@@ -16,9 +16,18 @@ scenarios/; numbers live in METRICS.md. These notes carry decisions and open ite
 
 ## Open items
 
-- 0.13.9 candidate (LOW): strike guard wording - fresh-session Boatswain has no
-  hand-off saying "spent"; add "or the run record corroborates every watchbill entry
-  green at the current deck-state hash". Observed inferred correctly and flagged.
+- 0.13.9 candidate (UPGRADED to MEDIUM, 2026-07-12 probe pair): strike guard wording -
+  fresh-session Boatswain has no hand-off saying "spent"; add "or the run record
+  corroborates every watchbill entry green at the current deck-state hash". Now three
+  observations, divergent: obs#1 (prior session) inferred spent and struck; obs#2
+  (legA) and obs#3 (legC) refused the inference, committed watchbill.json INTO the
+  voyage commit as work-in-flight, and named it for Captain. Same doctrine text, both
+  readings self-consistent, opposite custody outcomes. Cost of the no-strike path: one
+  extra Captain round-trip + second Boatswain dispatch (~600k cache-read) + second
+  commit to close the voyage. Over-strike risk arm tested (legC, stale record): agent
+  voided the record and did NOT strike, so the candidate wording's failure mode did
+  not materialize; under the candidate wording legC would legally strike after its own
+  rerun+append, closing the voyage in one pass. Awaiting dk's word to ship.
 - dk owns: jolly validation (real project, slow suite - where evidence-or-rerun and
   the run record pay off in minutes), model-tiering defaults (haiku custody
   outcome-safe but economy-leaky; sonnet economy-conformant), remote for this repo.
@@ -26,6 +35,23 @@ scenarios/; numbers live in METRICS.md. These notes carry decisions and open ite
   installed_plugins.json and cache are correct - upstream CLI quirk, unreported.
 - First TodoMVC pilot (scenarios/pilot.md) not yet run.
 - QM leg still leaks ~1 wait invocation on nested Crew even with foreground order.
+
+## Shakedown log
+
+- 2026-07-12 probe pair (strike + custody-fresh-session + stale-record arm), doctrine
+  0.13.8 installed-plugin channel, sonnet, three parallel fresh Boatswain legs on
+  duplicated tidewatch trees (cp -r probe-state duplication per the probe catalog).
+  Markers: legA row-1 inherit clean (hash byte-equal, 0 suite executions, commit
+  03d2feb) but strike MISSED per the wording gap above; legB hand-off strike full PASS
+  (0 strike-runs, watchbill removed, commit 6948022); legC stale-record full PASS
+  (mismatch caught, record voided, exactly 1 focused rerun, fresh record line appended
+  at the new hash, commit c8a69f6). No redundant confirmation runs anywhere; no
+  contamination refusals on legal hand-off content; no mid-leg doctrine re-reads.
+  Bonus positives: legA raised the unpinned-error-branch Captain blocker on
+  nextLowTide (spec-ambiguity check bites); legC flagged the data-bound plank for
+  harbour per the Planking agreement caution. Per-leg numbers in METRICS.md.
+- 2026-07-12: harness repo published to https://github.com/dmytri/shipshape-shakedown
+  (private) at dk's request; main tracks origin.
 
 ## Standing decisions (dk's; do not revisit without the named change)
 

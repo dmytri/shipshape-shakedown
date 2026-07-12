@@ -32,7 +32,8 @@ nothing else (no notes, no fixtures, no scratch).
    alone. Route findings to dk; do not fix doctrine without routing, except when dk
    pre-approved the cycle.
 7. **Record**: update METRICS.md baselines on doctrine version changes; log findings
-   in ~/shipshape/CAPTAIN.md per Captain notes custody.
+   and state in CAPTAIN.md here (notes migrated from ~/shipshape at the 2026-07-12
+   handover; the shipshape repo gets doctrine commits only).
 
 ## Invariants
 

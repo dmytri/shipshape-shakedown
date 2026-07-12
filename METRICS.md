@@ -26,10 +26,14 @@ Attribute phases by line ranges (record the count between legs).
 | QM + foreground Crew (0.13.6) | 25 (incl 4 wasted polls) | 1.30M | 14k | 3.5m |
 | Boatswain custody (0.13.7 table) | 15 | 712k | 10.6k | 2.6m |
 | Boatswain custody haiku | 14-16 | ~500-600k | 6-8k | 1.4-2.2m |
+| custody-fresh-session probe (0.13.8 plugin channel, row-1 inherit) | 14 | 623k | 15.8k | 3.0m |
+| strike probe, hand-off control (0.13.8 plugin channel) | 13 | 614k | 13.7k | 2.9m |
+| stale-record probe (0.13.8 plugin channel, void + rerun by trace) | 27 | 1.47M | 15.9k | 4.0m |
 
 Suite executions: fit-out ~8-11; voyage 14 (0.13.3) -> 8 (0.13.6) -> 3 (0.13.8 with
 wake run-record: one red classify, one Crew-local, one QM terminal green; custody ran
-zero).
+zero). Probe pair 2026-07-12: row-1 inherit 0 executions, hand-off strike 0, stale-record
+1 (exactly the owed focused rerun; argv in runs.log matches the focused shape).
 
 Full voyage 0.13.8 (Captain + QM/Crew + fresh-session custody): 35 invocations,
 ~1.53M cache-read, ~17k out, ~5.6m wall. Same intent on 0.13.3: 15.7m.
@@ -38,16 +42,18 @@ Full voyage 0.13.8 (Captain + QM/Crew + fresh-session custody): 35 invocations,
 
 | Class | Instances | P | N | Neg | Worthiness |
 |---|---|---|---|---|---|
-| skill/rigging reads (opening) | 3 | 3 | 0 | 0 | 100 |
-| deck retrieval + context reads | 12 | 10 | 2 | 0 | 83 (over-reads of out-of-scope files) |
-| owed verification runs | 4 | 4 | 0 | 0 | 100 |
-| redundant confirmation runs | 0 | - | - | - | eliminated at 0.13.8 (was the top waste class) |
+| skill/rigging reads (opening) | 12 | 12 | 0 | 0 | 100 |
+| deck retrieval + context reads | 37 | 34 | 3 | 0 | 92 (over-reads: out-of-scope files; one wake runs.log read) |
+| owed verification runs | 5 | 5 | 0 | 0 | 100 |
+| redundant confirmation runs | 0 | - | - | - | eliminated at 0.13.8; held at 0 across 3 more custody legs (2026-07-12 probes) |
 | polls/waits | 2 | 0 | 2 | 0 | 0 (one residual despite foreground order) |
-| evidence ops (run record, deck-state hash) | 3 | 2 | 1 | 0 | 67 (one unconsumed post-strike recompute) |
-| staging/commit/report | 9 | 9 | 0 | 0 | 100 |
-| mid-leg doctrine re-read | 1 | 1 | 0 | 0 | 100, but signals a wording gap (spent inference) |
+| evidence ops (run record, deck-state hash) | 10 | 9 | 1 | 0 | 90 (probe run: all 7 consumed, incl. mismatch detect + fresh append) |
+| staging/commit/report | 21 | 20 | 1 | 0 | 95 (one post-commit re-list) |
+| mid-leg doctrine re-read | 1 | 1 | 0 | 0 | 100; did not recur in probes - fresh agents resolved the strike ambiguity without re-reading, in the opposite direction |
 
 Leg worth densities 0.13.8: Captain ~90%, QM 73%, wake-custody 82%.
+Probes 2026-07-12 (sonnet, plugin channel): fresh-custody 100%, hand-off strike 100%,
+stale-record 91%.
 
 ## The audit lens (per dk)
 
