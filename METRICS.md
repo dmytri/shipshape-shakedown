@@ -38,6 +38,23 @@ zero). Probe pair 2026-07-12: row-1 inherit 0 executions, hand-off strike 0, sta
 Full voyage 0.13.8 (Captain + QM/Crew + fresh-session custody): 35 invocations,
 ~1.53M cache-read, ~17k out, ~5.6m wall. Same intent on 0.13.3: 15.7m.
 
+## TodoMVC pilot baselines (2026-07-12, sonnet, HEAD-text legs, doctrine 0.13.9)
+
+27 dispatched role legs, greenfield to graded app. Role-leg totals only: 517
+invocations, ~41.1M cache-read, ~749k out, 4h31m lifecycle wall. ~39 nested
+Crew/Boatswain subagent transcripts (QM-spawned) NOT included; mine from the session
+tasks dir for implementer-side numbers. Notable legs: QM build voyage 111
+invocations / 12.7M / 92m (17 Crew dispatches); Shipwright harbour 31 / 4.25M / 14m;
+Shipwright fit-out completion 34 / 3.47M / 13m. Bootstrap (empty repo to first
+product spec) cost 10 legs / ~65m - the harbour-gate deferral in the first Captain
+spec leg is the single largest avoidable serialization.
+
+Oracle (tastejs/todomvc pinned ff43b02e, cypress 15.14.2, operator-side quarantine
+held): first grade 0/29 (template-markup gate, 28 unmeasured); after ONE
+product-language iteration (template sections promoted to binding specs, 5 scenarios,
+5 Crew fixes): 18 passing / 9 failing / 2 skipped. The 9 residual failures are
+objective unauthored conformance findings (see CAPTAIN.md).
+
 ## Class tally (impact frequency; update every shakedown)
 
 | Class | Instances | P | N | Neg | Worthiness |

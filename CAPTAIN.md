@@ -29,10 +29,91 @@ scenarios/; numbers live in METRICS.md. These notes carry decisions and open ite
   outcome-safe but economy-leaky; sonnet economy-conformant), remote for this repo.
 - `npx plugins doctor` prints "No plugins found" from any cwd while
   installed_plugins.json and cache are correct - upstream CLI quirk, unreported.
-- First TodoMVC pilot (scenarios/pilot.md) not yet run.
+- First TodoMVC pilot COMPLETE (2026-07-12, 0.13.9, HEAD-text, sonnet): 27 legs,
+  greenfield to working app, oracle 18/29 after one legal iteration (from 0/29 on the
+  template gate). Numbers in METRICS.md; findings and doctrine queue in the Shakedown
+  log. Residual: 9 oracle failures unfixed (next iteration is one Captain
+  product-intent leg away, dk's call); ~39 nested subagent transcripts unmined.
+- dk concern + doctrine candidate (2026-07-12, pilot; raised LOW->MEDIUM after
+  discussion): plank-inventory derives to bare grep on plain-JS stacks, and grep
+  cannot verify docblock FORM (tag inside /** */) beyond a crude regex, nor PLACEMENT
+  (docblock attached to the seam declaration) at all - placement is parsing. The
+  Planking agreement's "executable form check rather than a human-read judgment"
+  degrades to exactly the human-read judgment it warns against (Article 6 failure
+  mode). Key facts: the one-line-command constraint binds RIGGING values only, NOT
+  verification support - a parser-backed checker under QM is legal today per the
+  Scantling agreement's bespoke-checker clause; and the pilot's own derived
+  verification-conformance rule set could have carried a form-lite regex rule
+  (line-comment plank reddens) within all constraints, but the Planking agreement and
+  the conformance rule-set mechanism are not cross-wired, so nothing prompts its
+  derivation. Proposal for dk post-pilot: (1) cross-wire sentence in the Planking
+  agreement routing plank-form into the derived conformance rule set, proven red by a
+  planted line-comment plank; (2) named-engine catalog entry for docblock inventory
+  (jsdoc -X; acorn-backed bespoke checker as QM verification support) for full
+  placement checking. Do not change mid-pilot.
 - QM leg still leaks ~1 wait invocation on nested Crew even with foreground order.
 
 ## Shakedown log
+
+- 2026-07-12 TodoMVC pilot results (doctrine 0.13.9, HEAD-text). What held: 0.13.9
+  strike arm 2-for-2 at sea (thin custody inherited record-corroborated greens and
+  struck, zero reruns, legs 10 and 25); contamination bulkhead bit FOUR times
+  correctly (2x QM-to-Crew interpretive dispatches, 1x operator's Boatswain-to-Crew
+  shortcut, 1x narrative Captain-to-Boatswain dispatch flagged); parallel Crew
+  shared-deck clean (2 mates, independent seams, leg 24); honest-red discipline held
+  (all new targets proven red before fix); harbour caught 2 real spec-conformance
+  defects the voyage's own verification missed and 27 missing planks via scripted
+  cross-reference; watchbill/at-rest lifecycle exact throughout. Oracle: 0/29 on
+  template gate (Captain's scope-out of Template/Structure/Code sections punished
+  objectively), 18/29 after one product-language iteration; quarantine held - no role
+  saw the oracle. Residual 9 failures (unauthored findings): missing template form
+  wrapper around new-todo, edit-blur/empty-destroy path, create-trim, persistence
+  format, filter-highlight semantics, others unanalysed.
+- 2026-07-12 pilot doctrine queue for dk (consolidated, none shipped):
+  1. MEDIUM plank conformance cross-wiring (one mechanism, three observed seams):
+     grep-only form check degrades to human judgment (two Boatswains ruled opposite
+     on identical index.html planks, legs 13/16); unplanked-seam remediation has no
+     red target (foul->QM->Crew loop strained, legs 13-16); missing planks reached 27
+     entries before a scripted harbour pass caught them (leg 21). Fix: plank
+     form+coverage rule in the derived verification-conformance rule set, proven red
+     by plant; named-engine catalog entry for docblock inventory (jsdoc -X; acorn
+     checker as QM verification support).
+  2. MEDIUM CAPTAIN.md custody: three Boatswains ruled leave/decline/stage-blind on
+     the same file (legs 16/19/23); Captain self-commit worked as exit (leg 20); six
+     CAPTAIN.md read-slips across HEAD-text legs, all self-caught, one costing a
+     bounced harbour (leg 18). Fix: one explicit line (Captain commits own notes, or
+     Boatswain MAY stage it content-blind); verify plugin-hook coverage blocks
+     CAPTAIN.md reads on the plugin channel (HEAD-text mode has no hooks).
+  3. LOW run-record line schema: roles appended structurally divergent entries
+     (deckStateHash vs hash keys, leg 23 anomaly); hash rule voided safely. Fix:
+     canonical line shape in the Wake policy, or an explicit no-strict-parse rule.
+  4. LOW @captain third disposal observed (leg 22): supersede-into-existing-scenario
+     (promote would bind a bug, discard would condemn a shared seam); lifecycle table
+     names only promote/discard.
+  5. Observational: greenfield bootstrap = 10 legs to first product spec; the
+     harbour-resume-gate deferral (leg 7) is the largest avoidable serialization;
+     Captain-owns-harness-setup resolved the toolchain gap cleanly with user word.
+  6. Observational: whole-deck equality cost profile confirmed (comment-only fix
+     voided full record; custody chose a defensible full rerun when hand-off
+     freshness had decayed two hops) - accepted cost of the no-impact-analysis
+     standing decision, working as designed.
+
+- 2026-07-12 pilot finding (MEDIUM-HIGH, doctrine seam): unplanked-seam remediation
+  has no clean legal path at sea. Live sequence: Boatswain custody correctly ruled
+  deck foul on an unplanked touched seam (js/app.js loadTodos), correctly refused
+  commit and strike; operator dispatched Crew directly with the foul; Crew correctly
+  REFUSED (no scenario reference = literal "No target. Crew stop."; Boatswain-to-Crew
+  is not a sanctioned dispatch vector). Underlying gaps: (1) a missing plank reddens
+  nothing - not a failing verification target, so QM's only Crew-dispatch ground is
+  strained (green target + custody foul as "failure evidence"); (2) "report foul deck
+  to the caller for Crew redispatch" assumes a live QM caller; in subagent reality
+  that context is gone; (3) Crew's contract cannot receive a hygiene foul. All three
+  dissolve if plank coverage/form enters the derived verification-conformance rule
+  set as a red-able rule (same fix as the plank-form item above - one mechanism, three
+  seams). Also observed: any post-record byte change (comment-only plank fix) voids
+  the whole run record by whole-deck equality; the caller-hand-off evidence arm is
+  the designed rescue - cost profile of the no-impact-analysis standing decision
+  observed live and workable.
 
 - 2026-07-12 probe pair (strike + custody-fresh-session + stale-record arm), doctrine
   0.13.8 installed-plugin channel, sonnet, three parallel fresh Boatswain legs on
