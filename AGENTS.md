@@ -20,7 +20,7 @@ role agents on instrumented toy projects. Built from the 0.13.x audit sessions.
    `bin/runs.sh <project>` for suite executions; `bin/deckstate.sh` to check wake
    run-record equality. Compare against METRICS.md baselines.
 6. **Judge**: markers from the scenario tables; every invocation through the audit
-   lens in METRICS.md. A finding is real only with tree evidence, never report prose
+   lens in METRICS.md, scored 0-100 for worth, with leg worth density in the report. A finding is real only with tree evidence, never report prose
    alone. Route findings to dk; do not fix doctrine without routing, except when dk
    pre-approved the cycle.
 7. **Record**: update METRICS.md baselines on doctrine version changes; log findings
