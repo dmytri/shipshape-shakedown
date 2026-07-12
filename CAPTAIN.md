@@ -1,5 +1,20 @@
 # Captain notes - shipshape-shakedown workstream
 
+## Session close 2026-07-12 (restart-ready)
+
+Doctrine 0.13.10 (c045b46) shipped, pushed, installed; doctor audit clean: one live
+install (plugin channel, user scope), all six skills + templates hash-match upstream
+main, all 10 hook scripts executable, no skills-channel copies, no shadowing; ~25
+inert older plugin-cache dirs are CLI-managed cruft, harmless. Next session runs
+installed-plugin mode at 0.13.10 by construction. First work item: the 0.13.11 queue
+under Open items/candidates (plant-red timing, scope-out confirmation gate,
+greenfield fast path, pilot.md template-fixture amendment) - all awaiting dk's word.
+Sim trees (tidewatch1-5, todopilot, oracle-grading) die with this session's
+scratchpad; all durable numbers are in METRICS.md. This session: 0.13.9 shipped and
+validated 2-for-2, first TodoMVC pilot complete (oracle 0/29 -> 18/29), 0.13.10
+shipped and probe-validated (notes custody FULL PASS transcript-verified,
+seam-parallel Crew PASS, plank rules derive with plant-red timing residue).
+
 Migrated from ~/shipshape/CAPTAIN.md at handover (2026-07-12, doctrine 0.13.8).
 The shipshape repo is doctrine/plugin only; all development, testing, and notes live
 here. Binding behaviour lives in the doctrine skills; procedure lives in AGENTS.md and
