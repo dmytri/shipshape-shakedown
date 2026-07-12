@@ -3,6 +3,14 @@
 Repeatable live-fire validation of the Shipshape doctrine (~/shipshape) using real
 role agents on instrumented toy projects. Built from the 0.13.x audit sessions.
 
+## Session bootstrap
+
+Fresh session, read in this order: this file, CAPTAIN.md (state, standing decisions,
+open items), METRICS.md. Then check the deck: ~/shipshape clean and level with
+origin, installed plugin version vs .plugin/plugin.json. Development and testing
+happen HERE; ~/shipshape is doctrine/plugin only - it gets doctrine commits and
+nothing else (no notes, no fixtures, no scratch).
+
 ## Standing procedure (order matters)
 
 1. **Ship first.** Doctrine changes under test must be committed, pushed, and
