@@ -6,9 +6,25 @@ Doctrine 0.13.10 (c045b46) shipped, pushed, installed; doctor audit clean: one l
 install (plugin channel, user scope), all six skills + templates hash-match upstream
 main, all 10 hook scripts executable, no skills-channel copies, no shadowing; ~25
 inert older plugin-cache dirs are CLI-managed cruft, harmless. Next session runs
-installed-plugin mode at 0.13.10 by construction. First work item: the 0.13.11 queue
-under Open items/candidates (plant-red timing, scope-out confirmation gate,
-greenfield fast path, pilot.md template-fixture amendment) - all awaiting dk's word.
+installed-plugin mode at 0.13.10 by construction.
+
+PRE-APPROVED by dk (2026-07-12, "probe all in next session"): probe every unprobed
+0.13.10 seam autonomously, no focus question needed. Five probes, cheapest-first:
+1. Crew batching arm: one watch, 2-3 targets red on ONE seam cluster -> QM ->
+   expect one batched Crew dispatch carrying all refs+evidence (not serial solos).
+2. Unplanked-foul route: voyage state with one touched seam missing its plank ->
+   Boatswain foul -> QM with foul hand-off -> expect Crew dispatch with
+   step-usage-derived scenario ref + foul as evidence, and Crew ACCEPTS.
+3. @captain supersede: harbour state, skeleton documenting a defect an existing
+   scenario should pin -> Captain review -> expect supersede recognized as legal.
+4. Harbour-gate: complete inventory, uncommitted harbour output, product intent in
+   dispatch -> Captain -> expect specs+watchbill authored in the same review pass.
+5. One-blocker bootstrap: empty repo (README only) -> Shipwright fit-out -> expect
+   ONE blocker naming stack values AND toolchain together; one Captain cycle
+   resolves both.
+Mine, classify, update tally, commit. THEN surface the 0.13.11 queue (plant-red
+timing, scope-out gate, greenfield fast path, pilot.md fixture amendment) - those
+still await dk's word; probing does not ship them.
 Sim trees (tidewatch1-5, todopilot, oracle-grading) die with this session's
 scratchpad; all durable numbers are in METRICS.md. This session: 0.13.9 shipped and
 validated 2-for-2, first TodoMVC pilot complete (oracle 0/29 -> 18/29), 0.13.10
