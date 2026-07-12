@@ -39,9 +39,22 @@ toggle-all coupling, persistence keys, counter pluralization.
   `npx cypress run --env framework=<pilot>`. Every failure is an objective conformance
   finding nobody in the loop authored - the external-verifier gold standard. Pin the
   upstream commit used and record it with the pilot results so grades stay comparable.
-  (The oracle is also natural @browser-tier material for the pilot project itself:
-  Captain MAY adopt it as the tier's verification per the doctrine's scantling-or-real
-  ordering - grading and adoption are separate uses of the same suite.)
+
+## Oracle quarantine (100% pop quiz, 0% shadow spec)
+
+The oracle is OPERATOR-SIDE ONLY and the role agents MUST NOT learn it exists:
+
+- Never clone, reference, or mention the upstream tests inside the pilot project, in
+  any role prompt, in any asset, or in any artifact a role can read. The vendored
+  app-spec.md is the only external material that enters the project.
+- Roles derive all verification from the spec alone. If their scenarios happen to
+  converge with the oracle's checks, that convergence IS the measurement.
+- Grade after the lifecycle ends, out-of-band, from a separate directory the project
+  never sees. Never feed failures back verbatim mid-pilot: if a pilot iterates, route
+  a failure to Captain re-phrased as USER intent in product language ("editing a todo
+  to an empty string should remove it"), never as test output, selectors, or the
+  suite's existence.
+- A pilot where any role saw the oracle is void. Note the leak, rebuild, rerun.
 - Doctrine conformance: same markers as lifecycle.md, judged at scale (parallel Crew,
   long watchbills, asset policy on css/template).
 - Economy: invocations, suite executions, worth density per leg; compare against the
