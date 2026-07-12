@@ -31,3 +31,12 @@ Rules learned live:
   final report in the skill's Final report form; ask "for each staged hunk, which
   recheck-selection row applied" to audit custody decisions.
 - Shipwright fitting-out legs get templates.md as a third authoritative file.
+- No git-author line in dispatches: scaffold.sh sets the repo-local Sim Operator
+  author; an author instruction in a QM dispatch was refused as contamination
+  (2026-07-12, plugin channel).
+- Plugin channel: nested spawns inherit the parent's model only for the parent's FIRST
+  spawn; later spawns silently fall to the session model unless the parent pins
+  `model`. Mine every leg's model and report the split.
+- Plugin dispatch guard caps captain-seat dispatches to any shipshape role at 2500
+  prompt chars; trim hand-offs to fit, and know a verbatim role report cannot be
+  pasted into a fresh QM at all (finding routed 2026-07-12).

@@ -14,6 +14,8 @@ npm install --save-dev @cucumber/cucumber >/dev/null 2>&1
 npx cucumber-js >/dev/null 2>&1 || { echo "FIXTURE NOT GREEN"; npx cucumber-js | tail -5; exit 1; }
 rm -f logs/runs.log
 git init -q
+git config user.name "Sim Operator"
+git config user.email "sim@example.test"
 git add -A
-git -c user.name="Sim Operator" -c user.email="sim@example.test" commit -qm "tidewatch: tide prediction baseline"
+git commit -qm "tidewatch: tide prediction baseline"
 echo "scaffolded: $TARGET at $(git rev-parse --short HEAD), suite green"

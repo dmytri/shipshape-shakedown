@@ -69,22 +69,51 @@ Probe 2 also live-validated: void-on-any-byte (record died when CAPTAIN.md lande
 rerun by trace exactly the 2 owed targets, strike after own append at current hash,
 canonical JSON record lines.
 
+## 0.13.10 seam probes, plugin channel (2026-07-12 evening, installed 0.13.10 c045b46, sonnet top-leg dispatch)
+
+Five pre-approved probes, 31 legs total (7 dispatched + 24 nested), all mined including
+nested Crew/Boatswain/QM. Totals: 409 invocations, 18.16M cache-read, 412k out, 41m
+wave wall (probes parallel). Model split: sonnet-5 264 inv / 12.57M; fable-5 145 inv /
+5.59M (nested spawns after a parent's first fall to the session model unless the parent
+pins `model` explicitly - tw3's Captain pinned, all-sonnet children; every other parent
+leaked). Nested fable-5 Crew ran 7-9 inv vs sonnet Crew 11-12 on like-for-like solos.
+
+| Probe | Legs | Inv | Cache | Out | Wall | Suite runs | Verdict |
+|---|---|---|---|---|---|---|---|
+| 1 Crew batching arm | 5 | 61 | 2.39M | 40k | 11.5m | 16 | MISS: 3 solo Crew sequential on a seam QM itself named shared |
+| 2 unplanked-foul route (2a+2b) | 4 | 48 | 2.11M | 50k | 1.8m + 9.4m | 5 | PASS: foul ruled (no commit/strike/runs); Crew ACCEPTS plank-only target; route closes with commit |
+| 3 @captain supersede | 8 | 114 | 5.05M | 100k | 22.9m | 5 | MISS: promote-with-correction chosen; supersede still unobserved live |
+| 4 harbour-gate same-pass | 7 | 89 | 3.50M | 81k | 20.4m | 12 | PASS: specs+watchbill in the review pass, zero redundant regression; bonus full voyage |
+| 5 one-blocker bootstrap (5a+5b) | 7 | 97 | 5.11M | 142k | 3.7m + 36.1m | uninstrumented | PASS: one blocker; one Captain cycle resolves values AND toolchain; full fit-out + methodology suite green |
+
+Leg worth densities: P2a Boatswain custody-foul 100% (9 inv/351k/1.8m - new best custody
+baseline), P1 voyage Boatswain 100% (10 inv), tw3 strike Boatswain 100% (10 inv, record-
+corroborated strike, zero strike-runs - 0.13.9 arm FULL PASS live), tw5 fit-out
+Shipwright#2 100% (12 inv incl. two planted-red proofs), P1 QM 91%, P2b QM 91%, P5b
+Captain 91%, P3 Captain 88%, P4 Captain 78% (refused-dispatch poll cluster: sleep 240
+et al, ~400k waste from one over-narrated dispatch). Run redundancy: tw1's serial-solo
+shape staled ~5 Crew mid-proofs (charged to the batching MISS, not discipline).
+
 ## Class tally (impact frequency; update every shakedown)
 
 | Class | Instances | P | N | Neg | Worthiness |
 |---|---|---|---|---|---|
-| skill/rigging reads (opening) | 12 | 12 | 0 | 0 | 100 |
-| deck retrieval + context reads | 37 | 34 | 3 | 0 | 92 (over-reads: out-of-scope files; one wake runs.log read) |
-| owed verification runs | 5 | 5 | 0 | 0 | 100 |
-| redundant confirmation runs | 0 | - | - | - | eliminated at 0.13.8; held at 0 across 3 more custody legs (2026-07-12 probes) |
-| polls/waits | 2 | 0 | 2 | 0 | 0 (one residual despite foreground order) |
-| evidence ops (run record, deck-state hash) | 10 | 9 | 1 | 0 | 90 (probe run: all 7 consumed, incl. mismatch detect + fresh append) |
-| staging/commit/report | 21 | 20 | 1 | 0 | 95 (one post-commit re-list) |
-| mid-leg doctrine re-read | 1 | 1 | 0 | 0 | 100; did not recur in probes - fresh agents resolved the strike ambiguity without re-reading, in the opposite direction |
+| skill/rigging reads (opening) | 76 | 76 | 0 | 0 | 100 (31 plugin legs pay exactly the 2-read tax; resident-by-design holds) |
+| deck retrieval + context reads | ~160 | ~152 | ~8 | 0 | ~95 (N: package.json re-reads, duplicate scans, one find dupe) |
+| owed verification runs | 38 | 33 | 5 | 0 | 87 (5 solo-shape staled Crew mid-proofs in tw1; charge to batching MISS) |
+| redundant confirmation runs | 0 | - | - | - | discipline-level still 0 across 24 more plugin legs (2026-07-12 seam probes) |
+| polls/waits | 9 | 0 | 9 | 0 | 0 (7 new: parents sleeping on async nested spawns, worst sleep 240; structural to async Agent spawns, not role discipline) |
+| evidence ops (run record, deck-state hash) | 24 | 23 | 1 | 0 | 96 (hash computes, appends, strike corroboration all consumed; QM inherited record greens twice) |
+| staging/commit/report | 33 | 30 | 3 | 0 | 91 (8 commits; N: post-commit re-lists, one denied CAPTAIN.md commit - see hooks finding) |
+| mid-leg doctrine re-read | 3 | 3 | 0 | 0 | 100 (both new instances preceded and shaped a disposal/fit-out decision) |
+| contaminated/premature dispatches | 3 | 0 | 0 | 3 | 0 (git-author line to QM; over-narrated Boatswain; Shipwright before toolchain - each cost a refused leg + parent rework, ~400k worst case) |
+| contamination refusals/guards | 4 | 4 | 0 | 0 | 100 (2 agent refusals, 2 hook blocks; every one caught a real contract breach, cheapest 0 tokens at the hook) |
 
 Leg worth densities 0.13.8: Captain ~90%, QM 73%, wake-custody 82%.
 Probes 2026-07-12 (sonnet, plugin channel): fresh-custody 100%, hand-off strike 100%,
 stale-record 91%.
+Seam probes 2026-07-12 evening: see the 0.13.10 seam probes section above; overall
+P~391/N~15/Neg 3 of 409 (~95% positive).
 
 ## The audit lens (per dk)
 

@@ -1,5 +1,73 @@
 # Captain notes - shipshape-shakedown workstream
 
+## 2026-07-12 evening: five pre-approved 0.13.10 seam probes COMPLETE (plugin channel)
+
+Discharges the pre-approval below. Verdicts (full numbers and per-leg accounting in
+METRICS.md "0.13.10 seam probes"): batching MISS (twice - tw1 sonnet QM ran 3 solo Crew
+sequential on a seam it itself named shared; tw4 fable QM ran 2 solos on one new seam),
+unplanked-foul PASS (Boatswain foul clean: no commit/strike/runs; thin-QM redispatch
+detected the plank gap itself, Crew ACCEPTED the plank-only target, route closed with
+commit 39e5639), supersede MISS (Captain chose promote-with-correction - rewrote the
+skeleton's assertion to intended behaviour and promoted; supersede still never observed
+live; fixture caveat: self-contained skeleton data invited a standalone scenario),
+harbour-gate PASS (specs+watchbill authored in the review pass, zero deferral, zero
+redundant regression, bonus full voyage to clean deck), one-blocker bootstrap PASS
+(one blocker; one Captain cycle installed toolchain AND wrote values; full fit-out to
+methodology-green in 5a 3.7m + 5b 36.1m; caught the npm `cucumber-js` squat).
+
+Findings routed to dk, NONE shipped (doctrine untouched):
+1. MEDIUM notes-custody hooks contradict 0.13.10 text: bash-custody.sh denies every
+   internal-role command containing "CAPTAIN.md" (blocks Boatswain content-blind
+   staging AND the validated `':!CAPTAIN.md'` diff-exclusion composition) and denies
+   `git commit` to all but Boatswain (blocks Captain's sanctioned notes-only
+   self-commit, observed denied live at tw5 20:20). Net: notes have NO legal path into
+   a commit on the plugin channel; 5b's Captain diagnosed it and left notes untracked.
+   Both 0.13.10 arms shipped in skills; hooks never updated. Meanwhile `git add -A`
+   would sweep notes in silently - hooks block the careful forms, miss the careless one.
+2. MEDIUM dispatch-guard thin cap (2500 chars, captain-seat dispatches to any
+   shipshape:* target; QM exempt only as dispatcher) closes the verbatim-report
+   hand-off INTO a fresh QM - the unplanked-foul redispatch vector. A foul is not a
+   durable artifact, so a fresh QM cannot legally receive one; only the live-QM loop
+   works (and did). Decide: intended (fresh QM re-derives; plank foul then only
+   reachable once plank rules ride the conformance rule set) or add a role-report
+   hand-off allowance for QM like Boatswain's.
+3. MEDIUM (upgraded from LOW) run-record line schema: three shapes in three trees on
+   one doctrine text (tw1 `target`/`deckState`; tw2 canonical - imitating the seeded
+   example line; tw4 `targets`/`deckStateHash`). The Wake policy names exact keys and
+   demonstrably does not bind; a written example DOES. Cheap fix: canonical example
+   line in the Wake policy or a template in RIGGING.
+4. Batching arm never fires (0.13.11 candidate): "MAY batch ... serial solo dispatches
+   are the fallback where neither applies, not the default" reads as optional; both QMs
+   defaulted to solos even after naming the shared seam. Candidate: SHOULD-strength or
+   an explicit decision rule at dispatch time. This is dk's top economy lever (tw1 paid
+   16 suite runs and 3 Crew spawns where a batch takes ~8 and 1).
+5. @captain disposal table incomplete: observed a fourth shape, promote-with-correction
+   (rewrite assertion at promotion). Supersede remains unobserved after two designed
+   invitations. Candidate: name the fourth disposal, or fold it into supersede wording.
+6. Plant-red timing: FOURTH divergent observation (tw5 fit-out Shipwright planted at
+   fit-out: setTimeout plant in verification + PERTURBATION plant in src, both proven
+   red then removed; tw5 QM ALSO planted nock( during verification). Strengthens the
+   existing 0.13.11 MEDIUM candidate.
+7. LOW derived-command fidelity: tw4 role hand-composed `--tags "not @captain and not
+   @shipshape and not @shipwright"` (nonexistent tag) instead of running `focused`
+   verbatim; harmless here.
+8. Model inheritance (harness, dk owns tiering): nested UNSET spawns inherit the
+   parent's model only for the parent's FIRST spawn; later spawns silently fall to the
+   session model. 145/409 invocations (35%) escalated to fable-5 despite sonnet
+   dispatch. Explicit `model` pin works (tw3 proof). Fable nested legs ran leaner in
+   invocations (Crew 7-9 vs sonnet 11-12).
+Positives: 0.13.9 strike corroboration arm FULL PASS live (10-inv leg, zero
+strike-runs); contamination enforcement caught real breaches at three layers (agent
+refusal x2, hook block x2) at falling cost (hook = 0 tokens); custody-foul Boatswain
+9-inv/100% new best; QM inherited run-record greens twice (zero redundant
+classification); polling ~7 waits/31 legs, structural to async spawns.
+
+Harness fixes shipped in THIS repo (operator-owned): fixture gitignores coverage/
+(operator error had committed c8 wake into all probe bases; three Boatswains handled it
+three defensible ways), scaffold.sh sets repo-local Sim Operator git author (the
+dispatch author line caused one QM contamination refusal - drop it from dispatches),
+probes.md gains the five seam probes.
+
 ## Session close 2026-07-12 (restart-ready)
 
 Doctrine 0.13.10 (c045b46) shipped, pushed, installed; doctor audit clean: one live
