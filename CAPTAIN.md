@@ -16,18 +16,14 @@ scenarios/; numbers live in METRICS.md. These notes carry decisions and open ite
 
 ## Open items
 
-- 0.13.9 candidate (UPGRADED to MEDIUM, 2026-07-12 probe pair): strike guard wording -
-  fresh-session Boatswain has no hand-off saying "spent"; add "or the run record
-  corroborates every watchbill entry green at the current deck-state hash". Now three
-  observations, divergent: obs#1 (prior session) inferred spent and struck; obs#2
-  (legA) and obs#3 (legC) refused the inference, committed watchbill.json INTO the
-  voyage commit as work-in-flight, and named it for Captain. Same doctrine text, both
-  readings self-consistent, opposite custody outcomes. Cost of the no-strike path: one
-  extra Captain round-trip + second Boatswain dispatch (~600k cache-read) + second
-  commit to close the voyage. Over-strike risk arm tested (legC, stale record): agent
-  voided the record and did NOT strike, so the candidate wording's failure mode did
-  not materialize; under the candidate wording legC would legally strike after its own
-  rerun+append, closing the voyage in one pass. Awaiting dk's word to ship.
+- 0.13.9 strike-guard wording: SHIPPED 2026-07-12 (33b8e38) on dk's word after the
+  probe pair upgraded it to MEDIUM (three observations, divergent: obs#1 struck on
+  inference; obs#2 legA and obs#3 legC refused, committed watchbill.json into the
+  voyage commit, named it for Captain; over-strike arm clean in legC). Strike guard
+  now accepts run-record corroboration of every watchbill entry green at the current
+  deck-state hash as spent evidence. Validation rides the TodoMVC pilot; a dedicated
+  custody-fresh-session probe on 0.13.9 text is the cheap follow-up if the pilot
+  never hits the fresh-session strike seam.
 - dk owns: jolly validation (real project, slow suite - where evidence-or-rerun and
   the run record pay off in minutes), model-tiering defaults (haiku custody
   outcome-safe but economy-leaky; sonnet economy-conformant), remote for this repo.
@@ -85,7 +81,7 @@ scenarios/; numbers live in METRICS.md. These notes carry decisions and open ite
 
 ## Downstream carry
 
-- Jolly and Estelle re-derive at next refit: everything 0.13.0-0.13.8, notably
+- Jolly and Estelle re-derive at next refit: everything 0.13.0-0.13.9, notably
   watchbill as sole QM channel, thin dispatch, broad/coverage without fail-fast,
   @invariant rename, planted-red vocabulary, trace-selected recheck, decision-table
   custody, runrecord slot in RIGGING, no-pre-check credentials.
