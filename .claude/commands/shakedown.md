@@ -10,7 +10,12 @@ Run a shakedown of the Shipshape doctrine. Arguments: $ARGUMENTS
    predates the last install (session-snapshot rule decides HEAD-text vs
    installed-plugin mode).
 2. Interpret the arguments:
-   - empty or "lifecycle": full lifecycle per scenarios/lifecycle.md
+   - empty: do NOT run yet. Report the deck in two lines (doctrine version vs the
+     last METRICS.md baseline, open items from CAPTAIN.md), then: if doctrine moved
+     since the last baseline, propose the cheapest scenario covering the changed
+     seams and ask one question - "run this?"; if nothing moved, ask what to test.
+     Named arguments below run autonomously without asking.
+   - "lifecycle": full lifecycle per scenarios/lifecycle.md
    - "probes" or a probe name: the matching probes from scenarios/probes.md
    - "pilot": the TodoMVC pilot per scenarios/pilot.md (expensive - confirm with the
      user before starting, and honour the oracle quarantine absolutely)
