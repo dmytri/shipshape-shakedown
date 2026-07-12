@@ -32,9 +32,16 @@ toggle-all coupling, persistence keys, counter pluralization.
 
 - Spec coverage: every app-spec behaviour section maps to at least one binding
   scenario (list the misses).
-- Functional conformance: manual/scripted spot-check against the spec's named
-  behaviours (new todo, edit modes, toggle-all, clear completed, routing, counter,
-  persistence key format `todos-[framework]`).
+- Functional conformance: run the OFFICIAL upstream oracle, not spot-checks. TodoMVC
+  ships a parameterised Cypress spec (tastejs/todomvc `tests/` + `cypress/e2e/spec.cy.js`)
+  covering add/edit/toggle/route/persist, run against a served app. Clone upstream,
+  serve the pilot build at the expected path (or point `baseUrl` at it), run
+  `npx cypress run --env framework=<pilot>`. Every failure is an objective conformance
+  finding nobody in the loop authored - the external-verifier gold standard. Pin the
+  upstream commit used and record it with the pilot results so grades stay comparable.
+  (The oracle is also natural @browser-tier material for the pilot project itself:
+  Captain MAY adopt it as the tier's verification per the doctrine's scantling-or-real
+  ordering - grading and adoption are separate uses of the same suite.)
 - Doctrine conformance: same markers as lifecycle.md, judged at scale (parallel Crew,
   long watchbills, asset policy on css/template).
 - Economy: invocations, suite executions, worth density per leg; compare against the
