@@ -10,7 +10,7 @@ from the transcripts.
 - `fixtures/tidewatch/` - the standard green baseline project (cucumber-js, planted
   instrumentation hook)
 - `prompts/` - role-agent preamble and dispatch rules learned live
-- `scenarios/` - full lifecycle table and the targeted probe catalog
+- `scenarios/` - full lifecycle table, targeted probe catalog, and the TodoMVC pilot (external-intent integration tier)
 - `METRICS.md` - how to read the numbers, plus baselines
 
 A shakedown answers four questions: does the doctrine hold end-to-end, did the change
