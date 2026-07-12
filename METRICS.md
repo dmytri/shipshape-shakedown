@@ -55,6 +55,20 @@ product-language iteration (template sections promoted to binding specs, 5 scena
 5 Crew fixes): 18 passing / 9 failing / 2 skipped. The 9 residual failures are
 objective unauthored conformance findings (see CAPTAIN.md).
 
+## 0.13.10 validation probes (2026-07-12, sonnet, HEAD-text)
+
+| Probe | Invocations | Cache-read | Out | Wall | Verdict |
+|---|---|---|---|---|---|
+| QM seam-parallel Crew (2 disjoint seams, one file) | 14 | 571k | 12.4k | 3.8m | PASS: 2 parallel mates, collision self-healed |
+| Boatswain notes custody + strike + record shape | 22 | 1.20M | 24.4k | 5.1m | FULL PASS, transcript-verified content-blind |
+| Shipwright fit-out plank rules | 25 | 2.34M | 59.5k | 12.0m | PASS derivation; MISS plant-red (timing ambiguity, 3 divergent obs) |
+
+Probe 2 tool-call audit: deck diff composed as `git diff <base> -- . ':!CAPTAIN.md'`
+verbatim; only mtime stat and by-path add touched CAPTAIN.md. Zero content reads.
+Probe 2 also live-validated: void-on-any-byte (record died when CAPTAIN.md landed),
+rerun by trace exactly the 2 owed targets, strike after own append at current hash,
+canonical JSON record lines.
+
 ## Class tally (impact frequency; update every shakedown)
 
 | Class | Instances | P | N | Neg | Worthiness |

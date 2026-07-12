@@ -16,6 +16,14 @@ scenarios/; numbers live in METRICS.md. These notes carry decisions and open ite
 
 ## Open items
 
+- TOP (dk directive, 2026-07-12 post-pilot): economy. Pilot cost ~13x a bare session
+  for first-build; must approach 2-3x for the maintenance-amortization case to hold.
+  Levers ranked: QM parallel/batched Crew dispatch (~45m of the 92m build voyage),
+  greenfield bootstrap collapse (~20m), harbour-gate deferral reading (~25m), model
+  tiering (dk-owned, 20-30%), opening tax (bounded by resident-by-design). Fold into
+  0.13.10 with the four blessed queue items; validate with tidewatch probes, not a
+  pilot.
+
 - 0.13.9 strike-guard wording: SHIPPED 2026-07-12 (33b8e38) on dk's word after the
   probe pair upgraded it to MEDIUM (three observations, divergent: obs#1 struck on
   inference; obs#2 legA and obs#3 legC refused, committed watchbill.json into the
@@ -129,6 +137,40 @@ scenarios/; numbers live in METRICS.md. These notes carry decisions and open ite
   harbour per the Planking agreement caution. Per-leg numbers in METRICS.md.
 - 2026-07-12: harness repo published to https://github.com/dmytri/shipshape-shakedown
   (private) at dk's request; main tracks origin.
+
+## 0.13.11 candidates (dk decisions pending)
+
+- Plant-red timing (UPGRADED to MEDIUM, three divergent observations): pilot leg 6
+  Shipwright planted at fit-out; pilot leg 9 QM re-planted at promotion; 0.13.10
+  fit-out probe planted NOT AT ALL (derived the plank rules correctly, deferred proof,
+  report silent). Two rules name two owners; agents resolve the ambiguity three ways.
+  Candidate resolution: QM-at-promotion owns the plant-red adoption proof (the rules
+  are not executable until QM binds their steps); fitting out derives rules and
+  skeletons only, and step 3's "every derived check has been red once" gate rewords
+  accordingly. Side benefit: removes plant-red cycles from the fit-out leg, serving
+  the bootstrap-time directive. Needs dk's word (0.13.11).
+- Greenfield fast path (ARCHITECTURE, dk's directive on bootstrap time): first voyage
+  needs only the five required RIGGING values; defer full fit-out derivation (weather,
+  conformance scantling, plank rules, step-usage, coverage) to the first harbour.
+  Sequence: one interactive Captain conversation (intent + stack + provision +
+  minimal rigging + specs + watchbill) -> product voyage immediately -> fit-out
+  completes at harbour. Cost: voyage 1 sails without methodology checks. Estimated
+  empty-repo-to-product-spec: ~65m (pilot) -> ~20-25m (0.13.10 + interactive
+  Captain) -> under ~10m (fast path).
+- Note for economy accounting: pilot legs 2/3/5 were a harness artifact - headless
+  Captain made each user exchange a full leg; interactive Captain absorbs them.
+- Scope-out confirmation rule (MEDIUM, dk's template-iteration question): Captain
+  downgraded asset-normative language (spec's "must include todomvc-app-css",
+  template "should be used as the base") to out-of-scope by section classification,
+  reported it, but nothing gated the build on user confirmation - cost the 0/29 first
+  oracle grade. Candidate: excluded sections of a user-supplied spec asset are open
+  questions, not decisions; they stand as pending intent (skeleton or named
+  CAPTAIN.md question surfaced in every report) until the user rules. Compounding
+  causes, recorded: spec mixes contribution-process and product registers; sim-user
+  "keep it simple" pushed the trim; and a FIXTURE GAP - pilot.md vendors only
+  app-spec.md while its Template section incorporates the todomvc-app-template repo
+  by reference. Pilot #2: vendor the template index.html as a second asset (amend
+  scenarios/pilot.md with dk's word).
 
 ## Standing decisions (dk's; do not revisit without the named change)
 
