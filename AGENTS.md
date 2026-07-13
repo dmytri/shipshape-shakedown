@@ -32,9 +32,21 @@ nothing else (no notes, no fixtures, no scratch).
    changes. Thin dispatches; verify tree facts between legs yourself. Pin `model`
    explicitly on every dispatched leg; nested spawns inherit the parent's model only
    for the parent's first spawn, then fall to the session model (2026-07-12).
+   Slow-suite dispatch rules (pilot #2 deadlock, 2026-07-13): every dispatch
+   carries the background-task lines from prompts/preamble.md - never end a turn
+   with a live background task; commands that may exceed ~90s run backgrounded and
+   their output file is Read to the summary line within the same turn; wait on
+   output files, never process names (a pgrep condition matched a concurrent
+   session's suite). Pilot and lifecycle legs are OPERATOR-DRIVEN: stop Captain
+   after specs+watchbill with an explicit stop-line and dispatch QM yourself; never
+   auto-chain nested async voyages on a slow-suite project - the runtime
+   auto-backgrounds foreground commands at ~2m, and a background completion cannot
+   resume a finished nested agent chain (silent deadlock).
 5. **Mine**: `bin/mine.sh <task-transcript.output> <legname>` per leg;
    `bin/runs.sh <project>` for suite executions; `bin/deckstate.sh` to check wake
-   run-record equality. Compare against METRICS.md baselines.
+   run-record equality. Compare against METRICS.md baselines. Mine the transcript
+   on EVERY task-notification immediately - tree-diff alone missed a stalled QM
+   for ~25m (pilot #2).
 6. **Judge**: markers from the scenario tables; every invocation through the audit
    lens in METRICS.md, scored 0-100 for worth, with leg worth density in the report. A finding is real only with tree evidence, never report prose
    alone. Route findings to dk; do not fix doctrine without routing, except when dk

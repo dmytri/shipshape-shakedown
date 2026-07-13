@@ -25,10 +25,15 @@ toggle-all coupling, persistence keys, counter pluralization.
    Captain scoped the unreachable Template section out, and the oracle graded 0/29 on
    the template-markup gate). The spec and template are Captain ASSETS; Captain
    derives scenarios from them - do not pre-chew scenarios.
-3. Run the lifecycle: fitting out, Captain discovery (expect several clarifying
-   blockers routed as spec decisions: framework choice per the Dependencies rule,
-   browser vs DOM-level tier), voyages until the watchbill rests, harbour, and a
-   verification-economy audit at real scale.
+3. Run the lifecycle OPERATOR-DRIVEN, leg by leg (pilot #2, 2026-07-13: an
+   auto-chained Captain->QM nested-async voyage deadlocked - the browser-tier
+   suite exceeded the runtime's ~2m foreground cap and a background completion
+   cannot resume a finished nested agent chain). Stop Captain after
+   specs+watchbill with an explicit stop-line; dispatch QM yourself; carry the
+   background-task dispatch lines from prompts/preamble.md in every leg. Expect
+   several clarifying blockers routed as spec decisions: framework choice per the
+   Dependencies rule, browser vs DOM-level tier. Voyages until the watchbill
+   rests, harbour, and a verification-economy audit at real scale.
 4. Mine every leg per METRICS.md; the pilot yields the large-N class-tally data the
    toy cannot.
 

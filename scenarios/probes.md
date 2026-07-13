@@ -124,6 +124,44 @@ Run history on the identical quayline intent: tw8 7m51s (tainted, cockpit reads)
 claims tree-verified live). The recovered verbatim intent lives in the tw12 dispatch;
 reuse it for any fourth like-for-like.
 
+## slow-census (0.13.14 candidate; regression probe for the pilot #2 QM deadlock, 2026-07-13)
+State: tw1 probe state (3 reds on one seam cluster from bin/probe-states.sh) + one
+additional green scenario in the same tier whose step definition sleeps ~150s before
+asserting an existing planked seam (features/slow-tide.feature; the sleep pushes the
+tier's broad run past the runtime's ~2m foreground cap so the run gets
+auto-backgrounded mid-leg - the exact pilot #2 trigger). Dispatch: QM per watchbill
+tier-tag watch, thin, WITHOUT the harness background-task lines (the probe tests
+whether DOCTRINE alone prevents the stall; the harness lines are the operator's
+belt-and-braces, not the subject). PASS markers, all transcript/tree, in order:
+(1) exactly ONE executing sweep of the tier (transcript grep; no census re-run once
+the red list is in hand); (2) the auto-backgrounded sweep is CONSUMED in-turn -
+transcript shows the output file read to the summary line before any dispatch or
+report; (3) Crew dispatch follows the census with refs + per-target evidence
+(batched: the tw1 reds name one cluster); (4) the QM turn ends in a Final report
+with zero live background tasks - no trailing "waiting"/idle invocations, no wait
+on process names (pgrep/kill -0 absent). FAIL: any turn ending on an open wait
+(the pilot #2 shape: census in hand at 18:07:52, full redundant re-run at
+18:08:03, turn ended 18:08:25 "waiting for the notification", re-run + poll
+completed 18:10 into a dead agent chain). Score the redundant-confirmation and
+polls/waits classes explicitly.
+
+## efficiency battery (rerun owed after ANY doctrine ship; dk directive 2026-07-13)
+After shipping a doctrine version, before any pilot work: rerun the five
+pre-approved probes (tw1-tw5 states), fast-path-bootstrap (verbatim quayline
+intent), and slow-census on the installed plugin channel. Compare per-leg
+invocations and wall against the wave-3/wave-4 baselines in METRICS.md (wave-3
+five-probe like-for-like: 182 inv; wave-4 boatswain leg 25 inv / 3m39s; fast-path
+bootstrap band 7m24s-8m14s to specs+watchbill+QM). Bar: within ~10% of the newest
+baseline or better; a doctrine fix that inflates invocations on unrelated probes
+is not efficient and routes back to dk before the pilot resumes.
+Model discipline (dk, 2026-07-13): probes run on sonnet - or haiku where a
+baseline exists (Boatswain custody has one) - never a stronger model; a stronger
+model masks doctrine weakness by native competence. Pinning alone is NOT enough:
+the async-resumption leak sends a pinned leg to the SESSION model at its first
+nested-child resumption, so the session model itself must be the probe tier
+before any dispatch. Mine every leg's model split and void any leg that
+escalated above its intended tier.
+
 Plugin-channel notes (2026-07-12): dispatches carry NO git-author line (scaffold sets
 repo-local author; an author line got one QM dispatch refused as contamination).
 Every plugin-channel dispatch MUST carry one boundary line: "Work only inside the

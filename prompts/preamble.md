@@ -54,3 +54,17 @@ Rules learned live:
 - Plugin dispatch guard caps captain-seat dispatches to any shipshape role at 2500
   prompt chars; trim hand-offs to fit, and know a verbatim role report cannot be
   pasted into a fresh QM at all (finding routed 2026-07-12).
+- Background-task lines, carried in EVERY dispatch (pilot #2 QM deadlock,
+  2026-07-13): "Never end your turn while any background task of yours is live -
+  consume or kill it first. Any command that may exceed 90 seconds must run with
+  run_in_background:true and you must Read its output file until the summary line
+  appears, within the same turn. Wait on output files, never on process names."
+  Rationale: the runtime auto-backgrounds foreground commands at ~2m and blocks
+  bare sleep; a background completion cannot resume a finished nested agent chain,
+  so a role that ends its turn "waiting for the notification" deadlocks silently;
+  a pgrep-based wait condition matched an unrelated concurrent session's cucumber.
+- Pilot/lifecycle legs are operator-driven: give Captain an explicit
+  stop-after-specs+watchbill line ("Stop after authoring specs and watchbill; do
+  not dispatch QM; report in your Final report form.") and dispatch QM yourself
+  per the watchbill - legal by construction, the Captain->QM bulkhead is
+  durable-artifacts-only.

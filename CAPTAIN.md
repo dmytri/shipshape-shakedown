@@ -1,5 +1,89 @@
 # Captain notes - shipshape-shakedown workstream
 
+## 2026-07-13 evening: pilot #2 PARKED on dk's word; doctrine fix package drafted; restart-ready
+
+dk's ruling (2026-07-13, after the forensic addendum below): the pilot does NOT
+resume until (1) doctrine is fixed so the pilot-#2 error class cannot recur and
+(2) the probe battery has been rerun on the fixed doctrine confirming efficiency
+(latency + invocation count) against the wave-3/4 baselines. Sequence is
+doctrine -> probes -> pilot; the pilot is last.
+
+Harness fixes SHIPPED this session (operator-owned): AGENTS.md slow-suite dispatch
+rules + operator-driven pilot legs + mine-on-every-notification; preamble.md
+background-task dispatch lines + Captain stop-line pattern; pilot.md
+operator-driven procedure; probes.md gains the slow-census regression probe (the
+designed re-creation of the pilot-#2 trigger, run WITHOUT the harness lines so it
+tests doctrine alone) and the efficiency-battery rule (five pre-approved probes +
+fast-path-bootstrap + slow-census after any doctrine ship; bar ~10% of newest
+baseline or better, regressions route to dk before the pilot).
+
+DOCTRINE PACKAGE 0.13.14, drafted, NOT shipped (awaiting dk's word on wording;
+homes verified against 49942d9 text):
+1. Turn discipline (shared Articles, home: Role transitions, next to the
+   role-hand-off/final-report paragraph at ~line 334): "A role's turn ends only in
+   its final report. A role never ends its turn waiting - not on a background
+   command, a notification, a timer, or another agent. Work in flight at report
+   time is either consumed before reporting or reported as a blocker. A
+   verification run whose output the role has not read is not evidence and counts
+   as never run." Evidence: pilot-#2 QM ended its turn "waiting for the background
+   completion notification"; the completion fired 2m later into a dead agent chain.
+2. Census-to-dispatch (QM skill, strengthens the existing "Spend the watch once
+   its red list is dispatched" in step 4/line 61): "One sweep enumerates the
+   watch: once the red list is in hand with per-target evidence, dispatch is owed
+   before any further executing run of that tier. A long-running sweep is consumed
+   within the turn - started, read to its summary, acted on; an environment that
+   cannot complete the sweep within the turn is a tooling blocker to Captain,
+   never an open wait." Evidence: census in hand 18:07:52, full redundant re-run
+   launched 18:08:03.
+3. Tier economy (Captain skill fast-path bullet + Verification policy), TWO
+   OPTIONS for dk:
+   A1 (route it): the verification tier is the one methodology decision the fast
+   path still surfaces in the interactive conversation (browser vs DOM vs
+   process-level, with per-run cost); silence adopts the cheapest sufficient tier.
+   A2 (default-cheap, operator's lean - serves the economy directive): voyage 1
+   verifies at the cheapest tier sufficient to observe the specified behaviour; a
+   real-browser tier is adopted only when the user names it or a specified
+   behaviour cannot be observed below it, and then as a named recorded decision.
+   Evidence: pilot-#2 Captain unilaterally chose Playwright/Chromium with zero
+   blockers -> 2m42s per census, the failure chain's root enabler; pilot #1
+   routed browser-vs-DOM as a blocker. Fixes 1+2 alone prevent the deadlock; 3 is
+   the economy component dk's ruling also asks for.
+Hook implications: none (text-only). Ship-first rule applies: bump 0.13.14, tests
+green, commit, push, install, THEN restart; if dk nods this session, ship this
+session so the next session runs 0.13.14 by construction (the 0.13.13 pattern).
+
+NEXT SESSION (restart-ready queue, in order):
+0. `/model sonnet` + `/effort medium` FIRST - dk's saved defaults are now
+   fable/xhigh from the forensic conversation. This is not just accounting:
+   dk's word (2026-07-13) is probes run on sonnet, or haiku where a baseline
+   exists, NEVER a stronger model - a stronger model masks doctrine weakness
+   with native competence, and the async-resumption leak sends even a pinned
+   leg to the session model at its first nested-child resumption, so the
+   session model IS the probe tier. Void any leg that escalated above its
+   intended tier (mine the model split per leg).
+1. Bootstrap per AGENTS.md; deck check; if 0.13.14 not yet shipped, ship it on
+   dk's recorded word first (wording above), tests green, push, install, and note
+   the session-snapshot rule (this session's subagents would still be 0.13.13 -
+   0.13.14 legs need the restart that follows the install).
+2. Channel-verify with a 0.13.14 marker phrase from the actual diff (candidates
+   once written: "counts as never run", "never an open wait").
+3. Run the efficiency battery per probes.md: five pre-approved probes (tw1-tw5
+   via bin/probe-states.sh), fast-path-bootstrap (verbatim quayline intent, tw12
+   dispatch), slow-census (NEW - build state per its spec: tw1 + slow-tide
+   scenario, ~150s step sleep). All legs sonnet-pinned in a sonnet session (dk's
+   model-discipline word above); optionally a haiku arm on the Boatswain custody
+   probe where the haiku baseline exists (14-16 inv / 1.4-2.2m). Mine everything
+   incl. model split, compare inv/wall per leg vs wave-3/4 baselines, classify,
+   record in METRICS.md.
+4. Pilot #2 only after 3 is green AND efficient, on dk's word. Tree preserved at
+   /tmp/claude-1000/-home-exedev-shipshape-shakedown/ff4765a5-b99a-4909-98bb-bacd27792124/scratchpad/todopilot2
+   (commits c529b99 + 98f5f7c; uncommitted Captain specs + QM verification
+   support; 32 honest reds). Fresh QM re-derives from durable artifacts by
+   design, so resume-from-tree is legal and cheap - but dk decides
+   resume-vs-clean-rerun then, not now. Fallback if the tree is gone (VM
+   reboot): re-scaffold + re-run the Captain leg with the pilot dispatch +
+   stop-line (~14m; leg-1/2 numbers already recorded stand as spent pilot cost).
+
 ## 2026-07-13 pilot #2 PAUSED at leg 2 (QM): stalled without dispatching Crew - HIGH finding, dk's word to pause and record
 
 Real restart confirmed (process start 17:50/17:51 UTC, well after the 13:49 UTC
