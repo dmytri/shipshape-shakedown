@@ -43,9 +43,21 @@ numbers in METRICS "wave 4".
    probe. Do-not-touch list: owed runs, opening reads, bulkheads.
 
 OPEN (unchanged, dk has not ruled): record-append seam. Deck state: 0.13.13 fully
-live-validated, fixtures v2, boundary discipline proven — PILOT-READY. Next: account
-run + pilot #2 on dk's word (pilot.md; oracle quarantine absolute), with the four
-economy rulings available to ship first if dk wants them in the pilot's doctrine.
+live-validated, fixtures v2, boundary discipline proven — PILOT-READY.
+
+RESTART-READY, PLAN CONFIRMED BY dk (2026-07-13, end of wave-4 session): restart into
+a fresh session with session model set to SONNET (makes the async-resumption pin leak
+harmless — all falls land on sonnet, uniform accounting, comparable to pilot #1),
+then run `/shakedown pilot` — pilot #2 on 0.13.13 AS-IS (no doctrine changes first;
+the two pending rulings are known small costs the pilot should show in its numbers).
+Cost estimate stated to dk: ~half of pilot #1's legs, 1.5-2.5h wall — confirm the
+final cost in ONE line at pilot start per the command, then run to completion.
+Oracle quarantine ABSOLUTE (operator-side grading only; no role sees the oracle).
+Mine EVERY leg including nested (wave-4 procedure: tasks-dir symlinks into the
+session subagents dir); count runs by transcript grep on uninstrumented greenfield
+trees; classify per the audit lens; emphasis = invocation + latency accounting vs
+pilot #1 baselines (517 inv / 4h31m / 13x-bare-session target toward 2-3x). The
+account run (real project) remains dk-owned, after the pilot.
 
 ## 2026-07-13 session close: 0.13.13 SHIPPED on dk's word ("ship all five"); restart-ready
 
