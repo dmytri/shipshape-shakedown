@@ -17,8 +17,22 @@ tests doctrine alone) and the efficiency-battery rule (five pre-approved probes 
 fast-path-bootstrap + slow-census after any doctrine ship; bar ~10% of newest
 baseline or better, regressions route to dk before the pilot).
 
-DOCTRINE PACKAGE 0.13.14, drafted, NOT shipped (awaiting dk's word on wording;
-homes verified against 49942d9 text):
+DOCTRINE 0.13.14 SHIPPED on dk's word (2026-07-13 evening, "ship both now" + A2):
+commit 670f3ab, pushed, installed (cache 670f3abe1e9d), tests 194 green
+(bulkhead 10, homes 46, hooks 117, map 17, style 4). THIS session's subagents
+stay snapshotted at 0.13.13 (install postdates process start) - the 0.13.14
+probes REQUIRE the restart; run nothing installed-plugin here. Marker phrases
+for next-session channel verification: shared "counts as never run", qm "never
+an open wait", captain "cheapest tier sufficient to observe". The shipped
+wording (identical to the draft below, A2 chosen for item 3): turn discipline
+homed in Hand-off custody after the report-travels paragraph; census-to-dispatch
+homed in QM step 4 around the kept sentence "Spend the watch once its red list
+is dispatched" (the shared Watchbill policy already said "one enumeration
+sweep" - one voice held); tier economy homed ONCE in the Captain fast-path
+bullet (Shipwright's existing "per the Captain skill" reference carries it; no
+second home, per the 0.13.13 exceptional-double lesson).
+
+The as-drafted package (kept for history; homes verified against 49942d9 text):
 1. Turn discipline (shared Articles, home: Role transitions, next to the
    role-hand-off/final-report paragraph at ~line 334): "A role's turn ends only in
    its final report. A role never ends its turn waiting - not on a background
@@ -61,28 +75,35 @@ NEXT SESSION (restart-ready queue, in order):
    leg to the session model at its first nested-child resumption, so the
    session model IS the probe tier. Void any leg that escalated above its
    intended tier (mine the model split per leg).
-1. Bootstrap per AGENTS.md; deck check; if 0.13.14 not yet shipped, ship it on
-   dk's recorded word first (wording above), tests green, push, install, and note
-   the session-snapshot rule (this session's subagents would still be 0.13.13 -
-   0.13.14 legs need the restart that follows the install).
-2. Channel-verify with a 0.13.14 marker phrase from the actual diff (candidates
-   once written: "counts as never run", "never an open wait").
-3. Run the efficiency battery per probes.md: five pre-approved probes (tw1-tw5
-   via bin/probe-states.sh), fast-path-bootstrap (verbatim quayline intent, tw12
-   dispatch), slow-census (NEW - build state per its spec: tw1 + slow-tide
-   scenario, ~150s step sleep). All legs sonnet-pinned in a sonnet session (dk's
-   model-discipline word above); optionally a haiku arm on the Boatswain custody
-   probe where the haiku baseline exists (14-16 inv / 1.4-2.2m). Mine everything
-   incl. model split, compare inv/wall per leg vs wave-3/4 baselines, classify,
-   record in METRICS.md.
-4. Pilot #2 only after 3 is green AND efficient, on dk's word. Tree preserved at
-   /tmp/claude-1000/-home-exedev-shipshape-shakedown/ff4765a5-b99a-4909-98bb-bacd27792124/scratchpad/todopilot2
-   (commits c529b99 + 98f5f7c; uncommitted Captain specs + QM verification
-   support; 32 honest reds). Fresh QM re-derives from durable artifacts by
-   design, so resume-from-tree is legal and cheap - but dk decides
-   resume-vs-clean-rerun then, not now. Fallback if the tree is gone (VM
-   reboot): re-scaffold + re-run the Captain leg with the pilot dispatch +
-   stop-line (~14m; leg-1/2 numbers already recorded stand as spent pilot cost).
+1. Bootstrap per AGENTS.md; deck check: expect ~/shipshape clean at 670f3ab,
+   installed 0.13.14 (SHIPPED this session - nothing to ship).
+2. Channel-verify with a 0.13.14 marker phrase on the first leg: shared "counts
+   as never run", qm "never an open wait", captain "cheapest tier sufficient to
+   observe".
+3. Run the efficiency battery per probes.md: five pre-approved probes (tw1-tw5),
+   fast-path-bootstrap (verbatim quayline intent, tw12 dispatch), slow-census
+   (tw13 - now BUILT INTO bin/probe-states.sh and smoke-proven this session:
+   whole builder green, tw13 slow scenario 2m30s > the ~2m foreground cap by
+   design; the build costs +150s for the honest slow-scenario verify). All legs
+   sonnet-pinned in a sonnet session (dk's model-discipline word above);
+   optionally a haiku arm on the Boatswain custody probe where the haiku
+   baseline exists (14-16 inv / 1.4-2.2m). Mine everything incl. model split,
+   compare inv/wall per leg vs wave-3/4 baselines, classify, record in
+   METRICS.md. Priority order if trimming: slow-census FIRST (it is the
+   regression probe for the exact error), then boatswain-notes-arms + fast-path
+   (the 0.13.13-validated seams re-checked under 0.13.14 text), then the rest.
+4. Pilot #2 attempt 2, CLEAN RERUN, same session once 3 is green and efficient -
+   dk's standing word (2026-07-13 evening: "get to where you are confident to
+   start a new session with sonnet and try pilot again"); still confirm cost in
+   ONE line at pilot start per the command. Clean rerun, NOT resume: 0.13.14's
+   tier rule changed the doctrine under the old tree - todopilot2's RIGGING
+   embodies the pre-fix Playwright choice, so resuming would neither validate
+   the fix nor give clean accounting. Procedure per scenarios/pilot.md
+   (operator-driven) with the exact dispatch texts in prompts/pilot-dispatches.md;
+   oracle quarantine absolute; emphasis unchanged (invocation + latency vs pilot
+   #1: 517 inv / 4h31m / 13x-bare target 2-3x; attempt-1's 84 spent inv reported
+   alongside, not folded in). Attempt-1 tree left at the old scratchpad path as
+   forensic evidence only.
 
 ## 2026-07-13 pilot #2 PAUSED at leg 2 (QM): stalled without dispatching Crew - HIGH finding, dk's word to pause and record
 

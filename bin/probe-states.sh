@@ -61,7 +61,29 @@ for i in 3 4; do
   echo "tw$i green, hash=$H, operator runs in runs.log: $(wc -l < "$TARGET/.instrument/tidewatch$i/runs.log")"
 done
 
+# tidewatch13 slow-census (0.13.14 regression probe, scenarios/probes.md): tw1's
+# fitted state + 3 undefined-red low-tide scenarios on ONE seam, PLUS one green
+# @logic-tier scenario whose settling step sleeps 150s, so the tier's broad sweep
+# exceeds the runtime's ~2m foreground cap (the pilot-#2 trigger). Watchbill is a
+# TIER TAG, not scenario refs: the enumeration sweep is the probe's subject.
+"$HERE/bin/scaffold.sh" "$TARGET/tidewatch13"
+cp "$FX/RIGGING.md" "$FX/AGENTS.md" "$FX/README.md" "$TARGET/tidewatch13/"
+cp "$FX/rgignore" "$TARGET/tidewatch13/.rgignore"
+cp "$FX/tide-fitted.js" "$TARGET/tidewatch13/src/tide.js"
+echo 'runrecord.jsonl' >> "$TARGET/tidewatch13/.gitignore"
+cp "$FX/slow-tide.feature" "$TARGET/tidewatch13/features/slow-tide.feature"
+cp "$FX/slow_steps.js" "$TARGET/tidewatch13/features/support/slow_steps.js"
+git -C "$TARGET/tidewatch13" add -A
+git -C "$TARGET/tidewatch13" commit -qm "Fit out for Shipshape: rigging, agent instructions, search exclusion, planked seam, gauge settling"
+cp "$FX/low-tides.feature" "$TARGET/tidewatch13/features/low-tides.feature"
+cp "$FX/watchbill-logic.json" "$TARGET/tidewatch13/watchbill.json"
+cd "$TARGET/tidewatch13"
+T0=$(date +%s)
+npx cucumber-js features/slow-tide.feature --tags "not @captain and not @shipwright" >/dev/null 2>&1 || { echo "tw13 SLOW SCENARIO NOT GREEN"; exit 1; }
+T1=$(date +%s)
+echo "tw13 slow scenario green in $((T1-T0))s (broad sweep will exceed the ~120s foreground cap: sleep 150s + suite)"
+
 echo "=== dispatch bases (skip runs.log prefix per tree when mining: tw3=2 tw4=2) ==="
-for i in 1 2 3 4 5 6; do
+for i in 1 2 3 4 5 6 13; do
   echo "tw$i base=$(git -C "$TARGET/tidewatch$i" rev-parse --short HEAD) dirty=[$(git -C "$TARGET/tidewatch$i" status --porcelain | tr '\n' ' ')]"
 done
