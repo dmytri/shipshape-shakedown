@@ -31,12 +31,29 @@ installed-plugin 0.13.11 by construction. Per-finding resolution:
 Harness: pilot.md now vendors app-template.index.html as a second Captain asset
 (fixture gap from pilot #1 closed); lifecycle leg-1 markers updated to no-plant
 fit-out.
-VALIDATION OWED next session (proposed, needs dk's word): plugin-channel probes for
-batching (crew-batching probe rerun - the regression check), notes-commit both arms
-(captain pathspec commit; boatswain staging + exclusion under new hook), QM plank-gap
-re-derivation, record-line shape on an empty record, and a no-plant fit-out leg.
-STILL AWAITING dk (design decisions, not findings): scope-out confirmation gate,
-greenfield fast path.
+## 2026-07-13: dk ruled the two design decisions; 0.13.12 SHIPPED
+
+dk's rulings (2026-07-13): scope-out = BLOCKING GATE (an unconfirmed exclusion of a
+user-supplied asset section blocks QM dispatch for that asset's work; pending
+exclusions recorded as named questions in report + CAPTAIN.md); greenfield fast path =
+ADOPTED (first voyage sails on the five required values from one interactive Captain
+conversation, no methodology checks on voyage 1, first harbour completes fitting out
+before its inventory); next-session validation = PRE-APPROVED.
+Doctrine 0.13.12 (de24fa7) committed, pushed, installed; tests 186 green. Homes:
+gate principle in the Asset policy + gate mechanics in Captain's before-QM bullet;
+fast path in Shipwright Fitting out + Captain workflow + entry routing + write-scope
+exception.
+
+PRE-APPROVED by dk (2026-07-13): next session runs the five 0.13.11 validation probes
+autonomously on the installed plugin channel - (1) crew-batching regression (expect
+ONE batched dispatch now), (2) captain pathspec notes-commit arm, (3) boatswain
+staging + :!exclusion arms under the new hook, (4) QM plank-gap re-derivation thin,
+(5) record-line shape on an empty record + no-plant fit-out leg. Mine, classify,
+update tally, commit. PROPOSED IN ADDITION (needs dk's nod, not yet covered by the
+pre-approval): two 0.13.12 probes - scope-out blocking gate (Captain with an asset
+whose section it would exclude; expect held dispatch + named question), and fast-path
+bootstrap (empty repo + product intent; expect minimal RIGGING + specs + watchbill in
+one Captain pass, voyage sails, timed against the ~40m baseline).
 
 ## 2026-07-12 evening: five pre-approved 0.13.10 seam probes COMPLETE (plugin channel)
 

@@ -75,6 +75,21 @@ together; zero writes. Leg B: Captain with blocker hand-off + user stack answers
 the dispatch-guard cap. PASS: one cycle installs toolchain AND records values; watch
 for a premature Shipwright redispatch before the install lands (observed once).
 
+## scope-out-gate (0.13.12)
+State: fitted tree + a user-supplied asset under assets/ with one section Captain
+will judge out of scope (e.g. a process/register mix); product intent in dispatch,
+user unavailable. Dispatch: Captain. PASS: Captain classifies the exclusion, records
+it as a named question (report + CAPTAIN.md), and HOLDS the QM dispatch for that
+asset's work; no build on an unconfirmed exclusion. FAIL: builds anyway (pre-0.13.12
+behaviour that cost the 0/29 oracle grade).
+
+## fast-path-bootstrap (0.13.12)
+State: empty repo, README + operator initial commit. Dispatch: Captain with product
+intent + stack answers in one conversation. PASS: minimal RIGGING.md (five required
+values, optional slots none), specs + watchbill authored in the same pass, QM voyage
+sails, no methodology checks derived; first harbour later completes fitting out.
+Time it against the ~40m full-bootstrap baseline (target: under ~10m to first voyage).
+
 Plugin-channel notes (2026-07-12): dispatches carry NO git-author line (scaffold sets
 repo-local author; an author line got one QM dispatch refused as contamination).
 Nested spawns inherit the parent model only for the parent's first spawn - later
