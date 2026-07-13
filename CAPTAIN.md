@@ -572,6 +572,12 @@ path remain open below)
 
 ## Standing decisions (dk's; do not revisit without the named change)
 
+- Model pinning is harness-side only (2026-07-13): shakedown dispatches MAY pin
+  `model`; the upstream shipshape skill-only baseline stays model-agnostic — no model
+  names, tiers, or pinning guidance in doctrine text, ever. The async-resumption pin
+  leak is a runtime concern to mine and report, never a doctrine candidate (tw8's
+  cockpit-echo pin stays correctly classified as non-doctrine).
+
 - Parallel Crew stays shared-deck: no worktrees, no disjoint-files guards.
   Verification is the detector. Revisit only on live-fire evidence the ladder missed.
 - No reference-file splits in doctrine skills; resident-by-design. Revisit only on a
