@@ -16,10 +16,16 @@ nothing else (no notes, no fixtures, no scratch).
 1. **Ship first.** Doctrine changes under test must be committed, pushed, and
    installed: `yes | npx plugins add dmytri/shipshape`. Bump `.plugin/plugin.json`
    version for ANY doctrine change. Run all `tests/*.sh` (must be green) before push.
-2. **Know your text channel.** Plugin resolution is snapshotted at session start:
-   installed `shipshape:*` agents in a session predating the install run OLD text.
-   Same session -> HEAD-text mode (generic agents + prompts/preamble.md).
-   After a restart -> installed-plugin mode validates the plugin channel itself.
+2. **Know your text channel.** Plugin resolution is snapshotted at PROCESS start,
+   not conversation start: /clear does NOT re-snapshot, so a long-lived Claude Code
+   process serves stale `shipshape:*` text and hooks no matter what
+   installed_plugins.json says (2026-07-13: two whole waves ran ~0.13.8 text
+   undetected). Never trust timestamps; verify empirically: after dispatching the
+   first installed-plugin leg, grep its transcript for a marker phrase unique to the
+   version under test (pick one from the newest doctrine diff, e.g. `git -C
+   ~/shipshape diff <prev>..<cur> -- skills | grep '^+'`). Zero hits = stale
+   snapshot = this session can only run HEAD-text mode (generic agents +
+   prompts/preamble.md); the installed-plugin validation waits for a real restart.
 3. **Scaffold**: `bin/scaffold.sh /tmp/<scratch>/tidewatchN` (never inside a real
    repo; keep sim trees in the session scratchpad).
 4. **Run legs** per scenarios/lifecycle.md, or scenarios/probes.md for single-rule

@@ -16,7 +16,17 @@ anything you think you know about Shipshape:
 
 Project root: {PROJECT} - work only inside it; never modify anything under
 /home/exedev/shipshape. Use git author "Sim Operator <sim@example.test>" for any commit.
+
+When you dispatch or load another Shipshape role, spawn a general-purpose subagent
+(never a shipshape:* agent type; those are stale in this runtime) and start its
+prompt with this same preamble form, substituting that role and its skill path,
+followed by your dispatch per the Dispatch contract.
 ```
+
+(The nested-spawn paragraph is mandatory in a stale-snapshot session and validated
+2026-07-13: both wave-2 QMs composed correct preamble'd general-purpose dispatches.
+Drop the git-author sentence per the rule below; scaffold.sh sets the repo-local
+author.)
 
 Rules learned live:
 

@@ -1,5 +1,65 @@
 # Captain notes - shipshape-shakedown workstream
 
+## 2026-07-13 afternoon: pre-approved 0.13.11 probes ran TWICE; channel-integrity finding (HIGH)
+
+1. HIGH channel-integrity finding (harness + process): the plugin snapshot is
+   PROCESS-level and /clear does not refresh it. This conversation's Claude Code
+   process dates from Jul 12 12:42, so wave 1's `shipshape:*` agents silently loaded
+   ~0.13.8/9 text AND hooks despite 0.13.12 installed on disk (proof: 0.13.10 and
+   0.13.11 marker phrases absent from every loaded skill text; live hook behaviour
+   matched the old hook exactly, incl. denying `git add CAPTAIN.md`, which the
+   0.13.12 hook allows by synthetic replay). RE-DATING of prior evidence: yesterday
+   evening's "0.13.10 seam probes" ALSO ran this stale snapshot - batching MISS x2
+   happened with NO batching arm in context (not a weak-MAY observation); supersede
+   MISS x2 happened with a tag table offering only promote/discard (supersede entered
+   the table in 0.13.10), so that miss is explained and the 0.13.11 supersede
+   preference is genuinely untested; the "0.13.9 strike arm FULL PASS" was
+   model-native (corroboration wording absent from all 12 Boatswain legs) and wave
+   1's stale Boatswain MISSED the same strike, so the arm's first real firing is wave
+   2's (text present, fired correctly). The hooks-vs-text misalignment findings stand
+   (hooks really were old). Harness fixes shipped in THIS repo: AGENTS.md channel
+   rule (mandatory marker-phrase verification; timestamps lie), probes.md channel
+   note, preamble.md nested-spawn paragraph (validated live).
+2. Wave 2 = the five pre-approved 0.13.11 validation probes on 0.13.12 TEXT
+   (HEAD-text mode; identical reconstructed states, deck hashes byte-equal to wave
+   1's): ALL FIVE PASS. (1) batching: ONE batched Crew dispatch carrying all 3
+   refs+evidence, batched red census, commit 15b2f65; (2) Captain composed
+   `git commit -m <msg> -- CAPTAIN.md` first try, notes-only commit 75833ab, 73s leg;
+   (3) Boatswain: `:!CAPTAIN.md` deck diff, `git add -- CAPTAIN.md` content-blind,
+   row-1 inherit zero runs, record-corroboration strike, commit 2dd9382; (4) QM
+   re-derived the unplanked-seam foul itself per the 0.13.11 clause (one fewer leg
+   than wave 1's nested-custody route), commit c930df1; (5) run-record lines
+   canonical x4 incl. empty-record appends (the example line binds where key lists
+   did not), and fit-out with ZERO plants, 3 skeletons + 5-rule conformance
+   scantling, tree uncommitted, 26 inv vs 40 stale. Validation is TEXT-layer; the
+   0.13.12 hook layer is synthetically ground-truthed; the integrated plugin-channel
+   re-run is owed after a REAL process restart (states rebuild scriptably via
+   scratchpad/build-wave2.sh pattern).
+3. Economics on like-for-like states (dk's lens quantified): stale/incoherent wave 1
+   = 11 legs, 180 inv, 4 hook denials, 1 doomed dispatch + SendMessage resume, 2/5
+   failed outcomes. Coherent wave 2 = 9 legs, 115 inv (-36%), zero mistake/fix
+   cycles, 5/5 outcomes landed. Coherence, not token thrift, was the whole lever.
+4. NEW findings routed to dk, none shipped: (a) hook gap - `git -C <root> add --
+   CAPTAIN.md` denied (strip patterns cover only bare `git add` forms); (b) hook gap -
+   any prose mention of CAPTAIN.md in a compound command denied, incl. echo section
+   labels that wave 2's textbook Boatswain naturally composed, so the best-behaved
+   agent eats a spurious denial on the plugin channel; (c) commit-custody denial
+   message leads with "Boatswain holds local commit custody" and steered wave 1's
+   Captain into the doomed Boatswain route - put the pathspec form first; (d)
+   record-append economy seam: both wave-2 QMs re-ran Crew-proven greens solely to
+   append record lines (4 redundant runs) - either a Crew hand-off green is
+   recordable or the re-proof is the record's standing price; (e) model-tier leak
+   unchanged in HEAD-text mode (first spawn inherits, later spawns fall to session
+   model) - dk owns tiering.
+5. dk directive recorded (mid-run, 2026-07-13): outcome quality > latency measured in
+   invocations and mistake/fix cycles > raw token volume. More-tokens-less-often for
+   the same quality is a win. Folded into the METRICS audit lens.
+6. Owed next session (after a real restart): integrated plugin-channel re-run of the
+   five probes (wave-2 verdicts predict PASS; hook-shape gaps (a)/(b) may bite the
+   Boatswain leg there - that is the point); supersede probe against text that
+   actually lists it; the two 0.13.12 probes (scope-out gate, fast-path bootstrap)
+   still await dk's nod.
+
 ## 2026-07-13: 0.13.11 SHIPPED on dk's word ("resolve all findings")
 
 Doctrine 0.13.11 (26ca239) committed, pushed, installed (tests 186 green incl. 9 new

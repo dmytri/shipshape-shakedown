@@ -95,3 +95,13 @@ repo-local author; an author line got one QM dispatch refused as contamination).
 Nested spawns inherit the parent model only for the parent's first spawn - later
 spawns fall to the session model unless the parent pins `model`; mine per leg and
 report the split.
+
+Channel verification (2026-07-13, mandatory): the plugin snapshot is process-level
+and survives /clear. Marker-grep every installed-plugin leg's transcript for a
+phrase unique to the doctrine version under test BEFORE judging the leg; a wave
+without a positive marker check is channel-unverified. Two waves (2026-07-12
+evening "0.13.10 seam probes", 2026-07-13 wave 1) ran ~0.13.8 text undetected and
+had to be re-dated. HEAD-text mode is immune (explicit skill paths at HEAD); in
+HEAD-text mode instruct role agents to spawn nested roles as general-purpose
+subagents with the same preamble, never shipshape:* types (stale in a stale
+session).
