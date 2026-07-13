@@ -12,7 +12,7 @@ cd "$TARGET"
 mkdir -p logs
 npm install --save-dev @cucumber/cucumber >/dev/null 2>&1
 npx cucumber-js >/dev/null 2>&1 || { echo "FIXTURE NOT GREEN"; npx cucumber-js | tail -5; exit 1; }
-rm -f logs/runs.log
+rm -rf "$(dirname "$(pwd)")/.instrument/$(basename "$(pwd)")"
 git init -q
 git config user.name "Sim Operator"
 git config user.email "sim@example.test"

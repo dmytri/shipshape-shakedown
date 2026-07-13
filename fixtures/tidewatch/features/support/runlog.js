@@ -3,7 +3,8 @@ const fs = require("fs");
 const path = require("path");
 
 BeforeAll(function () {
-  const dir = path.join(__dirname, "..", "..", "logs");
+  const root = path.resolve(__dirname, "..", "..");
+  const dir = path.join(path.dirname(root), ".instrument", path.basename(root));
   fs.mkdirSync(dir, { recursive: true });
   fs.appendFileSync(
     path.join(dir, "runs.log"),

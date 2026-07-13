@@ -15,6 +15,11 @@ Token cost ~= cache_read x invocations. Latency lever == token lever == fewer ro
 The runlog BeforeAll hook logs every EXECUTING cucumber run (dry-runs excluded - they
 run no hooks). Duplicates of the same argv with no intervening tree change = redundancy.
 Attribute phases by line ranges (record the count between legs).
+Fixture v2 (2026-07-13): the log sinks out-of-tree at `<parent>/.instrument/<tree>/runs.log`
+(roles wiped in-tree logs/ as scratch in wave 3); bin/runs.sh reads the sink first and
+falls back to logs/runs.log for pre-v2 trees. The fixture runrecord homes at the project
+root (`runrecord.jsonl`, gitignored), not in logs/. Uninstrumented states (fast-path
+empty repos) count runs by transcript grep instead.
 
 ## Baselines (2026-07-12, sonnet, tidewatch fixture, doctrine 0.13.x)
 
@@ -245,21 +250,73 @@ remains unobserved live, diagnosis upgraded from "arm may not bind" to
 "invitations were structurally wrong." Leg: 16 inv / 797k / 8.5k / 3m0s, boundary
 held, zero spawns (stop-after-review honoured).
 
+## 0.13.13 spot-validation + fixture v2 ("wave 4", 2026-07-13 post-restart, sonnet top legs pinned)
+
+First live firing of 0.13.13 (49942d9) text AND hooks. Session postdates the 13:49 UTC
+install by construction (process start 13:57); channel verified empirically on EVERY
+leg per the AGENTS.md rule — role marker phrases positive in all 9 transcripts
+(boatswain "not access and pass", captain "let the tree answer", shared table marker),
+all skills resolved from the 49942d9fadbc cache dir.
+
+Fixture v2 baseline: probe states rebuild green in ~19s and deck hashes reproduce
+byte-exactly across independent builds — tw3 `22c21b4b`, tw4 `35ff6754` (replaces the
+pre-v2 pair 13d9a2e/a545663, unreproducible from v2 fixtures by design). Sinks live:
+tw3/tw4 operator prefix = 2 runs each in `.instrument/`.
+
+| Probe | State | Verdict |
+|---|---|---|
+| boatswain notes arms (0.13.13 seams 1-2) | tw3 v2 | PASS all arms: `:!CAPTAIN.md` diff, content-blind staging, row-1 inherit on the ROOT runrecord (0 reruns), corroboration strike, commit d0832cc, clean close. ONE denial, NEW shape: multi-path `git add -- <role-files> CAPTAIN.md` batch (plus `git rm` in the compound) — strict-conformant per "exactly these two forms", self-healed in 1 retry to the exact form. Wave-3 misfire shapes (echo label, commit-msg prose, stat) did not naturally recur; ship-time 4/4 payload replay remains their ground truth |
+| fast-path bootstrap, 3rd like-for-like (0.13.13 seams 4-5) | tw12 | FULL PASS, clean channel: verbatim tw8/tw9 quayline intent + boundary line. Minimal-RIGGING letter BINDS (required values populated, every optional slot literally `none`, no wrapper scripts, no methodology checks — every tw9 miss clean); report-contract fidelity live (Captain drove its own binary pre-report; operator re-drive reproduces every reported example, band edges 8->18/12->18 inclusive, tw9's $NaN mode closed). Empty-repo to specs+watchbill+QM-dispatched 7m24s (tw8 7m51s tainted, tw9 8m14s; target <10m — 3rd consecutive), clean deck 29m51s across TWO voyages (Captain split domain/CLI seams; tw8/tw9 sailed one) — 3 commits + pathspec notes baa3172, watchbill absent at rest, zero denials, zero cockpit reads |
+| captain-disposal, sharpened supersede invitation | tw11 | PASS — SUPERSEDE CHOSEN LIVE, first observation in 4 designed invitations. Finding placed INSIDE the exercised behaviour per the tw10 design rule (ordering-independence of the already-asserted 3.8). Captain quoted the preference rule, rewrote the existing scenario as a 2-row Scenario Outline (committed/shuffled, both pin 3.8), deleted the skeleton, authored watchbill for the now-undefined outline, CAPTAIN.md rationale, ZERO production edits, ZERO executing runs (tree-verified by dry-run — the cheap shape of report fidelity), zero spawns. The tw10 diagnosis ("invitations were structurally wrong") is confirmed |
+
+Leg accounting (9 legs, all mined): 162 inv / 8.23M cache / 116k out / 30m25s wave wall
+(parallel front). Leg A Boatswain 25/1.30M/9.3k/3m39s (wave-3 same probe: 30/1.59M).
+tw11 Captain 23/1.26M/18.8k/4m26s (tw10: 16/797k — tw11 did the full supersede edit).
+tw12 chain 114/5.67M/88k: Captain 40/2.66M/29m51s, QM1 20/862k, Crew1 14/719k, Btsn1
+8/281k (100% density, zero-rerun inherit), QM2 13/486k, Crew2 12/435k, Btsn2 7/232k.
+Executing runs: tw12 chain 13 by transcript count (QM1 3, Crew1 2, QM2 6, Crew2 2,
+Boatswains 0 — both inherited); tw3 0 beyond operator prefix; tw11 0 (dry-run only).
+P/N/Neg ≈ 144/16/2 (~89% positive). Redundant confirmation runs: ZERO — with
+`runrecord: none` (fast path) the record-append seam never triggers; evidence for the
+open ruling.
+
+Model-pin finding (harness, sharpened — mechanism nailed): an explicit `model: sonnet`
+pin holds only until the leg's first ASYNC-CHILD RESUMPTION; the continuation falls to
+the session model (fable), and children spawned after the fall inherit it. Timeline
+proof: tw12 Captain sonnet 14:41:04 -> fable 14:58:25 (QM1 completed 14:57:17); QM1
+sonnet 14:48:30 -> fable 14:52:26 (Crew1 completed 14:52:08); whole cycle 2 all-fable.
+Subsumes the "later spawns fall" observation (6th+ instance). Legs pinned WITHOUT
+nested spawns held sonnet end-to-end (Leg A, tw11).
+
+Findings routed to dk, none shipped: (a) LOW hook shape — bless multi-path content-blind
+staging (`git add -- <paths...> CAPTAIN.md`) or keep the denial as the standing price of
+"exactly these two forms"; the best-behaved batching agent pays 1 cycle. (b) LOW wording
+— the minimal-RIGGING letter binds so hard it `none`s out USER-STATED stack values
+(Node 20 + npm went to `none`; Captain parked them in notes and flagged the sandbox's
+Node 24 honestly). Should user-named values populate their slots at bootstrap?
+(c) economy observation — identical intent sailed as 2 QM cycles/9 scenarios (tw12) vs
+1 cycle/7 (tw8/tw9): coherent seam split, +~25 inv; voyage-scoping guidance is a
+possible lever, not a defect. (d) unpinned CLI edge found by driving the binary:
+no-args -> `NaN`, exit 0 — voyage-1-legal, first-harbour item. (e) harness note: v2's
+out-of-tree sink is visible in runlog.js source; Leg A's Boatswain `ls`ed the parent
+scratch dir once after reading it (read-only, sibling names only, cockpit untouched
+9/9 legs).
+
 ## Class tally (impact frequency; update every shakedown)
 
 | Class | Instances | P | N | Neg | Worthiness |
 |---|---|---|---|---|---|
-| skill/rigging reads (opening) | 148 | 148 | 0 | 0 | 100 (+32 wave 3, 2 Skill loads x 16 legs; resident-by-design holds on the live plugin channel) |
-| deck retrieval + context reads | ~325 | ~307 | ~18 | 0 | ~94 (wave-3 N: duplicate status/usage-json/grep re-runs, post-edit re-reads, tw2's tracked-check cluster) |
-| owed verification runs | 89 | 84 | 5 | 0 | 94 (+22 wave 3, all consumed incl. tw6's 4-run window + standalone cold-cache proof; the 3 QM record re-proofs sit in the row below) |
-| redundant confirmation runs | 7 | 0 | 7 | 0 | 0 (+3 wave 3: QMs re-running Crew-proven greens in own hands — tw1 batched (ONE rerun where wave-2 paid 3 solos: batching shrinks this seam's price), tw4, tw8; the record-append economy seam stands routed) |
-| polls/waits | 24 | 0 | 24 | 0 | 0 (+13 wave 3: sleep-1 + empty continuations around nested spawns, ~2 per spawn; structural to async Agent spawns, not role discipline) |
-| evidence ops (run record, deck-state hash) | 50 | 49 | 1 | 0 | 98 (+12 wave 3: hash computes x5, record append ops x3 (6 canonical lines incl. 4 on an empty record), row-1 inherits/corroborations x4 incl. tw6-Btsn's python record-vs-watchbill join; all consumed) |
-| staging/commit/report | 59 | 55 | 6 | 3 | 88 (+14 wave 3: 7 commits — pathspec notes x2, custody x5 — all landed; N+1: tw8-Btsn commit retry after gap-(b) denial) |
+| skill/rigging reads (opening) | 166 | 166 | 0 | 0 | 100 (+18 wave 4, 2 Skill loads x 9 legs; holds at 0.13.13) |
+| deck retrieval + context reads | ~385 | ~361 | ~24 | 0 | ~94 (wave-4 N: parent-dir ls after reading the v2 sink path in runlog.js, post-edit re-reads; steady) |
+| owed verification runs | 102 | 97 | 5 | 0 | 95 (+13 wave 4, all consumed: QM red censuses, Crew local greens, QM terminal greens; both tw12 Boatswains inherited with ZERO reruns) |
+| redundant confirmation runs | 7 | 0 | 7 | 0 | 0 (+0 wave 4 — fast path runs `runrecord: none`, so the record-append trigger never fires; direct evidence for the open seam ruling) |
+| polls/waits | 32 | 0 | 32 | 0 | 0 (+8 wave 4, ~2-4 per async nested spawn; structural, unchanged) |
+| evidence ops (run record, deck-state hash) | 56 | 55 | 1 | 0 | 98 (+6 wave 4: Leg A hash + record corroboration + strike; tw11 dry-run tree-verification; tw12 Captain binary drives x2 — the two cheap report-fidelity shapes both consumed) |
+| staging/commit/report | 71 | 66 | 7 | 3 | 87 (+12 wave 4: 4 commits — custody d0832cc + product x2 + pathspec notes baa3172 — all landed; N+1: Leg A `git rm` retry on an untracked watchbill) |
 | mid-leg doctrine re-read | 3 | 3 | 0 | 0 | 100 (no new instances) |
-| contaminated/premature dispatches | 3 | 0 | 0 | 3 | 0 (no new instances; all 16 wave-3 dispatches accepted) |
-| contamination refusals/guards | 12 | 7 | 1 | 4 | 25 (+4 wave 3: 1 CORRECT catch — tw8 Crew `cat CAPTAIN.md`, first live 0.13.12 hook catch; +2 gap-(b) misfires (echo label, commit-message prose); +1 strict-text-conformant deny of a benign `ls -la CAPTAIN.md` stat. Precision is the routed problem: 1 catch per 3 spurious cycles this wave) |
-| operator-cockpit reads (sim-boundary breach) | 4 | 0 | 0 | 4 | 0 (NEW, wave 3: tw8 Captain read harness AGENTS/CAPTAIN/METRICS + probes.md rubric + fixture RIGGING from the session cwd on an empty-repo state; harness-owned, dispatch boundary line shipped) |
+| contaminated/premature dispatches | 3 | 0 | 0 | 3 | 0 (no new instances; all 9 wave-4 dispatches accepted) |
+| contamination refusals/guards | 13 | 7 | 2 | 4 | 23 (+1 wave 4: strict-conformant deny of the NEW multi-path staging batch shape, self-healed in 1 retry; zero real catches to make this wave — 0.13.13 removed the three misfire shapes and none recurred) |
+| operator-cockpit reads (sim-boundary breach) | 4 | 0 | 0 | 4 | 0 (+0 wave 4: boundary line held 9/9 incl. a greenfield state — the proven exposure class re-tested clean) |
 
 Leg worth densities 0.13.8: Captain ~90%, QM 73%, wake-custody 82%.
 Probes 2026-07-12 (sonnet, plugin channel): fresh-custody 100%, hand-off strike 100%,

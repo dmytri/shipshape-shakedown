@@ -40,7 +40,7 @@ Procedure lives in the skills. Every role reads this on open.
 - sandbox: none
 - policy: @logic local, no credentials
 - weather: none
-- runrecord: logs/runrecord.jsonl
+- runrecord: runrecord.jsonl
 
 ## Dependencies
 

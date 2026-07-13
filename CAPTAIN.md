@@ -1,5 +1,52 @@
 # Captain notes - shipshape-shakedown workstream
 
+## 2026-07-13 wave 4: 0.13.13 validated live 3/3 + fixture v2 shipped; deck is pilot-ready
+
+dk's word: all three proposed items, "get to our best state so we can do an account
+run and pilot." Discharged in full; 9 legs, every one marker-verified on 0.13.13
+(49942d9 cache), zero cockpit reads (boundary 9/9 incl. a greenfield state), full
+numbers in METRICS "wave 4".
+
+1. Fixture v2 SHIPPED (harness-owned, pre-decided): runs.log/provisions.log sink
+   out-of-tree at `<parent>/.instrument/<tree>/`; runrecord homes at project root,
+   gitignored; runs.sh falls back for pre-v2 trees. States rebuild green ~19s; fresh
+   deck-hash baseline tw3=22c21b4b tw4=35ff6754 reproduces byte-exactly.
+2. 0.13.13 spot-validation 2/2 PASS: (a) Boatswain notes arms all conformant on the
+   root runrecord, zero reruns, ONE denial in a NEW shape — multi-path
+   `git add -- <files> CAPTAIN.md` batch, strict-conformant per "exactly these two
+   forms", self-healed 1 retry (the wave-3 misfire shapes never recurred naturally;
+   ship-time 4/4 replay stays their ground truth); (b) fast-path FULL PASS on the
+   verbatim quayline intent: minimal-RIGGING letter BINDS (every optional slot
+   literally none, no wrapper scripts — every tw9 miss clean), report-contract
+   fidelity live (Captain drove its binary pre-report; operator re-drive reproduces
+   every claim), 7m24s to specs+watchbill+QM (3rd consecutive <10m), clean deck
+   29m51s across two voyages, watchbill absent at rest.
+3. tw11 supersede: CHOSEN LIVE, first in 4 invitations — the tw10 design rule
+   (finding INSIDE the exercised behaviour) is validated. Scenario Outline supersede,
+   skeleton deleted, watchbill for the now-red outline, zero production edits, zero
+   executing runs (dry-run tree-verification: the cheap report-fidelity shape).
+4. Model-pin mechanism NAILED (harness, dk owns tiering): an explicit pin survives
+   only until the leg's first async-child resumption; the continuation falls to the
+   session model and later children inherit the fall. Timeline proof in METRICS.
+   Legs without nested spawns held their pin end-to-end.
+5. Findings routed, none shipped: multi-path staging bless-or-price call; letter
+   `none`s out user-stated stack values (Node 20/npm -> none, parked in notes) —
+   wording question; two-voyage scoping economy note (+~25 inv vs tw8/tw9's single
+   voyage, coherent seam split, not a defect); no-args -> NaN exit 0 CLI edge
+   (voyage-1-legal, first-harbour item); v2 sink visible in runlog.js drew one
+   read-only parent-dir ls.
+6. Invocation-economy assessment delivered on dk's ask (safe levers, decision-ready):
+   record-append ruling (hash-equality-guarded inherit; fast path's `runrecord: none`
+   ran ZERO redundant confirmations this wave — direct evidence), bless multi-path
+   content-blind staging, round-economy wording for Boatswain/QM (the 0.13.8 Captain
+   precedent), spawn-count reduction via batching (shipped), deliberate model-tiering
+   probe. Do-not-touch list: owed runs, opening reads, bulkheads.
+
+OPEN (unchanged, dk has not ruled): record-append seam. Deck state: 0.13.13 fully
+live-validated, fixtures v2, boundary discipline proven — PILOT-READY. Next: account
+run + pilot #2 on dk's word (pilot.md; oracle quarantine absolute), with the four
+economy rulings available to ship first if dk wants them in the pilot's doctrine.
+
 ## 2026-07-13 session close: 0.13.13 SHIPPED on dk's word ("ship all five"); restart-ready
 
 Doctrine 0.13.13 (49942d9) committed, pushed, installed 13:49 UTC; tests 194 green

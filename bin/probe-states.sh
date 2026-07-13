@@ -7,10 +7,16 @@
 #   tidewatch5 no-plant fit-out: bare scaffold
 #   tidewatch6 verification-boundary: fitted + planked station diff (one expensive
 #              creation seam, instrumented) + 4 undefined scenarios + watchbill
-# Self-contained from fixtures/probe-states (2026-07-13 wave states, deck hashes reproducible).
+# Self-contained from fixtures/probe-states. Fixture v2 (2026-07-13): runs.log and
+# provisions.log sink out-of-tree at <target>/.instrument/<tree>/; the runrecord
+# lives at the project root (gitignored), not in logs/ (roles wiped logs/ as scratch).
+# v2 deck hashes are the fresh METRICS baseline; pre-v2 hashes (13d9a2e/a545663) are
+# not reproducible from v2 fixtures by design.
 # Usage: probe-states.sh <target-dir>
 set -euo pipefail
 TARGET="${1:?usage: probe-states.sh <target-dir>}"
+mkdir -p "$TARGET"
+TARGET="$(cd "$TARGET" && pwd)"
 HERE="$(cd "$(dirname "$0")/.." && pwd)"
 FX="$HERE/fixtures/probe-states"
 
@@ -20,6 +26,7 @@ for i in 1 2 3 4 6; do
   cp "$FX/RIGGING.md" "$FX/AGENTS.md" "$FX/README.md" "$TARGET/tidewatch$i/"
   cp "$FX/rgignore" "$TARGET/tidewatch$i/.rgignore"
   cp "$FX/tide-fitted.js" "$TARGET/tidewatch$i/src/tide.js"
+  echo 'runrecord.jsonl' >> "$TARGET/tidewatch$i/.gitignore"
 done
 for i in 2 3; do cp "$FX/CAPTAIN.md" "$TARGET/tidewatch$i/CAPTAIN.md"; done
 for i in 1 2 3 4 6; do
@@ -50,9 +57,8 @@ for i in 3 4; do
   npx cucumber-js features/tide-range.feature --name "^Daily tide range is computed$" --tags "not @captain and not @shipwright" >/dev/null 2>&1 || { echo "tw$i NOT GREEN"; exit 1; }
   npx cucumber-js --tags "not @captain and not @shipwright" >/dev/null 2>&1 || { echo "tw$i SUITE NOT GREEN"; exit 1; }
   H=$(GIT_INDEX_FILE="$(mktemp)" bash -c 'git read-tree HEAD && git add -A . && git write-tree')
-  mkdir -p logs
-  jq -cn --arg h "$H" '{"targets":["features/tide-range.feature:Daily tide range is computed"],"command":"npx cucumber-js features/tide-range.feature --name \"^Daily tide range is computed$\" --tags \"not @captain and not @shipwright\"","result":"pass","hash":$h}' >> logs/runrecord.jsonl
-  echo "tw$i green, hash=$H, operator runs in runs.log: $(wc -l < logs/runs.log)"
+  jq -cn --arg h "$H" '{"targets":["features/tide-range.feature:Daily tide range is computed"],"command":"npx cucumber-js features/tide-range.feature --name \"^Daily tide range is computed$\" --tags \"not @captain and not @shipwright\"","result":"pass","hash":$h}' >> runrecord.jsonl
+  echo "tw$i green, hash=$H, operator runs in runs.log: $(wc -l < "$TARGET/.instrument/tidewatch$i/runs.log")"
 done
 
 echo "=== dispatch bases (skip runs.log prefix per tree when mining: tw3=2 tw4=2) ==="

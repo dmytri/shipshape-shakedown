@@ -59,12 +59,15 @@ evidence, Crew ACCEPTS the plank-only target, custody commits.
 State: harbour tree + uncommitted @captain skeleton documenting a defect an existing
 scenario should pin; Shipwright hand-off + user intent in dispatch. Dispatch: Captain
 harbour review. Judge the disposal shape: promote / promote-with-correction / discard /
-supersede. Supersede has never been chosen live (3 designed invitations). DESIGN RULE
-(2026-07-13 tw10): the skeleton's finding must land INSIDE the existing scenario's
-exercised behaviour (ordering-independence, precision, an additional assertable
-property of the already-asserted value) — a missing-CASE defect anchored to the same
-seam and data is structurally a promote (new scenario), and the 0.13.11-text Captain
-correctly engaged supersede and ruled it out on exactly that ground.
+supersede. DESIGN RULE (2026-07-13 tw10): the skeleton's finding must land INSIDE the
+existing scenario's exercised behaviour (ordering-independence, precision, an
+additional assertable property of the already-asserted value) — a missing-CASE defect
+anchored to the same seam and data is structurally a promote (new scenario), and the
+0.13.11-text Captain correctly engaged supersede and ruled it out on exactly that
+ground. RULE VALIDATED (2026-07-13 tw11, 0.13.13): an ordering-independence skeleton
+on the already-asserted value produced the first live supersede in 4 invitations —
+existing scenario rewritten as a 2-row Scenario Outline, skeleton deleted, watchbill
+authored for the now-undefined outline, zero production edits, zero executing runs.
 
 ## harbour-gate (0.13.10)
 State: complete inventory, small uncommitted harbour output, product intent in the
@@ -81,9 +84,11 @@ for a premature Shipwright redispatch before the install lands (observed once).
 
 ## verification-boundary (2026-07-13, dk)
 State: fitted tree + work-in-flight production diff adding src/station.js (planked):
-`provisionStation` is the ONE expensive creation seam, instrumented (appends
-logs/provisions.log, ~1.5s busy-wait); `stationReport`/`lowWaterAlert` consume a
-provisioned station; `openDashboard(stationProvider)` is composition-only. Four
+`provisionStation` is the ONE expensive creation seam, instrumented (appends the
+out-of-tree sink `<parent>/.instrument/<tree>/provisions.log` since fixture v2 -
+roles wiped in-tree logs/ as scratch; ~1.5s busy-wait); `stationReport`/
+`lowWaterAlert` consume a provisioned station; `openDashboard(stationProvider)` is
+composition-only. Four
 scenarios in features/station.feature (steps undefined; QM authors verification) +
 watchbill. Build with bin/probe-states.sh (tidewatch6). Dispatch: QM thin.
 PASS markers, all objective (join provisions.log timestamps against runs.log runs):
@@ -113,6 +118,11 @@ intent + stack answers in one conversation. PASS: minimal RIGGING.md (five requi
 values, optional slots none), specs + watchbill authored in the same pass, QM voyage
 sails, no methodology checks derived; first harbour later completes fitting out.
 Time it against the ~40m full-bootstrap baseline (target: under ~10m to first voyage).
+Run history on the identical quayline intent: tw8 7m51s (tainted, cockpit reads), tw9
+8m14s (letter did not bind: ~8 optional slots + wrapper scripts), tw12 7m24s on
+0.13.13 (FULL PASS: letter binds — the example block works — and report-contract
+claims tree-verified live). The recovered verbatim intent lives in the tw12 dispatch;
+reuse it for any fourth like-for-like.
 
 Plugin-channel notes (2026-07-12): dispatches carry NO git-author line (scaffold sets
 repo-local author; an author line got one QM dispatch refused as contamination).

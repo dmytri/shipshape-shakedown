@@ -6,7 +6,8 @@ const path = require("path");
  * @planks("When a tide station is provisioned for the cove")
  */
 function provisionStation(tides) {
-  const dir = path.join(__dirname, "..", "logs");
+  const root = path.resolve(__dirname, "..");
+  const dir = path.join(path.dirname(root), ".instrument", path.basename(root));
   fs.mkdirSync(dir, { recursive: true });
   fs.appendFileSync(path.join(dir, "provisions.log"), JSON.stringify({ t: new Date().toISOString() }) + "\n");
   const until = Date.now() + 1500;
