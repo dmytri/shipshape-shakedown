@@ -319,6 +319,24 @@ restart-plan rationale that motivated setting the session model before this pilo
 Suite executions: 8 by transcript grep (no runlog.js hook in the TodoMVC fixture);
 1/33 passing pre-Crew (expected - no production code exists).
 
+Forensic correction (same day, on dk's ask; full chain in CAPTAIN.md): the QM
+stall was NOT self-implementation - zero production code written, zero Crew
+mentions in QM's own reasoning. Chain: Captain's unilateral real-browser tier
+choice (zero blockers; pilot #1 routed browser-vs-DOM as a blocker) made a broad
+sweep cost 2m42s -> QM's foreground sweep hit the runtime's ~2m cap and was
+auto-backgrounded -> `sleep` blocked -> Monitor armed on a `pgrep -f cucumber-js`
+condition that matched the unrelated concurrent jolly session's cucumber (LOW:
+cross-session contamination; match on project path, not process name) -> census
+successfully read 18:07:52 (1/32 + summary) -> QM re-ran the full sweep anyway
+(redundant confirmation class, +1 instance -> 8 total, worthiness stays 0) ->
+ended turn on three broken waits -> re-run and poll both completed 18:10 into a
+finished agent chain: notification orphaned, silent deadlock (HIGH, runtime).
+Executing-run recount: 8 total; ~3 killed mid-run by QM's own timeout wrappers,
+1 the redundant void re-run. Class tally deltas from this pilot fragment held
+until the pilot completes or dk voids it; the redundant-confirmation +1 and
+polls/waits +5 (echo-waiting/idle, dead-PID poll, broken wait, monitor cycle) are
+recorded here for the eventual fold.
+
 ## Class tally (impact frequency; update every shakedown)
 
 | Class | Instances | P | N | Neg | Worthiness |

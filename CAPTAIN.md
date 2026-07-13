@@ -55,10 +55,84 @@ foreground/background Bash suite-running be capped or flagged if no Crew dispatc
 follows within N runs. Needs QM skill text review before doctrine change, not
 shipped.
 
+FORENSIC ADDENDUM (same day, full transcript reconstruction on dk's "wtf" - this
+CORRECTS the paragraph above; the "same-role-does-everything" frame was wrong. QM
+wrote ZERO production code and never self-implemented; it died inside census
+mechanics before ever reaching its dispatch step. Second-by-second chain, all
+transcript-verified):
+
+1. ROOT ENABLER (Captain leg, doctrine tension): Captain unilaterally chose
+   real-Chromium Playwright for the whole @logic tier. Pilot #1's Captain routed
+   "browser vs DOM-level tier" as a blocker; this Captain raised zero blockers -
+   the 0.13.12/13 greenfield fast path ("no methodology checks", direction already
+   in hand) textually absorbed the very decision pilot.md says it WANTS surfaced
+   ("a pilot with zero Captain blockers means roles guessed - that is a finding").
+   Consequence: 33 scenarios x 5s locator timeout on missing DOM = 2m42s per broad
+   sweep. Every downstream failure flows from census cost. Operator under-weighted
+   this at leg-1 report time (classified it "legitimate direction-already-given").
+2. QM support work 17:57-18:04 was genuinely good: server/world/hooks/steps,
+   duplicate-step dedup, static discovery (192 steps bind), bounded 5s timeouts.
+3. Census mechanics 18:04-18:08: full sweep run FOREGROUND with `timeout 280` ->
+   the runtime auto-backgrounded it at the ~2m foreground cap (18:04:58 ->
+   18:06:58 "running in background with ID bxhsev1bg"). QM tried `sleep 120` ->
+   BLOCKED by runtime. Armed a Monitor whose condition polled
+   `pgrep -f cucumber-js | head -1` - which matched the UNRELATED concurrent
+   jolly session's long-running cucumber process (lowest PID wins): cross-session
+   false wait signal. QM killed the monitor, cat'ed the completed sweep output at
+   18:07:52 - FULL census in hand (1 passed/32 failed + summary line).
+4. FATAL 30s (18:08): with the census in hand, QM re-ran the ENTIRE sweep again
+   (`rm -f broad.log && timeout 280 npx cucumber-js ... > broad.log &`, pid
+   1049929) - a redundant confirmation run, the exact class the audit lens scores
+   0 - then composed three broken waits (bare `wait` in a fresh shell: no
+   children, returned instantly; a background `kill -0 1049929` poll; `echo
+   waiting`/`echo idle`) and ENDED ITS TURN on "I'll wait for the background
+   completion notification."
+5. DEADLOCK (18:10, runtime seam, HIGH): the re-run completed into broad.log at
+   18:10 (byte-equivalent census, 22505 bytes) and the poll task fired "cucumber
+   run finished" at 18:10 - but QM's turn had ended 18:08:25 and Captain's
+   18:07:29. Background-task completion does NOT resurrect a finished nested
+   subagent chain: the notification was delivered into the void. The harness
+   promise "You will be notified when it completes" is broken across the
+   nested-agent turn boundary. QM's own reasoning text contains zero mentions of
+   Crew dispatch intent (every "Crew" hit in its transcript is loaded skill text);
+   its plan was census-first and the plan never survived the census.
+6. Operator misses (owning them): (a) let Captain auto-chain QM nested-async -
+   wave-4 tw12 validated that chain shape ONLY on a fast toy CLI suite where the
+   2m foreground cap never bites; pilot #1 was operator-driven leg by leg; nested
+   chain + slow browser suite was an untested combination and is exactly where
+   the turn-boundary deadlock lives. (b) On QM's 18:08 "completed" notification,
+   operator checked the tree, saw no change, and kept waiting ~25m instead of
+   mining the transcript immediately - QM was still resumable then (task IDs
+   later expired). Mining-on-notification, not tree-diff-on-notification, is the
+   correction; folded into the next-run procedure.
+7. LOW boundary note: QM wrote broad.log to the session scratchpad ROOT, outside
+   the project tree - first WRITE-side "work only inside the project root" slip
+   (previous breaches were reads); no cockpit content touched.
+
+Findings recap for dk: HIGH runtime deadlock (nested background-task notification
+orphaning) - harness-side fix candidates: dispatch rule "never end your turn with
+a live background task; consume or kill it first" + operator-driven pilot legs;
+MEDIUM doctrine tension - fast path suppresses the tier blocker pilot.md wants
+(should verification-tier choice stay a routed decision when a browser tier is on
+the table?); MEDIUM QM census discipline on expensive suites (one census then
+dispatch; the re-run-in-hand instance joins the redundant-confirmation class);
+LOW cross-session pgrep contamination (match on project path, not process name);
+LOW write-boundary slip. None shipped; all await dk's word.
+
+Contrast with pilot #1, for scale: pilot #1 bootstrap ~65m/10 legs, voyage worked
+(17 Crew dispatches, 92m). Pilot #2 bootstrap 14m (fast path working as designed,
+best pilot bootstrap yet) but the voyage deadlocked at leg 2. Different failure,
+not a regression of the same one: pilot #1 never exposed this seam because its
+legs were operator-driven, HEAD-text (no nested async), and its per-run
+verification was cheaper.
+
 dk's word (2026-07-13, mid-run): PAUSE here. Do not resume/redispatch this leg or
 start a fresh QM this session. Findings stand as recorded; pilot #2 resumes only on
 dk's word. Sim tree todopilot2 left as-is (2 commits, 32 reds, uncommitted
-verification support) for inspection.
+verification support) for inspection. Session model changed to FABLE post-pause
+(dk, for the forensic conversation): if the pilot resumes in THIS session, async
+resumption falls now land on fable - uniform-sonnet accounting needs either a
+fresh sonnet session or accepted mixed accounting.
 
 ## 2026-07-13 wave 4: 0.13.13 validated live 3/3 + fixture v2 shipped; deck is pilot-ready
 
