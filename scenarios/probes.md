@@ -59,8 +59,12 @@ evidence, Crew ACCEPTS the plank-only target, custody commits.
 State: harbour tree + uncommitted @captain skeleton documenting a defect an existing
 scenario should pin; Shipwright hand-off + user intent in dispatch. Dispatch: Captain
 harbour review. Judge the disposal shape: promote / promote-with-correction / discard /
-supersede. Supersede has never been chosen live (2 designed invitations). Anchor the
-skeleton to the existing scenario's own data to invite supersede hardest.
+supersede. Supersede has never been chosen live (3 designed invitations). DESIGN RULE
+(2026-07-13 tw10): the skeleton's finding must land INSIDE the existing scenario's
+exercised behaviour (ordering-independence, precision, an additional assertable
+property of the already-asserted value) — a missing-CASE defect anchored to the same
+seam and data is structurally a promote (new scenario), and the 0.13.11-text Captain
+correctly engaged supersede and ruled it out on exactly that ground.
 
 ## harbour-gate (0.13.10)
 State: complete inventory, small uncommitted harbour output, product intent in the

@@ -69,10 +69,25 @@ assets slot pointed at assets/) and tw8 (empty repo). Full numbers in METRICS.md
    in the fixture RIGGING, and route the LOW doctrine question whether the Wake
    policy wants a record-not-in-scratch caution. Note: 2026-07-12's tw5 bootstrap
    probe (plugin channel, empty repo) shares the breach exposure — unmined for it.
-8. Owed next: clean fast-path re-run with the hardened dispatch (the only open
-   validation debt); supersede probe against text that lists it (still never fired
-   live); gap-(b) hook fix + exceptional-double home + stat/message wording, all on
-   dk's word.
+8. Clean fast-path re-run (tw9, autonomous continuation, same intent + boundary
+   line): PARTIAL PASS, taint mechanism closed — zero harness touches, zero
+   denials, no cockpit-echo pin. Fast-path mechanism validated on a clean channel:
+   8m14s empty-repo to specs+watchbill+QM (target <10m), honest real-spawn
+   verification, custody + pathspec notes commits, clean deck. TWO conformance
+   misses the tainted leg had masked, routed to dk: (e) the minimal-rigging letter
+   does not bind — tw9 populated ~8 optional slots and authored a focused-wrapper
+   script + cucumber config at bootstrap where the rule says "every optional slot
+   none"; tw8 matched the letter only because it read the fixture template.
+   Candidate 0.13.13: embed a minimal-RIGGING example block in the fast-path rule
+   (the 0.13.11 record lesson: examples bind, key lists don't). (f) Report-contract
+   fidelity: tw9's Captain reported a positional CLI contract while the tree
+   implements named flags — the reported shape prints $NaN; caught only by driving
+   the binary. A report claim naming an observable contract should be tree-checked
+   before reporting. Also: 4th model-leak instance (tw9 Boatswain to fable).
+9. Owed next: gap-(b) hook fix + exceptional-double home + stat/commit-message
+   wording + minimal-rigging example + report-fidelity seam, all on dk's word.
+   Supersede probe (tw10) run this session as the last owed wave item — verdict in
+   the wave-3 METRICS addendum.
 
 ## 2026-07-13 afternoon: pre-approved 0.13.11 probes ran TWICE; channel-integrity finding (HIGH)
 

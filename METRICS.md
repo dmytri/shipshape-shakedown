@@ -205,6 +205,46 @@ doctrine behaviour. Record-append seam: +3 instances (tw1, tw4, tw8 QMs re-ran
 Crew-proven greens in own hands); batching shrank the per-instance price to one
 batched rerun (tw1) from wave-2's 3 solos.
 
+Clean fast-path re-run (tw9, same intent + shipped boundary line): PARTIAL PASS.
+Boundary HELD — zero harness-path touches, zero denials, no cockpit-echo model pin
+(tw9's QM went UNSET and inherited sonnet; its Boatswain fell to fable, 4th leak
+instance). Fast-path mechanism ✓: one-conversation bootstrap, no methodology
+checks, honest real-spawn verification (7 scenarios green, steps spawnSync the
+actual CLI), custody 136f851 + pathspec notes bd20e75, clean deck; empty-repo to
+specs+watchbill+QM-dispatched 8m14s (tw8: 7m51s; both under the 10m target on
+like-for-like intent), ~18.5m to clean deck. Two conformance MISSes the tainted
+leg masked: (1) the minimal-rigging letter did NOT bind — tw9 populated ~8
+optional slots (discover/broad/step-usage/plank-inventory/weather/runrecord/tier
+policy/dependency) and authored `scripts/focused.js` + `cucumber.js` at bootstrap,
+where the rule says "every optional slot none" (tw8 matched the letter only
+because it read the fixture template — the wording alone doesn't bind; same
+lesson as the 0.13.11 record fix: examples bind, key lists don't); (2)
+report-contract fidelity — the Captain's final report declared a positional CLI
+contract while the tree implements named flags (`--length/--nights/--hull`;
+reported shape prints $NaN), caught only by driving the binary. Chain: Captain 43
+inv/3.20M/44.3k/19m40s + QM 27/1.29M + Crew 10/398k + Boatswain 9/341k (fable) =
+89 inv / 5.23M / 82.4k. Tally deltas folded: skill reads +8 (all P), polls +2,
+redundant confirmation +1 (QM re-proof of Crew-proven green), commits +2; row
+totals above not restated per-row for the tw9 chain — trend unchanged.
+
+Supersede probe (tw10, last owed wave item; harbour state, uncommitted @captain
+skeleton documenting the real tideRange -Infinity missing-day defect, anchored to
+the existing scenario's seam and data): disposal CONFORMANT — promote with
+corrected assertion, folded into the owning feature file, skeleton file deleted,
+watchbill authored for the now-red case, zero verification runs in the review
+pass, production untouched (red left for QM per the workflow). Supersede was
+ENGAGED AND RULED OUT explicitly ("no existing binding scenario already pinned
+this seam's missing-data case") — first live engagement with the 0.13.11
+preference rule (marker present x2), and the reasoning is textually sound: a
+missing-CASE defect naturally lands as a new scenario. Verdict: not an agent
+miss; a PROBE-DESIGN finding — all three designed supersede invitations to date
+anchored findings OUTSIDE the existing scenario's exercised behaviour, which
+promote handles correctly. A true invitation needs the finding INSIDE it (e.g.
+ordering-independence or precision of the already-asserted value). Supersede
+remains unobserved live, diagnosis upgraded from "arm may not bind" to
+"invitations were structurally wrong." Leg: 16 inv / 797k / 8.5k / 3m0s, boundary
+held, zero spawns (stop-after-review honoured).
+
 ## Class tally (impact frequency; update every shakedown)
 
 | Class | Instances | P | N | Neg | Worthiness |
