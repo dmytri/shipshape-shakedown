@@ -44,6 +44,10 @@ Rules learned live:
 - No git-author line in dispatches: scaffold.sh sets the repo-local Sim Operator
   author; an author instruction in a QM dispatch was refused as contamination
   (2026-07-12, plugin channel).
+- Plugin-channel dispatches MUST carry "Work only inside the project root." (the
+  HEAD-text preamble already has it; the thin plugin dispatch dropped it, and a
+  greenfield-state Captain leg walked out of its empty repo into the harness repo
+  and read the probe rubric - 2026-07-13 wave 3, sole leak in 16 legs).
 - Plugin channel: nested spawns inherit the parent's model only for the parent's FIRST
   spawn; later spawns silently fall to the session model unless the parent pins
   `model`. Mine every leg's model and report the split.

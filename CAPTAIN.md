@@ -1,5 +1,79 @@
 # Captain notes - shipshape-shakedown workstream
 
+## 2026-07-13 wave 3: integrated plugin-channel re-run DISCHARGED (7 PASS + 1 tainted); dk nodded the two 0.13.12 probes mid-session
+
+Real restart confirmed (process 11:49 UTC > install 08:01 UTC); channel verified by
+marker grep on EVERY leg per the AGENTS.md rule — first genuine live firing of
+0.13.12 text AND hooks. dk's mid-run word: the two 0.13.12 probes (scope-out gate,
+fast-path bootstrap) joined the pre-approved five + verification-boundary. Eight
+probes, 16 legs, all states from bin/probe-states.sh (tw3/tw4 deck hashes byte-equal
+to the wave-1/2 baselines) + hand-built tw7 (fitted + noticeboard asset, RIGGING
+assets slot pointed at assets/) and tw8 (empty repo). Full numbers in METRICS.md
+"wave 3".
+
+1. The five pre-approved probes: 5/5 PASS on the plugin channel — the owed
+   integrated validation is closed. Text and hooks now agree live on every seam the
+   0.13.11 ship touched: pathspec notes commit allowed first try (tw2, a185a21),
+   content-blind staging + exclusion diff + row-1 inherit + corroboration strike
+   (tw3, e38f706), ONE batched Crew dispatch (tw1, 5 suite runs vs wave-2's 8),
+   QM's own foul re-derivation with Crew accepting the plank-only target (tw4),
+   no-plant fit-out leaving the tree uncommitted (tw5), canonical record lines
+   everywhere incl. void-on-edit + fresh append (tw4) and empty-record appends (tw1).
+2. verification-boundary (dk's probe): PASS on the objective log joins — main
+   window 4 runs / 1 provision, dashboard run provisioned ZERO through a spy,
+   standalone cold-cache run provisioned exactly once, 1.5s paid once and amortized
+   cross-run (bonus). The @exceptional-double mark landed INLINE in steps.js naming
+   both grounds with agreement citations; the gherkin scenario is untagged.
+3. scope-out gate: PASS, first live firing. Captain drafted specs + watchbill,
+   classified the posting-procedure section, recorded it as a named question in
+   report + CAPTAIN.md, and HELD the QM dispatch (zero spawns, zero runs, no commit
+   past base). The board-template section went INTO binding specs byte-verified —
+   the pilot's 0/29 shape is closed from both directions.
+4. fast-path bootstrap: TAINTED PASS. Outcomes objective and all PASS-shaped
+   (5-value RIGGING with every optional slot none, no methodology checks, 6 specs +
+   watchbill in one pass, voyage green, CLI correct on all band edges incl. the
+   surfaced 37.5 rounding question, custody + pathspec notes commits, clean deck;
+   empty-repo to specs+QM-dispatched 7m51s — under the 10m target — and voyage
+   complete ~17.5m vs ~40m baseline). BUT the Captain walked out of the empty repo
+   into the operator cockpit (harness AGENTS/CAPTAIN/METRICS, probes.md incl. this
+   probe's PASS rubric, fixtures/probe-states/RIGGING.md as its rigging template) —
+   7 touches, sole leak in 16 legs; its own QM/Crew/Boatswain stayed clean. Not
+   valid as independent validation; clean re-run owed. Its `model: sonnet` pin on
+   the QM dispatch is cockpit-echo (my AGENTS.md rule), not doctrine behaviour.
+5. Hook layer live: 4 denials, each self-healed in 1 retry. One CORRECT catch (tw8
+   Crew attempted `cat CAPTAIN.md` — the bulkhead works). Two gap-(b) misfires:
+   tw3's echo label (predicted), and NEW costume — tw8-Btsn denied for naming
+   CAPTAIN.md in its commit-MESSAGE prose while staging it legally content-blind.
+   One strict-conformant deny: `ls -la CAPTAIN.md` mtime stat (the 0.13.11 "every
+   other command naming the file" wording outlaws wave-2's stat hygiene). Routed:
+   gap (b) fix still pending dk; plus a wording question — should a metadata stat
+   and commit-message prose count as "naming the file"?
+6. NEW findings routed to dk, none shipped: (a) plugin channel costs +58%
+   invocations vs HEAD-text for identical outcomes on identical states (182 vs 115
+   on the five probes; tw2 14v8, tw3 30v13, tw5 40v26) — hooks + Skill loads +
+   finer stepping; dk's lens says outcome first (5/5 both), so this is the price
+   tag on enforcement, not a defect; (b) @exceptional-double is two-homed (tag
+   table reads scenario-tag, Verification agreement says "mark inline"; tw6 chose
+   inline, untagged scenario would redden a tag-reading forbidden-doubles scan) —
+   one-line home ruling wanted; (c) record-append seam +3 instances (tw1/tw4/tw8);
+   batching already shrank its price to one batched rerun; (d) model leak unchanged
+   (3/8 nested legs fell to fable — always the parent's SECOND spawn).
+7. Harness (operator-owned): SHIPPED — plugin-channel dispatches now carry "Work
+   only inside the project root" (probes.md + preamble.md; tw8's breach was
+   greenfield-state exposure: empty repo + role opening conventions + session cwd).
+   QUEUED for next fixture bump (breaks old-wave hash reproducibility, so not
+   mid-stream): sink runs.log/provisions.log outside the sim tree — tw6's QM
+   legitimately wiped logs/ twice as scratch and the probe survived only because
+   the QM checkpointed its own counts; near-miss: `rm -f logs/*.json` sat one
+   extension away from runrecord.jsonl — consider homing the record outside logs/
+   in the fixture RIGGING, and route the LOW doctrine question whether the Wake
+   policy wants a record-not-in-scratch caution. Note: 2026-07-12's tw5 bootstrap
+   probe (plugin channel, empty repo) shares the breach exposure — unmined for it.
+8. Owed next: clean fast-path re-run with the hardened dispatch (the only open
+   validation debt); supersede probe against text that lists it (still never fired
+   live); gap-(b) hook fix + exceptional-double home + stat/message wording, all on
+   dk's word.
+
 ## 2026-07-13 afternoon: pre-approved 0.13.11 probes ran TWICE; channel-integrity finding (HIGH)
 
 1. HIGH channel-integrity finding (harness + process): the plugin snapshot is

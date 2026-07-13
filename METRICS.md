@@ -150,20 +150,76 @@ Crew-proven greens in their own hands solely to append record lines (4 runs), re
 the wake append as the running role's own; either Crew's hand-off green should be
 recordable or the re-proof is the record's standing price - routed to dk.
 
+## 0.13.12 integrated plugin-channel wave (2026-07-13 post-restart, "wave 3", sonnet top legs pinned)
+
+The owed re-run, DISCHARGED. Real process restart verified (process 11:49 UTC >
+install 08:01 UTC); channel verified empirically per AGENTS.md: role-skill marker
+phrases positive on every leg (captain: `pathspec-limited` + `Greenfield fast path`;
+qm: `expensive fallback, never the default` + re-derivation clause; boatswain:
+`Staging is not reading`; shipwright: both 0.13.11/0.13.12 phrases; shared Asset
+policy marker consumed on tw7). First live firing of the 0.13.12 hook layer.
+
+| Probe | State | Verdict |
+|---|---|---|
+| 1 crew-batching | tw1 | PASS: ONE batched Crew dispatch, 3 refs + per-target evidence, one-mate-one-cluster marker; 5 suite runs (vs 8 wave-2); canonical record on empty log; commit 76b0067 |
+| 2 captain notes-commit | tw2 | PASS: `git commit -m <msg> -- CAPTAIN.md` first try, hook allowed live, notes-only commit a185a21, zero cycles |
+| 3 boatswain notes arms | tw3 | PASS all arms: `:!CAPTAIN.md` diff, `git add -- CAPTAIN.md`, row-1 inherit 0 runs, corroboration strike, commit e38f706; 1 gap-(b) denial (echo label), self-healed |
+| 4 QM plank-gap | tw4 | PASS: foul re-derived by QM itself, Crew accepted plank-only target, record void-on-edit + fresh canonical append at cb1ded8e, 3 runs, commit 7bf1c5b |
+| 5 record + no-plant fit-out | tw5 | PASS: zero plants, tree uncommitted, 3 skeletons + 5-rule scantling, checker file correctly left to QM, 4 runs |
+| verification-boundary | tw6 | PASS on objective joins: main window 4 runs/1 provision (QM's own checkpoint), dashboard run 0 provisions via spy, inline `@exceptional-double` naming both grounds, standalone cold-cache run exactly 1 provision, cross-run amortization bonus; commit f6e2446 |
+| scope-out-gate (0.13.12) | tw7 | PASS first live firing: exclusion held as named question (report + CAPTAIN.md), QM dispatch HELD (zero spawns), specs+watchbill drafted unspent; template section entered binding specs byte-verified |
+| fast-path-bootstrap (0.13.12) | tw8 | TAINTED PASS: outcomes objective (minimal 5-value RIGGING, no methodology checks, 6 specs, voyage green, CLI correct on all band edges, 3 commits, clean deck; empty-repo to specs+QM 7m51s, voyage complete ~17.5m vs ~40m baseline) BUT the Captain read the operator cockpit incl. probes.md rubric — not valid as independent validation; clean re-run owed with hardened dispatch |
+
+Leg accounting (16 legs, all mined incl. nested): 332 inv / 19.33M cache / 295k out /
+20.2m wave wall (parallel). Tops: tw5-Shipwright 40/3.59M/13.7m, tw8-Captain
+35/3.38M/18.8m, tw3-Boatswain 30/1.59M/3.3m, tw1-QM 28/1.29M/6.5m, tw8-QM
+28/1.39M/8.7m, tw6-Btsn 27/1.51M/6.3m, tw6-QM 23/1.43M/14.2m, tw4-QM 22/975k/7.4m,
+tw7-Captain 15/814k/4.8m, tw2-Captain 14/558k/2.2m; nested Crew 12-15 inv,
+Boatswains 9-27. Worth densities: tw7 100% (new best Captain leg), tw6-Btsn 92%,
+tw1-Crew 92%, tw8-Crew 91%, tw3 89%, tw5 87%, tw6-QM 87%, tw4-Btsn/tw1-Btsn/tw8-Btsn
+86%, tw4-Crew 84%, tw4-QM 83%, tw1-QM/tw8-QM 82%, tw8-Captain 81% (cockpit-breach
+Neg x4), tw2 73%. P/N/Neg ≈ 292/35/5.
+
+Like-for-like, the five pre-approved probes (9 legs): wave 3 = 182 inv / 9.91M /
+130k out, 5/5 PASS, 1 spurious denial, zero failed outcomes. Wave 1 (stale plugin) =
+180 inv / 9.69M, 4 denials, 2/5 failed. Wave 2 (HEAD-text) = 115 inv / 6.58M, 5/5.
+Read: coherence decides outcomes at equal channel cost (w1 vs w3); the plugin
+channel itself costs +58% invocations over HEAD-text for identical outcomes on
+identical states (per-leg: tw2 14v8, tw3 30v13, tw5 40v26) — hooks, Skill-loading,
+and finer-grained stepping; routed to dk as a channel-economy observation.
+
+Hook layer live tally: 4 denials, each self-healed in exactly 1 retry. 1 CORRECT
+catch (tw8 Crew attempted `cat CAPTAIN.md` — first live contamination catch of the
+0.13.12 hook); 2 gap-(b) misfires (tw3 echo label; tw8-Btsn naming CAPTAIN.md in
+commit-MESSAGE prose while content-blind staging it legally — new costume); 1
+strict-text-conformant deny of `ls -la CAPTAIN.md` mtime stat (tw6-Btsn; the
+0.13.11 "every other command naming the file" wording makes the wave-2 stat
+hygiene illegal on the plugin channel). Precision this wave: 1 real catch per 3
+spurious cycles.
+
+Model split: nested inheritance leak unchanged — first spawn inherits sonnet, the
+parent's later spawns fall to session fable (3/8 nested legs: tw1/tw4/tw8
+Boatswains). fable 29 inv / 1.09M; sonnet 303 / 18.24M. tw8 Captain's `model:
+sonnet` pin on its QM dispatch is cockpit-echo (it read harness AGENTS.md), not
+doctrine behaviour. Record-append seam: +3 instances (tw1, tw4, tw8 QMs re-ran
+Crew-proven greens in own hands); batching shrank the per-instance price to one
+batched rerun (tw1) from wave-2's 3 solos.
+
 ## Class tally (impact frequency; update every shakedown)
 
 | Class | Instances | P | N | Neg | Worthiness |
 |---|---|---|---|---|---|
-| skill/rigging reads (opening) | 116 | 116 | 0 | 0 | 100 (+40 across the 2026-07-13 waves; resident-by-design holds in both channels) |
-| deck retrieval + context reads | ~195 | ~187 | ~8 | 0 | ~95 (N: package.json re-reads, duplicate scans, one find dupe) |
-| owed verification runs | 67 | 62 | 5 | 0 | 92 (+29 on 2026-07-13, all consumed; the 4 QM record re-proofs sit in the row below) |
-| redundant confirmation runs | 4 | 0 | 4 | 0 | 0 (all 4 = wave-2 QMs re-running Crew-proven greens to append record lines; structural to the wake write-scope reading, routed as the record-append economy seam, not discipline) |
-| polls/waits | 11 | 0 | 11 | 0 | 0 (+2 single sleeps 2026-07-13; structural to async Agent spawns, not role discipline) |
-| evidence ops (run record, deck-state hash) | 38 | 37 | 1 | 0 | 97 (+14: hash computes x5, record appends x6, row-1 inherits x3, first text-present corroboration strike; all consumed) |
-| staging/commit/report | 45 | 42 | 5 | 3 | 87 (+9 commits incl. first pathspec notes-only commit; N: wave-1 stale-text unstaged notes + unstruck watchbill; Neg x3: wave-1 Captain's denied plain commit -> doomed Boatswain dispatch -> SendMessage resume, notes never committed) |
-| mid-leg doctrine re-read | 3 | 3 | 0 | 0 | 100 (both new instances preceded and shaped a disposal/fit-out decision) |
-| contaminated/premature dispatches | 3 | 0 | 0 | 3 | 0 (git-author line to QM; over-narrated Boatswain; Shipwright before toolchain - each cost a refused leg + parent rework, ~400k worst case) |
-| contamination refusals/guards | 8 | 6 | 0 | 2 | 50 (+2 correct catches under old hooks incl. a real CAPTAIN.md content-read attempt; +2 misfires: echo-label mention and `git add CAPTAIN.md` overreach - hook-shape gaps routed to dk 2026-07-13) |
+| skill/rigging reads (opening) | 148 | 148 | 0 | 0 | 100 (+32 wave 3, 2 Skill loads x 16 legs; resident-by-design holds on the live plugin channel) |
+| deck retrieval + context reads | ~325 | ~307 | ~18 | 0 | ~94 (wave-3 N: duplicate status/usage-json/grep re-runs, post-edit re-reads, tw2's tracked-check cluster) |
+| owed verification runs | 89 | 84 | 5 | 0 | 94 (+22 wave 3, all consumed incl. tw6's 4-run window + standalone cold-cache proof; the 3 QM record re-proofs sit in the row below) |
+| redundant confirmation runs | 7 | 0 | 7 | 0 | 0 (+3 wave 3: QMs re-running Crew-proven greens in own hands — tw1 batched (ONE rerun where wave-2 paid 3 solos: batching shrinks this seam's price), tw4, tw8; the record-append economy seam stands routed) |
+| polls/waits | 24 | 0 | 24 | 0 | 0 (+13 wave 3: sleep-1 + empty continuations around nested spawns, ~2 per spawn; structural to async Agent spawns, not role discipline) |
+| evidence ops (run record, deck-state hash) | 50 | 49 | 1 | 0 | 98 (+12 wave 3: hash computes x5, record append ops x3 (6 canonical lines incl. 4 on an empty record), row-1 inherits/corroborations x4 incl. tw6-Btsn's python record-vs-watchbill join; all consumed) |
+| staging/commit/report | 59 | 55 | 6 | 3 | 88 (+14 wave 3: 7 commits — pathspec notes x2, custody x5 — all landed; N+1: tw8-Btsn commit retry after gap-(b) denial) |
+| mid-leg doctrine re-read | 3 | 3 | 0 | 0 | 100 (no new instances) |
+| contaminated/premature dispatches | 3 | 0 | 0 | 3 | 0 (no new instances; all 16 wave-3 dispatches accepted) |
+| contamination refusals/guards | 12 | 7 | 1 | 4 | 25 (+4 wave 3: 1 CORRECT catch — tw8 Crew `cat CAPTAIN.md`, first live 0.13.12 hook catch; +2 gap-(b) misfires (echo label, commit-message prose); +1 strict-text-conformant deny of a benign `ls -la CAPTAIN.md` stat. Precision is the routed problem: 1 catch per 3 spurious cycles this wave) |
+| operator-cockpit reads (sim-boundary breach) | 4 | 0 | 0 | 4 | 0 (NEW, wave 3: tw8 Captain read harness AGENTS/CAPTAIN/METRICS + probes.md rubric + fixture RIGGING from the session cwd on an empty-repo state; harness-owned, dispatch boundary line shipped) |
 
 Leg worth densities 0.13.8: Captain ~90%, QM 73%, wake-custody 82%.
 Probes 2026-07-12 (sonnet, plugin channel): fresh-custody 100%, hand-off strike 100%,

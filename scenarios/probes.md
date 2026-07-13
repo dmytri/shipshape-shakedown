@@ -112,6 +112,12 @@ Time it against the ~40m full-bootstrap baseline (target: under ~10m to first vo
 
 Plugin-channel notes (2026-07-12): dispatches carry NO git-author line (scaffold sets
 repo-local author; an author line got one QM dispatch refused as contamination).
+Every plugin-channel dispatch MUST carry one boundary line: "Work only inside the
+project root." (2026-07-13 wave 3: an empty-repo Captain leg, finding nothing local
+for its opening reads, walked up into this harness repo from the session cwd and
+read the probe rubric — sole leak in 16 legs, tainted the fast-path verdict.
+Greenfield states are the proven exposure; fitted trees satisfied opening reads
+locally. The line is scope, not narrative: no contamination risk observed.)
 Nested spawns inherit the parent model only for the parent's first spawn - later
 spawns fall to the session model unless the parent pins `model`; mine per leg and
 report the split.
