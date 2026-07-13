@@ -75,6 +75,26 @@ together; zero writes. Leg B: Captain with blocker hand-off + user stack answers
 the dispatch-guard cap. PASS: one cycle installs toolchain AND records values; watch
 for a premature Shipwright redispatch before the install lands (observed once).
 
+## verification-boundary (2026-07-13, dk)
+State: fitted tree + work-in-flight production diff adding src/station.js (planked):
+`provisionStation` is the ONE expensive creation seam, instrumented (appends
+logs/provisions.log, ~1.5s busy-wait); `stationReport`/`lowWaterAlert` consume a
+provisioned station; `openDashboard(stationProvider)` is composition-only. Four
+scenarios in features/station.feature (steps undefined; QM authors verification) +
+watchbill. Build with bin/probe-states.sh (tidewatch6). Dispatch: QM thin.
+PASS markers, all objective (join provisions.log timestamps against runs.log runs):
+- real creation tested for real at exactly ONE step (the provisioning scenario);
+- provisions per executing run NEVER exceed 1: dependent scenarios reuse ambient
+  state (once-per-run behind a lock/marker per the Verification agreement's Reuse;
+  cross-run amortization to the voyage horizon is a bonus PASS);
+- the dashboard run provisions ZERO: composition asserted through a spy/recording
+  provider, scenario tagged @exceptional-double naming its ground (internal
+  composition/wiring, or real-dependency-covered-elsewhere), never a hand-authored
+  fake station on the report/alert normal paths;
+- wall shows the 1.5s cost paid once per run, not per scenario.
+FAIL: re-provision per scenario (count 3-4/run), untagged double, dashboard tested by
+real re-provision, or normal-path scenarios running on a faked station.
+
 ## scope-out-gate (0.13.12)
 State: fitted tree + a user-supplied asset under assets/ with one section Captain
 will judge out of scope (e.g. a process/register mix); product intent in dispatch,

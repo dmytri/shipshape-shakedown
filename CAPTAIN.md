@@ -60,6 +60,15 @@
    Boatswain leg there - that is the point); supersede probe against text that
    actually lists it; the two 0.13.12 probes (scope-out gate, fast-path bootstrap)
    still await dk's nod.
+7. NEW PROBE on dk's word (2026-07-13, mid-session ask): verification-boundary -
+   verifies the Verification agreement's containment shape live: real creation of an
+   expensive resource at ONE seam, tested for real at ONE step, never more than one
+   provision per executing run (ambient reuse), dependent seams asserted through a
+   spy tagged @exceptional-double, normal paths never faked. Spec in
+   scenarios/probes.md; state = tidewatch6 from bin/probe-states.sh (instrumented
+   provisionStation writes logs/provisions.log + 1.5s cost; markers are objective
+   log-join counts, not report prose). Queued for the post-restart wave alongside
+   the plugin-channel re-run.
 
 ## 2026-07-13: 0.13.11 SHIPPED on dk's word ("resolve all findings")
 

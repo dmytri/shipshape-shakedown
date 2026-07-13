@@ -5,6 +5,8 @@
 #   tidewatch3 boatswain notes arms: green role-advanced diff + CAPTAIN.md edit + record @ hash + watchbill
 #   tidewatch4 QM plank-gap: same diff but seam UNPLANKED + record @ hash + watchbill
 #   tidewatch5 no-plant fit-out: bare scaffold
+#   tidewatch6 verification-boundary: fitted + planked station diff (one expensive
+#              creation seam, instrumented) + 4 undefined scenarios + watchbill
 # Self-contained from fixtures/probe-states (2026-07-13 wave states, deck hashes reproducible).
 # Usage: probe-states.sh <target-dir>
 set -euo pipefail
@@ -12,15 +14,15 @@ TARGET="${1:?usage: probe-states.sh <target-dir>}"
 HERE="$(cd "$(dirname "$0")/.." && pwd)"
 FX="$HERE/fixtures/probe-states"
 
-for i in 1 2 3 4 5; do "$HERE/bin/scaffold.sh" "$TARGET/tidewatch$i"; done
+for i in 1 2 3 4 5 6; do "$HERE/bin/scaffold.sh" "$TARGET/tidewatch$i"; done
 
-for i in 1 2 3 4; do
+for i in 1 2 3 4 6; do
   cp "$FX/RIGGING.md" "$FX/AGENTS.md" "$FX/README.md" "$TARGET/tidewatch$i/"
   cp "$FX/rgignore" "$TARGET/tidewatch$i/.rgignore"
   cp "$FX/tide-fitted.js" "$TARGET/tidewatch$i/src/tide.js"
 done
 for i in 2 3; do cp "$FX/CAPTAIN.md" "$TARGET/tidewatch$i/CAPTAIN.md"; done
-for i in 1 2 3 4; do
+for i in 1 2 3 4 6; do
   git -C "$TARGET/tidewatch$i" add -A
   git -C "$TARGET/tidewatch$i" commit -qm "Fit out for Shipshape: rigging, agent instructions, search exclusion, planked seam"
 done
@@ -39,6 +41,10 @@ cp "$FX/range_steps.js" "$TARGET/tidewatch4/features/support/range_steps.js"
 cp "$FX/tide-range-unplanked.js" "$TARGET/tidewatch4/src/tide.js"
 cp "$FX/watchbill-range.json" "$TARGET/tidewatch4/watchbill.json"
 
+cp "$FX/station.js" "$TARGET/tidewatch6/src/station.js"
+cp "$FX/station.feature" "$TARGET/tidewatch6/features/station.feature"
+cp "$FX/watchbill-station.json" "$TARGET/tidewatch6/watchbill.json"
+
 for i in 3 4; do
   cd "$TARGET/tidewatch$i"
   npx cucumber-js features/tide-range.feature --name "^Daily tide range is computed$" --tags "not @captain and not @shipwright" >/dev/null 2>&1 || { echo "tw$i NOT GREEN"; exit 1; }
@@ -50,6 +56,6 @@ for i in 3 4; do
 done
 
 echo "=== dispatch bases (skip runs.log prefix per tree when mining: tw3=2 tw4=2) ==="
-for i in 1 2 3 4 5; do
+for i in 1 2 3 4 5 6; do
   echo "tw$i base=$(git -C "$TARGET/tidewatch$i" rev-parse --short HEAD) dirty=[$(git -C "$TARGET/tidewatch$i" status --porcelain | tr '\n' ' ')]"
 done
