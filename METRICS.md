@@ -302,6 +302,23 @@ out-of-tree sink is visible in runlog.js source; Leg A's Boatswain `ls`ed the pa
 scratch dir once after reading it (read-only, sibling names only, cockpit untouched
 9/9 legs).
 
+## 0.13.13 pilot #2 (2026-07-13, sonnet, installed-plugin channel, todopilot2) - PAUSED at leg 2
+
+Real restart, channel and cost both confirmed before spending (see CAPTAIN.md). Two
+legs run before dk paused the pilot on a HIGH finding (QM stalled without
+dispatching Crew - full account in CAPTAIN.md, not restated here).
+
+| Leg | Role | Inv | Cache-read | Out | Wall | Model | Verdict |
+|---|---|---|---|---|---|---|---|
+| 1 | Captain | 32 | 1.88M | 14.0k | 17:53:16-18:07:29 (14m13s) | sonnet 32/32 | PASS: greenfield fast path, 9 features + RIGGING + watchbill, zero plants, dry-run clean |
+| 2 | QM (nested, spawnDepth 2) | 52 | 3.90M | 28.4k | 17:56:54-18:08:25 (11m31s) | sonnet 52/52 | STALL: verification support written, 8 executing suite runs (transcript-grep count, fixture uninstrumented), 32/33 red as expected - but zero Crew dispatch, ends polling a dead PID |
+
+Totals so far: 84 inv / 5.78M cache / 42.4k out. Model split: 84/84 sonnet - zero
+leak (session-model pin holds when the session itself runs sonnet, per the
+restart-plan rationale that motivated setting the session model before this pilot).
+Suite executions: 8 by transcript grep (no runlog.js hook in the TodoMVC fixture);
+1/33 passing pre-Crew (expected - no production code exists).
+
 ## Class tally (impact frequency; update every shakedown)
 
 | Class | Instances | P | N | Neg | Worthiness |

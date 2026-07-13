@@ -1,5 +1,65 @@
 # Captain notes - shipshape-shakedown workstream
 
+## 2026-07-13 pilot #2 PAUSED at leg 2 (QM): stalled without dispatching Crew - HIGH finding, dk's word to pause and record
+
+Real restart confirmed (process start 17:50/17:51 UTC, well after the 13:49 UTC
+0.13.13 install); session model set to sonnet per dk's restart plan. Cost confirmed
+with dk before spending (~half pilot #1's legs, 1.5-2.5h). Scaffolded todopilot2:
+empty repo (README-only operator commit c529b99), both vendored assets committed
+(app-spec.md + app-template.index.html, 98f5f7c). Dispatched `shipshape:captain`
+(installed-plugin channel, model sonnet) with the verbatim pilot user intent.
+
+Leg 1 Captain (agent a1d2688960eb7f1ff): 32 inv / 1.88M cache / 14.0k out /
+17:53-18:07 (14m13s), all sonnet. Greenfield fast path used correctly: RIGGING.md
+(vanilla JS, npm, cucumber-js + Playwright/Chromium), AGENTS.md, private CAPTAIN.md
+notes, 9 `.feature` files covering every app-spec.md section, watchbill.json (watch1
+= `@logic` tier), zero plants. `cucumber-js --dry-run` confirmed all 9 features parse
+clean. Working tree correctly left uncommitted (rides to QM). Zero Captain blockers
+this leg - flagged per pilot.md's own caution ("a pilot with zero blockers means
+roles guessed instead of routing") but framework/storage-key/routing decisions were
+made explicitly and recorded as decisions, not silently assumed, so this reads as
+legitimate direction-already-given greenfield fast path, not a guess - watching for
+whether it recurs as a real gap.
+
+Leg 2 QM (agent ae3fb9a872bf0b9e9, nested under Captain, spawnDepth 2): 52 inv /
+3.90M cache / 28.4k out / 17:56-18:08 (11m31s), all sonnet. STALLED - did NOT
+dispatch Crew.
+
+**HIGH finding, tree- and transcript-verified (not report prose):** QM wrote
+verification support correctly (features/support/{hooks,server,world,steps}.js,
+Playwright-driven), then ran the full suite itself via foreground and background
+Bash (`npx cucumber-js --tags "not @captain and not @shipwright"`, 8 executing runs
+by transcript grep - fixture is uninstrumented, no runlog.js hook, so counted by
+grep per METRICS.md convention) instead of dispatching Crew for the resulting red
+targets. Confirmed via the session's subagents directory: only 2 subagent
+transcripts exist for this pilot (Captain, QM) - zero Crew, zero Boatswain spawned,
+at any depth. Suite result: 1/33 scenarios passing, 32 failing (expected - zero
+production code exists; no `js/`, no `index.html`, no `coverage/` in the tree).
+QM's last five tool calls: a background `while kill -0 <dead-pid>; do sleep 3;
+done` poll loop (the polled PID was already dead - `ps -p` returned not-found),
+`echo waiting`, `echo idle`, then final text "I'll wait for the background
+completion notification before continuing" - no such notification could ever
+arrive; nothing was actually dispatched async. Two consecutive task-notifications
+reported "completed" (each agent's own turn genuinely ended) while implying
+continued progress that was not happening - operator-side transcript verification
+caught this, self-report alone would have missed it.
+
+Doctrine/harness angle for dk (none shipped, routing only): QM's contract is
+verify-then-dispatch-Crew-for-reds, not self-implement; this QM instead treated the
+red census as terminal and never composed a Crew dispatch at all - a silent
+same-role-does-everything failure mode distinct from the previously-catalogued
+batching MISS (which at least dispatched Crew, just serially). Candidate questions:
+does the QM skill text give a legal-looking off-ramp into self-running the suite
+repeatedly instead of dispatching once reds are known; should a QM leg's own
+foreground/background Bash suite-running be capped or flagged if no Crew dispatch
+follows within N runs. Needs QM skill text review before doctrine change, not
+shipped.
+
+dk's word (2026-07-13, mid-run): PAUSE here. Do not resume/redispatch this leg or
+start a fresh QM this session. Findings stand as recorded; pilot #2 resumes only on
+dk's word. Sim tree todopilot2 left as-is (2 commits, 32 reds, uncommitted
+verification support) for inspection.
+
 ## 2026-07-13 wave 4: 0.13.13 validated live 3/3 + fixture v2 shipped; deck is pilot-ready
 
 dk's word: all three proposed items, "get to our best state so we can do an account
