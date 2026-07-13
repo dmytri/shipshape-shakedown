@@ -1,5 +1,43 @@
 # Captain notes - shipshape-shakedown workstream
 
+## 2026-07-13: 0.13.11 SHIPPED on dk's word ("resolve all findings")
+
+Doctrine 0.13.11 (26ca239) committed, pushed, installed (tests 186 green incl. 9 new
+hook checks). This session's subagents stay snapshotted on 0.13.10; next session runs
+installed-plugin 0.13.11 by construction. Per-finding resolution:
+1. Notes custody -> hooks + text aligned: Captain commits notes pathspec-limited
+   (`git commit -m <msg> -- CAPTAIN.md`, hook-allowed; the pathspec itself enforces
+   notes-only whatever is staged); Boatswain gets exactly two content-blind forms
+   (`git add -- CAPTAIN.md`, `:!CAPTAIN.md` exclusion), every other naming still denied.
+2. Foul-to-fresh-QM -> resolved in text, not hooks: a foul is re-derivable (touched
+   seam + missing plank is the same observed evidence), QM and Boatswain skills now
+   say so; the dispatch-guard cap stands (it IS the bulkhead; hand-off-vs-discovery is
+   string-indistinguishable). 2b proved the re-derivation path live.
+3. Run-record schema -> canonical example line embedded in the Wake policy (the tw2
+   imitation evidence says examples bind where key lists do not).
+4. Batching -> SHOULD on one seam cluster; solos only when evidence cannot place the
+   cluster; "solos on a seam the evidence already names shared are the expensive
+   fallback, never the default."
+5. Disposals -> promote-with-correction named in the tag table AND in the Captain
+   skill's harbour-review step (root cause: Captain skill never listed supersede);
+   preference rule added: supersede when an existing scenario already pins the seam.
+6. Plant-red timing -> ONE owner: QM at adoption (promoted check made executable
+   plants, reddens, removes, greens); fit-out derives without planting (bootstrap-time
+   win); harbour plant exception survives only for production-only scantling reds.
+7. Command fidelity -> Rigging read contract: run derived commands verbatim; only
+   {scenario} and ## Tiers tags compose; invented tags are drift.
+8. Model inheritance -> harness-level, documented: AGENTS.md + preamble now order
+   explicit model pinning per dispatched leg (first-spawn-only inheritance recorded).
+Harness: pilot.md now vendors app-template.index.html as a second Captain asset
+(fixture gap from pilot #1 closed); lifecycle leg-1 markers updated to no-plant
+fit-out.
+VALIDATION OWED next session (proposed, needs dk's word): plugin-channel probes for
+batching (crew-batching probe rerun - the regression check), notes-commit both arms
+(captain pathspec commit; boatswain staging + exclusion under new hook), QM plank-gap
+re-derivation, record-line shape on an empty record, and a no-plant fit-out leg.
+STILL AWAITING dk (design decisions, not findings): scope-out confirmation gate,
+greenfield fast path.
+
 ## 2026-07-12 evening: five pre-approved 0.13.10 seam probes COMPLETE (plugin channel)
 
 Discharges the pre-approval below. Verdicts (full numbers and per-leg accounting in
@@ -237,9 +275,11 @@ scenarios/; numbers live in METRICS.md. These notes carry decisions and open ite
 - 2026-07-12: harness repo published to https://github.com/dmytri/shipshape-shakedown
   (private) at dk's request; main tracks origin.
 
-## 0.13.11 candidates (dk decisions pending)
+## 0.13.11 candidates (superseded 2026-07-13: plant-red SHIPPED in 0.13.11 per the
+resolution above; pilot.md fixture amendment DONE; scope-out gate and greenfield fast
+path remain open below)
 
-- Plant-red timing (UPGRADED to MEDIUM, three divergent observations): pilot leg 6
+- Plant-red timing (RESOLVED 0.13.11; kept for history - three divergent observations): pilot leg 6
   Shipwright planted at fit-out; pilot leg 9 QM re-planted at promotion; 0.13.10
   fit-out probe planted NOT AT ALL (derived the plank rules correctly, deferred proof,
   report silent). Two rules name two owners; agents resolve the ambiguity three ways.

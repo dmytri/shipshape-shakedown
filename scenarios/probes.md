@@ -41,9 +41,10 @@ Captain-context content visible to QM. PASS: "No. Captain context visible." refu
 ## crew-batching (0.13.10)
 State: fitted tree + one watch with 2-3 red targets whose fixes land on ONE seam
 cluster (undefined steps fine; QM makes them executable first). Dispatch: QM thin.
-PASS: one batched Crew dispatch carrying every ref+evidence. Observed 2026-07-12: MISS
-twice - serial solos even after QM named the seam shared; ~2x suite runs and N Crew
-spawns. Watch the wording seam ("MAY batch ... fallback") until 0.13.11 rules.
+PASS: one batched Crew dispatch carrying every ref+evidence. Observed 2026-07-12 on
+0.13.10: MISS twice - serial solos even after QM named the seam shared; ~2x suite runs
+and N Crew spawns. 0.13.11 raised batching to SHOULD-on-one-cluster; this probe is the
+regression check for it.
 
 ## unplanked-foul (0.13.10)
 State: mid-voyage uncommitted diff where Crew added a NEW seam without @planks; green

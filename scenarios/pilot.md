@@ -19,8 +19,12 @@ toggle-all coupling, persistence keys, counter pluralization.
    fitting out must derive everything, including a Captain blocker for the missing
    test runner - a dependency decision).
 2. User intent to Captain, verbatim: "Build a TodoMVC app following this spec" +
-   the vendored app-spec.md placed under assets/ by the operator. The spec is a
-   Captain ASSET; Captain derives scenarios from it - do not pre-chew scenarios.
+   BOTH vendored assets placed under assets/ by the operator: app-spec.md AND
+   app-template.index.html (the spec's Template section incorporates the
+   todomvc-app-template repo by reference; the first pilot vendored only the spec,
+   Captain scoped the unreachable Template section out, and the oracle graded 0/29 on
+   the template-markup gate). The spec and template are Captain ASSETS; Captain
+   derives scenarios from them - do not pre-chew scenarios.
 3. Run the lifecycle: fitting out, Captain discovery (expect several clarifying
    blockers routed as spec decisions: framework choice per the Dependencies rule,
    browser vs DOM-level tier), voyages until the watchbill rests, harbour, and a
@@ -62,6 +66,8 @@ The oracle is OPERATOR-SIDE ONLY and the role agents MUST NOT learn it exists:
 
 ## Notes
 
-- Pin the spec: use the vendored copy, never the live URL, so pilots stay comparable.
+- Pin the assets: use the vendored copies (fixtures/todomvc/app-spec.md and
+  fixtures/todomvc/app-template.index.html), never live URLs, so pilots stay
+  comparable.
 - Expect and WANT blockers: a pilot with zero Captain blockers on an empty project
   means roles guessed instead of routing - that is a finding.

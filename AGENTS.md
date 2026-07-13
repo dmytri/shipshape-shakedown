@@ -23,7 +23,9 @@ nothing else (no notes, no fixtures, no scratch).
 3. **Scaffold**: `bin/scaffold.sh /tmp/<scratch>/tidewatchN` (never inside a real
    repo; keep sim trees in the session scratchpad).
 4. **Run legs** per scenarios/lifecycle.md, or scenarios/probes.md for single-rule
-   changes. Thin dispatches; verify tree facts between legs yourself.
+   changes. Thin dispatches; verify tree facts between legs yourself. Pin `model`
+   explicitly on every dispatched leg; nested spawns inherit the parent's model only
+   for the parent's first spawn, then fall to the session model (2026-07-12).
 5. **Mine**: `bin/mine.sh <task-transcript.output> <legname>` per leg;
    `bin/runs.sh <project>` for suite executions; `bin/deckstate.sh` to check wake
    run-record equality. Compare against METRICS.md baselines.
