@@ -33,8 +33,9 @@
    did not), and fit-out with ZERO plants, 3 skeletons + 5-rule conformance
    scantling, tree uncommitted, 26 inv vs 40 stale. Validation is TEXT-layer; the
    0.13.12 hook layer is synthetically ground-truthed; the integrated plugin-channel
-   re-run is owed after a REAL process restart (states rebuild scriptably via
-   scratchpad/build-wave2.sh pattern).
+   re-run is owed after a REAL process restart. States rebuild with ONE command:
+   `bin/probe-states.sh <scratch-dir>` (self-contained from fixtures/probe-states,
+   reproduces the wave deck hashes 13d9a2e/a545663 exactly; tested green 2026-07-13).
 3. Economics on like-for-like states (dk's lens quantified): stale/incoherent wave 1
    = 11 legs, 180 inv, 4 hook denials, 1 doomed dispatch + SendMessage resume, 2/5
    failed outcomes. Coherent wave 2 = 9 legs, 115 inv (-36%), zero mistake/fix
