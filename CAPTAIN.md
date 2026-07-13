@@ -1,5 +1,42 @@
 # Captain notes - shipshape-shakedown workstream
 
+## 2026-07-13 night: 0.13.14 efficiency battery GREEN ("wave 5") - pilot #2 attempt 2 cleared, running next
+
+dk's word this session: run the queued gate (efficiency battery) then the pilot,
+autonomously, report everything at the end. Also flagged and left alone: a stray
+committed-but-unpushed-and-uninstalled 0.13.15 commit sitting in ~/shipshape
+(d31b22f, write-custody artifact-kind fix, tests green locally) - undocumented in
+this log, out of scope for this run per dk's word, not shipped/touched.
+
+Channel verified empirically at session start: process began 19:35:36 UTC, after
+the 0.13.14 install (19:22:20 UTC per installed_plugins.json, cache 670f3abe1e9d).
+First dispatched leg (tw2 captain notes-commit) carried the 0.13.14 marker
+"cheapest tier sufficient to observe" - confirmed live before trusting the rest.
+
+Full numbers in METRICS.md "0.13.14 efficiency battery (wave 5)". Verdict: GREEN,
+7/7 legs PASS on outcome, all sonnet (zero model leak - session model is sonnet so
+even a nested-child fall lands on-tier). One numeric drift: tw4 QM plank-gap ran
++22% invocations vs the wave-3 baseline (22->27) - single-metric, clean outcome,
+not a stop condition, routed as a watch-item. The critical result: **tw13
+slow-census, the purpose-built regression test for the pilot-#2 HIGH deadlock, PASSED
+clean with the harness's own background-task belt-and-braces lines WITHHELD** - QM's
+broad sweep exceeded the foreground cap (~159s), was consumed and acted on in the
+very next invocation, zero pgrep/kill-0/sleep-poll/wait patterns anywhere in the
+transcript, Crew dispatched with the fix, clean Final report. This confirms the
+0.13.14 doctrine text itself (turn discipline + census-to-dispatch + tier economy)
+prevents the failure class, not just operator dispatch hygiene - the gate dk asked
+for is satisfied. Two minor findings routed (not shipped): tw4's foul-catch route
+varied a third way (Boatswain's own custody pass caught it this time, vs QM
+self-re-deriving in wave 2/3) - still legal and clean, flagged as a variance to
+watch, not a defect; fast-path-bootstrap's Captain correctly distinguished a
+peer-relayed answer from direct user approval before treating it as product data -
+a positive behavioural note.
+
+Proceeding straight to pilot #2 attempt 2 (clean rerun, fresh scaffold, NOT a resume
+of the parked todopilot2 tree) per dk's word this session and the standing
+doctrine->probes->pilot sequencing. Full account to follow in this file once the
+pilot lifecycle completes or hits a stop-worthy blocker.
+
 ## 2026-07-13 evening: pilot #2 PARKED on dk's word; doctrine fix package drafted; restart-ready
 
 dk's ruling (2026-07-13, after the forensic addendum below): the pilot does NOT

@@ -337,21 +337,61 @@ until the pilot completes or dk voids it; the redundant-confirmation +1 and
 polls/waits +5 (echo-waiting/idle, dead-PID poll, broken wait, monitor cycle) are
 recorded here for the eventual fold.
 
-## Class tally (impact frequency; update every shakedown)
+## 0.13.14 efficiency battery ("wave 5", 2026-07-13, sonnet, installed-plugin channel, session model sonnet)
+
+Restart-ready queue item 3, run before pilot #2 attempt 2 per dk's doctrine->probes->pilot
+ruling. Channel verified empirically: tw2 Captain leg carried the 0.13.14 marker
+"cheapest tier sufficient to observe"; tw1/tw3/tw13 carried their own markers
+("never an open wait", "not access and pass"/"Staging is not reading"). All 7 legs
+dispatched `model: sonnet`; every top-level transcript's `message.model` field was
+100% `claude-sonnet-5` - zero leak (session model IS sonnet this run, so even a
+nested-child fall lands on the intended tier, per the wave-4 mechanism finding).
+
+| Probe | State | Inv | Cache | Out | Wall | Runs | Verdict |
+|---|---|---|---|---|---|---|---|
+| 2 captain notes-commit (channel verify) | tw2 | 6 | 123k | 1.8k | 30s | 0 | PASS, cheapest yet (wave-3 tw2: 14 inv) |
+| 1 crew-batching | tw1 | 28 | 1.41M | 6.4k | 3m41s | 4 | PASS: ONE batched Crew dispatch, 3 refs/1 seam; matches wave-3's 28 inv, shorter wall, fewer runs (4 vs 5) |
+| 3 boatswain notes arms | tw3 | 20 | 972k | 6.4k | 2m18s | 0 (inherited) | PASS all arms: content-blind staging, row-1 inherit (hash-equal, zero reruns), corroboration strike, commit c320109; BETTER than wave-4's 25 inv |
+| 4 QM plank-gap | tw4 | 27 | 1.32M | 9.3k | 4m27s | 5 | PASS: foul caught (this run via Boatswain's custody pass -> QM redispatched Crew plank-only), commit 44b50c1; +22% inv vs wave-3's 22 (mild drift, watch not block - outcome clean, no contamination) |
+| 5 no-plant fit-out | tw5 | 41 | 2.82M | 21.5k | 6m19s | 4 | PASS: ZERO plants (grep for PERTURBATION/setTimeout in transcript = prose mentions of the check, not an actual plant), 4 `@captain @invariant` scenarios + verify-rules.json, 1 content-catalog finding routed not fixed; vs wave-3's 40 inv/3.79M/13.7m - same inv, much less wall |
+| slow-census (0.13.14 regression probe) | tw13 | 19 | 848k | 7.2k | 5m54s | 5 (incl. 1 operator build-time prefix) | **PASS - the pilot-#2 deadlock trigger, doctrine alone, NO harness background-task lines given.** Broad sweep ran once (`timeout 280`, ~159s, over the ~120s cap), consumed and acted on immediately (Edit follows straight after in the next invocation), zero pgrep/kill-0/wait/sleep-poll patterns in the whole transcript, Crew dispatched with the fix, clean Final report. The turn-discipline + census-to-dispatch text (0.13.14) holds against its own designed regression test. |
+| fast-path-bootstrap | fastpath12 | 13 | 531k | 10.9k | 6m38s | uninstrumented (transcript: 1 focused MODULE_NOT_FOUND rerun -> green) | PASS: minimal RIGGING (5 required values), one Scenario Outline spec+watchbill, real CLI (no doubles), QM voyage sailed to clean deck full completion in 6m38s (vs tw12's 7m24s to specs+watchbill+QM-dispatched only - this run went further, faster). Legitimate Captain blocker raised (fee rates + boundary semantics) and answered as sim-user; Captain correctly flagged the answer's provenance (relayed, not direct) rather than treating it as outbound approval - good behaviour, not a finding. |
+
+Totals: 154 inv / 8.03M cache / 63.5k out / wave wall ~20m (parallel front after channel
+verify). GATE VERDICT: GREEN. All 7 legs PASS on outcome; only tw4 drifted numerically
+above the ~10% bar (+22%, 22->27 inv) and it is a single-metric drift on an otherwise
+clean, contamination-free, zero-redundant-rerun leg - not the "structurally broken"
+condition that would stop the pilot. The one probe purpose-built to regress the
+attempt-1 HIGH deadlock (slow-census) passed cleanly with the harness's own
+belt-and-braces lines withheld, meaning the 0.13.14 doctrine text itself (turn
+discipline + census-to-dispatch + tier economy) is confirmed to prevent the failure
+class, not just the operator's dispatch hygiene. Pilot #2 attempt 2 is cleared to run.
+
+Findings routed to dk, none shipped: (a) tw4's QM plank-gap route this run went via
+Boatswain's own custody pass finding the foul first (rather than QM's own
+re-derivation before dispatching custody) - still a legal, clean PASS shape, but a
+third observed route through this probe (wave-2/3 saw QM self-re-derive; this run saw
+Boatswain catch it) - worth confirming this variance is intentional flexibility, not
+drift; (b) fast-path-bootstrap's Captain correctly distinguished a peer-relayed
+answer from direct user approval and flagged it for confirmation rather than treating
+it as outbound-authorized - a positive behavioural observation, recorded for the
+credit column.
+
+
 
 | Class | Instances | P | N | Neg | Worthiness |
 |---|---|---|---|---|---|
-| skill/rigging reads (opening) | 166 | 166 | 0 | 0 | 100 (+18 wave 4, 2 Skill loads x 9 legs; holds at 0.13.13) |
-| deck retrieval + context reads | ~385 | ~361 | ~24 | 0 | ~94 (wave-4 N: parent-dir ls after reading the v2 sink path in runlog.js, post-edit re-reads; steady) |
-| owed verification runs | 102 | 97 | 5 | 0 | 95 (+13 wave 4, all consumed: QM red censuses, Crew local greens, QM terminal greens; both tw12 Boatswains inherited with ZERO reruns) |
-| redundant confirmation runs | 7 | 0 | 7 | 0 | 0 (+0 wave 4 — fast path runs `runrecord: none`, so the record-append trigger never fires; direct evidence for the open seam ruling) |
-| polls/waits | 32 | 0 | 32 | 0 | 0 (+8 wave 4, ~2-4 per async nested spawn; structural, unchanged) |
-| evidence ops (run record, deck-state hash) | 56 | 55 | 1 | 0 | 98 (+6 wave 4: Leg A hash + record corroboration + strike; tw11 dry-run tree-verification; tw12 Captain binary drives x2 — the two cheap report-fidelity shapes both consumed) |
-| staging/commit/report | 71 | 66 | 7 | 3 | 87 (+12 wave 4: 4 commits — custody d0832cc + product x2 + pathspec notes baa3172 — all landed; N+1: Leg A `git rm` retry on an untracked watchbill) |
+| skill/rigging reads (opening) | 180 | 180 | 0 | 0 | 100 (+14 wave 5, 2 Skill loads x 7 legs; holds at 0.13.14) |
+| deck retrieval + context reads | ~430 | ~406 | ~24 | 0 | ~94 (wave 5: no new N observed - zero cockpit reads, zero stray parent-dir walks) |
+| owed verification runs | 122 | 117 | 5 | 0 | 96 (+20 wave 5: tw1/tw4/tw13 red censuses+Crew local+QM terminal greens, tw5's full-tier regression, tw3's inherited row-1 zero-rerun, fastpath's MODULE_NOT_FOUND->green) |
+| redundant confirmation runs | 7 | 0 | 7 | 0 | 0 (+0 wave 5 — zero instances across all 7 legs) |
+| polls/waits | 45 | 0 | 45 | 0 | 0 (+13 wave 5: tw1 8 sleep-polls on nested Crew, tw4 ~4 hold/sleep cycles, tw13 1 sleep - notably tw13's OWN broad-sweep consumption cost ZERO polls, the doctrine-fix marker) |
+| evidence ops (run record, deck-state hash) | 62 | 61 | 1 | 0 | 98 (+6 wave 5: tw1/tw4/tw13 record appends, tw3 hash-equal inherit, fastpath tree-verified binary drive) |
+| staging/commit/report | 78 | 73 | 7 | 3 | 87 (+7 wave 5: tw2/tw1/tw3/tw4/fastpath commits all landed clean, tw5 harbour output correctly left uncommitted for Captain/Boatswain) |
 | mid-leg doctrine re-read | 3 | 3 | 0 | 0 | 100 (no new instances) |
-| contaminated/premature dispatches | 3 | 0 | 0 | 3 | 0 (no new instances; all 9 wave-4 dispatches accepted) |
-| contamination refusals/guards | 13 | 7 | 2 | 4 | 23 (+1 wave 4: strict-conformant deny of the NEW multi-path staging batch shape, self-healed in 1 retry; zero real catches to make this wave — 0.13.13 removed the three misfire shapes and none recurred) |
-| operator-cockpit reads (sim-boundary breach) | 4 | 0 | 0 | 4 | 0 (+0 wave 4: boundary line held 9/9 incl. a greenfield state — the proven exposure class re-tested clean) |
+| contaminated/premature dispatches | 3 | 0 | 0 | 3 | 0 (no new instances; all 7 wave-5 dispatches accepted) |
+| contamination refusals/guards | 13 | 7 | 2 | 4 | 23 (no new instances wave 5 - zero denials across all 7 legs) |
+| operator-cockpit reads (sim-boundary breach) | 4 | 0 | 0 | 4 | 0 (+0 wave 5: boundary held 7/7, zero cockpit touches) |
 
 Leg worth densities 0.13.8: Captain ~90%, QM 73%, wake-custody 82%.
 Probes 2026-07-12 (sonnet, plugin channel): fresh-custody 100%, hand-off strike 100%,
