@@ -1,5 +1,41 @@
 # Captain notes - shipshape-shakedown workstream
 
+## 2026-07-13 session close: 0.13.13 SHIPPED on dk's word ("ship all five"); restart-ready
+
+Doctrine 0.13.13 (49942d9) committed, pushed, installed 13:49 UTC; tests 194 green
+(hooks 117 incl. 8 new access-vs-mention shapes). This session's subagents stay
+snapshotted at 0.13.12; next session runs 0.13.13 by construction. The five:
+1. Hook precision: CAPTAIN.md deny is now ACCESS, not mention - quoted prose
+   (echoed labels, commit messages) strips before the check, a lone quoted path
+   unwraps first so quoting cannot hide a read, metadata stats (ls/stat/test) and
+   git-global-flag staging forms (git -C <dir> add -- CAPTAIN.md) allowed for
+   Boatswain. Ground truth: the four EXACT wave-3 payloads replayed against the
+   new script - three misfires now allow, the tw8-Crew cat chain still denies.
+2. Boatswain skill wording matches the access rule (opens/searches/edits/removes).
+3. @exceptional-double one voice: inline mark in verification support is the home;
+   tag-table row + both agreement mentions reworded (scenario-tag voice removed).
+4. Fast-path minimal RIGGING: binding example block embedded in the Captain
+   skill's fast-path bullet (all-none slots literal); Shipwright cross-references.
+5. Captain Final report: observable-contract claims tree-verified before reporting.
+
+OPEN (dk has not ruled): the record-append seam - Crew hand-off green recordable
+vs re-proof as the record's standing price. 4 live instances; batching already
+cut the price to one batched rerun per voyage.
+
+Next session queue (restart first; 0.13.13 markers for channel verification:
+boatswain "not access and pass", captain "let the tree answer", shipwright
+"embeds the exact minimal form", shared table "the mark lives inline in
+verification support"):
+1. Plugin-channel spot-validation of 0.13.13: one Boatswain hygiene leg composing
+   labels + stat (expect zero denials), one fast-path leg on an empty repo with
+   the boundary-line dispatch (expect the example block to bind: all-none slots,
+   no wrapper scripts; also re-checks report-contract fidelity live).
+2. Sharpened supersede invitation per the probes.md design rule (finding INSIDE
+   the existing scenario's exercised behaviour).
+3. Fixture v2 bump (pre-decided, do at session start before any probe states):
+   sink runs.log/provisions.log outside the sim tree, move fixture runrecord out
+   of logs/, record the new probe-state hashes in METRICS as the fresh baseline.
+
 ## 2026-07-13 wave 3: integrated plugin-channel re-run DISCHARGED (7 PASS + 1 tainted); dk nodded the two 0.13.12 probes mid-session
 
 Real restart confirmed (process 11:49 UTC > install 08:01 UTC); channel verified by
