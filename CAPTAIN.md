@@ -208,9 +208,45 @@ wrote the watchbill). Leg 2, QM (20 inv / 945k / 2m52s):
 Model leak: QM 33 sonnet / 6 opus (async-resumption pin fall, 8th instance). Shipwright 100%
 sonnet (no nested spawns). Economy numbers still not bankable until a sonnet-session rerun.
 
-**STILL UNTESTED after all of today:** PARALLEL CREW MATES (the highest-flagged risk in the
-dossier, untouched since 0.13.17 - every voyage today dispatched exactly ONE child). Needs the
-two-disjoint-seam state. Also never run: the plank-form check's own planted-red adoption proof.
+### tw15 PARALLEL MATES on 0.13.20: FULL PASS. THE PILOT-#3 HIGH FINDING IS CLOSED.
+
+**The highest-flagged risk, the one that started this whole session, is discharged.** Pilot #3's
+QM hit exactly this shape - two Crew children dispatched in parallel - armed a `Monitor` wait,
+ended its turn, and DIED SILENTLY until the operator resumed it by hand (`SendMessage` response:
+"Agent was stopped (completed); resumed it in the background").
+
+NEW STATE (keep it): `tidewatch15` - fitted base + TWO DISJOINT RED SEAMS, one watch, six targets.
+Seam A: `nextLowTide` missing from `src/tide.js` (low-tides.feature, 3 scenarios). Seam B:
+`src/station.js` does not exist at all (station.feature, 3 scenarios; the dashboard/spy scenario
+dropped to keep the signal clean). Base 8749c3b. Different FILES, so the signal is consumption,
+not collision.
+
+QM leg (20 inv / 831k+ / ~4m52s), harness wait-guard lines WITHHELD so doctrine alone is tested:
+- **BOTH MATES DISPATCHED IN ONE INVOCATION** (`Agent: ||| Agent:` in a single round), one turn,
+  two children, disjoint seam clusters - exactly 0.13.17's parallel-children sentence.
+- **ZERO INVENTED WAITS.** Monitor 0, pgrep 0, kill -0 0, `"type":"result"` 0, and **zero Bash
+  commands containing sleep/wait/poll/until AT ALL**. The one `sleep` string in the transcript is
+  the doctrine text quoting its own wait rule.
+- **It ended its turn, consumed each report as it arrived, and finished ON ITS OWN. No operator
+  nudge - none was sent.** No orphan, no stall, no "completed" status with wait-language.
+- Both seams built, 4 planks all canonical pattern form, **8/8 green**, 6 run-record lines from
+  CARRIED Crew greens (zero re-proof reruns), flat hand-off to Boatswain (0 Boatswain spawns -
+  THIRD confirmation).
+
+**Reading: the 0.13.16 wait rule + 0.13.17 parallel-children sentence prevent the class, in the
+doctrine TEXT, without harness help.** Same method as wave 5's slow-census probe: guards withheld,
+so this is not operator hygiene.
+
+**MINOR FINDING (report fidelity):** QM's report claims "the repo has no `.gitignore`" and routes
+it to Boatswain as hygiene. **FALSE** - `.gitignore` exists and already lists `runrecord.jsonl`
+(tree-verified). Not a behavioural fault, but it is an unverified claim in a final report, exactly
+what the 0.13.13 report-fidelity rule exists to catch, and it would have sent Boatswain chasing a
+non-problem. Second instance today of a role asserting a tree fact it did not check (the first was
+Boatswain's plank-form false pass in tw1).
+
+Model leak: 38 sonnet / 10 opus (9th instance). Economy numbers STILL not bankable.
+
+**STILL NEVER RUN:** the plank-form check's own planted-red adoption proof.
 
 ### THE ORIGINAL FINDING, kept for the record (tree-verified, now resolved above)
 
