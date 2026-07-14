@@ -1,5 +1,69 @@
 # Captain notes - shipshape-shakedown workstream
 
+## 0.13.24 SHIPPED (f2bb482), pushed + installed (cache f2bb482b6622). RESTART, THEN PILOT ON SONNET.
+
+**RESTART REQUIRED before any plugin-channel leg.** This session's process predates the install,
+so subagents dispatched from it run 0.13.23 text. Verify the channel empirically on the first
+leg per AGENTS.md: grep its transcript for `two dispositions and no third`, `:!CAPTAIN.md'`, or
+`keeps no register of failures`. Zero hits = stale snapshot = abort.
+
+### THE BIG FIND: a defect in the SHIPPED release, exposed only by withholding the hook
+
+**Boatswain's CAPTAIN.md content-blind rule was HOOK-enforced, never DOCTRINE-enforced.** Run
+0.13.23 (the tagged release) HEAD-text, where no hook exists, and Boatswain reads Captain's
+notes: the control leg ran `cat CAPTAIN.md` outright and self-reported it. A 0.13.24 leg
+breached the same bulkhead by a different route (unscoped `git diff`). **Two versions, two
+legs, ZERO `:!CAPTAIN.md` exclusions between them.** The prose rule sat two sections from the
+retrieval step and lost to whatever command the role composed. Fixed by putting the exclusion
+IN the command. Gate leg then used it, read zero notes, closed in 5 inv. First time doctrine
+alone has carried that rule. **This is the method working exactly as designed: the hook hides
+the defect, so the shakedown withholds the hook.**
+
+### Shipped in 0.13.24
+
+- **4 contradiction fixes** (five-role cross-consistency hunt, all tree-verified). The
+  release-critical one: Boatswain's "ambiguous plank -> Captain blocker" was a THIRD
+  disposition the Articles never sanction, reopening the tw16 class through a route 0.13.23's
+  fix did not close.
+- **`## Known false-failure modes` DELETED, all 8 sites.** dk's call, and the evidence backed
+  it: doctrine's own words were "an empty section is the healthy state", and it had already
+  drifted the way gravity pulls (Articles said "engineer it out"; QM's skill said only "rerun,
+  don't dispatch Crew"). Validated: fresh fit-out derives RIGGING.md without it and reports the
+  text-search weakness as a harbour finding instead of parking it.
+- **All 5 role skills RECOMPILED by retrieval dependency** (the IEPE refactor). Boatswain's
+  seven hygiene bullets became ONE evidence run + seven judgments. QM works a watch as a SET
+  (step 8 had been quietly re-serializing what step 5 batched). Crew's four-link read chain
+  became two passes, one link being false. Shipwright: opening only, it was already good.
+
+### A/B RESULTS, honest (HEAD-text both arms, same fixtures/model - a clean A/B, since the plugin channel's +58% would have confounded it)
+
+| Leg | 0.13.23 | 0.13.24 |
+|---|---|---|
+| Boatswain custody | 10 | **6**, and the bulkhead holds |
+| QM voyage | 15 | **17 - NOT the predicted win** |
+| Shipwright fit-out | *control INVALID, did no work* | 26 |
+
+Outcomes identical on every valid leg. Mergeable retrieval runs: **0** (was 18 across the fleet,
+runs up to 6 deep). **The QM +2 is recorded as-is, not buried** - both legs correct, within known
+run-to-run variance, but it is not a win. The Shipwright control wrote no RIGGING.md, no
+AGENTS.md, clean tree: 10 vs 26 compares a completed fit-out to a leg that did nothing. **No
+comparison drawn.**
+
+### OWED / OPEN
+
+- **Crew's two-cycle stop cap: dk's ruling owed.** A fifth stop trigger where the Articles
+  sanction four. Deliberately NOT shipped - the hunter flagged its own uncertainty, it is
+  plausibly an anti-thrash guard, and changing a contested rule right before a long pilot is how
+  a pilot gets poisoned.
+- **Plugin prefill (0.13.25):** carry doctrine in the agent definitions instead of the Skill
+  tool. Kills the 2 opening round-trips (12.9% of invocations). MUST be GENERATED from SKILL.md
+  with a drift test, never hand-copied - two copies of a rule is the exact failure class the
+  contradiction hunt found five of.
+- **STILL NEVER EXERCISED** (a pilot would drive all three): scenario-lane decomposition has
+  never met a Captain leg; full-regression economy has never met a Captain outbound decision;
+  the plank-form check's planted-red adoption proof has never run.
+- **Ablation harness: deferred by dk** (too much latency). Design recorded in `scenarios/iepe.md`.
+
 ## GOAL 2, INSTRUMENT 1 DONE: inbound weight is MEASURED, EXACT, and it closes. 2026-07-14.
 
 **Built and validated against the tag** (`bin/inbound.py`, `bin/inbound-fleet.py`,
