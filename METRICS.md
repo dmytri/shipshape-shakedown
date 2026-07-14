@@ -621,11 +621,19 @@ invocations"). They are now separate, and the order has teeth:
 - **Token usage** last. Avoid waste; never optimize for it. "Preserving tokens is not a major
   goal" (dk). Sending MORE tokens LESS often for the same outcome is a win, not a cost.
 
-Corollary for doctrine design (dk): doctrine gives roles OBLIGATIONS, never optimization
-TARGETS. Tell a role "minimize invocations" and it will skip a verification run to save a round;
-tell it "never rerun a proven green, batch one seam into one dispatch, never end a turn waiting"
-and the economy falls out with no perverse incentive. The role-tiered lens below is for SCORING
-a leg after the fact, and is deliberately NOT doctrine text.
+**Corollary (dk, 2026-07-14): minimizing invocations is a function of OUR prompt, context and
+role engineering - never something we tell the agents to do via the prompts. That would be
+backwards.** The lever is on our side of the table: coherent text (the -36% wave-1-vs-wave-2
+result), one retrieval instead of three, a batched dispatch, a hand-off that carries evidence so
+the next role does not re-derive it. Instructing the agent to "use fewer rounds" pushes the cost
+onto the only party who can pay it by cutting corners on the actual work.
+
+So doctrine gives roles OBLIGATIONS, never optimization TARGETS. Tell a role "minimize
+invocations" and it will skip a verification run to save a round; tell it "never rerun a proven
+green, batch one seam into one dispatch, never end a turn waiting, consume each report as it
+arrives" and the economy falls out with no perverse incentive. The rounds drop because there is
+less to do, not because someone was told to hurry. The role-tiered lens below is for SCORING a
+leg after the fact, and is deliberately NOT doctrine text.
 
 Role-tiered refinement (dk, 2026-07-14): the optimization target differs by seat.
 CAPTAIN (human-facing): play-by-play visibility is the priority - the user and
