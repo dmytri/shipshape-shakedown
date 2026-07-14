@@ -44,7 +44,44 @@ sonnet-session before any METRICS baseline is written.
 **STILL UNTESTED: parallel mates.** tw1 dispatches ONE child. Consuming one child never broke.
 The highest-flagged risk in the dossier stands untested; needs the two-disjoint-seam state.
 
-### FINDING (MEDIUM-HIGH, tree-verified): plank form is UNDECIDABLE in doctrine, and custody made a false pass on it
+### RESOLVED BY dk, SHIPPED AS 0.13.18 (823c1e0): the plank names the STEP DEFINITION's pattern
+
+**dk's ruling: "the plank should match the string in the step definition exactly... not the feature
+file, but the actual step def function. Since we already have cucumber usage to make step def to
+feature file."** So the finding below is REAL but I scored the roles BACKWARDS, and the correction
+matters more than the original write-up:
+
+- **Crew and Boatswain were RIGHT.** `@planks("When I ask for the next low tide after {string}")`
+  is now canonical form. The tidewatch fixture's convention was correct all along.
+- **QM's flag was a FALSE POSITIVE.** Its "deferred harbour finding" was doctrine-faithful under
+  the old text and is wrong under the new. Do not count it as a QM win in the tw1 scoring.
+- **My own reading was wrong too**, and only the live voyage exposed it. Reading alone would have
+  shipped the contradiction; this is the argument for probe-before-review, vindicated.
+
+dk's reasoning: `step-usage` ALREADY maps step definition to feature file. A plank copying the
+concrete step line stores a second copy of a join the runner derives for free, and that copy
+drifts with every data edit. The pattern is the durable contract; example values are not.
+
+**Consequences shipped in 0.13.18:**
+- Planking agreement Form + Judging: plank = definition's pattern string verbatim, with its
+  keyword. Trace chain made explicit: seam -> plank -> step definition -> scenarios, and the
+  runner owns the last hop.
+- **Plank form is now DECIDABLE**, which unblocks the 0.13.17 cross-wire I had shipped pointing at
+  an undecidable predicate: the plank string must be a member of the current step-definition
+  pattern set. The derived plank-form rule reddens on a plank naming no pattern.
+- Crew and Shipwright's "use the exact Gherkin step text" instructions INVERTED (they said the
+  opposite in as many words).
+- **The uncovered-seam hole, dk chose option 3.** A plank names a pattern, so a seam with no
+  executable step has no pattern to name. Shipwright leaves it UNPLANKED, carrying its `@captain`
+  scenario, and reports it as a harbour finding. Article 9 amended to permit this wait.
+  **Sharp edge I had to close:** a promoted skeleton passes against EXISTING code, so there is no
+  failing target, no Crew dispatch, and Crew is the only role that writes planks at sea - the seam
+  would have sat unplanked forever. Fix: when QM makes a promoted skeleton's step executable and
+  the target passes against existing production code, QM dispatches Crew with a PLANK-ONLY target
+  (the same route a custody foul already takes). That is the moment the harbour finding closes.
+  **This mechanism is UNTESTED and is the first thing to probe on 0.13.18.**
+
+### THE ORIGINAL FINDING, kept for the record (tree-verified, now resolved above)
 
 Three roles hit the plank-form rule in ONE voyage and resolved it THREE ways:
 - **Crew** wrote `@planks("When I ask for the next low tide after {string}")` - step-definition
