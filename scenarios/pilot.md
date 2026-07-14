@@ -37,6 +37,49 @@ toggle-all coupling, persistence keys, counter pluralization.
 4. Mine every leg per METRICS.md; the pilot yields the large-N class-tally data the
    toy cannot.
 
+## Runner architecture (binding; from pilot #2 attempt 2, 2026-07-14)
+
+The pilot runs 100% autonomously after a ONE-line cost confirmation, with live
+play-by-play. The operator seat is the MAIN SESSION LOOP - never a delegated
+background fork/agent. Reason (twice-proven failure): a nested agent that ends its
+turn on a live background Bash task is NOT resumed when that task completes - the
+notification orphans and the agent sits stopped until someone manually messages it
+(attempt 2's fork stalled 8.5h exactly this way, same class as attempt 1's QM
+deadlock, one layer up). The main loop is structurally immune: the harness
+re-invokes it both on Agent-tool completions and on background-Bash exits.
+
+Rules for the runner:
+- Role legs: async Agent-tool dispatches, one leg at a time, operator-driven.
+- Long commands the runner itself owns (oracle cypress runs, servers): Bash with
+  run_in_background=true, NEVER long foreground calls; wait on output files, never
+  process names (cross-session pgrep contamination, attempt 1).
+- Mine the transcript on EVERY task-notification immediately; never reply to a
+  notification with a bare "waiting" - each wake either consumes a result, dispatches
+  the next leg, or states concretely what external event is pending and how it
+  resumes.
+- PLAY-BY-PLAY (dk's contract): narrate to the user as text, in real time - each leg
+  dispatch (who, what state, what's expected), each mined leg result (inv/cache/out/
+  wall + verdict) as soon as mined, each oracle grade the moment the run finishes,
+  each iteration's translated feedback summary. Results reach dk the moment they
+  exist, not in an end-of-run dump.
+- Zero questions between the cost confirm and the final report. Doctrine findings are
+  recorded and routed in the report, not asked about mid-run. The single exception:
+  a genuine stop-worthy blocker (attempt-1-deadlock severity) - record fully in
+  CAPTAIN.md first, then stop.
+
+## Final analysis (owed at pilot end, dk's four axes)
+
+1. OUTCOME QUALITY: final oracle score (target: full pass), spec-section coverage,
+   residual defect list with evidence.
+2. INVOCATION COUNT: per leg and total (build + all iterations + operator overhead
+   separately), vs prior pilot baselines.
+3. TOKEN EFFICIENCY: cache-read/output per leg, worth densities, P/N/Neg class
+   tally deltas per METRICS.md.
+4. INSTRUCTION FIDELITY: how clearly roles understood and followed doctrine -
+   markers hit/missed, refusals and self-heals, contamination/boundary events,
+   blockers routed vs guessed, stop-lines honoured; and the same lens applied to
+   the runner itself against this file.
+
 ## Grading
 
 - Spec coverage: every app-spec behaviour section maps to at least one binding

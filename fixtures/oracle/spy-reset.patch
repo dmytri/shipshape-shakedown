@@ -1,0 +1,13 @@
+diff --git a/cypress/e2e/spec.cy.js b/cypress/e2e/spec.cy.js
+index 478bcfb..dae40b2 100644
+--- a/cypress/e2e/spec.cy.js
++++ b/cypress/e2e/spec.cy.js
+@@ -385,7 +385,7 @@ Cypress._.times(N, () => {
+       }
+       cy.wrap(localStorageSetItem, {log: false})
+         .should('have.been.called')
+-      cy.wrap(localStorageSetItem, {log: false}).invoke('reset')
++      cy.wrap(localStorageSetItem, {log: false}).invoke('resetHistory')
+     }
+ 
+     let currentTestId

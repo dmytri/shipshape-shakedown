@@ -215,6 +215,80 @@ iterations 2-4 not yet totalled) mined directly from subagent transcripts and
 reported to dk live; final rollup owed once the oracle passes or the session ends,
 whichever first - see "next session queue" note to follow once that happens.
 
+### 2026-07-14 morning: oracle harness bug FOUND and FIXED (operator-side) - the 24/29 plateau was the oracle, not the app
+
+Attempt 2 plateaued at 24/29 across three byte-identical grading runs (runs 3-5);
+two QM iterations honestly found no production defect. dk proposed "vendor the
+tests and fix deps?" with the bar "only if you are really sure." Evidence chain
+that met the bar (all read-only, no harness test runs):
+
+1. The two stuck failures ("New Todo > add todo items", "Mark all as completed >
+   before each") both died at `cy.wrap(spy).invoke('reset')` in the oracle's own
+   `checkItemSaved()` helper - AFTER `.should('have.been.called')` PASSED (i.e.
+   the app persisted correctly; the harness then called a method that doesn't
+   exist).
+2. Sinon removed `spy.reset()` in sinon 5 (2018); modern Cypress (^15.14.2, what
+   the oracle's own package.json floats to) bundles modern sinon with
+   `resetHistory()` only.
+3. The kicker: `noLocalStorageSpyCheck` (spreading `noLocalStorageCheck`) contains
+   the ENTIRE modern "main set" (angular/preact/react/react-redux/svelte/vue - all
+   in-memory, persist nothing) and every legacy app the oracle's README lists as
+   passing. Every framework upstream maintains RETURNS before the spy line. Only a
+   NEW framework that actually implements persistence - exactly what app-spec.md
+   requires - executes it, and fails. The oracle punished the pilot app for
+   correctly implementing persistence, on a path upstream CI never runs (repo
+   mothballed ~8 years, revived 2 months ago for agent-testing per dk; these
+   localStorage paths bit-rotted unnoticed).
+
+Fix: one-line `reset` -> `resetHistory` in the grading clone, vendored durably as
+fixtures/oracle/spy-reset.patch + rationale README (apply after cloning pinned
+ff43b02e; assertions unchanged, grades stay comparable, arguably stricter since
+later spy assertions now actually run). Re-grade of the SAME app bytes (7f52f57):
+**24/29 -> 28/29, zero skips** - the before-each fix also un-skipped the 2
+remaining Mark-all tests, which pass. Sole residual: Persistence detached-DOM -
+genuinely app-side (todopilot3 rebuilds list nodes on state change / re-renders
+after reload; a stable-DOM app passes it). Iteration 6 dispatched to close it
+(product-language feedback: "list should be stable, items update in place").
+
+Also this morning: SECOND fork stall confirmed (transcript timestamps: fork's last
+activity 21:26:18, next 06:04:14 - 8.6h silent on "Waiting for the oracle
+re-grade notification" after its cypress Bash call was auto-backgrounded; a
+background completion never resumes a finished nested agent). Same class as stall
+#1, now 2-for-2: delegated-fork orchestration is CONDEMNED for pilots. Runner
+architecture (main-session loop, Agent-tool legs, run_in_background for
+runner-owned commands, mine-on-every-notification, play-by-play narration, dk's
+four analysis axes: outcome quality / invocation count / token efficiency /
+instruction fidelity) is now BINDING in scenarios/pilot.md. Iteration 6 is being
+driven from the main loop as the architecture's first live proof.
+
+### NEXT SESSION (pilot #3, restart-ready queue - supersedes all prior queues)
+
+dk's want, verbatim intent: clear session and run a full pilot 100% autonomously,
+good play-by-play in real time, results as soon as available, final analysis on
+outcome quality / invocation count / token efficiency / instruction fidelity.
+"I just want a great shakedown system that works reliably and helps us iterate on
+shipshape efficiently."
+
+0. Session model: dk's saved defaults are now fable/xhigh (set 2026-07-14 during
+   the operator's analysis work). The standing pilot word remains SONNET for role
+   legs and uniform accounting (a stronger session model masks doctrine weakness
+   and catches nested falls). Unless dk says otherwise at launch: `/model sonnet`
+   + `/effort medium` first.
+1. Bootstrap per AGENTS.md. Deck expectation: ~/shipshape at 670f3ab, installed
+   0.13.14 (the local 0.13.15 commit d31b22f stays parked/unshipped unless dk
+   ships it - if dk ships: tests green + push + install BEFORE the pilot, and
+   channel-verify a 0.13.15 marker on the first leg).
+2. `/shakedown pilot` per scenarios/pilot.md AS REWRITTEN (Runner architecture +
+   Final analysis sections are binding): ONE-line cost confirm, then 100%
+   autonomous to full oracle green. Main-loop runner only - no fork delegation,
+   ever.
+3. Oracle setup now includes the patch step: clone pinned ff43b02e, `git apply
+   fixtures/oracle/spy-reset.patch` (see fixtures/oracle/README.md for the
+   rationale), npm install, serve, grade. Full-green = 28-29 runnable passing,
+   zero unexplained fails - proven reachable by attempt 2.
+4. Attempt-2 grade history for comparison: 21 -> 23 -> 24 (oracle-buggy) -> 28/29
+   (oracle-fixed, same app bytes) -> iteration-6 outcome in METRICS.md.
+
 ## 2026-07-13 evening: pilot #2 PARKED on dk's word; doctrine fix package drafted; restart-ready
 
 dk's ruling (2026-07-13, after the forensic addendum below): the pilot does NOT
