@@ -1,5 +1,44 @@
 # Captain notes - shipshape-shakedown workstream
 
+## GOAL 1 STATUS: STABLE RELEASE, one probe from the tag (2026-07-14, at 0.13.23)
+
+**DO THIS FIRST ON RESTART: re-run the tw16 trap on 0.13.23 to validate the fix, then TAG.**
+Rebuild: fitted tidewatch + the completed low-tide work as an uncommitted role-advanced diff, with
+nextLowTide's plank MALFORMED (concrete step line, not the `{string}` pattern). Suite is 5/5 GREEN,
+so verification alone says ship it: the ONLY thing between the fault and a commit is an actually-run
+plank check. Dispatch Boatswain post-implementation, thin. **PASS = Deck foul + Crew redispatch, NO
+commit.** (On 0.13.22 it committed: 4dd6482.)
+
+**Validated live (all tree-verified, harness wait-guards withheld):** wait discipline; parallel-mate
+consumption (pilot-#3 HIGH CLOSED); flat QM->Boatswain hand-off (3x); batching; recordable carried
+greens + zero-rerun custody inherit; the full @planks-provisional arc, harbour -> promotion ->
+liquidation, with ZERO reimplementation and ZERO dead code; @conformance lane vocabulary;
+plank-form cross-wire derived into a real executable checker by Shipwright, unprompted.
+**Check precedence (0.13.21) CONFIRMED TWICE:** tw16's Boatswain RAN the plank join and CAUGHT the
+malformed plank that tw1's Boatswain eyeballed past; tw15b's QM independently cross-referenced its
+planks against step-usage instead of asserting them.
+
+**tw16 FOUND THE LAST DEFECT, fixed in 0.13.23 (8e7cf25), UNVALIDATED:** the check bit but the
+DISPOSITION let the fault ship. Boatswain correctly ran the join, correctly found a malformed plank
+Crew had just written - then COMMITTED it and deferred it to harbour, faithfully following its own
+skill text ("plank drift defers to harbour") while the Planking agreement said only drift BEYOND the
+diff does. A missing plank on a touched seam was Crew redispatch; a MALFORMED one on the same seam,
+same diff, same voyage, went to a harbour months away. The weaker rule won and bad state shipped.
+0.13.23: on a touched seam in the role-advanced diff, missing/stale/malformed are ONE fault -
+unfinished Crew work, foul, redispatch. Harbour is where a fault no current role owns goes, never
+where a fault this voyage introduced is parked.
+
+**tw15 regression on 0.13.22: CLEAN** (8/8 green, canonical planks, zero waits/polls). Note it
+dispatched ONE mate this run where the 0.13.20 run dispatched TWO for the identical state, putting
+both seams in one file - **parallelism is NOT deterministic**; both shapes are legal and the earlier
+run already proved parallel consumption. Do not read a single-mate run as a batching regression.
+
+**NOT YET EXERCISED anywhere, carry into the release notes:** the scenario-lane DECOMPOSITION rule
+(one scenario one lane, unbolted feature template) has never met a Captain leg; the full-regression
+economy rule (harbour as sole trigger) has never met a Captain outbound decision; the plank-form
+check's own planted-red adoption proof has never run. Economy numbers remain CONTAMINATED by the
+model-pin leak (9 legs) - nothing is bankable as a METRICS baseline until a sonnet-session rerun.
+
 ## GOAL 2 (dk, 2026-07-14): THE EFFECTIVE RETRIEVAL GRAPH + INBOUND CONTEXT WEIGHT. Runs in a FRESH SESSION, after the stable release lands.
 
 dk's words: "we need a way to understand the effective retrieval graph for all invocations as well
