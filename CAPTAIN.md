@@ -13,7 +13,72 @@ session's process predates the 0.13.17 install, so subagents dispatched from it 
 transcript for a 0.13.17 marker phrase: `one lane`, `harbour is its only trigger`, or
 `never builds its own completion check`).
 
-### DO THIS FIRST: tw1 behaviour smoke test, THEN the review (dk's call, 2026-07-14)
+### tw1 SMOKE TEST: RUN, 4/4 MARKERS PASS + one real finding (2026-07-14, 0.13.17, installed channel)
+
+Voyage: QM 20 inv / 888k / 3m12s, Boatswain 11 inv / 492k / 1m07s. 31 inv, 4 suite runs, commit
+18ee6cb, clean deck. Baseline (wave 5, 0.13.14): QM 28 inv / 1.41M / 3m41s / 4 runs.
+
+- **M1 CHANNEL PASS.** 0.13.17 marker phrases live in the leg's skill text (`harbour is its only
+  trigger`, `never builds its own completion check`, `one lane`, `@conformance`).
+- **M2 FLAT HAND-OFF PASS.** QM made exactly ONE spawn (Crew) and ZERO Boatswain spawns; ended in
+  its report naming Boatswain + 3 advanced targets + base commit; left the tree uncommitted at
+  base for its caller. At 0.13.14 the same probe spawned a nested Boatswain and waited. Tree-
+  verified (HEAD still at base, work unstaged), not report prose. Receiving end also works:
+  operator-dispatched Boatswain committed clean.
+- **M3 NO INVENTED WAIT PASS.** Zero Monitor / pgrep / kill -0 / transcript-grep / sleep-loop
+  commands in either leg. The 3 `sleep`/`until` string hits are the doctrine text quoting ITSELF.
+  Harness background-task belt-and-braces lines were WITHHELD from the dispatch on purpose, so
+  this is the doctrine text alone holding (same method as wave 5's slow-census probe).
+- **M4 BATCHING PASS.** One Crew dispatch, 3 refs, one seam cluster.
+- **BONUS: two 0.13.17 rules fired live, unprompted.** (a) Recordable carried green: QM appended
+  Crew's hand-off green to runrecord as it stands, no re-proof rerun. (b) Boatswain inherited it
+  as commit evidence: ZERO reruns (suite runs stayed at 4). (c) QM cited the new plank-form
+  cross-wire reasoning verbatim when routing its finding.
+
+**ECONOMY NUMBERS ARE CONTAMINATED - do not bank them.** Model split 35 sonnet / 7 opus-4-8: the
+known async-resumption pin leak fired again (QM's continuation after its Crew child resumed fell
+to the SESSION model, which is opus this session). The 0.13.14 baseline was 100% sonnet, so the
+-29% invocation delta is NOT like-for-like. Behavioural markers unaffected. Rerun in a
+sonnet-session before any METRICS baseline is written.
+
+**STILL UNTESTED: parallel mates.** tw1 dispatches ONE child. Consuming one child never broke.
+The highest-flagged risk in the dossier stands untested; needs the two-disjoint-seam state.
+
+### FINDING (MEDIUM-HIGH, tree-verified): plank form is UNDECIDABLE in doctrine, and custody made a false pass on it
+
+Three roles hit the plank-form rule in ONE voyage and resolved it THREE ways:
+- **Crew** wrote `@planks("When I ask for the next low tide after {string}")` - step-definition
+  Cucumber Expression pattern form.
+- **QM** flagged exactly that as wrong-but-deferred, correctly citing `conformance: none` +
+  token-search `plank-inventory` = no executable check governs it. **QM was right.**
+- **Boatswain** looked at the SAME planks, asserted in its custody report that they carry "exact
+  current Gherkin step text", and COMMITTED. **False pass.** Tree: the feature step is `When I ask
+  for the next low tide after "2026-07-12T05:00:00Z"`; the plank says `{string}`.
+
+That is the 2026-07-12 open item (grep-only plank checking degrades to human-read judgment)
+caught LIVE: with no executable check, form-checking fell to judgment, and the judgment was wrong.
+
+**The deeper problem, and the one the fable review must rule on: THE PLANKING AGREEMENT
+CONTRADICTS ITSELF HERE.**
+- Form rule: "Use exact current Gherkin step text."
+- Judging rule, same agreement: "A plank bound to example data goes stale with every data edit."
+- This step's exact text CONTAINS example data (a hardcoded timestamp). Obey the form rule and you
+  author precisely the brittle data-bound plank the other rule warns against. Avoid the
+  brittleness and you write the `{string}` pattern the form rule forbids. **Doctrine backs both
+  horns.** Crew and Boatswain took one, QM took the other.
+- Complication: `step-usage` reports step PATTERNS, so a `{string}` plank may actually JOIN better
+  against step-usage output than a literal one would - the stale-plank join may be quietly
+  assuming the very form the form rule forbids. Check this before ruling.
+- The tidewatch FIXTURE seeded the pattern convention (its pre-existing `nextHighTide` plank uses
+  `{string}`), so Crew copied what it saw. Fixture is partly to blame; the false custody CLAIM is
+  not excused by it.
+
+**Why this blocks 0.13.17's own plank-form cross-wire:** the new text routes plank form into the
+conformance rule set as an EXECUTABLE check. **You cannot write that checker until doctrine
+decides which form is correct for a step carrying example data.** The cross-wire is currently a
+rule pointing at an undecidable predicate. Highest-value item for the fable review.
+
+### DO THIS FIRST: tw1 behaviour smoke test, THEN the review (dk's call, 2026-07-14) [DONE, see above]
 
 dk's sequencing: lightest possible behavioural smoke test BEFORE the fable review, so the
 review reads the diff with live evidence beside it rather than on argument alone. Run ONE leg.
