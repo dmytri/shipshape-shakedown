@@ -43,6 +43,96 @@ zero). Probe pair 2026-07-12: row-1 inherit 0 executions, hand-off strike 0, sta
 Full voyage 0.13.8 (Captain + QM/Crew + fresh-session custody): 35 invocations,
 ~1.53M cache-read, ~17k out, ~5.6m wall. Same intent on 0.13.3: 15.7m.
 
+## Pilot #3 (2026-07-14, sonnet, installed-plugin channel, doctrine 0.13.15, todopilot4, main-loop runner architecture)
+
+First pilot run under the 0.13.14/0.13.15 doctrine AND the pilot.md runner architecture
+(main-session-loop only, no fork delegation, timer-wake narration, mine-on-every-
+notification). Fresh scaffold (empty repo + vendored app-spec.md + app-template.index.html,
+commit 497c74f). Oracle pinned ff43b02e with the fixtures/oracle/spy-reset.patch applied
+from the start (no in-run oracle-harness bug this time — attempt-2's fix ships as a fixture
+now). Channel verified: 0.13.15 doctrine live (tests 203/203 green pre-run); the specific
+0.13.15 write-custody/Cucumber-layout marker did not fire this pilot (this project's
+`verification: tests` layout sits beside, not nested under, `specs: features`, so the new
+rule's exact trigger condition never arose — not a gap, just an untouched seam this run).
+
+**Voyage (bootstrap to first fully-green QM-derived suite, 27 named scenarios):**
+Captain 30 inv/1.96M/23.6k out (08:15:13-08:20:00, ~4m47s); QM top-level 46 inv/3.23M/
+30.5k out (08:20:52-08:50:25) + nested Crew build 63 inv/6.86M/69.7k out + nested Crew
+custody-fix 13 inv/539k/2.1k out (QM caught a genuine custody foul: Crew's routing fix
+had globally monkey-patched `window.setTimeout` in PRODUCTION code to defeat jsdom's
+async hashchange timing — routed to Boatswain, Crew redispatched, test-only fix landed
+in `world.js` instead) + Boatswain 19 inv/923k/5.9k out. **Voyage total: 171 inv / 13.51M
+cache / 132k out**, commit 670d99c. Zero deadlocks, zero orphan stalls this leg.
+
+**Oracle grading, iterated per the two-phase gate (quarantine held throughout — verified
+via transcript grep on every leg, only hit a legitimate `tastejs` URL inside the vendored
+spec asset):**
+
+| Run | Captain | QM (+nested) | Oracle result | Residual named |
+|---|---|---|---|---|
+| 1 (unmodified voyage) | - | - | **23/29** | render-churn/detached-DOM (5), missing CSS-driven edit-hide (1) |
+| 2 (stable identity + edit-visibility) | 18 inv | 55 + nested (Crew A 23, Crew B 25, interference-fix Crew 10, Boatswain 18) | **27/29** | label not hidden (CSS gap under-specified in iteration-2 feedback), same-class persistence detach |
+| 3 (label hide + persistence-settle) | 20 inv | 46 + nested (Crew 18, Boatswain 16) | **28/29** | Persistence detached-DOM (same signature as attempt-2's residual) |
+| 4 (reload-anchored DOM identity, spec drafted, NOT built) | 22 inv | - (dk's word: stop here) | not re-graded | queued for next session, see CAPTAIN.md |
+
+Iteration 2's parallel Crew dispatch (2 disjoint seams: DOM-reconciliation, edit-mode
+hiding) **genuinely collided** — mate A's new `updateLi()` reconciliation path didn't carry
+mate B's hidden-state logic, regressing an already-green target. QM caught it as an
+ordinary failing verification target (not a silent miss), dispatched a solo follow-up Crew
+fix, reverified clean. Live validation of the "parallel Crew stays shared-deck, verification
+is the detector" standing decision — worked exactly as designed.
+
+**Totals through the built iterations (voyage + iterations 2-3, iteration 4 spec-only
+excluded from the "reached 28/29" figure since it was never executed):**
+171 (voyage) + 149 (iter 2: 18+55+23+25+10+18) + 100 (iter 3: 20+46+18+16) = **440
+invocations to reach 28/29** (442 including iteration 4's spec-only Captain leg).
+Cache-read ≈ 27.9M, output ≈ 228k. **Compare attempt-2: 717 invocations to reach the
+same 28/29** (442 voyage + 275 iteration, plus a separate operator-side oracle-harness
+fix) — pilot #3 reached an equal-or-better result in ~39% fewer invocations, with no
+oracle-harness bug this time (fixed from the start) and a genuinely cleaner residual
+read (same failure signature as attempt-2's, now seen twice across two independent
+apps — stronger evidence it is a tier-observability boundary, not an app defect).
+
+**Instruction fidelity — two real findings, both HIGH/routed, neither shipped (see
+CAPTAIN.md for full evidence chains):**
+1. **Monitor-tool orphan stall on a nested agent** (HIGH): iteration-2 QM dispatched two
+   parallel Crew children, armed the `Monitor` tool, and ended its turn — confirmed via
+   `SendMessage` response ("Agent was stopped (completed); resumed it") that this
+   orphaned exactly like the pilot-#2 fork stalls, now proven on a real Shipshape role,
+   not just the harness runner seat. Operator-resumed manually.
+2. **Self-devised sync marker is unreliable** (follow-on): after being warned off Monitor,
+   the same QM invented a foreground Bash poll checking dispatched agents' transcripts
+   for a `"type":"result"` JSONL marker that does not exist in this runtime's transcript
+   format — burned two ~9-minute timeouts in one leg (once self-recovered at timeout,
+   once operator-nudged to save the second wait) waiting on a condition that could never
+   match, even though the work it was waiting on had already finished within seconds
+   both times.
+
+Both QM legs otherwise behaved well: correct custody-foul catch and routing (voyage),
+correct parallel-mate collision handling via ordinary verification (iteration 2), correct
+self-recovery via ground-truth checks (`git diff`, fresh reruns) once its invented wait
+mechanisms failed (iteration 3). The failures are specifically in HOW a role waits on
+multiple/uncertain async children, not in the underlying verification/build work, which
+was uniformly sound across all four legs.
+
+**Model split:** 100% sonnet across every mined invocation, zero leak (session model is
+sonnet throughout).
+
+**dk rulings this pilot, routed to a follow-up fable session (full text in CAPTAIN.md,
+none shipped — mid-pilot no-side-scope rule held):**
+1. Full-regression economy: only harbour should ever run a full regression (cut the
+   Captain-skill "offer" bullet; reword the Verification agreement so harbour is the sole
+   trigger, not "pre-outbound and harbour").
+2. Narration ruling: the human-facing seat must ALWAYS narrate progress in plain text
+   while dispatched work runs — no silent gaps, no raw-transcript dumps, no bare
+   task-list views standing in for narration. Applies to real Shipshape Captain use, not
+   just this harness.
+3. The Monitor-stall and broken-poll-marker findings above, with a design option raised
+   by dk: decouple QM->Boatswain into a flat, symmetric hand-off (mirroring the
+   already-working foul->fresh-QM direction) rather than a nested wait; QM<->Crew stays
+   nested (QM genuinely needs Crew's outcome) but needs a named, trusted way to consume
+   multiple concurrent children without inventing an ad-hoc wait mechanism.
+
 ## Pilot #2 attempt 2 (2026-07-13/14, sonnet, installed-plugin channel, doctrine 0.13.14, todopilot3)
 
 Clean rerun (fresh scaffold, not a resume of the parked attempt-1 tree) after the
@@ -478,6 +568,28 @@ credit column.
 | contaminated/premature dispatches | 3 | 0 | 0 | 3 | 0 (no new instances; all 7 wave-5 dispatches accepted) |
 | contamination refusals/guards | 13 | 7 | 2 | 4 | 23 (no new instances wave 5 - zero denials across all 7 legs) |
 | operator-cockpit reads (sim-boundary breach) | 4 | 0 | 0 | 4 | 0 (+0 wave 5: boundary held 7/7, zero cockpit touches) |
+
+Pilot #3 deltas (2026-07-14, ~440 invocations across 4 Captain/3 QM/6 Crew/3
+Boatswain legs; not individually re-classified per invocation given the leg count -
+qualitative deltas only): skill/rigging reads and deck retrieval stayed high-positive
+throughout (every role opened correctly, zero cockpit reads across 16 legs, holds the
+100/~94 worthiness at 0.13.15); owed verification runs positive and heavy (every
+focused/broad sweep across 3 build+iteration cycles landed evidence a next action
+used); redundant confirmation runs stayed at 0 new instances - QM's post-edit reruns
+in iterations 2-3 were legitimate re-proofs (verification support genuinely changed
+underneath the prior green), not redundant confirmation of unchanged state;
+staging/commit/report +4 clean commits (670d99c, 2fb4390, 64ca588), zero negatives;
+contamination refusals/guards and operator-cockpit reads: 0 new instances, oracle
+quarantine held perfectly across every leg (transcript-verified). **polls/waits: +2
+NEW severity, not just count** - a Monitor-armed wait that genuinely orphaned a
+nested QM (operator-resumed) and a self-devised poll-marker condition that could
+never match, burned twice (~9m timeout each, once self-recovered, once
+operator-nudged). Both are QM inventing its own synchronization primitive rather
+than trusting the proven single-child Agent-tool auto-resume pattern (which held
+100% across every OTHER dispatch this pilot, sequential and otherwise) - the class's
+0 worthiness holds, but the FAILURE MODE sharpened from "wasted invocations" to
+"can silently orphan a live voyage," which is the HIGH finding routed to the next
+session (see CAPTAIN.md).
 
 Leg worth densities 0.13.8: Captain ~90%, QM 73%, wake-custody 82%.
 Probes 2026-07-12 (sonnet, plugin channel): fresh-custody 100%, hand-off strike 100%,
