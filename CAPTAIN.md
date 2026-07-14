@@ -170,10 +170,47 @@ organically to QM replacement.** Shipped as 0.13.20:
   dispatches Crew plank-only to swap in the pattern it just authored. Trigger, target and fix are
   all mechanically derivable, and the work arrives as ordinary failing verification.
 
-**STILL UNTESTED:** (a) `@planks-provisional` written at harbour (0.13.20 changed the annotation
-under tw14's feet); (b) its liquidation at promotion - Captain promotes, QM finds the seam by the
-annotation, Crew swaps it. Rerun tw14 on 0.13.20, then run the promotion voyage. Also still
-untested since 0.13.17: PARALLEL CREW MATES.
+### tw14b + LIQUIDATION VOYAGE on 0.13.20: FULL END-TO-END PASS, tree-verified (2026-07-14)
+
+**The whole arc works, harbour to liquidation. Nothing left untested in this mechanism.**
+
+Leg 1, Shipwright harbour (base 4b03fe2, 34 inv / 2.48M / 6m33s, 100% sonnet, zero leak):
+- **`@planks-provisional` LANDED, first contact with the new text.** TWO of them on `tideRange`,
+  one per discovered behaviour: `@planks-provisional("features/tides.feature:Tide range for a day
+  with recorded tides")` and `...:Tide range for a day with no tides is an error"`. Canonical
+  scenario-reference form. **No quote collision - the 0.13.19 defect is closed in practice.**
+- Scenario names in the refs match the `@captain` scenario titles EXACTLY (char-for-char).
+- `@planks` stayed ONE form on `nextHighTide`. Write scope held (zero step defs).
+- **Shipwright DERIVED THE LIQUIDATION PREDICATE into its rule set unprompted** - the scantling
+  reddens on a `@planks-provisional` whose scenario "no longer carries @captain".
+- Channel verified: leg read templates from `.../shipshape/5c783a8...`.
+
+Operator then promoted as Captain would (stripped `@captain` off the two tideRange scenarios,
+wrote the watchbill). Leg 2, QM (20 inv / 945k / 2m52s):
+- Made the 3 steps executable. **Both targets PASSED against untouched production code** - so
+  there was NO RED to dispatch on. This is exactly the state where the old rules lose the seam.
+- **THE LIQUIDATION FIRED.** QM ran `grep -rn "@planks-provisional" src && grep -c "@captain"
+  features/...` - found the seam BY THE ANNOTATION with no seam hunt, saw the tag was gone,
+  ruled it red, and dispatched Crew with a plank-only target. Then ENDED ITS TURN.
+- **Crew swapped both annotations for `@planks("When I ask for the tide range on {string}")` and
+  touched NOTHING ELSE.** Tree-verified: `git diff` on `src/tide.js` since base shows ONLY the
+  added docblock, 3 lines, all annotation. `tideRange` body untouched, exactly ONE definition.
+- **ZERO reimplementation, ZERO duplicate seam, ZERO dead code.** The failure dk reversed option 3
+  to prevent is closed, and closed MECHANICALLY - it arrives as ordinary red work, not as a role
+  remembering to be careful.
+- Deck: 4/4 green, 2 run-record lines, flat hand-off to Boatswain again (1 Crew spawn, 0 Boatswain
+  spawns - SECOND confirmation), zero polls/waits/Monitor.
+- QM raised two honest Captain findings, both correct: the conformance skeletons are still
+  `@captain` so the plank-form check is NOT live (its planted-red proof is owed at promotion), and
+  `RIGGING.md` now names a `scantlings` path no BINDING scenario references - a textbook Scantling
+  agreement finding.
+
+Model leak: QM 33 sonnet / 6 opus (async-resumption pin fall, 8th instance). Shipwright 100%
+sonnet (no nested spawns). Economy numbers still not bankable until a sonnet-session rerun.
+
+**STILL UNTESTED after all of today:** PARALLEL CREW MATES (the highest-flagged risk in the
+dossier, untouched since 0.13.17 - every voyage today dispatched exactly ONE child). Needs the
+two-disjoint-seam state. Also never run: the plank-form check's own planted-red adoption proof.
 
 ### THE ORIGINAL FINDING, kept for the record (tree-verified, now resolved above)
 
