@@ -274,27 +274,36 @@ spec-derivation quality with no answer key in reach). The real product capabilit
 is a USER-SUPPLIED external acceptance suite handled first-class by the doctrine.
 In real usage there is no quarantine - the user tells Captain about the tests.
 
-**0.13.16 candidate (draft, three homes, one voice - NOT shipped):**
-1. Asset policy: a user-supplied executable acceptance suite is a named asset
-   class - read-only custody (it is the user's contract; roles never edit it),
-   distinct from specs: it is acceptance verification, never a substitute for
-   deriving binding scenarios from intent.
+**0.13.16 candidate (draft v2 after dk's correction, three homes, one voice -
+NOT shipped):** dk's ruling on v1's item 1: do NOT discourage mining the tests
+for intent - that wall is a pilot-measurement artifice only. "The captain should
+use the tests, or any other scantlings they can find, to get it right the first
+time... should be encouraged."
+1. Asset policy: user-supplied verification material (an executable acceptance
+   suite, QA scripts, checklists) is a named asset class: read-only custody (it
+   is the user's contract - roles never edit it), and INTENT-BEARING - Captain
+   reads it during discovery like any other scantling source and derives binding
+   scenarios informed by everything it checks. Convergence with the suite is by
+   design, not accident. Binding scenarios remain the project's own executable
+   spec at the project's own verification tier (fast, local); the acceptance
+   suite stays the outer gate (authoritative, typically slower) - deliberate
+   test-pyramid duplication, not waste.
 2. Captain skill (discovery/fast-path): when intent names existing tests, ONE
    question elicits: where they live, the exact run command, how the app must be
    served. Recorded as a RIGGING `acceptance:` slot (command verbatim, same
    fidelity rule as other rigging commands). Acceptance green joins the stated
    intent's definition of done.
-3. Lifecycle mechanics (QM home): the voyage sails to watchbill rest on its OWN
-   spec-derived scenarios FIRST (the two-phase principle - keeps the suite a
-   check, not a crutch); then the acceptance suite runs; each failure lands as a
-   new/amended binding scenario (spec-first fix, never a test-chasing patch),
-   then the normal watchbill -> Crew cycle; iterate until acceptance green.
-   This is exactly the loop the operator drove manually in pilot #2 attempt 2,
-   minus the disguise.
+3. Lifecycle mechanics (QM home): the voyage sails to watchbill rest on its own
+   binding scenarios, then the acceptance suite runs. With intent mined up front
+   the expectation is near-first-try acceptance green; the fallback loop for any
+   residue: each failure lands as a new/amended binding scenario (spec-first
+   fix, never a test-chasing patch), normal watchbill -> Crew cycle, re-run
+   acceptance until green.
 Quality guardrails per dk's caution: skill-only baseline stays generic (no
 model/tool names beyond the user's own rigging values), minimal wording, tests
 green, one voice per rule; the pilot quarantine stays in the SHAKEDOWN procedure
-only - doctrine text never mentions oracles or pilots.
+only - doctrine text never mentions oracles or pilots, and never discourages
+using available material.
 
 (dk clarified same day: "upstream" means the shipshape DOCTRINE only - no
 tastejs/todomvc PR is proposed or wanted. The oracle spy-reset fix stays
