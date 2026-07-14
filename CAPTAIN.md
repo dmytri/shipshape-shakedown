@@ -118,10 +118,62 @@ instead of two). Rejected, three reasons, and dk landed on the third himself:
    that only works where the runner has pending semantics is a Cucumber-JS convention, not a rule.
    (It would also breach QM's write scope, which is what licenses Shipwright to talk to the user.)
 
-**UNTESTED on 0.13.19, first things to probe:** (a) the provisional plank written at harbour by
-Shipwright; (b) its self-liquidation at promotion (QM writes the definition -> drift reddens ->
-plank-only Crew dispatch normalizes it). Neither has ever run. Note 0.13.17's tw1 green does NOT
-cover any of this.
+**PROBED on 0.13.19 (tw14 Shipwright harbour) -> mechanism WORKS, and the probe found a DEFECT in
+it that reading could never have caught. Fixed in 0.13.20 (5c783a8). See below.**
+
+### tw14: Shipwright harbour on 0.13.19, an uncovered seam (2026-07-14)
+
+State built for this probe (NEW, keep it): fitted tidewatch tree + `tideRange` seam with real
+behaviour, no scenario, no step def, no plank. Base bfd6c80, clean, suite green.
+Leg: 17 inv / 1.19M / 6m01s / 100% sonnet, ZERO model leak (no nested spawns).
+
+**PASSES, all tree-verified:**
+- **Provisional plank LANDED.** `tideRange` got `@planks("When I ask for the tide range on
+  "2026-07-12"")` - the `@captain` skeleton's step line verbatim, per 0.13.19. The seam is held.
+- **Write scope HELD.** Zero step definitions written. The rejected empty-step-def route did not
+  sneak in.
+- **Pattern plank untouched.** `nextHighTide`'s `{string}` plank verified against fresh
+  `step-usage` with zero drift.
+- **Channel verified for free:** the leg read its own templates from `.../shipshape/eee0ef8...`.
+- **0.13.17 lane vocabulary is LIVE:** 3 `@conformance` skeletons, ZERO `@invariant`.
+- **BEST RESULT: the cross-wire closed the loop.** Shipwright DERIVED the two-form rule into an
+  executable checker, unprompted, first try: `scantlings/verification-conformance.json` takes
+  `captainScenarios` as an input and reddens on "a @planks string matching neither a current
+  step-definition pattern nor a current @captain scenario step line". The 0.13.17 rule that was
+  pointing at an undecidable predicate this morning is now a real check.
+
+### DEFECT FOUND BY tw14, FIXED IN 0.13.20 (5c783a8): the concrete-step-line plank collides with its own syntax
+
+`@planks("When I ask for the tide range on "2026-07-12"")` - **the inner quotes are unescaped.**
+A Gherkin step line carries DOUBLE-QUOTED parameters, and `@planks("...")` uses double quotes as
+its DELIMITER. Verified: a standard extraction regex parses the pattern plank fine and **fails to
+match the provisional plank at all**. The pattern form is immune (`{string}` has no quotes), so the
+collision is unique to the provisional form and appears in exactly the case that form exists to
+serve. Bitterest part: the checker Shipwright derived would redden the plank Shipwright wrote.
+
+**dk's fix, better than the escape-hatch I proposed: an EXPLICIT provisional annotation that leads
+organically to QM replacement.** Shipped as 0.13.20:
+
+`@planks-provisional("features/tides.feature:Tide range for a day spans its highest high and lowest low")`
+
+- **Kills the collision:** the string is a scenario REFERENCE in the canonical
+  `<spec>.feature:<Scenario Name>` form the watchbill and `focused` already speak. No embedded step
+  data, no quotes, nothing to escape. Parse-verified both ways: a `@planks` regex does NOT falsely
+  match `@planks-provisional`.
+- **`@planks` returns to ONE form** (the step-definition pattern), which is what dk originally ruled.
+  The transitional state is a different annotation, not a second form of the same one.
+- **Self-announcing:** a reader sees at once that the plank is provisional and which scenario it
+  waits on. Under the two-form scheme you could only tell by joining against the specs.
+- **Liquidates ORGANICALLY, which was dk's ask:** promotion removes the `@captain` tag, so a
+  `@planks-provisional` naming a promoted scenario is RED - before QM even writes the step def. QM
+  greps for the annotation naming its directed target, finds the seam with NO seam hunt, and
+  dispatches Crew plank-only to swap in the pattern it just authored. Trigger, target and fix are
+  all mechanically derivable, and the work arrives as ordinary failing verification.
+
+**STILL UNTESTED:** (a) `@planks-provisional` written at harbour (0.13.20 changed the annotation
+under tw14's feet); (b) its liquidation at promotion - Captain promotes, QM finds the seam by the
+annotation, Crew swaps it. Rerun tw14 on 0.13.20, then run the promotion voyage. Also still
+untested since 0.13.17: PARALLEL CREW MATES.
 
 ### THE ORIGINAL FINDING, kept for the record (tree-verified, now resolved above)
 
