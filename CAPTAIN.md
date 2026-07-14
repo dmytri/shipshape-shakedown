@@ -326,7 +326,18 @@ time... should be encouraged."
    rework cycle) is the cost that matters; token volume per round is not."
    Note the interlock with item 4: report-chaining's token cost at the Captain
    seat is explicitly accepted - visibility trumps thrift where a human is
-   watching.
+   watching. dk's addendum (2026-07-14): a dispatcher that cannot stream
+   dispatched work's output can SET A TIMER - self-scheduled wakes to check and
+   surface progress mid-flight. Doctrine-generic wording candidate (rides with
+   item 4, same home): "Where the runtime lets the dispatcher schedule its own
+   wake, silence while dispatched work runs is a choice: the human-facing seat
+   owes a check-in cadence, surfacing dispatched work's progress as it becomes
+   knowable, not only at completion." Runtime caveat kept harness-side: in this
+   runtime only the MAIN session can timer-wake (a finished nested agent is not
+   resumed by its own timers - the 2-for-2 orphan stall), one more reason the
+   human-facing Captain seat is where play-by-play lives. Runner-side rule
+   already shipped in scenarios/pilot.md (timer wakes every ~5m during long
+   legs, tail-mine + narrate).
 Quality guardrails per dk's caution: skill-only baseline stays generic (no
 model/tool names beyond the user's own rigging values), minimal wording, tests
 green, one voice per rule; the pilot quarantine stays in the SHAKEDOWN procedure

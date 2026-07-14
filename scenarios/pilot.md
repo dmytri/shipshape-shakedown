@@ -62,6 +62,16 @@ Rules for the runner:
   wall + verdict) as soon as mined, each oracle grade the moment the run finishes,
   each iteration's translated feedback summary. Results reach dk the moment they
   exist, not in an end-of-run dump.
+- TIMER WAKES during long legs (dk, 2026-07-14: "the dispatcher can set a timer
+  when it can't route subagent output to main session"): completion notifications
+  are not the only legal boundary - while a leg longer than ~5 minutes runs (QM
+  voyages especially), the runner schedules its own wake every ~5 minutes, tails
+  the leg's live transcript (latest tool calls / new commits, NOT a full read),
+  and narrates interim progress ("QM dispatched Crew for X; 2 commits landed").
+  Timer wakes are main-session-only in this runtime (a finished NESTED agent is
+  not resumed by its own timers or background children - the 2-for-2 orphan
+  stall). Cost is Captain-seat cost: explicitly accepted per the role-tiered
+  economy (visibility over tokens at the human-facing seat).
 - Zero questions between the cost confirm and the final report. Doctrine findings are
   recorded and routed in the report, not asked about mid-run. The single exception:
   a genuine stop-worthy blocker (attempt-1-deadlock severity) - record fully in
