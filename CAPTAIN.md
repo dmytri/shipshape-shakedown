@@ -1,13 +1,17 @@
 # Captain notes - shipshape-shakedown workstream
 
-## GOAL 1 STATUS: STABLE RELEASE, one probe from the tag (2026-07-14, at 0.13.23)
+## GOAL 1 COMPLETE: **v0.13.23 TAGGED AND PUSHED** (8e7cf25). Stable release. 2026-07-14.
 
-**DO THIS FIRST ON RESTART: re-run the tw16 trap on 0.13.23 to validate the fix, then TAG.**
-Rebuild: fitted tidewatch + the completed low-tide work as an uncommitted role-advanced diff, with
-nextLowTide's plank MALFORMED (concrete step line, not the `{string}` pattern). Suite is 5/5 GREEN,
-so verification alone says ship it: the ONLY thing between the fault and a commit is an actually-run
-plank check. Dispatch Boatswain post-implementation, thin. **PASS = Deck foul + Crew redispatch, NO
-commit.** (On 0.13.22 it committed: 4dd6482.)
+**tw16b, the final gate: FULL PASS, tree-verified.** Identical tree, identical malformed plank,
+identical 5/5 GREEN suite - the outcome INVERTED. HEAD stayed at base 7e31010, **nothing committed**,
+work left uncommitted for Crew redispatch. Deck foul named the seam, the line, the fault, and the
+correct pattern to carry, so Crew needs no seam hunt. It RAN the join (4 step-usage invocations),
+did not eyeball it. 0.13.23 marker phrases live in the leg's text. Its report closes: "No claim in
+this report is by-read-only; every tree claim above is a command's output" - 0.13.21 self-attested.
+14 inv / 668k / 1m36s. **On 0.13.22 the same Boatswain found the same fault and committed it
+anyway (4dd6482). On 0.13.23 it refuses. The check bites AND the disposition holds.**
+
+This is the FIXED BASELINE for Goal 2. Measure against the tag, never against churning text.
 
 **Validated live (all tree-verified, harness wait-guards withheld):** wait discipline; parallel-mate
 consumption (pilot-#3 HIGH CLOSED); flat QM->Boatswain hand-off (3x); batching; recordable carried
