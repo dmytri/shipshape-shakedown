@@ -604,6 +604,77 @@ stale-record 91%.
 Seam probes 2026-07-12 evening: see the 0.13.10 seam probes section above; overall
 P~391/N~15/Neg 3 of 409 (~95% positive).
 
+## GOAL 2, INSTRUMENT 1: inbound context weight (2026-07-14, measured at tag v0.13.23)
+
+**Built:** `bin/inbound.py` (one leg), `bin/inbound-fleet.py` (all legs in a session),
+`bin/doctrine-sections.py` (section cost inventory). Measured against the FIXED tag per dk's
+sequencing - installed plugin cache `8e7cf2504ecb` is byte-identical to `v0.13.23` (verified
+by diff, not assumed).
+
+**The method is EXACT and needs no tokenizer.** The API reports, per invocation,
+`context[n] = input + cache_creation + cache_read` - the true prompt size. So
+`delivered[n] = context[n] - context[n-1] - output[n-1]` is exactly the tokens injected
+between two calls, whatever the channel. A token entering at invocation `k` is re-read by
+every invocation `k..N`, so its RESIDENT COST is `size x (N-k+1)`, and summing resident cost
+over every block reproduces the metered spend. **That identity is asserted on every run and
+closes at drift +0 on all 14 legs.** If it ever drifts, the decomposition is unsound and the
+tool says so.
+
+**Two traps, both hit and both fixed - do not reintroduce them:**
+1. The doctrine body does NOT arrive as a tool result. `Skill` returns a 36-char stub
+   (`Launching skill: shipshape:boatswain`); the text is injected by another channel and is
+   not reliably written to the transcript at all. Attribution by CONTENT silently misses it.
+   Attribute by the CALL: price ordinary tool results at the leg's own observed char->token
+   rate, give doctrine the residual.
+2. Before that fix, `probe19`'s shared Articles were filed as `command: 24.7k` because that
+   invocation called `Skill` and `Bash` together and a char-proportional split handed the
+   tokens to Bash. An instrument that miscounts its own headline is worthless; the ledger
+   identity is what caught it.
+
+**Fleet: 14 legs / 224 invocations / 12,616,440 tokens read.**
+
+| Source | Share of all inbound spend |
+|---|---|
+| shared Articles (`shipshape/SKILL.md`) | **36.9%** |
+| harness floor (system prompt + tool schemas + dispatch) | **33.5%** |
+| role skills | 14.0% |
+| **THE JOB** (everything retrieved, run, and reasoned) | **15.6%** |
+
+**84% of every token a Shipshape role reads is boilerplate.** The shared Articles measure
+~24.0k tokens (74,255 chars), confirmed independently by two roles on two legs - not the
+~15k the notes estimated. Every role loads it in full: Crew 24,086, QM 24,055, Boatswain
+24,040, Shipwright 24,066.
+
+| Role | Legs | Inv | Shared loaded | Role skill | JOB% of its context |
+|---|---|---|---|---|---|
+| Crew | 5 | 50 | 24,086 | 4,732 | **5.2%** |
+| Boatswain | 3 | 44 | 24,040 | 7,234 | 11.2% |
+| QM | 4 | 79 | 24,055 | 6,574 | 14.8% |
+| Shipwright | 2 | 51 | 24,066 | 16,071 | 25.1% |
+
+Crew is the sharpest case: **the shared Articles are 5x the size of Crew's own role skill**,
+and the actual job is 5.2% of what Crew reads.
+
+**dk's named suspects, priced.** He guessed Crew carries Harbour flow, Watchbill and Outbound
+it never uses. All three are real, and all three are SMALL: Watchbill 718 tok, Harbour flow
+529, Outbound 400 - together 1,647 tok, **6.8% of the shared Articles** (~16.5k per 10-inv
+Crew leg). Cutting all three from Crew saves ~3.7% of a Crew leg's spend. The heavy sections
+are Verification policy (1,625), Role transitions (1,433), Hand-off custody (1,397) - all
+plausibly load-bearing for every role. **The bulk is not in the obvious offcuts.**
+
+**THE CAVEAT THAT REFRAMES THE WHOLE RESULT, and it must ride with any citation of these
+numbers:** cache-read tokens bill at ~10% of input, so 12.6M cache-read is real but modest in
+money, and dk's own ladder puts tokens LAST ("preserving tokens is not a major goal"). On the
+token rung alone this finding would not justify touching doctrine. What promotes it is
+LATENCY (rung 2, outranking invocations and tokens): across the 14 legs, mean context per
+invocation vs seconds per invocation gives **Pearson r = +0.82**. **Confounded** - the
+big-context legs are Shipwright legs that also reason more per round, so this is SUGGESTIVE,
+NOT CAUSAL. The controlled test is a probe: same leg, same state, trimmed context, measure
+wall. That probe is owed before any claim that trimming buys latency.
+
+And the real prize is rung 1, QUALITY - attention dilution across 24k tokens of mostly-
+irrelevant rules - which **instrument 1 cannot measure at all**. Cost is not worth.
+
 ## The audit lens (per dk)
 
 **THE LADDER (dk, 2026-07-14, binding): quality > latency > invocations > token usage.**

@@ -1,5 +1,58 @@
 # Captain notes - shipshape-shakedown workstream
 
+## GOAL 2, INSTRUMENT 1 DONE: inbound weight is MEASURED, EXACT, and it closes. 2026-07-14.
+
+**Built and validated against the tag** (`bin/inbound.py`, `bin/inbound-fleet.py`,
+`bin/doctrine-sections.py`). Full numbers + method + traps in METRICS.md; here is what a
+fresh session needs.
+
+**The method needs no tokenizer and it is exact.** `context[n] = input + cache_creation +
+cache_read` is the true prompt size, so `delivered[n] = context[n] - context[n-1] -
+output[n-1]` is exactly what got injected between two calls. A token entering at `k` is
+re-read `N-k+1` times; sum those resident costs and you must reproduce the metered spend.
+**The identity is asserted on every run and closed at drift +0 on all 14 legs.** That
+assertion is the whole reason to trust the numbers - and it is what caught my own bug
+(`probe19`'s shared Articles were being filed as `command:24.7k`).
+
+**Transcripts persist and are NOT in /tmp** - the notes feared they were volatile. They live
+at `~/.claude/projects/<proj>/<session>/subagents/agent-*.jsonl`. Nothing needs harvesting
+before a session dies. Today's session `6bdcdbf3` holds 14 role legs, 0.13.17->0.13.23.
+
+**THE HEADLINE: 84% of every token a Shipshape role reads is boilerplate.**
+14 legs / 224 inv / 12.6M tokens: shared Articles **36.9%**, harness floor **33.5%**, role
+skills 14.0%, **THE JOB 15.6%**. Shared Articles measure **~24.0k tokens, not the ~15k I
+estimated** - and every role loads all of it. Crew reads 24.1k of shared Articles (5x its own
+role skill) to do a job that is **5.2%** of its context.
+
+**dk's hypothesis is CONFIRMED but SMALL, and that is the useful part.** Crew really does
+carry Harbour flow, Watchbill and Outbound. Priced: 529 + 718 + 400 = **1,647 tok, 6.8% of
+the shared Articles**. Cutting all three from Crew saves ~3.7% of a Crew leg. The heavy
+sections are Verification policy (1,625), Role transitions (1,433), Hand-off custody (1,397)
+- plausibly load-bearing for everyone. **The bulk is not in the obvious offcuts, so the
+"move Crew's dead sections" lever is real but minor.** Do not oversell it to dk.
+
+**WHAT THIS DOES NOT SHOW, and I will not let it be read otherwise.** This is COST, not
+WORTH. Three limits, all binding:
+1. **Tokens are rung 4** and cache-read bills at ~10%. On the token rung alone this finding
+   does NOT justify touching doctrine. dk: "preserving tokens is not a major goal."
+2. **The latency case is suggestive, not proven.** Mean context vs sec/invocation across the
+   14 legs: **r = +0.82** - which would promote this to rung 2, above invocations and tokens.
+   But it is CONFOUNDED (big-context legs are Shipwright legs that also reason more per
+   round). **The controlled probe is owed: same leg, same state, trimmed context, measure
+   wall.** Until it runs, "trimming buys latency" is a hypothesis, not a finding.
+3. **The real prize is rung 1, quality** - attention dilution across 24k tokens of mostly-
+   irrelevant rules - and instrument 1 **cannot see it at all**.
+
+**NEXT, and dk rules before anything moves:** instruments 2 (retrieval->consumption edge
+graph) and 3 (doctrine-section x role consumption matrix). Instrument 3 is the one that could
+shrink the shared skill, and it **collides with the resident-by-design standing decision**
+("no reference-file splits in doctrine skills"). Re-homing a section into a role skill is not
+strictly a reference-file split - every role already loads its own skill - but it is close
+enough to that decision's spirit that dk rules first. And the standing limit holds: **the
+matrix NOMINATES, it never condemns; anything it flags gets a probe before it gets cut**,
+because a rule can be load-bearing precisely because it PREVENTED something (the wait rule's
+value is a stall that did not happen, and it will surface in no transcript).
+
 ## GOAL 1 COMPLETE: **v0.13.23 TAGGED AND PUSHED** (8e7cf25). Stable release. 2026-07-14.
 
 **tw16b, the final gate: FULL PASS, tree-verified.** Identical tree, identical malformed plank,
