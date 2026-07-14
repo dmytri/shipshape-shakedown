@@ -88,6 +88,41 @@ message rather than left for the subagent to guess.
 Redispatching a fresh QM (bulkhead: new context, not the blocked QM's) now that the
 harness runs.
 
+### Pilot #2 attempt 2: voyage 1 GREEN (32/32), oracle iterated 21->23->24/29, plateaued - checking with dk before further grinding
+
+Fresh QM voyage completed clean: 32/32 QM-derived scenarios green, zero deadlock,
+zero polls, all sonnet. Full numbers in METRICS.md "Pilot #2 attempt 2". Oracle
+grading (operator-side, quarantine held - transcript-verified clean on every leg):
+run 1 (unmodified) 21/29, already beating pilot #1's first-grade 0/29.
+
+Per dk's mid-run word (overriding the earlier "route findings" framing): iterated
+oracle failures as ordinary product-language feedback through the normal cycle
+(Captain spec/watchbill amendment -> fresh QM -> Crew -> Boatswain -> re-grade),
+oracle never exposed to any role. Iteration 2 (render churn -> keyed-node reuse,
+edit-mode hiding, first-write persistence framing) -> 23/29, real architectural fix
+landed (`eeb3f83`). Iteration 3 (label-hide, add-settling via mark-all-complete
+proxy) -> 24/29, real fix landed (`dd54354`). Iterations 4 and 5 (save-ordering /
+startup-render-path framing, then reload-settle-stability framing) both produced
+QM's own HONEST finding of no production defect - both amended scenarios already
+passed against completely unmodified `src/index.html` (byte-identical from
+`cea5a54` onward, confirmed by diff) - oracle stayed at 24/29 unchanged both times.
+
+**Plateau, not a stall**: the 3 residual failures (two identical `reset`-property
+CypressErrors on the harness's own storage-spy mechanism, one reload-timing DOM-
+detachment) held byte-for-byte unchanged across 3 full grading iterations despite
+two different genuine, independently-framed product asks landing real spec
+coverage each time with zero effect on the actual failure. Evidence (not further
+diagnosis - read from the app's own source and QM's own repeated verification-only
+findings, no comparison/control apparatus built, per dk's explicit word against
+that): this looks like a test-harness/library-version artifact independent of app
+behaviour, not a reachable product gap. Flagged to dk mid-run rather than
+continuing to spend identical-outcome iterations blind. Grand total so far: 717
+invocations (442 voyage + 275 across 4 iterations) for 24/29 (82.8%) - already
+above pilot #1's 18/29 (62%) at roughly 1.4x the invocation cost, not the 13x-bare
+pilot #1 opened at. Checking with dk on whether to keep spending iterations on the
+plateaued 3, accept them as documented residuals and close out the pilot, or take
+a different diagnostic angle.
+
 ### Pilot #2 attempt 2, operator-layer finding (HIGH, runtime/harness, NOT doctrine): the fork itself hit the exact attempt-1 deadlock class
 
 Twice this run, the coordinating fork (an autonomous background agent dk had drive

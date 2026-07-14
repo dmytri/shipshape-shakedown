@@ -43,6 +43,55 @@ zero). Probe pair 2026-07-12: row-1 inherit 0 executions, hand-off strike 0, sta
 Full voyage 0.13.8 (Captain + QM/Crew + fresh-session custody): 35 invocations,
 ~1.53M cache-read, ~17k out, ~5.6m wall. Same intent on 0.13.3: 15.7m.
 
+## Pilot #2 attempt 2 (2026-07-13/14, sonnet, installed-plugin channel, doctrine 0.13.14, todopilot3)
+
+Clean rerun (fresh scaffold, not a resume of the parked attempt-1 tree) after the
+0.13.14 efficiency battery gated GREEN. Full account in CAPTAIN.md; numbers here.
+
+**Voyage 1 (bootstrap to first fully-green QM-derived suite, 32/32 scenarios):**
+Captain (specs+watchbill, incl. a toolchain blocker + resume) 50 inv/3.77M/31.5k
+out; QM blocked-then-resolved attempt 10 inv/402k/5.05k out; QM voyage (retry)
+111 inv/12.66M/65.3k out top-level + 14 nested Crew/Boatswain legs 271 inv/14.24M/
+106.2k out. **Voyage total: 442 inv / ~31.1M cache / ~208k out, ~53m active leg
+wall** (scaffold-to-green ~56m wall-clock). Zero deadlocks, zero polls/pgrep/kill-0
+patterns anywhere, all-sonnet (zero model leak - session model is sonnet).
+**Tier economy A2 validated live**: Captain chose jsdom verification over a
+real-browser tier and named it as an open question rather than unilaterally
+adopting Playwright - the exact attempt-1 root-cause fix, holding on re-test.
+
+**Oracle grading** (tastejs/todomvc pinned ff43b02e, operator-side only, quarantine
+held throughout - verified via transcript grep for oracle terms on every leg,
+only hit being a legitimate "tastejs" URL inside the vendored app-spec.md's own
+Template section): run 1 (unmodified voyage-1 build) **21/29 passing** - already
+better than pilot #1's first grade (0/29). Iterated per dk's word (spec/watchbill
+amendment -> fresh QM -> Crew -> Boatswain -> re-grade, oracle failures translated
+into ordinary product-language feedback, never exposing the oracle to any role):
+
+| Iteration | Captain | QM (+nested) | Oracle result |
+|---|---|---|---|
+| 2 (render churn, edit-mode hiding, first-write persistence) | 32 inv | 38 + 93 nested (5 Crew/Boatswain legs) | 23/29 |
+| 3 (label-hide, add-settling via mark-all proxy) | 20 inv | 22 + 39 nested (1 Crew/Boatswain pair) | 24/29 |
+| 4 (save-before-clear ordering, startup-render-path) | 23 inv | 29, 0 nested - both scenarios ALREADY PASSED against unmodified production code | 24/29 (unchanged) |
+| 5 (reload-settle stability) | 22 inv | 18, 0 nested - scenario ALREADY PASSED, no defect found | 24/29 (unchanged) |
+
+Iteration total: 275 inv. **Grand total, full pilot: 717 inv** (442 voyage + 275
+iteration) to reach 24/29 (82.8%) - a HIGHER pass rate than pilot #1's 18/29 (62%,
+one iteration, 517 inv total lifecycle). Zero deadlocks, zero contamination, zero
+cockpit reads, zero role-boundary breaches across every leg.
+
+**Plateau finding (routed, not a doctrine defect):** the 3 residual failures (two
+`reset`-property CypressErrors on the harness's own storage-spy teardown, one
+reload-timing DOM-detachment) held EXACTLY unchanged across iterations 3-5 despite
+three independently-framed product asks each landing real spec coverage - QM's own
+honest verification found no production defect on two of those three passes (Crew
+never dispatched, scenarios already passed against untouched code), and the app's
+`src/index.html` was byte-identical from commit `cea5a54` onward. This is strong
+evidence the residual 3 are not reachable through further product-language
+iteration - most plausibly a test-harness/library-version artifact independent of
+app behaviour, not a real spec gap. Operator did not build a comparison/control
+apparatus to confirm this (out of scope per dk's word); this is inference from the
+app's own source and QM's repeated independent findings, not further diagnosis.
+
 ## TodoMVC pilot baselines (2026-07-12, sonnet, HEAD-text legs, doctrine 0.13.9)
 
 27 dispatched role legs, greenfield to graded app. Role-leg totals only: 517
