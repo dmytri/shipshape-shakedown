@@ -1,6 +1,17 @@
 # Captain notes - shipshape-shakedown workstream
 
-## 0.13.24 SHIPPED (f2bb482), pushed + installed (cache f2bb482b6622). RESTART, THEN PILOT ON SONNET.
+## 0.13.25 SHIPPED (f155284), pushed + installed. RESTART, THEN PILOT ON SONNET.
+
+**0.13.25 = 0.13.24 + Crew's stop recast.** dk ruled: cap APPROACHES, not edit cycles. Crew's
+skill had a fifth stop trigger (a bare two-cycle count) where the Articles sanction four, and it
+would stop a CONVERGING fix one edit from green, spending a redispatch to finish it. Now: a
+second edit REFINING an approach is the work and runs to green; a second APPROACH stops, because
+Disposition 3 already bans alternative approaches and design choice is not Crew's with a target
+in hand. **No live leg has ever hit this stop - the pilot is the first test of whether Crew ever
+reaches it.**
+
+**Channel markers for 0.13.25:** `The stop is on the approach, never on a cycle count`,
+`two dispositions and no third`, `:!CAPTAIN.md'`, `keeps no register of failures`.
 
 **RESTART REQUIRED before any plugin-channel leg.** This session's process predates the install,
 so subagents dispatched from it run 0.13.23 text. Verify the channel empirically on the first
