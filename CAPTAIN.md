@@ -1,9 +1,191 @@
 # Captain notes - shipshape-shakedown workstream
 
-## NEXT SESSION QUEUE (fable model, runs AFTER pilot #3's full analysis is delivered - dk's word)
+## 2026-07-14: THE QUEUE IS SHIPPED - 0.13.17 (85e9e6f), pushed and installed. Two things owed: a FABLE DOCTRINE REVIEW of the diff, then live-fire probes.
 
-Consolidated pointer so nothing below gets missed. Five items, all mid-pilot findings
-routed but NOT shipped (no side-scope mid-pilot rule held throughout):
+The five-item queue below was worked through with dk in one session, item by item, and
+shipped as **0.13.17** (`85e9e6f`, tests 209/209 green, pushed, `npx plugins add` done).
+0.13.16 (`19fd03a`, the wait-on-a-signal rule) had shipped in a prior session and covered
+queue items 3-4 only PARTIALLY - see below. Nothing in the queue is now unshipped.
+
+**RESTART REQUIRED before any probe leg.** The plugin snapshot is process-level: this
+session's process predates the 0.13.17 install, so subagents dispatched from it would run
+0.13.16 text. Restart, then verify the channel empirically per AGENTS.md (grep a leg
+transcript for a 0.13.17 marker phrase: `one lane`, `harbour is its only trigger`, or
+`never builds its own completion check`).
+
+### OWED #1: fable doctrine review of the 0.13.17 diff (dk's ask, this session)
+
+Read `git -C ~/shipshape show 85e9e6f`. The review dossier - every decision, its reasoning,
+and the risks I flagged - is in the next section. Review with fresh eyes; I wrote it, so I
+am the wrong reader for it.
+
+### OWED #2: live-fire probes, which no doctrine version since 0.13.15 has had
+
+**0.13.16 AND 0.13.17 have both shipped with ZERO live-fire validation.** Run the five
+pre-approved probes (scenarios/probes.md) on the installed 0.13.17 channel. Fold in the
+channel-economy re-measure (below) at the same time; the probes must run anyway, so the
+measurement is nearly free.
+
+### The channel-economy re-measure (dk: "re-measure, and consider real world impact")
+
+The standing "+58% invocations on the plugin channel vs HEAD-text" finding is **stale and
+probably overstated**. Evidence it is not structural: at 0.13.12 the five probes cost 182
+inv (plugin, wave 3) vs 115 (HEAD-text, wave 2). At 0.13.14 the SAME probes on the plugin
+channel cost 6+28+20+27+41 = **122 inv** (wave 5) - roughly HEAD-text parity. The gap
+appears to track doctrine COHERENCE, not the channel (the wave-1-vs-wave-3 lesson wearing a
+channel costume). Not a controlled comparison (different doctrine versions), hence the
+re-measure: same five probes, 0.13.17, plugin vs HEAD-text, fixture v2 (rebuilds in ~19s,
+deck hashes reproduce byte-exactly).
+
+Record per leg, on the four-rung ladder: **wall-clock, invocations, cache-read, output, and
+mean context per invocation.** Wall outranks invocation count now (see METRICS.md's rewritten
+lens) - a plugin channel that runs more rounds but lands sooner is NOT convicted. Report leg
+wall in absolute terms AND as a share, so the toy-suite distortion (~95% agent overhead)
+stays visible rather than baked in.
+
+Two things the probes structurally CANNOT see, and the report must say so: they measure the
+plugin's **tax** and never its **insurance**. A conformant agent never trips a hook, so a
+clean probe run shows the cost of enforcement and none of its value (the one time the value
+showed was tw8's Crew attempting `cat CAPTAIN.md`). If the tax IS real, the cheapest lever
+is plugin-side, not doctrine-side: **carry doctrine text in the plugin's agent definitions
+instead of making roles load it through the Skill tool** - same text, same hooks, same
+isolation, minus ~2 round trips per leg.
+
+## 2026-07-14: REVIEW DOSSIER for the fable doctrine review of 0.13.17
+
+Every decision below was worked out live with dk this session. Grouped by confidence, because
+the review should spend its time on the third group.
+
+### Settled by dk's explicit ruling - review for WORDING only, not for the decision
+
+1. **Full-regression economy.** Harbour is the SOLE full-regression trigger. Outbound ships on
+   the voyage's own focused/enumeration evidence. Cut: the Captain-skill "offer a full regression
+   across all tiers" bullet, the Captain final-report bullet, the two-trigger sentences in the
+   Verification policy and the Wake policy, Shipwright's "pre-outbound or the next harbour"
+   nets, QM's "or a full regression" run-shape, and two README paragraphs.
+   Rationale (dk, worked through in 3 steps): harbour is the only pivot that pairs the run with
+   coverage triage and the economy audit, and that pairing is what makes the spend worth paying;
+   the same run anywhere else spends the cost and discovers nothing with it. Sequencing
+   (ship-then-harbour vs harbour-then-ship) becomes the user's free choice, not a doctrine order.
+   **I raised one objection and dk overruled it, correctly:** killing the pre-outbound regression
+   also removes the net that stops a live `PERTURBATION` token shipping. dk's ruling: "we worry
+   far too much about misplaced perturbations... if they are truly harmless we don't need to hunt
+   for them, they will eventually be removed as deadcode, if they are not harmless they will
+   eventually cause a red and be sent to crew." No quiescence exception was written. **If the
+   reviewer wants to reopen anything, this is the one place a real consequence was knowingly
+   accepted.**
+2. **Narration.** dk: "there is never a situation where I want silent background runs."
+   The rule went through THREE shapes before landing, and the final one is much smaller than the
+   first two, because dk kept correcting the frame:
+   - I first proposed a cadence clause on QM's voice. dk: smart-but-silent is an internal-role
+     token measure, not a Captain constraint; and in skill-only there is no spawning at all -
+     Captain, QM, Crew and Boatswain all run in the foreground, so the human already sees every
+     command, run and edit. **Silence is not a doctrine defect; it is created entirely by
+     spawning with context isolation.** A foreground workflow must not be burdened or confused by
+     text describing a problem it cannot have.
+   - So the rule binds the ACT of dispatching, not the channel: a spawning-capable skill-only
+     agent can choose to spawn, and the moment it does, the human's view goes dark. Conditional
+     on spawning, it burdens nobody who runs in the foreground.
+   - dk's final refinement: the runtime need NOT surface progress directly to the human; it is
+     enough that progress is visible to an ACTIVE SEAT who narrates on a timer, **no more than 2
+     minutes**. Option A accepted for skill-only: QM narrates in smart-but-silent (terse, but
+     progress IS visible, and Captain explains it all at the end).
+   **The load-bearing distinction, which the reviewer should check survived the prose:**
+   completion is learned from the REPORT; visibility is served by NARRATION. The seat never wakes
+   to find out *whether the work is done* (that is the busy-wait 0.13.16 kills, and exactly what
+   pilot #3's QM did); it wakes to *tell the human what it can already see*. Same clock, two
+   purposes. If doctrine blurs them, the next role reads the timer clause as permission to poll.
+   **Known limit, written into the text:** timer wakes reach the MAIN SESSION only (this harness's
+   own finding - a nested agent cannot self-schedule a wake). So the narrating-seat route serves
+   the top seat and nothing below it; anything deeper needs the machinery route. Both routes are
+   in the sentence deliberately.
+   The remaining narration work is PLUGIN work, not doctrine: the plugin isolates the context, so
+   the plugin owes the visibility back.
+
+### Settled on my argument, dk did not contradict - review the DECISION, not just the wording
+
+3. **Parallel children.** 0.13.16's "a dispatched agent ends on its report" is singular and never
+   names the multiple-concurrent-children case, which is what actually broke in pilot #3. Written:
+   *a role MAY dispatch several agents in one turn; it ends its turn, and consumes each report as
+   it arrives.*
+4. **No legal-polling recipe.** My note originally proposed naming a sanctioned in-turn
+   ground-truth check (poll the work product, never transcript internals). **I inverted it** and
+   the reviewer should sanity-check that call: writing "here is how to poll legally" would
+   re-legitimize the exact instinct that burned two ~9-minute timeouts. Written as a prohibition
+   instead: *the report is the only channel that says a dispatched role is done; a role never
+   builds its own completion check out of a transcript, a process table, or a working file.*
+   Scoped carefully to *inferring completion*, so it does NOT outlaw reading a dispatched role's
+   progress for narration - those ask different questions. **That scoping is subtle and is the
+   most likely place for a drafting error.**
+5. **Flat QM->Boatswain.** dk's own design option, shipped. QM ends in its report naming Boatswain
+   + advanced targets + base commit; QM's CALLER dispatches custody; Boatswain reports to Captain.
+   Mirrors the foul direction, which already worked this way (a foul re-derives for a fresh QM,
+   no return path needed). QM<->Crew stays nested because QM genuinely needs Crew's outcome to
+   pick the next red target. Dispatch-contract table collapsed the two Boatswain rows into one
+   ("To Boatswain"). **Check the receiver landed:** I added a Captain-workflow bullet making
+   custody Captain's dispatch, because a flat hand-off with no receiver is a dropped voyage.
+6. **Scenario lanes (@contract / @conformance).** The three-bucket muddle dk raised, resolved as a
+   sharper trichotomy than the original note: the distinction is not "does a maintainer care" but
+   **what the assertion is ABOUT** - (a) product behaviour (untagged default), (b) the product's
+   own mechanical shape/contract, permanent, survives shipping (`@contract`), (c) the project's
+   own METHOD, which expires (`@conformance`). `@invariant` was doing jobs (b) and (c) at once and
+   is retired into them. Decomposition rule written: **one scenario, one lane** - and the
+   feature-file template was changed, because it had been actively teaching the blur (a trailing
+   `And the response conforms to the "<schema>" schema` bolted onto a product scenario as the
+   RECOMMENDED shape). Also written: a report that counts scenarios counts BY LANE (dk's
+   heads-up-display framing: a green product lane beside a red conformance lane is a different
+   ship from the reverse, and one blended number tells the reader neither).
+   **Naming is mine, not dk's** ("open to ideas" was his word). `@conformance` was chosen to match
+   existing vocabulary (the `conformance` command, the verification-conformance rule set).
+   **Migration cost is real and unpriced: every fitted-out project's `@invariant` scenarios and
+   any tag-filtered command must be re-derived at next refit. Downstream carry, below.**
+
+### Smaller items, all shipped, low risk
+
+7. **Plank-form cross-wire.** The Planking agreement now routes plank form/placement into the
+   derived verification-conformance rule set (proven red by a plant at adoption) instead of
+   degrading to human-read judgment where no docblock/AST reader exists. Closes the 07-12
+   LOW->MEDIUM open item.
+8. **Minimal-RIGGING no longer `none`s out user-stated values.** The rule's intent is "don't
+   invent"; a value the user said out loud is not invented. Fixes the tw9/wave-4 finding where a
+   Captain wrote `none` over the user's explicit "Node 20 + npm".
+9. **Carried greens are recordable.** A fresh green in a hand-off appends to the run record as it
+   stands. Kills the record-append seam (QM re-running Crew-proven greens purely to author a
+   record line) by applying custody's existing evidence-or-rerun principle.
+10. **Hook blesses multi-path content-blind staging.** `git add -- <paths...> CAPTAIN.md` now
+    passes; the previous "exactly these two forms" taxed the best-behaved batching Boatswain one
+    cycle. Implemented by splitting the command on its separators and stripping the path ONLY
+    inside a staging segment, so `git add -- src CAPTAIN.md ; cat CAPTAIN.md` still DENIES.
+    5 new hook tests cover both directions (131 hook assertions green).
+
+### Deliberately NOT written - the reviewer should confirm these absences are right
+
+- **Voyage-scoping guidance** (1 QM cycle/7 scenarios vs 2 cycles/9 for identical intent, ~25 inv
+  apart, clean outcomes both ways). Writing it risks over-constraining a judgment call.
+- **QM plank-gap route variance** (three observed routes to the same clean outcome: QM
+  self-re-derives, or Boatswain catches it in custody). Declared intentional flexibility.
+- **The role-tiered economy lens** (Captain optimizes for visibility, tokens not a constraint;
+  QM/Crew minimize invocations). Stays a SHAKEDOWN SCORING LENS in METRICS.md, not doctrine.
+  Reason (dk agreed): doctrine gives roles OBLIGATIONS, not optimization TARGETS - a role told to
+  "minimize invocations" will skip a verification run to save a round. The obligations already in
+  doctrine (never rerun a proven green, batch one seam into one dispatch, never end a turn
+  waiting) buy the same economy with no perverse incentive.
+- **Model tiering / the pin leak.** Standing decision: harness-only, never doctrine text.
+
+### Risks I am flagging against my own work
+
+- **The narration/turn-discipline seam is the sharpest thing in this diff.** Two rules, one clock,
+  opposite purposes. Read the Narration section and Hand-off custody together and check they
+  cannot be read as licensing a poll.
+- **`@invariant` retirement is a breaking vocabulary change** with an unpriced downstream cost.
+- **The perturbation net was knowingly removed** (see item 1).
+- **The full-regression cut touched 9 sites across 5 files plus the README.** `tests/homes.sh`
+  caught one real break (I dropped the named "Selection MAY narrow intermediate confirmation"
+  principle that Shipwright cites by name; restored). A second pair of eyes on the remaining
+  cross-references is worth the spend - `grep -rn "full regression\|pre-outbound\|@invariant"`
+  comes back clean, but clean greps are not a coherence proof.
+
+## The five queued items, as they stood before this session (kept for the reviewer's context)
 
 1. **Full-regression economy (dk's ruling, worked out live in 3 steps, see dated
    section below)**: cut the Captain-skill "offer a full regression across all
@@ -456,6 +638,12 @@ main tracks origin.)
 
 ## Downstream carry
 
+- **0.13.16/0.13.17 (BREAKING for fitted-out projects):** `@invariant` is retired into
+  `@contract` (product's mechanical shape) and `@conformance` (project's own method). Every
+  fitted project's `@invariant` scenarios and any tag-filtered command re-derive at next
+  refit. Also carry: harbour is the sole full-regression trigger (outbound ships on
+  selective evidence), the flat QM->Boatswain hand-off, the wait-on-a-signal rule, the
+  no-self-devised-completion-check rule, and one-scenario-one-lane decomposition.
 - Jolly and Estelle re-derive at next refit: everything 0.13.0-0.13.9, notably
   watchbill as sole QM channel, thin dispatch, broad/coverage without fail-fast,
   @invariant rename, planted-red vocabulary, trace-selected recheck, decision-table

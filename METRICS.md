@@ -8,7 +8,14 @@
 - wall: first-to-last timestamp. ~95% agent overhead on toy suites, so wall tracks
   invocations x model speed, not verification.
 
-Token cost ~= cache_read x invocations. Latency lever == token lever == fewer rounds.
+Record all four per leg, plus MEAN CONTEXT PER INVOCATION (cache_read / invocations). That last
+number decides whether a leg's extra rounds are cheap-and-fast or fat-and-slow; without it,
+invocation count silently stands in for two things it may not track.
+
+The old shorthand "token cost ~= cache_read x invocations; latency lever == token lever == fewer
+rounds" is RETIRED (dk, 2026-07-14): it holds only while context per invocation is constant. It
+is not. More small, low-context, fast invocations can beat fewer large costly ones on BOTH wall
+and tokens. Invocations are a PROXY for the two things actually paid, never the target itself.
 
 ## Suite executions (bin/runs.sh on the project)
 
@@ -599,11 +606,26 @@ P~391/N~15/Neg 3 of 409 (~95% positive).
 
 ## The audit lens (per dk)
 
-Ranking refinement (dk, 2026-07-13): outcome quality first, then latency measured in
-invocations and mistake/fix cycles (refusals, fouls, denied-command retries, rework
-loops), then raw context-token volume last. Sending MORE tokens to the model LESS
-often for the same outcome quality is a win, not a cost. Framework coherence is the
-key latency lever because mistake/fix cycles are the dominant latency source.
+**THE LADDER (dk, 2026-07-14, binding): quality > latency > invocations > token usage.**
+
+Four rungs, in that order, each outranking everything below it. This SUPERSEDES the 2026-07-13
+formulation, which fused latency and invocations into one rung ("latency measured in
+invocations"). They are now separate, and the order has teeth:
+
+- **Quality** first, always. An outcome that is wrong is not made right by being cheap or fast.
+- **Latency** second, and it OUTRANKS invocation count. A leg that runs more rounds but finishes
+  sooner WINS. Wall-clock is the tiebreaker above round count.
+- **Invocations** third. They hold their own rung because each round is both a cost and a chance
+  to err; mistake/fix cycles (refusals, fouls, denied-command retries, rework loops) are the
+  dominant latency source, which is why framework coherence is the key lever.
+- **Token usage** last. Avoid waste; never optimize for it. "Preserving tokens is not a major
+  goal" (dk). Sending MORE tokens LESS often for the same outcome is a win, not a cost.
+
+Corollary for doctrine design (dk): doctrine gives roles OBLIGATIONS, never optimization
+TARGETS. Tell a role "minimize invocations" and it will skip a verification run to save a round;
+tell it "never rerun a proven green, batch one seam into one dispatch, never end a turn waiting"
+and the economy falls out with no perverse incentive. The role-tiered lens below is for SCORING
+a leg after the fact, and is deliberately NOT doctrine text.
 
 Role-tiered refinement (dk, 2026-07-14): the optimization target differs by seat.
 CAPTAIN (human-facing): play-by-play visibility is the priority - the user and
