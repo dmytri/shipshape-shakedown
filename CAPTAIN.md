@@ -1,5 +1,56 @@
 # Captain notes - shipshape-shakedown workstream
 
+## GOAL 2 (dk, 2026-07-14): THE EFFECTIVE RETRIEVAL GRAPH + INBOUND CONTEXT WEIGHT. Runs in a FRESH SESSION, after the stable release lands.
+
+dk's words: "we need a way to understand the effective retrieval graph for all invocations as well
+as the inbound context weight... feels like this should be a major goal of shakedown." And:
+"our probes should help us find doctrine that is not actually helping during a particular
+invocation and thus a candidate to move or remove."
+
+**Why this is a major goal, not a side quest.** METRICS today classifies each invocation's OUTPUT
+by whether a later invocation consumed it (P/N/Neg). That is the OUTBOUND worth of an action. We
+measure NOTHING on the inbound side. Every role re-prefills the full shared skill on EVERY
+invocation: ~11.4k words, call it ~15k tokens, so a 30-invocation leg pays ~450k tokens of
+doctrine alone - and we have no idea which of those tokens ever touched a decision. Crew loads the
+Harbour flow, the Watchbill policy, the Outbound policy and the named-engine catalog on every
+invocation and has, as far as anyone knows, never used one of them. On dk's ladder
+(quality > latency > invocations > tokens) that inbound bulk is the dominant hidden cost, and it
+is currently invisible. Put inbound and outbound together and you can ask the only question that
+really matters about a prompt: **did every token in this context earn its place?**
+
+**Three instruments, in this order:**
+1. **Inbound weight decomposition** (cheap, EXACT). Per invocation: cache_read split by source -
+   skill text vs conversation history vs tool results. Tells us what we are actually paying for,
+   with no inference. Do this first.
+2. **Retrieval graph** (observable edges). Each invocation's tool calls are retrievals; link each
+   retrieval to the later invocation that used it. A file read followed by an edit to that file is
+   consumed. A command whose output values reappear later is consumed. A read never referenced
+   again is dead weight. This mechanizes the P/N/Neg classification that is hand-done today.
+3. **Doctrine-section x role consumption matrix** (HEURISTIC - the one that could shrink the
+   shared skill). For each doctrine section, does its rule surface in a role's reasoning, report,
+   or actions? A section no role ever touches across dozens of legs is a candidate to CUT. A
+   section only one role ever touches is a candidate to MOVE into that role's skill.
+
+**THE LIMIT, and it is not optional - state it in any report:** absence of evidence is weak here.
+A rule can be load-bearing precisely BECAUSE it prevented something. The wait rule's whole value is
+a stall that did not happen, and it will surface in almost no transcript. **The matrix NOMINATES
+candidates; it never condemns. Anything it flags gets a probe before it gets cut** - same bar as
+everything else in this harness (findings need tree evidence, never report prose).
+
+**Standing-decision collision, needs dk's word before acting on results:** "No reference-file
+splits in doctrine skills; resident-by-design. Revisit only on a change to the clear or isolation
+model." Moving a section from the shared skill INTO a role skill is re-homing, not a reference-file
+split (every role already loads its own skill), but it is close enough to that decision's spirit
+that dk rules before anything moves.
+
+**Build:** `bin/graph.sh` over the task transcripts already banked (they persist in the session
+tasks dir; harvest them BEFORE the session dies, or re-run legs). Five clean legs exist from
+2026-07-14: 2 Shipwright harbours, 2-3 QMs, 2 Boatswains, all on 0.13.17-0.13.20.
+
+**PREREQUISITE (dk's own sequencing): measure against a FIXED doctrine version.** The stable
+release tag is the baseline. Churning doctrine text underneath the measurement poisons the very
+numbers the exercise exists to produce. Ship the release FIRST, then start Goal 2 against it.
+
 ## 2026-07-14: THE QUEUE IS SHIPPED - 0.13.17 (85e9e6f), pushed and installed. Two things owed: a FABLE DOCTRINE REVIEW of the diff, then live-fire probes.
 
 The five-item queue below was worked through with dk in one session, item by item, and
