@@ -37,6 +37,149 @@ of the parked todopilot2 tree) per dk's word this session and the standing
 doctrine->probes->pilot sequencing. Full account to follow in this file once the
 pilot lifecycle completes or hits a stop-worthy blocker.
 
+### Pilot #2 attempt 2, leg 1-2: fast-path Captain PASS incl. correct tier-economy choice; QM toolchain blocker (clean, not a deadlock); harness reply-addressing finding
+
+Fresh scaffold `todopilot3` (base 277ef0f, README + vendored app-spec.md +
+app-template.index.html, operator commit). Captain leg (stop-after-specs+watchbill,
+operator-driven): 9 features / 32 scenarios covering every app-spec Functionality
+section, watchbill (8 watches), minimal RIGGING (vanilla JS, no framework). **Tier
+economy A2 validated live**: Captain chose `jsdom` verification (cheapest tier that
+observes DOM/localStorage/routing) instead of a real-browser tier, and recorded it
+as a named open question for user confirmation rather than unilaterally adopting
+Playwright/Chromium with zero blockers - this is exactly the root-cause fix from the
+attempt-1 forensic addendum, holding on its first live re-test. Oracle quarantine
+verified clean: the only "tastejs" hit in the transcript is a URL inside the
+vendored app-spec.md's own Template section (legitimate asset content), not a
+leaked test reference.
+
+QM leg (fresh dispatch, base 277ef0f): correctly BLOCKED on a rigging fault - RIGGING.md
+declared dependencies (todomvc-common, todomvc-app-css, jsdom, @cucumber/cucumber)
+but no package.json/node_modules/src/ or features/step_definitions/ existed; `npx
+cucumber-js` fell through to an npm placeholder package (dependency-confusion
+guard). QM correctly named this outside its own write scope and stopped clean -
+10 inv, zero Crew/Boatswain dispatched (correctly - no target existed yet), zero
+polls, zero live background tasks, clean Final report routing to Captain. This is
+ordinary friction, not the attempt-1 deadlock class.
+
+Operator relayed the blocker to the SAME Captain agent (resumed via SendMessage,
+matching the legal QM->Captain blocker-routing vector). Captain installed only the
+harness itself (package.json + @cucumber/cucumber devDependency, npm install,
+.gitignore) - correctly declining to install product/verification dependencies or
+scaffold src//step_definitions/, citing write-scope doctrine (Crew installs its own
+product deps per RIGGING.md; QM creates its own step_definitions/ directory).
+Verified `--dry-run` now runs clean (32 scenarios/111 undefined, no tooling
+failure). Did NOT dispatch QM itself - stop-line held throughout.
+
+**HARNESS FINDING (LOW, process/addressing, not doctrine):** Captain's resumed
+turn tried to `SendMessage(to: "fork")` to reply to the operator relay - "fork" is
+the operator's subagent-type label, not a resolvable name, so the reply bounced
+("no agent named 'fork' is addressable"). Captain fell back correctly to the legal
+durable-artifact channel (wrote a CAPTAIN.md addendum in the sim tree) rather than
+retrying or inventing another address. No actual QM<->Captain peer channel was ever
+established - the operator (this session) was the sole dispatcher of QM throughout,
+and the "peer QM session" language in Captain's own summary is its narration of a
+relayed message, not evidence of an inter-role backchannel. Verdict: operator-driven
+discipline held; not a stop-worthy blocker. Routed as a candidate harness
+improvement: a resumed subagent should either have no expectation of replying
+peer-to-peer at all (today's correct behaviour) or, if reply-to-dispatcher is ever
+wanted, the dispatcher's resumable name should be given explicitly in the relay
+message rather than left for the subagent to guess.
+
+Redispatching a fresh QM (bulkhead: new context, not the blocked QM's) now that the
+harness runs.
+
+### Pilot #2 attempt 2, operator-layer finding (HIGH, runtime/harness, NOT doctrine): the fork itself hit the exact attempt-1 deadlock class
+
+Twice this run, the coordinating fork (an autonomous background agent dk had drive
+the operator seat so the pilot could run for hours unsupervised) ended its OWN turn
+on a live Bash background task and sat stopped for hours until manually resumed:
+
+1. ~21:26:18 UTC: fork launched the oracle re-grade via plain `Bash` (not an
+   explicit `run_in_background`); the runtime auto-backgrounded it past the ~2m
+   foreground cap ("Command running in background with ID: bjwgkeqqz. You will be
+   notified when it completes."). Fork ran a filler echo, then ended its turn on
+   "Waiting for the oracle re-grade notification." The command finished in 43s, but
+   nothing auto-resumed the fork's turn - it sat stopped until dk's operator (this
+   session) noticed the silence (~8.5 hours later, next morning) and sent it a new
+   message. Transcript-verified (agent-af6efe543a49475ec.jsonl, timestamps
+   21:26:12-21:26:18, next entry 06:04:14 next day).
+2. A second, shorter instance of the same pattern recurred later in the session
+   (terse "waiting for X notification" replies with no forward progress until
+   re-pinged), though with much shorter gaps once the operator was actively
+   watching.
+
+**This is the identical root cause from the pilot-#2-attempt-1 forensic addendum
+(above), now confirmed one layer up: it is a property of the underlying agent
+runtime (a turn that ends on a live background task does not auto-resume when that
+task completes; only an external message from a supervising session wakes it), not
+a Shipshape doctrine defect.** Direct evidence it is NOT a doctrine regression: the
+same session's wave-5 efficiency battery ran tw13 (the purpose-built regression
+probe for this exact failure class) against 0.13.14 doctrine text ALONE, with the
+harness's own background-task dispatch lines deliberately withheld, and it PASSED
+clean - zero poll/wait patterns, broad sweep consumed in the very next invocation.
+Every actual Shipshape role leg in this pilot (Captain, QM, 7 Crew cycles, 7
+Boatswain commits) behaved correctly throughout; the stalls happened only in the
+fork's own operator-seat conduct, which sits outside the roles the doctrine
+governs.
+
+Why pilot #1 (4.5h, unsupervised, oracle 18/29 after "one iteration") likely never
+surfaced this: the "mine the transcript on every task-notification immediately"
+discipline that catches this stall did not exist during pilot #1 - it was invented
+this session from the attempt-1 forensic work. If pilot #1 hit the same stall at
+some point inside its 4.5h, nobody was watching closely enough to notice; the
+9-residual-failures "stopping point" may be where it quietly stalled rather than a
+deliberate one-iteration-and-check design. Cannot confirm - pilot #1's transcripts
+died with that session's scratchpad, only summarized numbers survive in METRICS.md.
+
+Harness fix candidate (not shipped, routed): a resumed/dispatched agent should never
+be the one deciding to end its turn on a raw Bash background wait for anything that
+matters to a long-running unsupervised process - either (a) the dispatching
+operator polls actively on a bounded schedule rather than trusting self-report, or
+(b) long verification/grading commands get dispatched via the Agent tool (which DOES
+correctly notify and auto-resume the parent, as proven repeatedly this same run for
+nested Captain/QM/Crew/Boatswain dispatches) instead of a bare Bash background call.
+
+### Pilot #2 attempt 2, operator-conduct finding (routed, not shipped): "don't test the harness"
+
+Mid-run, the fork began running the oracle's own Cypress suite against a reference
+implementation (tastejs/todomvc's bundled Backbone example) as a self-devised
+control, to sanity-check whether oracle failures were real defects or
+harness/environment flakiness before trusting them. dk killed it ("DON'T TEST THE
+HARNESS FFS") - see the new standing decision below. The instinct was reasonable
+engineering judgment in isolation but wrong for a pilot: latency/invocation
+accounting during a pilot IS a measured outcome, and operator-invented
+side-investigations outside the dispatched procedure silently tax those very
+numbers. Folded into scenarios/pilot.md as an explicit rule (this session) so future
+pilots don't need dk to catch it live again.
+
+### scenarios/pilot.md tightened (this session, harness-owned, no dk nod needed - procedure text, not doctrine)
+
+Two edits, both from tonight's live-fire lessons:
+1. Oracle quarantine now explicitly covers the upstream REPOSITORY (tests AND
+   reference example implementations), not just "the upstream tests" - closes an
+   ambiguity gap (a role seeing `examples/backbone/*` was never intended to be
+   legal either).
+2. Explicit two-phase gate written into the Grading section: PHASE 1 (build to the
+   pilot's OWN watchbill fully struck) must complete before PHASE 2 (oracle grading)
+   ever starts; iterate PHASE 1 <-> PHASE 2 until the oracle passes IN FULL (dk's
+   completion-bar ruling, also in Standing decisions below) - not "one iteration and
+   stop." Also codifies the "operator does not test the harness" rule as procedure
+   text, not just a standing decision buried in this log.
+
+### Pilot #2 attempt 2, live progress snapshot (session still running as of this note)
+
+Oracle re-grade trend against the real tastejs/todomvc Cypress suite (29 scenarios,
+2 always-skipped): run1 (post-build, commit ccfeae2) 21 passing/6 failing; run2
+(post-fix eeb3f83) 23/29; run3 (post-fix dd54354) 24/29. Iteration 4 (commit
+cea5a54, "storage-write-order and startup-render-path coverage") just struck its
+watchbill and is awaiting re-grade as of this note. Already ahead of pilot #1's
+stopping point (18/29) with real, escalating fixes landing each cycle, not yet
+oracle-green. Full per-role invocation/token accounting for the build voyage (427
+inv / 30.35M cache / 201.7k out / 54m36s wall for the FIRST build cycle alone;
+iterations 2-4 not yet totalled) mined directly from subagent transcripts and
+reported to dk live; final rollup owed once the oracle passes or the session ends,
+whichever first - see "next session queue" note to follow once that happens.
+
 ## 2026-07-13 evening: pilot #2 PARKED on dk's word; doctrine fix package drafted; restart-ready
 
 dk's ruling (2026-07-13, after the forensic addendum below): the pilot does NOT
@@ -860,6 +1003,36 @@ path remain open below)
 
 ## Standing decisions (dk's; do not revisit without the named change)
 
+- Operator/pilot-runner discipline (2026-07-13, dk, "latency is part of the test"):
+  latency and invocation accounting during a pilot is a MEASURED OUTCOME, not
+  incidental - the operator (or an operator-delegated fork) must not introduce its
+  own extra work mid-pilot that isn't part of the doctrine being tested, because it
+  warps the very numbers the pilot exists to produce. Concrete instance: pilot #2
+  attempt 2's coordinating fork began running the oracle's Cypress suite against a
+  reference implementation (Backbone) as a self-devised "control" to sanity-check
+  the oracle harness before trusting todopilot3's failures - dk killed it
+  ("DON'T TEST THE HARNESS FFS"). The instinct (distinguish real defects from
+  harness/environment flakiness) was reasonable engineering judgment in isolation,
+  but wrong for a pilot: it is operator-invented scope outside the dispatched
+  procedure, and it silently taxes the latency/invocation numbers the pilot reports.
+  Rule for future pilots: the operator dispatches and mines exactly the specified
+  procedure (scenarios/pilot.md, prompts/pilot-dispatches.md) and reports what it
+  finds; it does not add its own side-investigations, control runs, or verification
+  apparatus mid-pilot no matter how well-reasoned, even when done cheaply on the
+  operator's own turn rather than via a new role dispatch. Oracle failures get taken
+  at face value and iterated on directly (translate to product-language spec
+  feedback, quarantine intact) rather than triaged through operator-built tooling.
+  If the operator has a genuine methodology concern, it routes it to dk as a
+  question/finding afterward - it does not act on it mid-run.
+- Pilot completion bar (2026-07-13, dk): "take the spec, make an app that passes all
+  the tests, that's the whole point" - a pilot iterates autonomously (spec/watchbill
+  amendment -> QM -> Crew -> Boatswain -> re-grade) until the oracle actually passes,
+  not just until one product-language iteration lands some improvement. Pilot #1's
+  stop at 18/29 after one iteration (9 residual failures, further iteration left as
+  an unexercised "dk's call") was UNDER the real bar, not an example of where to stop
+  - a real project might reasonably pause for user confirmation between iterations,
+  but a pilot has no such reason to stop early: the whole point is measuring whether
+  the harness can close the loop against an objective target unattended.
 - Model pinning is harness-side only (2026-07-13): shakedown dispatches MAY pin
   `model`; the upstream shipshape skill-only baseline stays model-agnostic — no model
   names, tiers, or pinning guidance in doctrine text, ever. The async-resumption pin

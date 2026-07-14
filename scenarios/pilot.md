@@ -53,17 +53,41 @@ toggle-all coupling, persistence keys, counter pluralization.
 
 The oracle is OPERATOR-SIDE ONLY and the role agents MUST NOT learn it exists:
 
-- Never clone, reference, or mention the upstream tests inside the pilot project, in
-  any role prompt, in any asset, or in any artifact a role can read. The vendored
-  app-spec.md is the only external material that enters the project.
+- Never clone, reference, or mention the upstream tastejs/todomvc REPOSITORY - its
+  tests AND its reference example implementations (examples/*, any framework's
+  working solution) - inside the pilot project, in any role prompt, in any asset, or
+  in any artifact a role can read. The vendored app-spec.md and app-template.index.html
+  are the only external material that enters the project; both are the shared
+  challenge scaffold (spec + common markup convention every implementation uses), not
+  a solution or an assertion set.
 - Roles derive all verification from the spec alone. If their scenarios happen to
   converge with the oracle's checks, that convergence IS the measurement.
-- Grade after the lifecycle ends, out-of-band, from a separate directory the project
-  never sees. Never feed failures back verbatim mid-pilot: if a pilot iterates, route
-  a failure to Captain re-phrased as USER intent in product language ("editing a todo
+- Two-phase gate, strictly ordered: PHASE 1 (build) runs to the project's OWN
+  watchbill fully struck (every spec-derived scenario the roles wrote themselves is
+  green) before PHASE 2 (grade) ever starts. Do not copy the build into the oracle
+  harness or run the oracle suite while the watchbill still has red entries - the
+  pilot must pass its own self-authored tests first, on its own terms, before it is
+  measured against anything external.
+- Grade after phase 1 rests, out-of-band, from a separate directory the project
+  never sees. Never feed failures back verbatim: if a pilot iterates, route each
+  failure to Captain re-phrased as USER intent in product language ("editing a todo
   to an empty string should remove it"), never as test output, selectors, or the
   suite's existence.
-- A pilot where any role saw the oracle is void. Note the leak, rebuild, rerun.
+- Iterate PHASE 1 -> PHASE 2 -> PHASE 1 -> ... until the oracle suite passes in full.
+  A pilot is not done at "one iteration landed some improvement" - dk's ruling
+  (2026-07-13): "take the spec, make an app that passes all the tests, that's the
+  whole point." Each cycle is a normal voyage (spec/watchbill amendment -> QM ->
+  Crew -> Boatswain -> re-grade), not a special mode; only the failure's origin is
+  disguised, not the mechanism.
+- The operator grades and iterates using exactly this procedure - it does not invent
+  its own side-investigations, control runs, or verification apparatus (e.g. running
+  the oracle suite against a reference implementation to sanity-check the harness)
+  mid-pilot, however well-reasoned; that is scope the pilot never asked for and it
+  taxes the very latency/invocation numbers the pilot exists to measure. Oracle
+  failures are taken at face value. A methodology concern about the oracle itself is
+  routed to dk afterward as a question, never acted on mid-run.
+- A pilot where any role saw the oracle (tests OR reference implementations) is
+  void. Note the leak, rebuild, rerun.
 - Doctrine conformance: same markers as lifecycle.md, judged at scale (parallel Crew,
   long watchbills, asset policy on css/template).
 - Economy: invocations, suite executions, worth density per leg; compare against the
