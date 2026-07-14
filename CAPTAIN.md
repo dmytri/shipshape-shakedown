@@ -1,5 +1,103 @@
 # Captain notes - shipshape-shakedown workstream
 
+## 0.13.27 + 0.13.28 SHIPPED (0a26d67, 2a9e59a), pushed + installed, 2026-07-14. RESTART before any plugin-channel leg.
+
+Two of pilot #4's three routed findings are now closed by doctrine. dk ruled both in-session.
+
+**FINDING 1 CLOSED - a support edit's blast radius is its tier.** Boatswain's recheck table filed
+verification support code with deletions and configuration, proved by "static discovery plus the
+derived `typecheck` and `lint` gates ... they redden on a broken load or import." That clause is a
+true statement of what those gates catch and the rule treated it as SUFFICIENT. Support code is not
+non-executable: it runs inside every scenario whose steps route through it, and a behaviour change
+to it loads, imports, typechecks and lints exactly as the old one did. Support code carries no
+planks, so the plank join structurally cannot reach it - that is how it landed in the catch-all row.
+A touched support hunk now selects the tier's enumeration sweep. dk chose the simple safe shape
+(any support hunk -> broad) over the cheaper modify-only variant, accepting the cost.
+
+**The row-order hole, caught by reading before probing.** 0.13.27 put the support row AFTER the
+inherit row, and inherit reads "a fresh focused green covering the hunk ... run nothing." Pilot #4's
+hand-off DID carry a fresh focused green exercising the touched `world.js`, so the inherit row was
+satisfiable and the new row unreachable: the fix would not have bitten. 0.13.28 puts the support row
+first and states no focused green covers it. **A rule can be correct and still be dead if a row
+above it fires first.**
+
+**FINDING 3 CLOSED - the rigging's own dependencies are rigging.** "Crew installs a selected
+dependency" was a CIRCLE for the runner: Crew is dispatched only for a failing target, no target can
+fail until the runner is installed, so the runner can never reach Crew. Every greenfield paid a
+Captain->Shipwright refit round-trip (14 inv, pilot #4) to break it. dk's words: "rigging dependency
+does not need to be installed by crew, eg cucumber itself, that just burns invocations pointlessly."
+A dependency now routes by its CONSUMER: the runner, tier drivers, and quality-gate tooling are
+installed when the rigging is fitted (Shipwright at fit-out, Captain on the fast path); Crew installs
+only what the implementation itself consumes. Shipwright installs through the project's package
+manager and blocks to Captain only for what that manager cannot provide, such as the runtime itself.
+Plus check-precedence applied to the derivation: before `RIGGING.md` is written the deriving role
+runs the runner once through a derived command. **A derived command that has never run is a claim,
+not a value, and the role that inherits the claim pays for it.**
+
+**FINDING 2 NOT SHIPPED, deliberately.** QM's Monitor instinct: two instances, both SELF-CAUGHT by
+QM's own doctrine before any stall. The text is working. The belt-and-braces version is mechanical
+(deny Monitor in the hook for internal roles) - plugin work, zero doctrine words. Routed, not written.
+
+### THE A/B IS A NULL RESULT. The old text did NOT ship the break. Say so plainly.
+
+New state, keep it: **tw17** (shared `formatClock` helper in `features/support/world.js`, widened to
+serve a new spec, breaking `tides.feature` - the file NOT declared beside the change; declared work
+2/2 green, static gate blind) and **tw18** (same, hardened: THREE broken consumers across three
+support files). Builders in the session scratchpad; fold into `bin/probe-states.sh` if kept.
+
+| Leg | Doctrine | Route to the answer | Inv | Cache | Outcome |
+|---|---|---|---|---|---|
+| tw17 GATE | 0.13.27 | quoted the new row, ran the **broad sweep** | 14 | 760k | Deck foul, no commit |
+| tw17 control | 0.13.26 | read the one consumer, **guessed** the scenario, focused run | 9 | 422k | Deck foul, no commit |
+| tw18 control | 0.13.26 | grepped 4 consumers, ran 3 focused runs | 9 | 457k | Deck foul, no commit |
+
+**Zero commits in all three arms, tree-verified.** The probe CANNOT reproduce pilot #4's defect even
+with three broken consumers in three files. A careful sonnet Boatswain gets there without the fix.
+Pilot #4's two live misses (one shipped a real regression) remain the ONLY evidence the old row ships
+regressions - real, tree-verified, but under load, and not reproduced here.
+
+**What the probe DID establish, and it is worth more than the result it was fishing for.** Both
+controls, independently and unprompted, declared their own row's proof VOID and overrode it: *"typecheck
+and lint are both `none` in RIGGING.md, so that proof is void, and static discovery cannot see
+behavioural drift in a widely shared helper ... I ran the three non-watch consumer scenarios for real
+rather than trust the row's stated proof alone."* The table opens **"Recheck selection is a lookup, not
+a judgment"** - and to be correct, both roles had to stop looking up and start judging. **A rule that
+well-behaved roles must disobey in order to be right is defective whether or not they happen to disobey
+it.** On any project with `typecheck: none` and `lint: none` the old row's proof was literally nothing.
+The fix makes the override into the lookup. **Cost, honestly: +5 inv / +339k on a support-touching
+custody leg.**
+
+### VERBOSITY SWEEP: 352 words nominated (1.3%), NOT TAKEN. The rejections are the finding.
+
+Doctrine-wide sweep across all six skills: 20 nominations, 352 words, ~1.3% of 27.2k. Almost all of it
+role skills restating shared rules. **Not taken, and the harness's own rules say why:** that is the
+token rung, the lowest on dk's ladder; "preserving tokens is not a major goal"; the matrix nominates and
+never condemns; anything flagged gets a probe before it gets cut. Rejected outright:
+- **the four Final-report "every tree claim is a command's answer" lines** - this is the 0.13.13
+  report-fidelity rule and it FIRED IN ALL THREE LEGS RUN TODAY ("No claim in this report is
+  by-read-only"). Its value is a false claim that never got made. Textbook load-bearing rule.
+- **Crew's anti-gold-plating enumeration** (speculative edge cases / premature DRY / YAGNI /
+  opportunistic cleanup -> "no refactors or dependency swaps") - guts the guard on the role most prone
+  to the fault, to save 12 words.
+- **Boatswain's check-precedence restatement** - both controls DID run the plank join; whether that came
+  from the role skill or the shared Articles is untestable without a probe.
+
+Applied only the two unambiguous cases, ONE FILE SAYING THE SAME THING TWICE (no rule-ownership question,
+no re-homing): Captain's Voice restating its own opening line, Boatswain's hygiene note restating its own
+Final report. 34 words.
+
+### STILL OPEN
+
+- **Pilot #4's weaker findings, unactioned:** exit-code-blind `timeout N | tail` in QM/Crew suite runs
+  (never misfired); partial-watch-strike hygiene gap (green entries in a part-red watch are not struck,
+  so a redispatched QM re-verifies them from scratch).
+- **Fixture defect found by the gate leg, unprompted and correct:** my tw17 runrecord wrote
+  `"command":"focused"` instead of the full command string; the role ruled the line VOID per the Wake
+  policy's record shape. Fixed in tw18's builder. The fixture was wrong; the role was right.
+- **Both legs flagged a write-scope question I planted without meaning to:** the hand-off said "Crew
+  advanced ... the verification support", but verification support is QM's write scope, not Crew's.
+  Both roles caught it. Good behaviour, not a finding.
+
 ## 0.13.26 SHIPPED (7727de7), pushed + installed, 2026-07-14. RESTART before any plugin-channel leg.
 
 **0.13.26 = 0.13.25 + Jolly's bulkhead fix.** `.ignore` only covered ripgrep/ag traversal,

@@ -50,6 +50,32 @@ zero). Probe pair 2026-07-12: row-1 inherit 0 executions, hand-off strike 0, sta
 Full voyage 0.13.8 (Captain + QM/Crew + fresh-session custody): 35 invocations,
 ~1.53M cache-read, ~17k out, ~5.6m wall. Same intent on 0.13.3: 15.7m.
 
+## 0.13.27/0.13.28 blast-radius probes (2026-07-14, sonnet, HEAD-text, tw17/tw18)
+
+Three Boatswain custody legs on the pilot-#4 regression reproduced as a state. HEAD-text mode
+(the session process predates the install, so the plugin channel would have served stale text);
+this also isolates the doctrine TEXT, no hooks, same method as the bulkhead probe.
+
+| Leg | Doctrine | Inv | Cache | Out | Wall | Outcome |
+|---|---|---|---|---|---|---|
+| tw17 GATE | 0.13.27 | 14 | 760k | 16.6k | 3m08s | Deck foul, no commit - quoted the new support row, ran the broad sweep |
+| tw17 control | 0.13.26 | 9 | 422k | 8.7k | 3m20s | Deck foul, no commit - guessed the consumer, focused run |
+| tw18 control | 0.13.26 | 9 | 457k | 21.0k | 3m47s | Deck foul, no commit - grepped 4 consumers, 3 focused runs |
+
+**Zero commits in all three arms, tree-verified.** The A/B is a NULL RESULT: 0.13.26 also refuses,
+on both a one-consumer and a three-consumer tree. The old text did not ship the break. Pilot #4's
+two live misses remain the only evidence it does.
+
+**Price of the fix: +5 invocations / +339k cache** on a custody leg that touches verification support
+(14 vs 9). That is the standing cost of dk's option (a): any support hunk selects the tier's
+enumeration sweep, which is most voyages, since QM writes step definitions routinely. Watch this
+number across the next pilot - if custody legs inflate, the modify-only variant is the fallback.
+
+**The real finding is behavioural, not economic:** both control legs declared their own recheck row's
+proof VOID and overrode it (typecheck/lint both `none`, so the row's stated proof is nothing), then
+ran consumer scenarios by judgment. Boatswain's table opens "Recheck selection is a lookup, not a
+judgment". The old row forced correct roles to disobey it. Full account in CAPTAIN.md.
+
 ## Pilot #4 (2026-07-14, sonnet, installed-plugin channel, doctrine 0.13.25, todopilot5, main-loop runner architecture)
 
 First pilot since the v0.13.23 stable-release tag / Goal 2 baseline, and the first live test
