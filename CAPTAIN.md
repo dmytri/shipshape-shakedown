@@ -261,6 +261,57 @@ four analysis axes: outcome quality / invocation count / token efficiency /
 instruction fidelity) is now BINDING in scenarios/pilot.md. Iteration 6 is being
 driven from the main loop as the architecture's first live proof.
 
+### Upstreaming direction (dk, 2026-07-14) + 0.13.16 design draft awaiting dk's wording nod
+
+dk's target flow, verbatim intent: "I should be able to run a normal shipshape
+session, paste the specs to captain, answer some questions about stack, tell them
+about the cypress tests, say proceed and get the full working, tested app" - and
+"as much as possible we should try to upstream our improvements... careful not to
+reduce the quality of upstream."
+
+Read: the oracle quarantine is a PILOT-measurement artifice (it measures
+spec-derivation quality with no answer key in reach). The real product capability
+is a USER-SUPPLIED external acceptance suite handled first-class by the doctrine.
+In real usage there is no quarantine - the user tells Captain about the tests.
+
+**0.13.16 candidate (draft, three homes, one voice - NOT shipped):**
+1. Asset policy: a user-supplied executable acceptance suite is a named asset
+   class - read-only custody (it is the user's contract; roles never edit it),
+   distinct from specs: it is acceptance verification, never a substitute for
+   deriving binding scenarios from intent.
+2. Captain skill (discovery/fast-path): when intent names existing tests, ONE
+   question elicits: where they live, the exact run command, how the app must be
+   served. Recorded as a RIGGING `acceptance:` slot (command verbatim, same
+   fidelity rule as other rigging commands). Acceptance green joins the stated
+   intent's definition of done.
+3. Lifecycle mechanics (QM home): the voyage sails to watchbill rest on its OWN
+   spec-derived scenarios FIRST (the two-phase principle - keeps the suite a
+   check, not a crutch); then the acceptance suite runs; each failure lands as a
+   new/amended binding scenario (spec-first fix, never a test-chasing patch),
+   then the normal watchbill -> Crew cycle; iterate until acceptance green.
+   This is exactly the loop the operator drove manually in pilot #2 attempt 2,
+   minus the disguise.
+Quality guardrails per dk's caution: skill-only baseline stays generic (no
+model/tool names beyond the user's own rigging values), minimal wording, tests
+green, one voice per rule; the pilot quarantine stays in the SHAKEDOWN procedure
+only - doctrine text never mentions oracles or pilots.
+
+(dk clarified same day: "upstream" means the shipshape DOCTRINE only - no
+tastejs/todomvc PR is proposed or wanted. The oracle spy-reset fix stays
+operator-side as the vendored fixtures/oracle patch, nothing more.)
+
+**Future pilot variant (proposal, cheap to add once 0.13.16 ships): "pilot-open"**
+- same TodoMVC build but the cypress suite is handed to Captain as a user asset
+per the new doctrine arm, measuring the real-usage loop end-to-end (external-
+suite iteration efficiency) alongside the quarantined pilot (spec-derivation
+quality). Two modes, two different questions.
+
+**Explicitly NOT upstreamable (stays harness-side, standing decision):** runner
+architecture, model pinning, background-task dispatch lines, mine-on-
+notification - all Claude Code runtime concerns. Note the real-usage flow dk
+describes is structurally SAFE from the fork-stall class: the user's own session
+IS the main loop, and 0.13.14's turn discipline (tw13-proven) covers the roles.
+
 ### NEXT SESSION (pilot #3, restart-ready queue - supersedes all prior queues)
 
 dk's want, verbatim intent: clear session and run a full pilot 100% autonomously,
@@ -269,11 +320,14 @@ outcome quality / invocation count / token efficiency / instruction fidelity.
 "I just want a great shakedown system that works reliably and helps us iterate on
 shipshape efficiently."
 
-0. Session model: dk's saved defaults are now fable/xhigh (set 2026-07-14 during
-   the operator's analysis work). The standing pilot word remains SONNET for role
-   legs and uniform accounting (a stronger session model masks doctrine weakness
-   and catches nested falls). Unless dk says otherwise at launch: `/model sonnet`
-   + `/effort medium` first.
+0. Session model: SONNET, dk's explicit word (2026-07-14: "start a new sonnet
+   session for the pilot shakedown as soon as we're confident we're ready" -
+   the fable/xhigh saved defaults were for the operator's analysis work in the
+   OLD session, not the pilot). First action: `/model sonnet` + `/effort medium`.
+   The 2026-07-14 close-out work in the old session (iteration 6 reachability
+   check) ran under fable session model and is EXCLUDED from clean pilot
+   accounting - pilot #3's numbers stand alone, compared to pilot #1 and
+   attempt-2 voyage-1 baselines only.
 1. Bootstrap per AGENTS.md. Deck expectation: ~/shipshape at 670f3ab, installed
    0.13.14 (the local 0.13.15 commit d31b22f stays parked/unshipped unless dk
    ships it - if dk ships: tests green + push + install BEFORE the pilot, and
