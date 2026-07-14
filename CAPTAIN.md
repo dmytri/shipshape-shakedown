@@ -44,6 +44,29 @@ routed but NOT shipped (no side-scope mid-pilot rule held throughout):
    QM didn't trust plain turn-ending to resume it and reached for Monitor instead of
    the plain sequential pattern (dispatch, end turn, trust auto-resume) that worked
    flawlessly every single-child time this pilot.
+   **INDEPENDENT REAL-WORLD CONFIRMATION (dk, 2026-07-14, Estelle):** the identical
+   failure class - QM using Bash to figure out whether Crew is done - is live in
+   Estelle, not just this pilot's sim tree. This is not a pilot artifact; it is a
+   real, observed production gap. dk confirmed this covers QM->Boatswain as well as
+   QM->Crew - this pilot hit the SAME broken-poll-marker pattern on BOTH dispatch
+   targets (once waiting on parallel Crew, once waiting on Boatswain custody), so
+   the fix is not Crew-specific: any role a QM (or any dispatcher) waits on is in
+   scope, which is also exactly why dk's flat-handoff proposal for QM->Boatswain
+   above is one legitimate partial answer, not the whole fix - QM->Crew still needs
+   its own reliable answer since it can't be flattened the same way. dk's framing
+   raises the bar on the fix: doctrine
+   needs a genuinely RELIABLE subagent-orchestration and results-harvesting pattern
+   for a role dispatching and awaiting another role's work, and it needs to hold
+   **whether the dispatch channel is the skill-only generic baseline (any
+   subagent-capable runtime) or this specific open-plugin's own mechanisms**- not a
+   narrow patch scoped to "don't use Monitor" or "don't grep transcript internals."
+   The skill-only baseline's existing quality guardrail (no model/tool names in
+   doctrine text) means this pattern must be described in terms of the DISPATCH
+   CONTRACT's own vocabulary (a role's turn, a final report, a hand-off) rather than
+   any one runtime's tool surface - whatever concrete mechanism a given runtime
+   offers underneath, the doctrine-level rule is the same: dispatch, end your turn,
+   consume the report when resumed, never invent your own completion-detection
+   mechanism. This is now the highest-priority item in this queue.
 5. **Scenario categorization** (dk, 2026-07-14, raised mid-pilot as a design question,
    not yet a ruling): three scenario buckets are currently blurred together with no
    clear vocabulary distinguishing them - (a) PRODUCT-INTENT scenarios, ordinary
