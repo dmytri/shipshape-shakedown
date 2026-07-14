@@ -726,6 +726,48 @@ One incidental finding worth keeping: **a LIGHT-arm agent refused the task** and
 the eight-silent-echoes instruction was itself a compliance test. Correct instinct, and a
 reminder that inert-looking probe scaffolding is not invisible to the agent reading it.
 
+## The INBOUND lens (IEPE, per dk, 2026-07-14) - the counterpart to the audit lens below
+
+The audit lens below classifies an invocation's OUTPUT by whether a later invocation consumed
+it (P/N/Neg). That is OUTBOUND worth. The inbound lens points the same vocabulary the other
+way: it classifies each CONTEXT BLOCK an invocation received. Full method, limits and standing
+rulings in `scenarios/iepe.md`; that file is the durable home and this is the scoring summary.
+
+**The principle (dk):** *an inference pass is justified only when inference is required;
+context is justified only when it contributes to the outcome.* The object being engineered is
+not the prompt, it is **the entire sequence of inference and retrieval the instructions
+produce**.
+
+**Classify each context block, and keep the two questions apart:**
+
+| Class | Test | Disposition |
+|---|---|---|
+| unused | removing it changes nothing | nominate to move or cut; never condemn on one state |
+| positive | removing it makes the outcome worse | load-bearing; the probe proved its worth |
+| negative | removing it makes the outcome BETTER | the context is harming; highest-value find |
+
+*Was this context used?* is observable from a transcript. **Did using it help?** is NOT.
+Only intervention answers it. Negative context is real: tw16 cost a release.
+
+**New invocation class for the tally below** (worthiness 0 by construction, since a merged
+retrieval returns identical bytes):
+
+| Class | Instances | P | N | Neg | Worthiness |
+|---|---|---|---|---|---|
+| compilable retrieval round-trips | 33 of 224 (14.7%) | 0 | 33 | 0 | 0 (opening block 12.9% + independent runs 8.0%; a conservative FLOOR) |
+
+**Judge an instruction, not just a leg.** For any instruction under test, ask:
+1. What is its inbound weight, and what share of it is the JOB? (`bin/inbound-fleet.py`)
+2. What retrieval plan does it IMPLY, and how much of that is compilable? (`bin/plan.py`)
+3. Does each context block earn its place? (ablation; `scenarios/ablation.md`, deferred)
+
+**The trap:** merging retrievals and minimising context PULL AGAINST EACH OTHER. Resident
+context costs +0.84s/invocation per ~24k cached tokens (measured). Merge what the plan
+retrieves anyway; never merge speculatively.
+
+**What binds:** examples, not prose. Boatswain's skill said "the deck is Boatswain's one
+retrieval" and Boatswain split the deck in 7 of 14 legs. State the exact command.
+
 ## The audit lens (per dk)
 
 **THE LADDER (dk, 2026-07-14, binding): quality > latency > invocations > token usage.**

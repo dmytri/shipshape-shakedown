@@ -47,11 +47,23 @@ nothing else (no notes, no fixtures, no scratch).
    run-record equality. Compare against METRICS.md baselines. Mine the transcript
    on EVERY task-notification immediately - tree-diff alone missed a stalled QM
    for ~25m (pilot #2).
-6. **Judge**: markers from the scenario tables; every invocation through the audit
+   Transcripts are DURABLE and are NOT in /tmp: they live at
+   `~/.claude/projects/<proj>/<session>/subagents/agent-*.jsonl`. Nothing needs
+   harvesting before a session dies.
+6. **IEPE**: analyse the instruction as the execution trajectory it produces, per
+   `scenarios/iepe.md`. `bin/inbound.py` and `bin/inbound-fleet.py` decompose inbound
+   context weight (exact; the ledger identity closes at drift +0 or the numbers are
+   unsound). `bin/plan.py` derives the retrieval plan an instruction implies and reports
+   its compilable waste. `bin/doctrine-sections.py` prices each doctrine section.
+   `bin/make-ballast.py` + `bin/ballast-compare.py` are the controlled context-latency
+   probe. Apply this to ANY instruction under test, not just role skills. The framework's
+   own limits are binding and stated in that file: cost is not worth, the matrix nominates
+   and never condemns, and IEPE is a shakedown lens that never ships as doctrine text.
+7. **Judge**: markers from the scenario tables; every invocation through the audit
    lens in METRICS.md, scored 0-100 for worth, with leg worth density in the report. A finding is real only with tree evidence, never report prose
    alone. Route findings to dk; do not fix doctrine without routing, except when dk
    pre-approved the cycle.
-7. **Record**: update METRICS.md baselines on doctrine version changes; log findings
+8. **Record**: update METRICS.md baselines on doctrine version changes; log findings
    and state in CAPTAIN.md here (notes migrated from ~/shipshape at the 2026-07-12
    handover; the shipshape repo gets doctrine commits only).
 
