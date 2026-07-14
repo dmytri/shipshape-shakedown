@@ -79,7 +79,49 @@ drifts with every data edit. The pattern is the durable contract; example values
   would have sat unplanked forever. Fix: when QM makes a promoted skeleton's step executable and
   the target passes against existing production code, QM dispatches Crew with a PLANK-ONLY target
   (the same route a custody foul already takes). That is the moment the harbour finding closes.
-  **This mechanism is UNTESTED and is the first thing to probe on 0.13.18.**
+  **SUPERSEDED by 0.13.19 - see below. Option 3 was WRONG and dk reversed it himself.**
+
+### 0.13.19 (eee0ef8): PROVISIONAL PLANK - dk reversed option 3, and his reasoning is the important part
+
+dk reconsidered within the hour: **"shipwright knows exactly where the unplanked seam is, so
+connecting it to the candidate scenario now makes it easier for qm/crew to find, and so less
+likely then to just reimplement and leave it as dead code."** That is decisive, and it exposes
+what option 3 actually did: **it deleted information.** Shipwright is the only role that has the
+seam and the behaviour in hand at once. Under option 3 that link lived only in Shipwright's
+REPORT, and reports are discarded context, not durable artifacts. At promotion a fresh QM would
+arrive holding a domain-level scenario and no pointer to the code that already implements it; if
+it failed to rediscover the seam, Crew would implement the behaviour AGAIN and leave the original
+as dead code. Doctrine already names that defect class (behaviour-identity duplication, the harbour
+finding a token scanner cannot catch). **The plank is the ONLY durable home for the seam-behaviour
+link** - a scenario cannot carry it (domain-level; a seam hint in a spec is contamination).
+
+**Shipped: two decidable plank forms.** A plank string is a current step-definition pattern, OR the
+step line of a `@captain` scenario (provisional). Both sets come from artifacts in hand: `step-usage`
+for the first, the feature files for the second. The provisional form SELF-LIQUIDATES: at promotion
+QM writes the definition, the pattern comes into existence, the provisional plank matches neither
+form, reddens as ordinary plank drift, and normalizes via a plank-only Crew dispatch. **The form
+expires exactly when the `@captain` tag does** - it is the tag's existing bounded lifecycle showing
+through, not a new rule. Better shape than my 0.13.18 mechanism too: work now arrives as FAILING
+VERIFICATION rather than as a role noticing something.
+
+**dk also floated Shipwright writing an empty step def** so the pattern would exist early (one form
+instead of two). Rejected, three reasons, and dk landed on the third himself:
+1. **An empty step def PASSES.** While `@captain` it never runs, but at promotion the scenario runs,
+   its steps are DEFINED, and it goes GREEN ASSERTING NOTHING - watchbill spent, no Crew, silent
+   false green. Would need a throw-pending body instead.
+2. **It would read as an ORPHANED step definition.** Every derived command composes `not @captain`,
+   so `step-usage` never sees skeleton scenarios; a definition bound only to a skeleton reports zero
+   usage, which is exactly Boatswain's orphan signal. We would manufacture false positives at every
+   harbour to avoid a second plank form.
+3. **dk's own objection, and the cleanest: TOO STACK-DEPENDENT.** Pending/unimplemented semantics
+   differ by runner and language. Doctrine must hold on any stack with any Gherkin runner; a rule
+   that only works where the runner has pending semantics is a Cucumber-JS convention, not a rule.
+   (It would also breach QM's write scope, which is what licenses Shipwright to talk to the user.)
+
+**UNTESTED on 0.13.19, first things to probe:** (a) the provisional plank written at harbour by
+Shipwright; (b) its self-liquidation at promotion (QM writes the definition -> drift reddens ->
+plank-only Crew dispatch normalizes it). Neither has ever run. Note 0.13.17's tw1 green does NOT
+cover any of this.
 
 ### THE ORIGINAL FINDING, kept for the record (tree-verified, now resolved above)
 
