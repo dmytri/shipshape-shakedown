@@ -299,6 +299,21 @@ time... should be encouraged."
    residue: each failure lands as a new/amended binding scenario (spec-first
    fix, never a test-chasing patch), normal watchbill -> Crew cycle, re-run
    acceptance until green.
+4. Dispatch consumption + report surfacing (dk, 2026-07-14, "while it's fresh":
+   consuming agents frequently spawn QM/Crew such that the transcript never
+   surfaces and the dispatcher never consumes it - user AND Captain are blind to
+   what is actually happening; poor UX, wastes time). Extends the 0.13.14
+   turn-discipline sentence to spawned roles, same home (shared Articles, Role
+   transitions/Dispatch contract). Draft wording: "A dispatch is not complete
+   until the dispatcher has read the dispatched role's final report and folded
+   its outcome into its own next action or report. A spawned role whose report
+   is never consumed counts as never dispatched - its work is invisible and is
+   not evidence. If the runtime forces the spawn asynchronous, consuming the
+   report is owed before the dispatcher's turn ends; a report that cannot be
+   consumed is a blocker, reported. Reports travel up: each role's report
+   carries the outcome of every role it dispatched, so the human-facing session
+   sees the whole chain." Evidence: pilot-#2 attempt-1 Captain auto-chained QM
+   and finished blind; the same shape recurs in real consuming agents per dk.
 Quality guardrails per dk's caution: skill-only baseline stays generic (no
 model/tool names beyond the user's own rigging values), minimal wording, tests
 green, one voice per rule; the pilot quarantine stays in the SHAKEDOWN procedure
