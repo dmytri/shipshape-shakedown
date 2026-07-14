@@ -63,11 +63,14 @@ Rules for the runner:
   each iteration's translated feedback summary. Results reach dk the moment they
   exist, not in an end-of-run dump.
 - TIMER WAKES during long legs (dk, 2026-07-14: "the dispatcher can set a timer
-  when it can't route subagent output to main session"): completion notifications
-  are not the only legal boundary - while a leg longer than ~5 minutes runs (QM
-  voyages especially), the runner schedules its own wake every ~5 minutes, tails
-  the leg's live transcript (latest tool calls / new commits, NOT a full read),
-  and narrates interim progress ("QM dispatched Crew for X; 2 commits landed").
+  when it can't route subagent output to main session"; "even 1 minute with no
+  output is poor ux... we can live with 2"): completion notifications are not
+  the only legal boundary - while any leg runs, the runner schedules its own
+  wake every ~2 minutes (the runtime's minimum is 60s; 2m is dk's accepted
+  ceiling), tails the leg's live transcript (latest tool calls / new commits,
+  NOT a full read), and narrates interim progress ("QM dispatched Crew for X;
+  2 commits landed"). The user should never face more than ~2 minutes of
+  silence while the pilot runs.
   Timer wakes are main-session-only in this runtime (a finished NESTED agent is
   not resumed by its own timers or background children - the 2-for-2 orphan
   stall). Cost is Captain-seat cost: explicitly accepted per the role-tiered
