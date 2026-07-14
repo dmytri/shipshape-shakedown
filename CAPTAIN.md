@@ -1,5 +1,85 @@
 # Captain notes - shipshape-shakedown workstream
 
+## 0.13.26 SHIPPED (7727de7), pushed + installed, 2026-07-14. RESTART before any plugin-channel leg.
+
+**0.13.26 = 0.13.25 + Jolly's bulkhead fix.** `.ignore` only covered ripgrep/ag traversal,
+never grep, so six vectors reached `CAPTAIN.md` through the Bash custody hook untouched:
+`rg --glob`, `rg --no-ignore`, a shell glob in the path list, bare `grep -r`,
+`grep --include`, `grep` with a shell glob. Two live QM roles were contaminated by this in
+Jolly's session before the mechanism was understood. Fix denies the six leak vectors,
+leaves 8 proven-safe search/build forms untouched (`rg` plain/`-t md`/`--hidden`, `rg` on a
+named dir, `grep` on a named file, `rg` piped to `grep`, ordinary builds, cucumber focused
+runs), scoped to internal roles only (Captain unaffected). Proven against a spliced copy
+first (`incoming/jolly-bulkhead/`, 15/15 cases pass) before landing in the real hook.
+Tests 209/209 green (bulkhead 10, homes 46, hooks 131, map 18, style 4).
+
+## PILOT #4 (2026-07-14, sonnet, installed-plugin channel, doctrine 0.13.25, todopilot5/pilot5)
+
+First pilot since Goal 2's stable-release baseline. Scaffold to first fully-green watchbill:
+**~189 inv**. First reached 28/29 oracle (iteration 2, in-place DOM-reuse fix): **~232 inv
+total / ~12.5M cache / ~90k out / ~44m wall**. Full run including a shipped-then-caught
+regression (iteration 3) and a confirmed plateau (iteration 4): **~454 inv / ~25.2M cache /
+~204k out / ~1h29m wall**. 100% sonnet throughout, zero model leak.
+
+**Oracle grading history:** run 1 (unmodified voyage) 24/29; run 2 (iter 2, DOM-reuse fix)
+28/29; run 3 (iter 3, filtering regression shipped-then-fixed) 28/29 unchanged; run 4 (iter
+4, reload-finality fix) 28/29 unchanged - 3rd consecutive no-defect result on the same
+residual (`Persistence -> should persist its data`, `element-has-detached-from-dom` on
+reload, spec line 936). **Resolved not as a plateau but as a mislabeled check**: verified
+(git log on the pinned oracle) that the last real upstream update wave (2026-05-02) touched
+exactly 7 examples - vue, svelte, react-redux, react, preact, lit, angular - and all 7 are
+already in the oracle's own `noLocalStorageCheck` exemption map (apps that "persist
+nothing"). Every non-exempted example is untouched since 2024 or earlier, most since
+2018-2019; a live comparison run against the closest non-exempted analog
+(`javascript-es6`) failed for an unrelated stale-selector reason before ever reaching
+Persistence. No currently-maintained reference implementation is provably reachable
+through this exact check. dk's ruling: exempt the shakedown pilot's own fixed framework
+name (`shakedown`, not `pilot3`/`pilot5`/etc. - must stay fixed across pilots) the same way
+the modern main set already is. Shipped as `fixtures/oracle/shakedown-localstorage-exempt.patch`,
+documented in `fixtures/oracle/README.md` to the same evidence bar as `spy-reset.patch`.
+Confirmed: shakedown-framework grading run now shows 28 passing / 0 failing / 1 pending
+("All specs passed!"). Not a general license for future exemptions - the same evidence bar
+applies to any future request of this kind.
+
+**Findings routed to dk, NOT shipped - need a ruling before any doctrine change:**
+1. **Boatswain's recheck-selection doesn't expand blast radius for shared support-file
+   changes.** Happened TWICE this pilot; the first time shipped a real regression
+   (`filtering.feature` broken by a `world.js` edit, committed with the break unseen because
+   the recheck only ran `persistence.feature`, the file the change was declared alongside -
+   not the full suite, not the other files that also call the touched functions). Second
+   instance: same narrow scoping, no regression existed to miss that time. Caught downstream
+   by a Shipwright harbour full-regression, not by custody itself. Candidate fix: when a
+   touched diff is verification-support code (not production, not one spec file), recheck
+   selection should default to broad, not the file it's declared beside.
+2. **QM reached for the Monitor tool on a Crew wait, twice, despite 0.13.16/0.13.17
+   targeting exactly this class.** Both times self-caught and self-corrected before actually
+   stalling (unlike the pilot-#3 orphan). The instinct isn't extinguished by current text.
+   Needs a ruling: strengthen the wording, or accept self-correction as sufficient.
+3. **Captain declares dependencies in RIGGING.md without provisioning them.** Guarantees a
+   rigging-blocker round-trip (QM discovers -> Captain routes -> Shipwright refits) on every
+   greenfield pilot - not occasional, structural. Candidate fix: Captain's Rigging-authoring
+   step should install + smoke-test what it names before handing off.
+
+**Weaker findings, logged but not action-worthy yet:**
+- Exit-code-blind `timeout N | tail` habit in QM/Crew suite-run commands - never actually
+  misfired this run (nothing hit the timeout), but the construction can't distinguish a
+  killed run from a clean one if it ever does.
+- CAPTAIN.md staging blocked once even via the sanctioned standalone `git add -- CAPTAIN.md`
+  form, then worked normally the very next Boatswain leg. Possibly transient/order-dependent;
+  not enough evidence to act on.
+- Partial-watch-strike hygiene gap: a watch with one red + several green entries doesn't get
+  its green entries struck, so the next QM redispatch re-verifies already-fixed scenarios
+  from scratch. Minor invocation waste, not a correctness risk.
+
+**Runner-conduct finding, on this session itself:** the pilot's own play-by-play narration
+requirement (scenarios/pilot.md: "never more than ~2 minutes of silence") was not
+self-sustaining - required the user to flag it mid-run before a real `ScheduleWakeup` loop
+was armed. Second occurrence of this exact class (first was pilot #3's Monitor-tool finding,
+different mechanism, same shape: a standing rule stated once does not reliably survive many
+turns without an external check). Flagging for a structural fix (e.g., the wake prompt
+itself carrying a hard "emit a narration line first" instruction every time it fires), not
+another verbal commitment.
+
 ## 0.13.25 SHIPPED (f155284), pushed + installed. RESTART, THEN PILOT ON SONNET.
 
 **0.13.25 = 0.13.24 + Crew's stop recast.** dk ruled: cap APPROACHES, not edit cycles. Crew's
@@ -1219,3 +1299,62 @@ main tracks origin.)
 - Open infra fork: automated live-agent bulkhead conformance harness vs the
   fixture-matrix proof in shipshape tests/bulkhead.sh - the probe catalog's
   contamination/bulkhead probes are the current answer; build more or accept.
+
+## Inbound from Jolly (2026-07-14): the Bash custody hook does not hold the bulkhead
+
+From Jolly's Captain. Live-fire finding, not theory: TWO QM roles were contaminated by
+this vector today, in one session, and both were discarded mid-target. The second one
+established the mechanism and refused to write a single step definition, which is the
+behaviour the Articles want and the reason this is a hook fault and not a QM fault.
+
+**The claim `.ignore` makes is false.** Jolly's `.ignore` asserted it kept Captain-only
+notes out of crew-visible search "by construction". It does not. Six vectors reach
+`CAPTAIN.md`; only bare `rg` is covered:
+
+| vector                           | reaches the notes |
+|----------------------------------|-------------------|
+| `rg -l -e . .`                   | no (`.ignore` respected) |
+| `rg -l --glob '*.md' -e . .`     | YES (`--glob` outranks the ignore rule) |
+| `rg -l --no-ignore -e . .`       | YES |
+| `rg -l -e . *.md`                | YES (a shell glob defeats ripgrep itself) |
+| `grep -rl -e . .`                | YES (no `--include` needed at all) |
+| `grep -rl --include=*.md -e . .` | YES (GNU grep never reads `.ignore`) |
+
+No ignore-file can deliver this guarantee. GNU grep does not read `.ignore`, and an
+explicitly named path outranks any ignore rule, so "use rg" is not a sound rule either.
+`bash-custody.sh`'s own comment already concedes it: "a broad search that surfaces the
+file without naming it stays with skill discipline." Discipline is what failed.
+
+**The patch is built and proven, and NOT installed.** dk ruled: no plugin-cache edit in
+Jolly, carry it here instead. Splice point is immediately after the `notecheck` deny block
+in `bash-custody.sh`. Proof against the installed hook: it ALLOWS all six vectors above;
+the patched hook DENIES all six, still PERMITS the eight ordinary search and build forms,
+still denies named access, and applies to internal roles only, so Captain is unaffected.
+The recovery message names a safe form. Proven-safe: `rg <pattern>`, `rg -t md`,
+`rg --hidden`.
+
+- Guard body: `incoming/jolly-bulkhead/guard.sh`
+- Proof harness: `incoming/jolly-bulkhead/prove.py`
+- Natural upstream home for the proof: `tests/bulkhead.sh`, which the open infra fork in
+  Downstream carry already names.
+
+**Two related findings, both unverified, both worth a look here rather than in Jolly.**
+
+- The native Grep tool likely has the SAME hole. Its guard denies only when the payload
+  CONTAINS the filename; a Grep call with pattern `foo` and glob `*.md` names neither the
+  file nor a token. This is the tool an internal role reaches for FIRST. The underlying
+  `--glob` override is proven; the harness passthrough is not, because Shipwright had no
+  Grep tool to drive.
+- A derived command that selects NOTHING exits 0 and reads as a pass. Jolly's `focused`
+  could not select an `@eval` target at all (the default profile's `not @eval` ANDs with
+  the CLI tags), so every `@eval` target "proven" through it was never run. Jolly refitted
+  `focused` to run on a tag-free profile and to exit 1 when zero scenarios are selected.
+  The same latent false green sits in `broad-*` and `coverage-*`. If the Rigging read
+  contract is going to derive commands, it should require that selecting nothing reddens.
+
+Jolly holds two `@captain` skeletons asserting the hook denies the six reaching vectors
+and permits the three covered ones. They stay unpromoted until the patched hook lands.
+They assert hook deny/permit rather than search result sets on purpose: a step definition
+asserting "the notes file is absent from this result set" must NAME the notes file, and
+the Read/Grep/Glob guard then blocks QM from writing or reading its own step definition.
+Pre-clear that before promoting anything of the same shape here.

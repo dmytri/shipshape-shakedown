@@ -50,6 +50,75 @@ zero). Probe pair 2026-07-12: row-1 inherit 0 executions, hand-off strike 0, sta
 Full voyage 0.13.8 (Captain + QM/Crew + fresh-session custody): 35 invocations,
 ~1.53M cache-read, ~17k out, ~5.6m wall. Same intent on 0.13.3: 15.7m.
 
+## Pilot #4 (2026-07-14, sonnet, installed-plugin channel, doctrine 0.13.25, todopilot5, main-loop runner architecture)
+
+First pilot since the v0.13.23 stable-release tag / Goal 2 baseline, and the first live test
+of 0.13.24's flat QM->Boatswain hand-off and 0.13.25's Crew stop-cap under pilot pressure
+(the stop-cap was NOT exercised - Crew converged on every fix without hitting it).
+
+**Scaffold -> first fully-green watchbill: ~189 inv.** Included a genuine rigging blocker
+(Captain declared deps in RIGGING.md, never provisioned them; QM discovered via
+`npx cucumber-js --dry-run` failing, routed Captain -> Shipwright refit, 14 inv round-trip)
+and one malformed-plank deck foul (Boatswain caught it via the plank join, correctly
+redispatched Crew rather than deferring to harbour - the 0.13.23 rule holding live again).
+
+**Oracle iteration table** (tastejs/todomvc pinned ff43b02e, operator-side only, quarantine
+held throughout - verified via transcript grep on every leg):
+
+| Run | Fix | Result |
+|---|---|---|
+| 1 (unmodified voyage) | - | 24/29 |
+| 2 (in-place DOM reuse, keyed by `dataset.id`) | Captain 17/QM 16/Boatswain 10 | 28/29 |
+| 3 (filtering regression shipped+caught+fixed, see below) | Captain 18/QM(regression) 15/Boatswain(missed) 10/QM(refused contaminated dispatch) 3/QM(clean) 4/Shipwright(harbour, caught it) 27/Captain(routed) 10/QM(fix+conformance) 31+nested Crew 40/Boatswain 27 | 28/29 unchanged |
+| 4 (reload-finality determinism) | Captain 11/QM 19/Boatswain 8 | 28/29 unchanged - 3rd consecutive no-defect result |
+
+**Totals to first reach 28/29 (through run 2): ~232 inv / ~12.5M cache / ~90k out / ~44m
+wall.** Full run through run 4 (regression detour + plateau confirmation): **~454 inv /
+~25.2M cache / ~204k out / ~1h29m wall.** 100% sonnet throughout, zero model leak.
+
+**THE REGRESSION, live-caught, tree-verified (iteration 3):** QM's fix for 3 new
+rapid-timing persistence scenarios reverted `features/support/world.js`'s
+`completeTodo`/`activateTodo` from `.click()` back to `.check()`/`.uncheck()`, silently
+undoing an earlier fix and reintroducing a checkbox-removes-its-own-element hang in
+`filtering.feature`. QM never caught it (only reran the 3 targeted scenarios, never the
+full suite). **Boatswain's custody recheck ALSO missed it** - scoped its recheck to
+`persistence.feature` (the file the change was declared alongside) and committed the
+broken build. Caught only when the operator ran the full suite independently. Routed via
+a clean thin QM redispatch (which correctly found nothing, since the deck was at rest with
+no watchbill) -> Shipwright harbour full-regression (caught it immediately, named it
+"most urgent", correctly refused to fix it directly) -> Captain routed -> QM+Crew fixed it
+for real (production-code fix: filtered-out items now `display:none` instead of DOM-removed,
+not a harness reversion) -> Boatswain custody (broad recheck this time, committed clean).
+**This is the doctrine working exactly as designed at the harbour layer, and failing at the
+custody layer twice in the same voyage** - see CAPTAIN.md's PILOT #4 findings for the
+routed recheck-selection gap.
+
+**Successful validations, unprompted, tree-evidenced:**
+- **The planted-red adoption proof, owed since 0.13.19, closed.** QM planted a bogus
+  watchbill, a `PERTURBATION` token, and a malformed plank in turn, confirmed each
+  correctly reddened its corresponding `@conformance` scenario, then reverted cleanly -
+  the Shipwright-derived scantling checkers are proven to actually catch what they claim to.
+- **Real scantlings, first time in a pilot.** Shipwright derived
+  `scantlings/verification-conformance-rules.md` (4 rules) unprompted during harbour
+  inspection, each backed by an executable `@conformance` scenario.
+- Content-blind `CAPTAIN.md` staging hook enforcement observed live under real plugin-channel
+  conditions (batched `git add` rejected, forcing a split into two calls) - the bulkhead
+  defect fix from the 0.13.23 era, working correctly outside a staged probe.
+
+**Model split: 100% sonnet, zero leak** across every mined leg (~30 top-level + nested
+Crew/Shipwright legs).
+
+**Oracle exemption, dk-ruled and shipped (2026-07-14, `fixtures/oracle/`, NOT a doctrine
+change - operator-side fixture only):** the persisting 28th/29th residual
+(`Persistence -> should persist its data`) was resolved not by further product iteration
+but by discovering the check itself is effectively untested upstream - every framework
+touched in the oracle's last real update wave (2026-05-02: vue, svelte, react-redux, react,
+preact, lit, angular) is already exempt from it, and the entire non-exempted set is
+untouched since 2024 or earlier. See CAPTAIN.md PILOT #4 entry and
+`fixtures/oracle/README.md` for the full evidence chain. Grading under the new fixed
+`shakedown` framework name (all future pilots must use this name, not a per-run label):
+28 passing / 0 failing / 1 pending, "All specs passed!"
+
 ## Pilot #3 (2026-07-14, sonnet, installed-plugin channel, doctrine 0.13.15, todopilot4, main-loop runner architecture)
 
 First pilot run under the 0.13.14/0.13.15 doctrine AND the pilot.md runner architecture
