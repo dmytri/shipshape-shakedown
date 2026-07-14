@@ -675,6 +675,57 @@ wall. That probe is owed before any claim that trimming buys latency.
 And the real prize is rung 1, QUALITY - attention dilution across 24k tokens of mostly-
 irrelevant rules - which **instrument 1 cannot measure at all**. Cost is not worth.
 
+## GOAL 2, THE OWED LATENCY PROBE: SETTLED. Context bulk IS a rung-2 cost (2026-07-14)
+
+dk's ruling was "run the probe first" - settle latency before building more instruments,
+because latency is the ONLY rung that could promote Goal 2 above the token rung it does not
+deserve. Done. `bin/ballast-probe` = `make-ballast.py` + `ballast-compare.py`.
+
+**The observational shortcut FAILED, and the tool now says so out loud.** Regressing think-time
+on cache_read while controlling for output (`bin/latency-probe.py`, n=224) gives a positive
+cache_read coefficient but **R^2 = 0.28 and raw r = +0.20**. cache_read is collinear with
+everything - it grows monotonically within a leg, and later invocations also write more. The
+coefficient is POORLY IDENTIFIED and must not be quoted as a finding. Observational data could
+not settle this; that is exactly why the controlled probe was owed.
+
+**The controlled probe: identical task, only the cached prefix varies.** Six general-purpose
+agents (NO Shipshape doctrine anywhere - no role behaviour, no contamination risk, pure
+runtime measurement). Both arms read one file, then run eight `echo` commands one per turn.
+Identical tool-call structure, identical tiny outputs, so decode is held fixed. The ONLY
+difference is the size of the file read:
+- LIGHT: 39-byte stub -> ~23.6k mean context
+- HEAVY: 73,429-byte ballast (sized to the 74,255-byte shared Articles) -> ~48.5k mean context
+
+The ballast lands as a tool result at invocation 1 and is RESIDENT and CACHED thereafter -
+exactly how doctrine behaves.
+
+| Arm | n | Mean ctx | Mean out | Mean think | **Median think** | Stdev |
+|---|---|---|---|---|---|---|
+| LIGHT | 14 | 23,564 | 76 | 2.16s | **2.00s** | 0.52s |
+| HEAVY | 21 | 48,499 | 77 | 3.31s | **2.84s** | 1.97s |
+
+**+24,935 cached tokens cost +0.84s per invocation on identical work - a +42% increase.**
+Quote the MEDIAN: the heavy arm has a long right tail (one 11.3s call) that skews the mean to
++1.15s. Robustness: median diff +0.84s, trimmed diff +0.85s, **Mann-Whitney z = -3.27**
+(rank-based, distribution-free, p~0.001). The distributions barely overlap.
+
+**VERDICT: resident cached context carries a real, CAUSAL time cost.** The task is held fixed
+and only the prefix varies, so this is the causal result the confounded per-leg r=+0.82 could
+never deliver. Carrying the shared Articles costs ~0.84s/invocation: ~13s on a 15-invocation
+leg, ~3.1 minutes across the 224-invocation fleet. **Context bulk is a rung-2 latency cost, so
+Goal 2 is promoted above the token rung.**
+
+**AND IT STILL DOES NOT LICENSE A CUT - the ladder is why.** Quality outranks latency, and
+METRICS' own lens says mistake/fix cycles are the dominant latency source. One prevented rework
+cycle costs a whole invocation or more, buying back many seconds of prefill. Priced per section,
+a rule costs ~0.02-0.06s per invocation; **any section that prevents even one cycle across a
+voyage has already paid for itself.** The price tag is now known. The WORTH is not, and remains
+instrument 3's question - followed by a probe, per the standing limit.
+
+One incidental finding worth keeping: **a LIGHT-arm agent refused the task** and asked whether
+the eight-silent-echoes instruction was itself a compliance test. Correct instinct, and a
+reminder that inert-looking probe scaffolding is not invisible to the agent reading it.
+
 ## The audit lens (per dk)
 
 **THE LADDER (dk, 2026-07-14, binding): quality > latency > invocations > token usage.**

@@ -43,15 +43,40 @@ WORTH. Three limits, all binding:
 3. **The real prize is rung 1, quality** - attention dilution across 24k tokens of mostly-
    irrelevant rules - and instrument 1 **cannot see it at all**.
 
-**NEXT, and dk rules before anything moves:** instruments 2 (retrieval->consumption edge
-graph) and 3 (doctrine-section x role consumption matrix). Instrument 3 is the one that could
-shrink the shared skill, and it **collides with the resident-by-design standing decision**
-("no reference-file splits in doctrine skills"). Re-homing a section into a role skill is not
-strictly a reference-file split - every role already loads its own skill - but it is close
-enough to that decision's spirit that dk rules first. And the standing limit holds: **the
-matrix NOMINATES, it never condemns; anything it flags gets a probe before it gets cut**,
-because a rule can be load-bearing precisely because it PREVENTED something (the wait rule's
-value is a stall that did not happen, and it will surface in no transcript).
+### THE OWED LATENCY PROBE: RUN, AND IT SETTLES THE RUNG. (dk's call: "run the probe first")
+
+**Context bulk IS a rung-2 latency cost. Causally, not by correlation.** Six general-purpose
+agents (no doctrine, no roles, no contamination risk), identical task - read one file, then
+eight `echo`s one per turn - with ONLY the file size varying: 39-byte stub vs a 73,429-byte
+ballast sized to the shared Articles. Decode held fixed (outputs 76 vs 77 tokens).
+
+**+24,935 cached tokens cost +0.84s per invocation, a +42% increase** over the light arm's
+2.00s. Quote the MEDIAN, not the mean (+1.15s): the heavy arm has one 11.3s outlier. Robust
+every way - trimmed diff +0.85s, **Mann-Whitney z = -3.27**, distributions barely overlap.
+~13s on a 15-inv leg; ~3.1 min across the 224-inv fleet, purely re-reading the Articles.
+
+**My observational shortcut FAILED and I have made the tool admit it.** Regressing think-time
+on cache_read (n=224) gave R^2=0.28, raw r=+0.20 - collinear with everything, poorly
+identified, NOT quotable. dk was right to demand the controlled probe; the cheap version could
+not settle it.
+
+**BUT IT STILL DOES NOT LICENSE A CUT, and this is the part to carry into any report.**
+Quality outranks latency, and METRICS' own lens says mistake/fix cycles are the dominant
+latency source. Per section, doctrine costs ~0.02-0.06s per invocation. **One prevented rework
+cycle costs a whole invocation or more - so any section that prevents even one thing across a
+voyage has already paid for itself.** We now know the PRICE. We still do not know the WORTH.
+
+**NEXT, and dk has ruled:** instrument 3 (doctrine-section x role consumption matrix) is
+**MEASURE, DON'T MOVE**. Build the matrix, report candidates, touch NO doctrine text.
+**Resident-by-design STANDS** - re-homing stays blocked behind dk's explicit word. The matrix
+NOMINATES, it never condemns; anything it flags gets a probe before it gets cut, because a
+rule can be load-bearing precisely because it PREVENTED something (the wait rule's value is a
+stall that did not happen, and it will surface in no transcript). Instrument 2
+(retrieval->consumption edge graph) is unbuilt.
+
+**Aim instrument 3 at DECISION QUALITY, not token cost.** The latency probe means cost is now
+known and modest per section; the only question that can still justify a cut is whether a
+section ever touches a decision. That is a consumption question, not an accounting one.
 
 ## GOAL 1 COMPLETE: **v0.13.23 TAGGED AND PUSHED** (8e7cf25). Stable release. 2026-07-14.
 
