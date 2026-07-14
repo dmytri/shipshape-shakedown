@@ -13,6 +13,38 @@ session's process predates the 0.13.17 install, so subagents dispatched from it 
 transcript for a 0.13.17 marker phrase: `one lane`, `harbour is its only trigger`, or
 `never builds its own completion check`).
 
+### DO THIS FIRST: tw1 behaviour smoke test, THEN the review (dk's call, 2026-07-14)
+
+dk's sequencing: lightest possible behavioural smoke test BEFORE the fable review, so the
+review reads the diff with live evidence beside it rather than on argument alone. Run ONE leg.
+
+**State:** `bin/probe-states.sh <scratch>` -> `tidewatch1` (crew-batching, 0.13.10 probe,
+scenarios/probes.md). Zero new fixtures. Dispatch QM thin (role + base commit), `model` pinned.
+
+**Baseline to A/B against (wave 5, 0.13.14): 28 inv / 1.41M cache / 6.4k out / 3m41s / 4 suite
+runs / PASS.** Judge on the four-rung ladder (quality > latency > invocations > tokens), and
+record mean context per invocation.
+
+**Four markers, all falsifiable from the leg transcript:**
+1. **CHANNEL (gates everything).** Grep the transcript for a 0.13.17 marker phrase: `harbour is
+   its only trigger`, `never builds its own completion check`, or `one lane`. ZERO hits = stale
+   process snapshot = the run is meaningless, abort and restart properly (AGENTS.md rule).
+2. **FLAT HAND-OFF (the new-text behaviour).** QM should now END IN ITS REPORT naming Boatswain +
+   advanced targets + base commit, and spawn NOTHING. At 0.13.14 this same probe spawned a nested
+   Boatswain. **Zero Boatswain spawns from QM = the flat hand-off is live.** Captain (or the
+   operator, standing in) then dispatches custody.
+3. **NO INVENTED WAIT.** Grep for `sleep`, `pgrep`, `kill -0`, `Monitor`, `"type":"result"`.
+   Expect ZERO. Any hit is the pilot-#3 stall class surviving 0.13.16+0.13.17.
+4. **BATCHING REGRESSION.** ONE Crew dispatch carrying 3 refs + per-target evidence (holds at
+   0.13.14; a regression here would be a coherence casualty of the 0.13.17 edits).
+
+**What tw1 CANNOT tell us, stated plainly:** it dispatches ONE Crew child (3 reds, one seam
+cluster -> one batched mate). Consuming a single child NEVER broke. **The parallel-mates case -
+the single highest-flagged risk in the dossier below - stays untested by this smoke test.** It
+needs a two-disjoint-seam state that does not exist in fixtures/probe-states yet (a small build,
+not a big one). That belongs in the full wave AFTER the review. Do not let a green tw1 be read as
+clearing the parallel case.
+
 ### OWED #1: fable doctrine review of the 0.13.17 diff (dk's ask, this session)
 
 Read `git -C ~/shipshape show 85e9e6f`. The review dossier - every decision, its reasoning,
