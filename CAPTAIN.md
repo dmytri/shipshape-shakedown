@@ -39,15 +39,33 @@ the defect, so the shakedown withholds the hook.**
 
 | Leg | 0.13.23 | 0.13.24 |
 |---|---|---|
-| Boatswain custody | 10 | **6**, and the bulkhead holds |
-| QM voyage | 15 | **17 - NOT the predicted win** |
-| Shipwright fit-out | *control INVALID, did no work* | 26 |
+| Boatswain custody | 10 | 8 |
+| QM voyage | 15 | 17 |
+| Shipwright fit-out | 26 | 26 |
 
-Outcomes identical on every valid leg. Mergeable retrieval runs: **0** (was 18 across the fleet,
-runs up to 6 deep). **The QM +2 is recorded as-is, not buried** - both legs correct, within known
-run-to-run variance, but it is not a win. The Shipwright control wrote no RIGGING.md, no
-AGENTS.md, clean tree: 10 vs 26 compares a completed fit-out to a leg that did nothing. **No
-comparison drawn.**
+**THE IEPE RECOMPILE IS A NULL RESULT ON INVOCATIONS. The predicted ~25% did NOT materialize.**
+Boatswain -2, QM +2, Shipwright 0. Say so plainly in any report; the prediction was falsifiable
+and it was falsified.
+
+**OPERATOR ERROR, twice, and it nearly entered the record as a finding:** I read STILL-RUNNING
+transcripts as finished ones and reported "Boatswain 10 -> 6" and "Shipwright control did no
+work, comparison INVALID". Both false. The leg was mid-flight and its files were not yet
+written. **A partial transcript looks exactly like a finished one to `plan.py`.** Wait for the
+task-notification before mining; a tree check on a live leg proves nothing. This is the same
+class as the pilot-#2 lesson (mine on EVERY notification) wearing a new costume.
+
+**What IS real and validated:** the bulkhead defect closed (v23 control breached, v24 gate leg
+did not); the 4 contradiction fixes; the false-failure deletion (tree-verified both ways - the
+v23 control's derived RIGGING.md HAS the section, v24's does not); outcomes identical on all
+three legs; mergeable retrieval runs 0, down from 18 across the fleet.
+
+**Reading:** the recompile is SAFE (no regression, cleaner plans) but it is NOT the economy
+lever. The 84%-boilerplate and 25%-compilable-waste numbers measured a real cost that the
+recompile did not convert into fewer invocations. Candidate explanations, none tested: the
+opening block is only 1 invocation on HEAD-text anyway (the 12.9% figure was a PLUGIN-channel
+measurement, and the plugin prefill is the change that would actually collect it); the
+mergeable runs were only 8% and mostly short. **The plugin prefill (0.13.25) is now the only
+untested economy lever left, and it targets exactly the 12.9% this A/B could not see.**
 
 ### OWED / OPEN
 
