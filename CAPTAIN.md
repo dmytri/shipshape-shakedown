@@ -314,6 +314,19 @@ time... should be encouraged."
    carries the outcome of every role it dispatched, so the human-facing session
    sees the whole chain." Evidence: pilot-#2 attempt-1 Captain auto-chained QM
    and finished blind; the same shape recurs in real consuming agents per dk.
+5. Role-tiered economy (dk, 2026-07-14): visibility is the Captain-seat
+   priority, invocation-minimization the worker-seat priority. Draft principle
+   for wording (homes: Captain skill + the shared round-economy language):
+   "The human-facing seat spends context freely to keep the user informed -
+   play-by-play of dispatched work as its outcomes become known, full report
+   chains surfaced, never silence; its economy is measured in how fast the
+   session reaches done with the user informed throughout, never in tokens.
+   Worker roles (QM, Crew, Boatswain) complete in the fewest model rounds that
+   preserve evidence - every avoidable round (poll, redundant confirmation,
+   rework cycle) is the cost that matters; token volume per round is not."
+   Note the interlock with item 4: report-chaining's token cost at the Captain
+   seat is explicitly accepted - visibility trumps thrift where a human is
+   watching.
 Quality guardrails per dk's caution: skill-only baseline stays generic (no
 model/tool names beyond the user's own rigging values), minimal wording, tests
 green, one voice per rule; the pilot quarantine stays in the SHAKEDOWN procedure
@@ -365,7 +378,17 @@ shipshape efficiently."
    rationale), npm install, serve, grade. Full-green = 28-29 runnable passing,
    zero unexplained fails - proven reachable by attempt 2.
 4. Attempt-2 grade history for comparison: 21 -> 23 -> 24 (oracle-buggy) -> 28/29
-   (oracle-fixed, same app bytes) -> iteration-6 outcome in METRICS.md.
+   (oracle-fixed, same app bytes). Iteration-6 reachability check (2026-07-14,
+   excluded from accounting): all 3 new scenarios green against unmodified
+   production - the last residual (Persistence detached-DOM) is a
+   TIER-OBSERVABILITY boundary (real-Chrome sees an async re-render jsdom
+   cannot), NOT an app defect or loop failure. Completion-bar guidance for
+   pilot #3: target full green; if this class appears, product-language feedback
+   names the observable behaviour and the 0.13.14 tier-economy escape hatch
+   (escalate tier when behaviour cannot be observed below it, named recorded
+   decision) is the legal route - its firing live would validate the A2 rule.
+   QM's 4-invocation fable fall at async-child resumption (live in this fable
+   session) re-confirms item 0: the pilot session MUST run sonnet.
 
 ## 2026-07-13 evening: pilot #2 PARKED on dk's word; doctrine fix package drafted; restart-ready
 

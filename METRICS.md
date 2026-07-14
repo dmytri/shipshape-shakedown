@@ -92,6 +92,43 @@ app behaviour, not a real spec gap. Operator did not build a comparison/control
 apparatus to confirm this (out of scope per dk's word); this is inference from the
 app's own source and QM's repeated independent findings, not further diagnosis.
 
+**CLOSE-OUT (2026-07-14 morning, operator-side; full chain in CAPTAIN.md):** the
+plateau inference above was CONFIRMED by reading the pinned oracle source: 2 of
+the 3 residuals were the oracle's own `spy.invoke('reset')` calling a
+sinon-removed API on a path every upstream-maintained framework skips
+(noLocalStorageSpyCheck covers the whole modern main set - they persist nothing).
+One-line operator-side fix (reset -> resetHistory), vendored as
+fixtures/oracle/spy-reset.patch. **Same app bytes re-graded: 24/29 -> 28/29,
+zero skips** (the before-each fix un-skipped 2 Mark-all tests, which pass).
+
+Iteration 6 (2026-07-14, the completion-bar reachability check; EXCLUDED from
+clean pilot accounting - fable session model, post-stall conditions): Captain 30
+inv/2.51M/9m0s (30/30 sonnet, pin held, no nested spawns) - amended 2 features +
+watchbill (3 scenarios), correctly identified both coverage gaps (neighbour-vs-own
+node identity; post-reload reference blindness), stop-line held. QM 29
+inv/1.87M/9m51s (25 sonnet + 4 FABLE - the async-resumption fall, live in a fable
+session, confirming the sonnet-session requirement) + nested Boatswain legs 5+21
+inv all-sonnet (one dispatch-contract foul self-caught: first Boatswain dispatch
+over-narrated, withdrawn, redispatched clean); commit a9e3aea. ALL 3 scenarios
+GREEN AGAINST UNMODIFIED PRODUCTION - production bytes unchanged since the 28/29
+grade, so the grade stands by identity (re-run would be a redundant confirmation).
+
+**Verdict on the last residual (Persistence detached-DOM): a TIER-OBSERVABILITY
+BOUNDARY, not an app defect the loop failed to fix.** Three product-language
+framings across iterations 4-6 all verified green at the jsdom tier; the oracle's
+real-Chrome run observes an async re-render the jsdom settle-window snapshots do
+not. The doctrine-sanctioned path already exists: 0.13.14 tier economy escalates
+to a browser tier when a specified behaviour cannot be observed below it, as a
+named recorded decision. Pilot #3 guidance: full-green target stands; if this
+residual class appears, the product-language feedback should name the observable
+behaviour and the tier escalation is the legal route - that firing live would
+itself be a validation of the A2 rule's escape hatch.
+
+**Attempt-2 final: 28/29 (96.6%) at 717 clean-accounting invocations** (+ the
+excluded iteration-6 reachability check: 85 inv incl. nested). Pilot #1: 18/29
+(62%) at 517 inv. Attempt 1: 84 inv spent, deadlocked (reported alongside, not
+folded).
+
 ## TodoMVC pilot baselines (2026-07-12, sonnet, HEAD-text legs, doctrine 0.13.9)
 
 27 dispatched role legs, greenfield to graded app. Role-leg totals only: 517
@@ -455,6 +492,17 @@ invocations and mistake/fix cycles (refusals, fouls, denied-command retries, rew
 loops), then raw context-token volume last. Sending MORE tokens to the model LESS
 often for the same outcome quality is a win, not a cost. Framework coherence is the
 key latency lever because mistake/fix cycles are the dominant latency source.
+
+Role-tiered refinement (dk, 2026-07-14): the optimization target differs by seat.
+CAPTAIN (human-facing): play-by-play visibility is the priority - the user and
+Captain must be able to know what Crew is doing at all times; token spend at this
+seat is explicitly NOT a constraint ("token optimization is not our goal at the
+captain level"); the goal is clearing the session as soon as possible with the
+user fully informed throughout. QM/CREW (worker seats): MINIMIZE MODEL INVOCATIONS
+- end-to-end latency reduction is the primary goal, token efficiency a side
+benefit. Judge legs accordingly: a Captain leg is never dinged for verbose
+surfacing/report-chaining; a QM/Crew leg is dinged per avoidable invocation
+(polls, redundant confirmations, rework cycles), not per token.
 
 Classify EVERY invocation's impact by one objective test - trace whether its output
 was consumed:
