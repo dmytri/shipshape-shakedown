@@ -86,17 +86,43 @@ Applied only the two unambiguous cases, ONE FILE SAYING THE SAME THING TWICE (no
 no re-homing): Captain's Voice restating its own opening line, Boatswain's hygiene note restating its own
 Final report. 34 words.
 
-### STILL OPEN
+### DISPOSITIONS (dk ruled, 2026-07-15): clear the board WITHOUT touching doctrine. Recommendation was do-nothing on all four; recorded so no future session re-litigates or naively acts.
 
-- **Pilot #4's weaker findings, unactioned:** exit-code-blind `timeout N | tail` in QM/Crew suite runs
-  (never misfired); partial-watch-strike hygiene gap (green entries in a part-red watch are not struck,
-  so a redispatched QM re-verifies them from scratch).
+- **Finding 2 (QM Monitor instinct): WATCH, do not hook naively.** Self-caught 2/2 under current text
+  (0.13.16 wait rule + 0.13.17 parallel-children). The obvious fix - a PreToolUse hook denying `Monitor`
+  for internal roles - is FEASIBLE (matchers take arbitrary tool names; role-scoping precedent exists in
+  bash-custody) but is a **whack-a-mole trap, pilot-#3-proven**: a QM blocked off Monitor invented a
+  broken Bash transcript-poll instead. The only complete mechanical fix denies the whole WAIT CLASS
+  (Monitor + `pgrep`/`kill -0`/sleep-loops/transcript-result-greps), which is real design + careful test
+  for a class that currently self-corrects. Not worth it now. **If ever revisited, deny the class, never
+  Monitor alone.**
+- **Partial-watch-strike: NON-FINDING, reclassified.** Original write-up called it invocation waste
+  (a redispatched QM re-verifies a part-red watch's green entries from scratch). On reflection it is
+  correct behaviour, not waste: Crew fixing the watch's red MOVES the deck, and re-running the greens is
+  exactly the regression net the blast-radius finding (0.13.27/28) just argued for. If the deck did NOT
+  move, the run-record inherits them by hash equality. Current behaviour is right both ways. Closed.
+- **Exit-code-blind `timeout N | tail`: WATCH.** Never misfired. A fix means legislating how roles
+  compose run commands = command-drift risk. Not worth a rule for a latent that has not bitten.
+- **Deletion/config recheck row vs `typecheck: none`/`lint: none`: CLOSED, not a hole.** Verified live
+  (2026-07-15): `cucumber-js --dry-run` load-checks every support/step module, so a broken import reddens
+  even with both gates `none` - the row lists static discovery FIRST and it answers the load question. The
+  support-code hole was unique because load-success != behaviour-preserved for code that runs inside
+  scenarios; a full strict typecheck was verified to PASS the `HH:MM -> HH:MM:SS` helper (return type still
+  `string`), so requiring the gates would NOT have caught pilot #4. The support fix depends on no gate
+  being configured, by design. Only theoretically exposed on a non-Gherkin stack with no dry-run; not
+  hardened (speculative).
+
+### RECORDED, not open
+
 - **Fixture defect found by the gate leg, unprompted and correct:** my tw17 runrecord wrote
   `"command":"focused"` instead of the full command string; the role ruled the line VOID per the Wake
   policy's record shape. Fixed in tw18's builder. The fixture was wrong; the role was right.
 - **Both legs flagged a write-scope question I planted without meaning to:** the hand-off said "Crew
   advanced ... the verification support", but verification support is QM's write scope, not Crew's.
   Both roles caught it. Good behaviour, not a finding.
+- **Operational, not a decision: RESTART owed before any plugin-channel leg or pilot.** This process
+  snapshotted 0.13.26; 0.13.27/0.13.28 text runs only in HEAD-text mode from here. HEAD-text doctrine
+  work needs no restart.
 
 ## 0.13.26 SHIPPED (7727de7), pushed + installed, 2026-07-14. RESTART before any plugin-channel leg.
 
