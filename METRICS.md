@@ -96,10 +96,17 @@ COMMITTED skills-lock.json unreported; (d) obs: `verification: features/support`
 self-populated (cucumber-conventional reading; watch), L1 Shipwright staged its
 own deletion (watch).
 
-Leg accounting (4 legs, all mined): 132 inv / 12.10M cache / 126k out / 14m17s
-wave wall (parallel, 06:30:38-06:44:55). G1 10/488k/11.6k/2m27s; G2
-73/7.38M/58.4k/14m01s (76 tool uses, zero spawns); L1-Captain 8/351k/7.5k/13m00s +
-nested Shipwright 41/3.88M/48.8k/11m42s. Model split: sonnet 132/132 — the
+Leg accounting (4 legs, all mined; wave wall 14m17s parallel, 06:30:38-06:44:55):
+
+| Leg | Invocations | Cache-read | Out | Wall | Notes |
+|---|---|---|---|---|---|
+| G1 Captain (greenfield opening) | 10 | 488k | 11.6k | 2m27s | zero spawns |
+| G2 Captain (greenfield bootstrap) | 73 | 7.38M | 58.4k | 14m01s | 76 tool uses, zero spawns; incl. 5-tool install + proofs (no-offer tw12 lineage: 7m24s) |
+| L1 Captain (legacy routing) | 8 | 351k | 7.5k | 13m00s | wall dominated by waiting on the nested child |
+| L1 nested Shipwright (fit-out) | 41 | 3.88M | 48.8k | 11m42s | in line with historical fit-out legs (36-40 inv) |
+| **Wave total** | **132** | **12.10M** | **126k** | **14m17s** | |
+
+Model split: sonnet 132/132 — the
 explicit pin held on EVERY invocation including L1-Captain's post-async-child
 continuation; the wave-4 async-resumption fall did NOT reproduce under HEAD-text
 general-purpose spawns (harness note: the leak may be plugin-channel agent-type
