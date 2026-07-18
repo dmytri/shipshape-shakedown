@@ -1,5 +1,84 @@
 # Captain notes - shipshape-shakedown workstream
 
+## 2026-07-18 (fable session): PILOT #4 RETROSPECTIVE EVAL (dk's ask: "eval last pilot") - zero legs dispatched; one HIGH harness finding (transcript durability is FALSE), AGENTS.md corrected
+
+Entry: /shakedown, deck reported (0.13.32 = last baseline, nothing moved), dk's
+focus answer: "eval last pilot" = pilot #4. Cheapest covering scenario = analysis
+over the banked record, no simulation. Deck housekeeping: pushed the stranded
+efficiency-battery commit 651766f (cockpit was ahead-1; last session recorded but
+never pushed).
+
+**HIGH HARNESS FINDING, and it reshaped the eval: the transcript-durability
+assumption is FALSE.** Evidence: nothing before 2026-07-15 survives anywhere under
+`~/.claude/projects` (oldest survivor is a jolly session dir dated Jul 15; the
+shakedown project holds ONLY Jul-18 sessions); `~/.claude/backups` empty,
+file-history trivial; the todopilot5 sim tree lived in a since-wiped /tmp
+scratchpad. Gone forever: pilot #4's raw transcripts (Jul 14), GOAL-2's 14-leg
+session 6bdcdbf3, waves 1-5 raw legs. Observed retention ~3-4 days (or a VM
+lifecycle event - indistinguishable from here; either way durability cannot be
+assumed). Consequences: (a) pilot #4's P/N/Neg fold and worth densities are
+PERMANENTLY unrecoverable (METRICS.md pilot-#4 section now says so - the fold was
+never done, only "held for the eventual fold" like the pilot-#2 fragment); (b)
+GOAL-2 instrument 2 ("retrieval graph over the task transcripts already banked")
+is DEAD as a retrospective - it can only run same-window or on fresh legs; (c) the
+mine-on-every-notification rule is not just a stall-detector, it is the ONLY
+moment the data exists. Harness fix APPLIED operator-side (same class as the
+wave-6 fetch-first fix): AGENTS.md durability text corrected to mine-same-session
++ bank-derived-numbers. ROUTED, not done: whether to bank raw leg jsonl into the
+cockpit repo (MBs/wave) or accept METRICS-only survival - dk's call.
+
+**The eval itself, four axes per scenarios/pilot.md, from the durable record:**
+
+1. OUTCOME: effectively FULL PASS - best of the four pilots. First grade 24/29 is
+   the best cold open ever (#1: 0/29, #2: 21/29, #3: 23/29); 28/29 at iteration 2;
+   the residual resolved as an upstream-mislabeled check (every framework in the
+   oracle's last real update wave already exempt) -> dk-ruled exemption fixture ->
+   "All specs passed!" Pilot #4 is the only pilot that CLOSED its residual rather
+   than parking it.
+2. INVOCATIONS: ~232 inv to 28/29 - the generation trend is 717 (#2) -> 440 (#3)
+   -> 232 (#4), roughly halving per doctrine generation on the like-for-like
+   reach-28/29 metric. Full run ~454, of which the iteration-3 regression detour
+   cost 185 inv (41% of the run); the pure detection+repair chain AFTER the broken
+   commit landed is 142 inv. That is the measured price of ONE custody escape, vs
+   the 0.13.28 fix's standing price of +5 inv per support-touching custody leg:
+   the fix breaks even if it prevents one escape per ~28 such legs. Hindsight also
+   prices iteration 4's plateau confirmation at 38 inv - not waste under the
+   quarantine rule (mid-run oracle forensics are banned), and the exemption
+   fixture means no future pilot pays it again.
+3. TOKENS: ~12.5M cache / 90k out to 28/29 (-55% cache vs #3's 27.9M); full run
+   ~25.2M / 204k. Worth densities: unrecoverable, see above.
+4. FIDELITY: hits - 0.13.23 plank-join disposition fired live in a real voyage
+   (malformed plank -> Crew redispatch, not harbour parking); the planted-red
+   adoption proof owed since 0.13.19 closed; first real scantlings in a pilot;
+   quarantine held every leg; QM refused a contaminated dispatch; 100% sonnet;
+   content-blind CAPTAIN.md hook live under real conditions. Misses - custody
+   recheck-selection missed the same shared-support regression TWICE (the harbour
+   net caught it, custody did not); QM's Monitor instinct x2 (self-caught); Captain
+   declared-not-provisioned rigging deps (structural, every greenfield); runner
+   narration decayed without an external check (2nd instance of the stated-once
+   class). 0.13.25's own headline change (Crew approach-cap) was NEVER exercised -
+   Crew converged on every fix; still unexercised anywhere as of today.
+
+**Finding afterlife - every pilot #4 finding reached a terminal state; the yield
+was 3 routed findings -> 2 doctrine ships + 1 standing watch, 3 weak findings ->
+evidence-based do-nothing dispositions, 1 oracle fixture, 1 runner-architecture
+hardening (pilot.md timer wakes):** finding 1 (custody blast radius) -> 0.13.27/28,
+and the tw17/tw18 probes could NOT reproduce the miss even hardened to three
+broken consumers - pilot #4 remains the ONLY live evidence of the defect class it
+fixed, which is exactly why losing its transcripts stings; finding 3 (rigging
+deps) -> 0.13.28 consumer-routing, downstream-validated in wave 6 + the battery
+(deriving roles install toolchains, zero rigging-blocker round-trips observed
+since); finding 2 (Monitor instinct) -> watch, deny-the-class-never-Monitor-alone
+rider stands.
+
+**The ONE pilot #4 number still open: the +5 inv/leg custody price of 0.13.27/28
+("watch across the next pilot") has no post-fix pilot-scale measurement - it waits
+on the owed 0.13.26-0.13.32 TodoMVC pilot (#5), which would also be the first
+possible exercise of the Crew approach-cap.** Queue otherwise unchanged: dk's
+ruling owed on the two RIGGING.md findings (Dependencies slot, gplint lint-slot);
+wave-7 A/B/C on dk's nod; pilot #5 owed at integration scale. NEW routed question:
+raw-transcript banking policy (above).
+
 ## 2026-07-18 (sonnet session, same day as wave 6): efficiency battery + 0.13.32 spot-validation run, MIXED gate, two findings routed, wave-7 deferred on dk's word
 
 Entry: dk asked for /shakedown pilot; deck check showed both queue items (efficiency

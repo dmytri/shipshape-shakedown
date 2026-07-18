@@ -145,6 +145,12 @@ judgment". The old row forced correct roles to disobey it. Full account in CAPTA
 
 ## Pilot #4 (2026-07-14, sonnet, installed-plugin channel, doctrine 0.13.25, todopilot5, main-loop runner architecture)
 
+CLOSED FOLD (2026-07-18 retrospective eval): pilot #4's per-invocation P/N/Neg
+classification and worth densities were never computed and are now PERMANENTLY
+UNRECOVERABLE - the raw transcripts were pruned before the fold (see the
+2026-07-18 pilot-eval entry in CAPTAIN.md). Do not hunt for this data; the
+leg-level numbers below are everything that survives.
+
 First pilot since the v0.13.23 stable-release tag / Goal 2 baseline, and the first live test
 of 0.13.24's flat QM->Boatswain hand-off and 0.13.25's Crew stop-cap under pilot pressure
 (the stop-cap was NOT exercised - Crew converged on every fix without hitting it).

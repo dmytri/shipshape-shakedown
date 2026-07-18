@@ -51,9 +51,13 @@ nothing else (no notes, no fixtures, no scratch).
    run-record equality. Compare against METRICS.md baselines. Mine the transcript
    on EVERY task-notification immediately - tree-diff alone missed a stalled QM
    for ~25m (pilot #2).
-   Transcripts are DURABLE and are NOT in /tmp: they live at
-   `~/.claude/projects/<proj>/<session>/subagents/agent-*.jsonl`. Nothing needs
-   harvesting before a session dies.
+   Transcripts live at `~/.claude/projects/<proj>/<session>/subagents/agent-*.jsonl`
+   but the old "DURABLE, nothing needs harvesting" claim is FALSE (2026-07-18:
+   everything before 07-15 was pruned - pilot #4, the GOAL-2 14-leg session, waves
+   1-5 raw transcripts all gone; observed retention ~3-4 days or a VM lifecycle
+   event). Mine every leg SAME-SESSION and bank every number a future analysis
+   could need in METRICS.md/CAPTAIN.md; raw-transcript re-analysis (P/N/Neg fold,
+   inbound.py, plan.py, retrieval graph) is only possible within the window.
 6. **IEPE**: analyse the instruction as the execution trajectory it produces, per
    `scenarios/iepe.md`. `bin/inbound.py` and `bin/inbound-fleet.py` decompose inbound
    context weight (exact; the ledger identity closes at drift +0 or the numbers are
