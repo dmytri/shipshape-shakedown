@@ -996,3 +996,117 @@ job, another role? Known classes: opening reads (batchable), independent hygiene
 (batchable), polling waits (eliminate - foreground spawns), discover+step-usage (one
 run serves both, 0.13.8), custody reruns of caller-proven greens (inherit - decision
 table row 1 / wake record).
+
+## Efficiency battery + 0.13.32 spot-validation ("wave 7 prep", 2026-07-18, sonnet, installed-plugin channel, session process postdates install)
+
+Owed re-run (three ships landed since wave 5/6: 0.13.30, 0.13.31, 0.13.32) plus the
+three queued 0.13.32 plugin-channel spot-checks (greenfield opening, TS bootstrap
+re-run, plain-JS bootstrap). Wave-7 (yoink/architecture.md/anchors A/B/C) deferred on
+dk's word; this run is the two cheaper queue items only. Channel verified empirically:
+tw2's transcript carries 0.13.31 marker phrases (`harness-install artifacts`, `gplint`,
+`jsdoc -X`, `not @captain and not @shipwright`) though tw2 itself never exercises the
+greenfield path - the installed cache is serving current text. 100% sonnet, zero model
+leak, confirmed across all 10 transcripts including nested children (grep of
+`message.model` on every leg: `claude-sonnet-5` only).
+
+Ten legs, all independently scaffolded sim trees, dispatched in parallel via the
+installed-plugin channel (`subagent_type: shipshape:*`, thin dispatch, `model: sonnet`
+pinned), mined on every notification, tree facts verified independently (not from
+report prose):
+
+| Leg | Role | Inv | Cache | Out | Wall | Mean ctx/inv | vs prior baseline |
+|---|---|---|---|---|---|---|---|
+| tw1 crew-batching | QM | 17 | 826k | 4.6k | 2m16s | 48.6k | wave-5: 28/1.41M/3m41s - **-39% inv, -41% cache** |
+| tw2 notes-commit | Captain | 7 | 298k | 2.6k | 32s | 42.6k | wave-5: 6/123k/30s - +17% inv, **+142% cache** (doctrine text growth) |
+| tw3 notes-arms | Boatswain | 9 | 408k | 5.4k | 1m17s | 45.4k | wave-5: 20/972k/2m18s - **-55% inv, -58% cache** |
+| tw4 plank-gap | QM | 21 | 1.085M | 8.3k | 4m45s | 51.7k | wave-5: 27/1.32M/4m27s - -22% inv, -18% cache |
+| tw5 no-plant fit-out | Shipwright | 51 | 4.61M | 46.3k | 11m10s | 90.3k | wave-5: 41/2.82M/6m19s - **+24% inv, +63% cache, +77% wall** (blows the ~10% bar) |
+| tw13 slow-census | QM+nested Crew/Boatswain | 24 | 1.39M | 13.2k | 17m27s | 57.8k | wave-5 (QM-only): 19/848k/5m54s - not like-for-like, this run ran the FULL chain to a committed clean deck |
+| fastpath-bootstrap | Captain (+nested QM/Crew/Boatswain) | 39 | 2.77M | 28.4k | 15m16s | 71.0k | wave-5 fastpath12: 13/531k/6m38s - not like-for-like (see note) |
+| G1 greenfield opening | Captain | 12 | 530k | 4.6k | 3m38s | 44.2k | wave-6 G1: 10/488k/2m27s - comparable, wall +48% (live registry round-trips) |
+| ts-bootstrap G2 (TS) | Captain | 65 | 8.53M | 41.1k | 12m55s | 131.3k | wave-6 G2 (TS, tainted by the tag-drop/glue findings): 73/7.38M/14m01s - improved on every axis |
+| js-bootstrap G2 (plain JS, new) | Captain | 35 | 2.97M | 28.0k | 8m53s | 84.9k | no prior baseline (new leg) |
+
+**Efficiency-battery total: 168 inv / 11.38M cache / 108.9k out.** **0.13.32
+spot-validation total: 112 inv / 12.04M cache / 73.7k out.** **Wave total: 280 inv /
+23.42M cache / 182.6k out**, wave wall (parallel dispatch, first start to last finish)
+17m37s.
+
+**Note on the two "not like-for-like" rows.** tw13 and fastpath-bootstrap dispatches
+here said "bring to a clean deck" with no stop-line, so both ran further than their
+named wave-5 comparators (which may have stopped at QM-dispatch or counted only the
+top-level role's own invocations, per the ambiguous prior wording) - both completed a
+full nested voyage to a committed, clean-verified deck. Wall-clock is the more honest
+comparison for these two; both came in 2-2.5x wave-5's wall, which is directionally
+consistent with the tw5/tw2 drift below (doctrine has grown), not evidence of a
+specific new fault.
+
+**GATE VERDICT: MIXED, not a clean gate-green like wave 5.** Three legs (tw1, tw3,
+tw4) beat their baselines outright. Two legs (tw2, tw5) blow the ~10% bar - tw5
+substantially so. Per the battery's own rule ("a doctrine fix that inflates
+invocations on unrelated probes... routes back to dk before the pilot resumes"): tw5's
+drift traces to no single doctrine version (0.13.15's efficiency-battery bar predates
+most of the growth), it is cumulative - Shipwright's derived-check surface has grown
+from ~4-5 rules (wave 5 era) to 7 required-when-supported methodology checks today,
+producing 9 `@conformance` skeletons this run versus wave-5's smaller set. This is
+doctrine SCOPE growth, correctly reflected in cost, not a bug - but it is real and it
+compounds every fit-out leg from here forward. Flagged plainly rather than absorbed
+into "drift, watch."
+
+**Latency reading (mean context/invocation, the fat-vs-fast signal per this file's own
+method).** Two legs stand out as heavy: ts-bootstrap (131.3k/inv, the heaviest leg in
+the wave by a wide margin) and tw5 (90.3k/inv). Both are the two legs most loaded with
+config/tool-output content (TS toolchain install+proof cycles; Shipwright's
+templates.md third file plus 9 derived skeletons). The lightest legs (tw2, tw3, G1) sit
+in the 42-45k/inv band, essentially the shared-Articles-plus-role-skill floor this
+file's Goal-2 section already measured. No controlled latency probe was re-run this
+wave (that remains `bin/latency-probe.py`/`bin/make-ballast.py` territory); this is the
+cheap observational signal only, offered as a candidate, not a finding.
+
+**Findings routed to dk, none shipped:**
+1. **MEDIUM, reproducible 2/3: `RIGGING.md`'s `## Dependencies` slot left literally
+   `none` on both the TS bootstrap and the fastpath-bootstrap legs, despite each
+   installing multiple confirmed tools** (ts-bootstrap: biome, cucumber, c8, gplint,
+   tsx, typescript, @types/node all in `package.json` devDependencies, `Dependencies`
+   section empty; fastpath: the same shape). The js-bootstrap leg got this right (5
+   dependencies listed, policy locked). The minimal-RIGGING letter requires "every
+   slot a discovered value or a confirmed tool answers populated" - `Dependencies` is
+   exactly such a slot and it silently reverted to `none` in the majority of legs that
+   exercised it this wave.
+2. **LOW-MEDIUM: no RIGGING.md command slot represents feature lint (gplint) as
+   distinct from code lint (biome).** js-bootstrap installed gplint, proved
+   `gplint "features/**/*.feature"` runs clean in its own transcript, yet
+   `RIGGING.md`'s `## Commands` carries only one `lint:` key (populated with biome).
+   The fast-path doctrine text names "feature lint, code lint and format" as two
+   separate offer categories but the RIGGING schema (per `fixtures/probe-states/RIGGING.md`
+   and every produced RIGGING.md this wave) has only one `lint` key - this may be a
+   template/schema gap rather than a per-leg miss, since it reproduced identically
+   wherever gplint was confirmed. Worth a ruling: does gplint's command belong folded
+   into `lint` (e.g. both tools chained) or does the schema need a second key?
+3. **LOW, doctrine-growth observation, not a fault:** tw2's cache-read nearly doubled
+   since wave 5 (123k -> 298k, comparable invocation count and wall) - a direct,
+   measured instance of the shared-Articles/role-skill "resident-by-design" cost
+   accumulating release over release, consistent with Goal 2's original 84%-boilerplate
+   finding. Tokens remain rung 4 per dk's ladder; noted for the eventual matrix, not
+   acted on.
+
+**Positive instruction-coherence markers, tree-verified:**
+- Bulkhead hook self-heal live again (tw3: `grep -rn "@planks" src` denied, retried as
+  `rg -n "@planks" src` the very next invocation - one real catch, one retry, zero
+  contamination) - same class as the 0.13.26 bulkhead fix, still holding at 0.13.32.
+- Zero invented wait mechanisms on the slow-census regression check (tw13, harness
+  background-task lines deliberately withheld per the probe's own method): zero
+  Monitor tool calls, zero pgrep/kill-0/sleep-poll patterns, zero `run_in_background`
+  - the auto-backgrounded 150s+ broad sweep was consumed via the runtime's own
+  notification-resume path, Crew got one batched dispatch, deck closed clean via a
+  chained Boatswain pass. The pilot-#2 deadlock class stays closed at 0.13.32.
+- Tag-exclusion recomposition (0.13.31's fix for the wave-6 finding) holds under real
+  load: ts-bootstrap's TS runtime needed every verification command recomposed with a
+  `node --import tsx ...` wrapper, and all five (`discover`/`focused`/`broad`/
+  `coverage`/`step-usage`) kept `--tags "not @captain and not @shipwright"` intact.
+- `plank-inventory` correctly `none` on TS / `jsdoc -X` on plain JS in both spot-check
+  legs, zero ts-morph or glue-script installs on either - the wave-6 finding (b) stays
+  closed.
+- Zero cockpit reads, zero contamination refusals needed (none attempted), zero
+  redundant confirmation runs observed (tw1, tw4 both inherited Crew's carried green
+  rather than re-proving it).

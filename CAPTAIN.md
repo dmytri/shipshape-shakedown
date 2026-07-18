@@ -1,5 +1,88 @@
 # Captain notes - shipshape-shakedown workstream
 
+## 2026-07-18 (sonnet session, same day as wave 6): efficiency battery + 0.13.32 spot-validation run, MIXED gate, two findings routed, wave-7 deferred on dk's word
+
+Entry: dk asked for /shakedown pilot; deck check showed both queue items (efficiency
+battery OWED since three ships landed - 0.13.30/31/32 - and the 0.13.32 plugin-channel
+spot-validation) still open, plus wave-7 (yoink/architecture.md/anchors A/B/C)
+sketched but not run. dk's word: wave-7 later, proceed on the two cheaper items, with
+emphasis on latency/instruction-coherence/invocation-count analysis. Full pilot NOT
+run this session - "pilot" as a /shakedown argument routed to the cheaper queue items
+first per the standing doctrine->probes->pilot ordering, confirmed with dk before
+spending.
+
+**Deck at session start:** both repos clean and level with origin (`git fetch`
+confirmed on this repo AND `~/shipshape` before anything else, per the wave-6
+harness fix). Installed plugin 0.13.32 (`ac08582`), installed 07:13:04 UTC. This
+session's own Claude Code process started 09:08:18 UTC - postdates the install, so
+the installed-plugin channel was a live candidate from the start; verified
+empirically anyway (tw2's transcript carries 0.13.31 marker phrases before any
+greenfield leg ran, confirming the cache is serving current text, not a stale
+snapshot).
+
+**Ten legs, all sonnet-pinned, installed-plugin channel, dispatched in parallel,
+mined on every notification, tree-verified (not report prose):** efficiency battery
+(tw1 crew-batching, tw2 notes-commit, tw3 notes-arms, tw4 plank-gap, tw5 no-plant
+fit-out, tw13 slow-census, fastpath-bootstrap) + 0.13.32 spot-validation (G1
+greenfield opening, a TS bootstrap re-run, a NEW plain-JS bootstrap variant to check
+`jsdoc -X` fires on the greenfield path too, not just legacy fit-out). Full numbers,
+per-leg table, and findings in METRICS.md's "Efficiency battery + 0.13.32
+spot-validation" section - not restated here in full.
+
+**Wave total: 280 inv / 23.42M cache / 182.6k out / 17m37s wave wall (parallel).
+100% sonnet, zero model leak** - confirmed by grepping `message.model` across all ten
+transcripts including nested Crew/Boatswain children, every single entry
+`claude-sonnet-5`.
+
+**GATE VERDICT: MIXED, not clean-green like wave 5.** tw1/tw3/tw4 beat their wave-5
+baselines outright (tw3 particularly: -55% inv, -58% cache). tw2 and tw5 blow the
+efficiency battery's own ~10% bar - tw5 substantially (+24% inv/+63% cache/+77%
+wall). Read as doctrine SCOPE growth (Shipwright now derives 7 methodology checks,
+up from ~4-5 in the wave-5 era, producing 9 `@conformance` skeletons this run) rather
+than a specific regression - no single doctrine version between wave 5 and 0.13.32
+obviously owns it - but it is real, it compounds every fit-out leg going forward, and
+it is stated plainly rather than absorbed into a vague "drift, watch" line.
+
+**Two findings routed to dk, NOT shipped:**
+1. **MEDIUM, reproduced 2/3 legs: `RIGGING.md`'s `## Dependencies` slot left
+   literally `none` on the TS bootstrap and fastpath-bootstrap legs** despite each
+   installing multiple confirmed tools (biome, cucumber, c8, gplint, tsx,
+   typescript, @types/node all present in `package.json` on the TS leg; the
+   `Dependencies` section empty on both). js-bootstrap got this right. The
+   minimal-RIGGING letter says every confirmed-tool slot populates; `Dependencies`
+   silently didn't, majority of the time it was exercised this wave.
+2. **LOW-MEDIUM: the RIGGING.md schema has no distinct command slot for feature
+   lint (gplint) separate from code lint (biome).** js-bootstrap proved gplint runs
+   clean in its own transcript, but `RIGGING.md`'s `## Commands` carries only one
+   `lint:` key (biome). Reproduced identically wherever gplint was confirmed - looks
+   like a template/schema gap (the fast-path text names feature lint and code
+   lint/format as two separate offer categories; the RIGGING.md shape only has room
+   for one `lint` key), not a per-leg miss. Needs a ruling: fold gplint into `lint`
+   (chain both tools) or add a second key.
+
+Both are watch-only until dk rules; nothing shipped this session (no doctrine changes
+were made or needed - this was a validation-only run).
+
+**Positive markers, all tree-verified, matching the METRICS.md section in full:**
+bulkhead hook self-heal live again (tw3, `grep -rn` denied -> `rg -n` retried
+next invocation, one real catch); the slow-census pilot-#2-deadlock regression check
+stayed clean at 0.13.32 (zero Monitor/pgrep/sleep-poll/`run_in_background` - the
+harness's own belt-and-braces lines were deliberately withheld from tw13's dispatch,
+so this is doctrine text alone holding); 0.13.31's tag-exclusion-survives-
+recomposition fix held under real load (ts-bootstrap's five verification commands all
+kept `--tags "not @captain and not @shipwright"` through a `node --import tsx`
+wrapper); `plank-inventory` correctly `none`-on-TS / `jsdoc -X`-on-JS in both spot
+legs, zero ts-morph/glue-script installs (wave-6 finding (b) stays closed); zero
+cockpit reads, zero redundant confirmation runs (tw1/tw4 both inherited Crew's
+carried green).
+
+**QUEUE, updated:** efficiency battery and 0.13.32 spot-validation are now DISCHARGED
+(this entry). Next session: (1) dk's ruling owed on the two findings above; (2)
+wave-7 A/B/C (yoink orient-plan / architecture.md / token-economy target) on dk's
+nod, still not run; (3) a full TodoMVC pilot is owed at some point to validate the
+accumulated 0.13.26-0.13.32 doctrine at integration scale - not requested this
+session, still open.
+
 ## 2026-07-18 wave 6: onboarding overhaul 0.13.30-0.13.32 SHIPPED + probed 3/3; yoink/architecture.md/anchors discussion recorded; OWNED: session ran on a stale cockpit clone
 
 OPERATOR MISS FIRST: this session bootstrapped from a local clone at 88a1bbd, 38
