@@ -1,5 +1,100 @@
 # Captain notes - shipshape-shakedown workstream
 
+## 2026-07-18 wave 6: onboarding overhaul 0.13.30-0.13.32 SHIPPED + probed 3/3; yoink/architecture.md/anchors discussion recorded; OWNED: session ran on a stale cockpit clone
+
+OPERATOR MISS FIRST: this session bootstrapped from a local clone at 88a1bbd, 38
+commits BEHIND origin - pilots #2-#4, GOAL 1/2, and every 0.13.14-0.13.29 record
+were in this repo all along; I mis-read the gap as "doctrine advanced outside the
+cockpit" and three now-superseded commits (kept on local branch backup-wave6)
+recorded a wrong wave number and a stale queue. Caught at push-reject; this
+section is the corrected record. ~/shipshape itself WAS level with origin, so the
+0.13.30-0.13.32 ships are unaffected. Harness fix: AGENTS.md bootstrap now fetches
+THIS repo before the deck check.
+
+Entry: dk invoked /shipshape:captain here; cockpit invariant held (declined to run
+the role against this repo), dk redirected to shakedown with a real-use focus:
+rough onboarding on new repos, four failure modes from ~/yoink (2026-07-17,
+opencode, skills channel, vendored skills = 0.13.29 HEAD; sessions mined from the
+opencode sqlite DB - new evidence source). dk's word: "yes, and probe".
+
+1. 0.13.30 SHIPPED (121dfee; tests 213 green incl. 4 new hook cases): greenfield
+   fork (no RIGGING + no production code -> discovery + fast path, NEVER
+   Shipwright), initial commit = Captain's own bootstrap action (four text homes +
+   bash-custody unborn-HEAD allowance), clean-deck gate binds at dispatch
+   boundaries never conversation (harness-install artifacts ignore-or-fold), stack
+   discovery names dialect/version verified live, batched quality-toolchain offer
+   with confirmed-tool slot population (amends the 0.13.13 minimal-none letter on
+   dk's explicit trade).
+2. Probed same session, HEAD-text, sonnet-pinned, 3/3 PASS (G1 greenfield opening
+   FULL PASS; G2 bootstrap PASS w/ findings; L1 legacy routing PASS). Hook replay
+   vs installed cache 6/6. Numbers in METRICS wave 6. Model-pin note: sonnet
+   132/132 incl. post-async-child continuations - the async-resumption fall did
+   NOT reproduce under HEAD-text general-purpose spawns; likely plugin-channel
+   agent-type specific.
+3. Findings (a) tag-exclusion drop on recomposition and (b) ts-morph glue-script
+   write-scope breach RESOLVED same day on dk's rulings: 0.13.31 (a26b210)
+   Node-stack catalog (jsdoc -X on plain JS proven live; none-on-TS for jsdoc's
+   silent-empty false clean; Biome GritQL plugin seam confirmed in 2.5.4; ts-morph
+   out until needed; no-glue guard; tag-exclusion recomposition rule). 0.13.32
+   (ac08582) ASCII style fix - OWNED MISS: 0.13.31 pushed with style.sh red (test
+   loop swallowed the failure), caught post-push, ALL GREEN verified before the
+   0.13.32 push. Installed 0.13.32; still open: (c) LOW biome sweep reformatted a
+   committed operator file unreported; (d) obs: verification slot self-populated,
+   L1 Shipwright staged its own deletion.
+4. yoink bonus observations (real use): QM bulkhead held twice (refused a
+   resumed-context dispatch); Captain wrongly paused a voyage on a status
+   question; yoink deck = ONE commit with a whole voyage untracked (skills
+   channel, no hooks) - custody cadence worth a look at its next harbour. yoink
+   picks up 0.13.32 on its next `skills` re-vendor; skills.sh channel needs no
+   version bump (serves the repo).
+
+DESIGN DISCUSSION (dk, recorded; nothing shipped from it):
+- yoink (@dk/yoink): verdict GOOD IDEA - attacks the retrieval class (iterations
+  ARE latency; savings compound since every round re-prefills prior context).
+  Converges with the existing GOAL-2 record: bin/plan.py already measured 14.7%
+  of invocations as compilable waste, and the ballast probe proved context bulk
+  is a CAUSAL rung-2 cost. Custody answered: stdin-heredoc form
+  (`yoink - <<'PLAN' ... PLAN`) keeps the whole plan inside the Bash command
+  string, bash-custody inspects unchanged, zero bypass; plans embed in skills.
+  Coupling accepted (npx assumed; @dk/yoink adds no new dep class). Side effect
+  valued: plans are explicit retrieval allowlists; labeled multipart feeds report
+  fidelity. ADOPTION GATE = wave-7 A/B, orient-plans arm vs baseline, counting
+  invocations + mistake/fix cycles (predicted: hygiene/QM legs -30-40%, bootstrap
+  -15-20%, Crew flat). yoink seaworthiness is ours to finish first.
+- architecture.md (https://architecture.md/ + timajwilliams/architecture
+  prompt.md): adopt THE STANDARD WHOLE or not at all (standing decision below).
+  The prompt's evidentiary rules are our Articles already; intent-bearing
+  sections fill TRUTHFULLY in a spec-driven repo ("decisions homed in
+  features/**; no in-tree roadmap") - standard-conformant one-liners, never a
+  pruned house variant; SS14 Testing Strategy is the tiers/planks slot. Ours is
+  mechanism/cadence only: Shipwright derives at fit-out (scale-gated), refits
+  each harbour, jolly-style executable conformance pin (jolly proved it live:
+  day-one drift caught, pinned by methodology-conformance.feature:80). CAUTION
+  from GOAL 2: the doc ADDS inbound prefill weight (+0.84s/inv causal ballast
+  finding), so it must EARN its weight in saved retrieval rounds - buy with
+  wave-7 numbers.
+- Semantic anchors (llm-coding.github.io/Semantic-Anchors): adopt as REGISTER,
+  wording ship-ready on dk's word: Captain unpacks a user-named anchor into
+  concrete scenarios (anti-XY decompression); Shipwright names an observed
+  pattern by its established anchor PLUS tree evidence. Bare anchors stay banned
+  from durable artifacts (existing standing decision generalized); never vendor
+  the catalog; terms stay canonical or the cluster does not activate.
+- Wave-7 sketch: one real-shaped state, arms = baseline / ARCHITECTURE.md /
+  ARCHITECTURE.md + yoink orient plan; measure downstream retrieval invocations,
+  wall, mistake/fix cycles, and inbound weight (instrument 1 exists). Folds the
+  yoink gate, the architecture.md gate, and the economy target into one probe.
+
+QUEUE next session (0.13.32 markers: captain "never dispatched at a greenfield
+repository" + "never glue-scripted at bootstrap" + "however it is recomposed";
+shipwright "a false clean, so derive" + "so is the initial commit"; boatswain
+"whose own bootstrap action the initial commit is"; entry routing "nothing to
+derive"): RESTART, then (1) efficiency battery - OWED, three ships landed since
+the last run per the standing dk directive; (2) plugin-channel spot-validation of
+0.13.32: greenfield opening leg (unborn-HEAD commit allowed by hook LIVE), a TS
+bootstrap re-run (tags survive recomposition, plank-inventory stays none, no glue
+script), a plain-JS bootstrap (jsdoc -X populated); (3) wave-7 A/B/C on dk's nod.
+Sonnet-session pilots remain the standing pattern (this session was fable).
+
 ## 0.13.27 + 0.13.28 SHIPPED (0a26d67, 2a9e59a), pushed + installed, 2026-07-14. RESTART before any plugin-channel leg.
 
 Two of pilot #4's three routed findings are now closed by doctrine. dk ruled both in-session.
@@ -1341,6 +1436,11 @@ sections. Repo published to https://github.com/dmytri/shipshape-shakedown (priva
 main tracks origin.)
 
 ## Standing decisions (dk's; do not revisit without the named change)
+
+- Standards adopt WHOLE, never modified or adapted (2026-07-18): an adapted
+  standard defeats the purpose - a standard is an anchor at file granularity and
+  a house variant activates nothing. Conflicts with our articles resolve by
+  filling the standard's shape truthfully from the tree, not by reshaping it.
 
 - Operator/pilot-runner discipline (2026-07-13, dk, "latency is part of the test"):
   latency and invocation accounting during a pilot is a MEASURED OUTCOME, not

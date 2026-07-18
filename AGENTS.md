@@ -5,9 +5,13 @@ role agents on instrumented toy projects. Built from the 0.13.x audit sessions.
 
 ## Session bootstrap
 
-Fresh session, read in this order: this file, CAPTAIN.md (state, standing decisions,
-open items), METRICS.md. Then check the deck: ~/shipshape clean and level with
-origin, installed plugin version vs .plugin/plugin.json. Development and testing
+Fresh session, FIRST `git fetch` THIS repo and confirm the local clone is level
+with origin/main before reading anything - a stale clone reads as a false state
+gap and mis-bases the whole session (2026-07-18: a 38-commit-stale clone cost a
+wave a wrong number, a stale queue, and a rejected push). Then read in this order:
+this file, CAPTAIN.md (state, standing decisions, open items), METRICS.md. Then
+check the deck: ~/shipshape clean and level with origin, installed plugin version
+vs .plugin/plugin.json. Development and testing
 happen HERE; ~/shipshape is doctrine/plugin only - it gets doctrine commits and
 nothing else (no notes, no fixtures, no scratch).
 

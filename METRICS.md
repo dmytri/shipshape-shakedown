@@ -50,6 +50,66 @@ zero). Probe pair 2026-07-12: row-1 inherit 0 executions, hand-off strike 0, sta
 Full voyage 0.13.8 (Captain + QM/Crew + fresh-session custody): 35 invocations,
 ~1.53M cache-read, ~17k out, ~5.6m wall. Same intent on 0.13.3: 15.7m.
 
+## 0.13.30-0.13.32 onboarding probes ("wave 6", 2026-07-18, HEAD-text, sonnet pinned, fable session)
+
+Trigger: real-use onboarding failures in ~/yoink (2026-07-17, opencode, skills
+channel, vendored skills byte-equal to 0.13.29 HEAD; sessions mined from the
+opencode sqlite DB — a new evidence source): fitting-out routed before discovery on
+a greenfield repo, Captain ordered the operator to make the initial commit ("the
+operator owns only the initial commit" quoted back at dk), deck-dirt (the harness's
+own .agents/ + skills-lock.json) blocked discovery, stack dialect (TS7 vs JS) and
+every quality tool user-pushed (gherkin-lint self-installed then uninstalled;
+gplint/c8/ts-morph/biome all dk's words), RIGGING left typecheck none on a TS7
+stack; cost made concrete when Crew shipped plain JS into dist/ with nothing to
+redden it. 0.13.30 (121dfee) shipped on dk's word ("yes, and probe"): (1)
+greenfield fork — no RIGGING + no production code routes to discovery/fast path,
+never Shipwright; (2) initial commit = Captain's own bootstrap action, four text
+homes + hook unborn-HEAD allowance; (3) clean-deck gate binds at dispatch
+boundaries, never conversation, harness artifacts ignore-or-fold; (4) stack
+discovery names dialect/version, verified live; (5) batched quality-toolchain
+offer with confirmed-tool slot population, letter reworded "every remaining slot".
+Tests 213 green (4 new hook cases); hook replay vs installed 0.13.30 cache 6/6.
+
+| Probe | State | Verdict |
+|---|---|---|
+| onboarding-greenfield G1 (opening) | onb1: unborn HEAD + quill.md + untracked harness artifacts | FULL PASS: greenfield fork held (zero Shipwright), no dirt block, spec read, initial commit SELF-MADE (02855da, artifacts folded, author checked first), batched questions name dialect/module-system/floor AND the tooling offer with candidates verbatim; registry claims verified live (npm view typescript -> 7.0.2) |
+| onboarding-greenfield G2 (bootstrap) | onb2: same shape, scripted answers (TS7/node>=22/npm, gplint+biome+tsc+c8+ts-morph) | PASS w/ findings: initial commit 7c263ac self-made; confirmed slots POPULATED (typecheck tsc, lint biome+gplint two-line, coverage c8, plank-inventory); undecided slots literal none; 8-scenario spec + exact-form watchbill; every reported command re-driven by operator and reproduced incl. the honest "no inputs" typecheck state; stopped before QM as instructed. 14m01s incl. 5-tool install+config+proof (no-offer tw12 lineage: 7m24s — the offer's price ~+6.5m) |
+| onboarding-legacy L1 (routing) | onb3: committed 2-module JS repo, no RIGGING, no tests | PASS: production-code fork -> Shipwright, no fast-path attempt; fit-out derived c8 coverage, jsdoc -X plank-inventory, usage step-usage; quality-gate gaps NAME stack-native candidates (eslint/biome, tsc --checkJs, gplint, Biome/GritQL); bonus live: @planks-provisional 0.13.20 reference form x3, knip-confirmed unreachable removal with restore path, .rgignore derived |
+
+Findings: (a) MEDIUM tag-exclusion drop — G2 recomposed every verification command
+around NODE_OPTIONS and lost the @captain/@shipwright tags everywhere (skeletons
+would execute in broad/coverage). (b) MEDIUM library-only tool vs the letter —
+ts-morph has no CLI, so "populates its command slot" drove Captain to author
+tools/plank-inventory.ts, a script file outside Captain write scope. BOTH RESOLVED
+same day on dk's rulings ("biome/gritql/jsdoc should be enough without ts-morph
+until needed", "for node based projects"): 0.13.31 (a26b210) Node-stack catalog —
+gplint/biome/c8 (+tsc on TS); plank-inventory defaults `jsdoc -X` on plain JS
+(proven live on onb3: 3 doclets, one CLI line) and stays `none` on TS (proven
+live: jsdoc silently EMPTY on .ts — a false clean), checker at first harbour via
+Biome GritQL plugin (plugins seam confirmed in installed 2.5.4) or QM
+bespoke-checker, ts-morph OUT until needed; no-glue guard closes (b) at root;
+tag-exclusion recomposition sentence closes (a). 0.13.32 (ac08582) ASCII style
+fix — OWNED MISS: the 0.13.31 push went out with style.sh RED (operator test-loop
+swallowed the failure); caught post-push, ALL GREEN verified before the 0.13.32
+push, reinstalled. Still open: (c) LOW G2's `biome check .` reformatted the
+COMMITTED skills-lock.json unreported; (d) obs: `verification: features/support`
+self-populated (cucumber-conventional reading; watch), L1 Shipwright staged its
+own deletion (watch).
+
+Leg accounting (4 legs, all mined): 132 inv / 12.10M cache / 126k out / 14m17s
+wave wall (parallel, 06:30:38-06:44:55). G1 10/488k/11.6k/2m27s; G2
+73/7.38M/58.4k/14m01s (76 tool uses, zero spawns); L1-Captain 8/351k/7.5k/13m00s +
+nested Shipwright 41/3.88M/48.8k/11m42s. Model split: sonnet 132/132 — the
+explicit pin held on EVERY invocation including L1-Captain's post-async-child
+continuation; the wave-4 async-resumption fall did NOT reproduce under HEAD-text
+general-purpose spawns (harness note: the leak may be plugin-channel agent-type
+specific). Class-tally deltas held for the eventual fold: opening skill reads +8
+(all P), owed bootstrap-proof runs +4 P (conservative, executing forms only),
+evidence ops +5 P (registry checks x2, plank planted-proof pair, knip
+before/after), commits +2 P (both unborn-HEAD initial commits, first live firings
+of the new seam), polls +2 N (L1 async child), cockpit reads +0 (boundary 4/4
+incl. two unborn-HEAD greenfield states).
+
 ## 0.13.27/0.13.28 blast-radius probes (2026-07-14, sonnet, HEAD-text, tw17/tw18)
 
 Three Boatswain custody legs on the pilot-#4 regression reproduced as a state. HEAD-text mode

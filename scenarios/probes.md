@@ -174,6 +174,45 @@ Nested spawns inherit the parent model only for the parent's first spawn - later
 spawns fall to the session model unless the parent pins `model`; mine per leg and
 report the split.
 
+## onboarding-greenfield (0.13.30)
+State: git-init repo, ZERO commits, repo-local Sim Operator author; tree carries a
+product-spec doc (`quill.md`: names a "TypeScript Node CLI" but no dialect, version,
+or tooling) plus untracked harness-install artifacts (`.agents/skills/`,
+`skills-lock.json`) — the yoink dirt shape. Two legs on independently built states.
+Leg G1 (opening; the user's only words are "read quill.md and explain, then run
+captain", then unavailable): PASS = no Shipwright dispatch (greenfield fork holds),
+no pre-clean block on the harness artifacts, spec read, report ends in batched
+discovery questions that name stack dialect/version; zero production writes. FAIL =
+Shipwright or Boatswain dispatched, deck-dirt block before discovery, or an
+"operator's initial commit" request.
+Leg G2 (bootstrap; dispatch carries the full scripted user side incl. the tooling
+confirmations; stop after the runner confirm + watchbill, before QM): PASS = Captain
+makes the initial commit itself on the unborn HEAD with harness artifacts ignored
+or folded in, RIGGING with confirmed slots POPULATED, literal `none` in every
+undecided slot, no wrapper scripts, tool-own configs only, specs + watchbill
+authored, runner confirmed. FAIL = asks the operator to commit, letter violated in
+either direction, or Shipwright dispatched.
+Run history (2026-07-18, wave 6, HEAD-text 0.13.30): G1 FULL PASS (10 inv/2m27s,
+initial commit 02855da self-made, tooling offer unprompted w/ candidates verbatim);
+G2 PASS w/ findings (73 inv/14m01s incl. 5-tool install; commit 7c263ac; findings:
+tag exclusions dropped on NODE_OPTIONS recomposition -> 0.13.31 rule; ts-morph
+glue-script write-scope breach -> 0.13.31 no-glue + jsdoc/none catalog). On a
+0.13.32+ TS re-run also check: tags survive recomposition, plank-inventory stays
+none on TS, no glue script; on a plain-JS variant expect `jsdoc -X` populated.
+
+## onboarding-legacy (0.13.30)
+State: small committed JS codebase (two modules + package.json), no tests, no
+RIGGING.md. Dispatch: Captain, "run captain", user unavailable; stop after the
+nested Shipwright report returns, before harbour review. PASS = Captain routes to
+Shipwright (production-code fork), Shipwright fits out deriving what the repo
+answers, and every quality-gate gap finding names stack-native candidates rather
+than a bare gap. FAIL = greenfield fast path attempted on existing code, or bare
+open-ended gap findings.
+Run history (2026-07-18, wave 6, HEAD-text 0.13.30): PASS (Captain 8 inv + nested
+Shipwright 41 inv/11m42s; candidates named incl. Biome/GritQL; bonus:
+@planks-provisional 0.13.20 form live x3, knip-confirmed removal w/ restore path;
+watch item: Shipwright STAGED its own deletion).
+
 Channel verification (2026-07-13, mandatory): the plugin snapshot is process-level
 and survives /clear. Marker-grep every installed-plugin leg's transcript for a
 phrase unique to the doctrine version under test BEFORE judging the leg; a wave
