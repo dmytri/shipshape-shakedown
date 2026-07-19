@@ -68,13 +68,29 @@ never as a dedicated round trip. The join did not inflate any leg's invocation c
    which is filed `tw13-slow-census-ORPHAN`. One non-reproduction in the small sample dk's queue
    already tracks ("one reproduction in ~6 runs") — does not by itself close the orphan-class
    ruling still owed, but is a data point toward it.
-3. **LOW — observed, not confirmed as a class: tw13's QM bridged two concurrent nested Crew
-   dispatches with ~7 trivial filler invocations** (`echo "holding..."`/`echo waiting`, `sleep 1`,
-   `true` x3 — cache barely grows across them, ~69k to ~75k) rather than ending its turn cleanly.
-   This is cheap and did not deadlock, but it is a self-devised turn-bridging pattern in the same
-   family as pilot #3's self-devised sync-marker finding, now observed under doctrine alone with
-   no harness belt-and-braces text to explain it away. Worth a look if it recurs; not routed as a
-   ship candidate on n=1.
+3. **MEDIUM — a doctrine CONTRADICTION, the known class, with live evidence of a role caught in
+   it.** Revised upward from the run-time read ("self-devised turn-bridging") after reading both
+   governing passages; the behaviour is the tell, and its cause is textual.
+   - `shipshape/SKILL.md:354`: "A role's turn ends only in its final report. A role never ends its
+     turn waiting: not on a background command, a notification, a timer, **or another agent**."
+   - `shipshape/SKILL.md:360`: "A role MAY dispatch several agents in one turn: **it ends its
+     turn**, and consumes each report as that report arrives."
+
+   For the multi-agent case these instruct opposite acts. 354 forbids ending a turn waiting on
+   another agent, and forbids ending a turn anywhere but in a final report; 360 requires ending
+   the turn, without a final report, precisely to await several agents' reports. tw13's QM
+   dispatched two Crew mates in one turn (inv 19) and then did neither thing cleanly: it spent
+   **5 filler invocations** (`echo waiting`, `sleep 1`, `true` ×3 — inv 20-22, 24-25, cache flat
+   at ~69k-75k) attempting to hold the turn open per 354, ended it anyway without a final report
+   (inv 23, 26), was auto-resumed by task-notification both times, and only then continued. Five
+   invocations bought nothing; the runtime's own resume did the work.
+   Line 358 supplies the reconciliation the text never states — a background command has no
+   resume signal that reaches a finished turn, whereas a dispatched agent's report does — but a
+   role reading 354 and 360 in one pass has no way to derive that distinction. Candidate fix,
+   routed not shipped: 354's "or another agent" is the wrong member of that list; the Agent case
+   is governed by 360 and the runtime resume, and naming the distinction (no resume signal vs. a
+   report signal) in 354 would close it. Note this is the same fault shape as 0.13.33's finding 1,
+   recorded there as "a CONTRADICTION, the known class."
 4. **Observed, not routed: tw13's plank-only Crew fix (change one string in a docblock) cost 12
    invocations / 545k cache** — high for the size of the edit, in the same family as pilot #5's
    plank-join trial-and-error finding (not re-derived here in full; noted for whoever next audits

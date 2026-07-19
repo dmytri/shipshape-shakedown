@@ -8,14 +8,24 @@ the "2026-07-19 (sonnet session): EFFICIENCY BATTERY 0.13.35" entry below and ME
 "Efficiency battery, 0.13.35" section.** Do not re-run it; read the entry instead.
 
 **NEXT, in order, per the prior order's own "after the battery" sequence:**
-1. **dk's ruling owed on this session's HIGH finding** (tw4: QM misrouted a missing plank on its
-   own touched watch-target to harbour instead of Crew — reproduced, evidenced, doctrine text
-   quoted both ways in the METRICS.md entry) before any fix ships.
-2. **dk's ruling on the orphan-class hook** — still not designed, still not shown. New datum this
-   session: tw13 slow-census did NOT orphan under 0.13.35 doctrine alone (contrast the 0.13.33
-   run, filed `tw13-slow-census-ORPHAN`) — one non-reproduction, does not close the question by
-   itself.
-3. **Wave 7**, once 1-2 are ruled on.
+1. **dk's ruling owed on THREE findings, none shipped, all evidenced:**
+   - **HIGH (tw4)**: QM misrouted a missing plank on its own touched watch-target to harbour
+     instead of Crew — reproduced, doctrine text quoted both ways in the METRICS.md entry.
+   - **MEDIUM (tw13)**: `shipshape/SKILL.md:354` vs `:360` CONTRADICT for the multi-agent case
+     (354 forbids ending a turn waiting on another agent and forbids ending outside a final
+     report; 360 requires exactly that). Live evidence: tw13's QM burned 5 filler invocations
+     caught between them. Candidate fix in METRICS.md.
+   - **The orphan-class ruling, now with a designed and TESTED artifact to rule on** — see
+     `designs/orphan-guard/` (prototype + 15/15 replay tests + README). Two results dk should
+     read before ruling: **(a) the fix on the board — a PreToolUse wait-class deny — would NOT
+     have fired on the only live reproduction**, whose complete command list contains no wait
+     command at all (it ToolSearched for Monitor, never called it, ran `true`, stopped);
+     recommend rejecting it outright rather than deferring again. **(b) A SubagentStop guard
+     blocks the STOP not the command, adds no doctrine (it mechanises `SKILL.md:354`, which
+     line 358 explicitly asks a runtime to carry as machinery), and discriminates the 0.13.33
+     orphan from the clean 0.13.35 run of the same probe on the same state, with zero false
+     positives across ten real role legs.** NOTHING SHIPPED, nothing written to `~/shipshape`.
+2. **Wave 7**, once the above are ruled on.
 
 ALSO CARRY, unresolved and dk's to read: the META-FINDING further below - two consecutive pilot
 findings failed to reproduce in probe fixtures. If probe states are systematically too clean,
@@ -53,14 +63,48 @@ verifiably inside the diff by the QM's own `git status` read the same turn. Cont
 tw13, both correct on the same fault shape at different watch scopes (scenario-ref vs tier-tag).
 Full evidence chain in METRICS.md.
 
-**Secondary observations, not routed as findings on this sample:** the orphan/wait class did not
-reproduce on tw13 this run (doctrine alone, no harness background-task lines) — contrast the
-0.13.33 baseline's orphan; tw13's QM bridged two concurrent nested Crew dispatches with ~7 cheap
-filler invocations (`echo waiting`/`sleep 1`/`true`) rather than a clean turn-end, a self-devised
-turn-bridging pattern worth watching if it recurs; tw13's plank-only Crew fix (one string change)
-cost 12 invocations, in the same family as pilot #5's plank-join trial-and-error finding.
+**Secondary:** the orphan/wait class did not reproduce on tw13 this run (doctrine alone, no
+harness background-task lines) — contrast the 0.13.33 baseline's orphan. tw13's plank-only Crew
+fix (one string change) cost 12 invocations, in the same family as pilot #5's plank-join
+trial-and-error finding.
 
-QUEUE: see the primed block above.
+**tw13's filler invocations were re-read after the run and PROMOTED to a MEDIUM finding** — a
+doctrine contradiction between `SKILL.md:354` and `:360` for the multi-agent case, not the
+"self-devised turn-bridging" the run-time report called it. Full text in METRICS.md finding 3.
+The run-time characterisation was wrong and is corrected there; recording that here because this
+harness's own rule is that the fold sees what the run does not.
+
+### Same session, continued: ORPHAN-CLASS HOOK DESIGNED AND SHOWN, NOT SHIPPED (queue item 2 discharged)
+
+Deliverable: `designs/orphan-guard/` — prototype `orphan-guard.sh`, `test-orphan-guard.sh`
+(15/15 green, replaying REAL transcripts from the record), and a README carrying the full
+argument. Deliberately in the cockpit, NOT in `~/shipshape`: no version bump, no install,
+nothing committed to doctrine. dk rules.
+
+**The result that matters, and it retires an item on dk's board rather than advancing it: the
+mechanical fix dk's 2026-07-15 disposition named — deny the WAIT CLASS in a PreToolUse hook —
+would NOT have fired on the only live reproduction of the class.** The 0.13.33 tw13 orphan's raw
+transcript survives, and its complete command list contains no wait command of any kind: no
+`pgrep`, no `kill -0`, no sleep loop, no transcript-result grep. It ran `ToolSearch
+select:Monitor`, never called Monitor, ran `true`, and ended its turn holding a live backgrounded
+sweep. A command-inspecting deny has nothing to inspect. Recommend **rejecting** it outright.
+Two independent weakenings: the runtime itself already blocks `sleep N; <cmd>` chaining (observed
+twice this session), and the class self-corrected in 5 of ~6 runs.
+
+**The alternative designed instead:** a SubagentStop guard that blocks the STOP, never a command,
+so it cannot break a legitimate command — the precise failure mode dk warned about. It adds NO
+doctrine: `shipshape/SKILL.md:354` already states the rule verbatim, and `:358` explicitly asks
+that "a runtime that spawns roles SHOULD carry this rule as machinery… discipline alone has been
+observed to fail here." Agent children are excluded by design and by doctrine (`:360`), since
+their completion does resume the parent. Tested against the record, not asserted: it blocks the
+0.13.33 orphan at its real stop point and passes the clean 0.13.35 run of the same probe on the
+same state, with zero false positives across ten real role legs.
+
+Limitations stated in the README: plugin channel only (does not reach yoink's vendored/opencode
+channel, same as planks-check.sh), depends on runtime wording (fails OPEN, never breaks a
+voyage), nudges once then lets the role stop, and rests on a thin sample.
+
+QUEUE: see the block at the top of this file.
 
 ## 2026-07-19 (opus session, close): CAPTAIN-OPENING PROBE DID NOT REPRODUCE - no fix shipped - and the day's DOMINANT PATTERN, dk's read owed
 
