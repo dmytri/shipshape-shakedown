@@ -1,5 +1,44 @@
 # Captain notes - shipshape-shakedown workstream
 
+<!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
+## >>> NEXT SESSION: PRIMED ORDER (written 2026-07-19 by the opus session at dk's request) <<<
+
+**dk's standing instruction, given verbatim this session: "prime shakedown so I don't need to
+type more." That is authorization to PROCEED AUTONOMOUSLY on the scope below. Do NOT ask the
+usual one focus question - it is pre-answered here. Report the deck in two lines, then run.**
+
+**RUN: the efficiency battery (`scenarios/probes.md` -> "## efficiency battery"), owed TWICE
+over, for 0.13.34 (99c6002) AND 0.13.35 (5616ed0).** Its own text gates wave 7: "After shipping
+a doctrine version, BEFORE ANY PILOT WORK." Nothing pilot-class runs until this is green.
+
+FOCUS dk has already given, fold it in: neither ship has EVER run on the installed-plugin
+channel, so this battery is also their first plugin-channel exposure. Weight the report toward
+(a) economy vs the newest baselines, and (b) whether 0.13.35's step-5 plank join inflates QM
+legs - it is the one change that adds work to a hot path, and it must cost ~0.63s folded into an
+existing pass, NOT an invocation of its own. A doctrine fix that inflates unrelated probes routes
+back to dk before wave 7 resumes.
+
+PRECONDITIONS, verify before spending anything:
+- SESSION MODEL must be sonnet, not a pin. If this session is not sonnet, STOP and say so: the
+  async-resumption leak sends a pinned leg to the session model at its first nested-child
+  resumption, and any escalated leg is void.
+- CHANNEL must be installed-plugin. Restart-not-/clear was required; confirm EMPIRICALLY by
+  marker-grepping the first leg's transcript for `Green scenarios do not discharge plank form`
+  (unique to 0.13.35). Zero hits = stale snapshot = report it and run HEAD-text instead, saying
+  which channel the numbers came from.
+- Both repos clean and level with origin; installed plugin should read 0.13.35.
+
+COST: last full battery was ~168 inv / 11.4M cache. Owed twice over, run once.
+
+AFTER THE BATTERY, in order: (1) dk's ruling on the orphan-class hook - design it and SHOW it,
+do not ship it; a too-broad PreToolUse wait-class deny breaks legitimate commands across every
+voyage and dk's own prior disposition warns this area is whack-a-mole. (2) Wave 7.
+
+ALSO CARRY, unresolved and dk's to read: the META-FINDING below - two consecutive pilot findings
+failed to reproduce in probe fixtures. If probe states are systematically too clean, "cheapest
+covering scenario" is pointing at the wrong instrument, and that bears on wave 7's design.
+<!-- =================== END PRIMED ORDER =================== -->
+
 ## 2026-07-19 (opus session, continued): 0.13.35 SHIPPED and validated against a control - and the META-FINDING that gates how this harness reads its own pilot findings
 
 0.13.35 (5616ed0, tests 5/5, pushed, installed) on dk's "proceed" over the recommendation set.
