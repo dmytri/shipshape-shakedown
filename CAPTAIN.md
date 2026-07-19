@@ -20,15 +20,10 @@ reproducible from `designs/plankroute/`.
 
 **NEXT, in order, per the prior order's own "after the battery" sequence:**
 1. **dk's ruling owed on THREE findings, none shipped, all evidenced:**
-   - **~~HIGH~~ MEDIUM (tw4) — PROBED, mechanism CORRECTED, candidate fix RETIRED.** See
-     `designs/plankroute/results.md`. 12 legs A/B/C. The reorganization fix is a NULL RESULT
-     against its own control (4/4 vs 4/4) and **ships nothing**. The fault is real but rare
-     (1/12, installed channel only) and my battery write-up **mis-described its mechanism**: the
-     QM does not pick the wrong rule, it applies the right rule to an input it inferred rather
-     than ran (`"HEAD is base, nothing dispatched yet"` with `M src/tide.js` in the tree, zero
-     working-tree commands). Doctrine already forbids that inference (report-fidelity rule), so
-     this is ~8% compliance, not a text gap. If hardened at all, the candidate is check-precedence
-     on the routing input, not more prose — and it owes its own probe.
+   - ~~**(tw4) plank routing**~~ **— CLOSED this session, no ruling owed.** Probed across 20
+     legs (arms A-E), mechanism found (a retrieval asymmetry, not a broken rule), fixed in
+     0.13.36, consequence measured as latency-not-quality. The only thing outstanding is the
+     VALIDATION named at the top of this file. Do not re-open it as a finding.
    - **MEDIUM (tw13)**: `shipshape/SKILL.md:354` vs `:360` CONTRADICT for the multi-agent case
      (354 forbids ending a turn waiting on another agent and forbids ending outside a final
      report; 360 requires exactly that). Live evidence: tw13's QM burned 5 filler invocations
