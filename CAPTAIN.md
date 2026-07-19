@@ -7,6 +7,17 @@
 the "2026-07-19 (sonnet session): EFFICIENCY BATTERY 0.13.35" entry below and METRICS.md's
 "Efficiency battery, 0.13.35" section.** Do not re-run it; read the entry instead.
 
+**FIRST ACTION NEXT SESSION — 0.13.36 VALIDATION IS OWED AND UNRUN.** Shipped this session
+(`49a1597`, tests 5/5, pushed, installed 21:15:35). It could NOT be validated here: the fault it
+fixes appears only on the installed-plugin channel (2/8 installed vs 0/8 HEAD-text), and this
+process snapshotted 0.13.35 at 19:52, so subagents serve stale text. **Restart, confirm the
+channel by marker-grepping the first leg for `An unmoved HEAD is not an empty diff` (unique to
+0.13.36), then re-run arm C/D**: 8 legs, installed channel, sonnet, the tw4 probe state,
+stop-before-dispatch, dispatch WITH the base commit named (arm D form — the Dispatch contract
+requires it and my first 12 legs wrongly omitted it). **Expected: 0/8 fault.** Anything above
+that and the line is not the fix — route back, do not patch further. Trees and rubric are
+reproducible from `designs/plankroute/`.
+
 **NEXT, in order, per the prior order's own "after the battery" sequence:**
 1. **dk's ruling owed on THREE findings, none shipped, all evidenced:**
    - **~~HIGH~~ MEDIUM (tw4) — PROBED, mechanism CORRECTED, candidate fix RETIRED.** See
@@ -80,6 +91,52 @@ doctrine contradiction between `SKILL.md:354` and `:360` for the multi-agent cas
 "self-devised turn-bridging" the run-time report called it. Full text in METRICS.md finding 3.
 The run-time characterisation was wrong and is corrected there; recording that here because this
 harness's own rule is that the fold sees what the run does not.
+
+### Same session, continued: 0.13.36 SHIPPED on dk's word — the QM opening pass now reports the working tree
+
+Root cause found by arm E and it is an ASYMMETRY BETWEEN TWO ROLES, not a rule anyone broke.
+QM's mandated opening retrieval was `cat RIGGING.md && cat watchbill.json && git rev-parse HEAD`
+— HEAD and nothing about uncommitted work — and step 3 then settles the base from HEAD alone. A
+QM following its skill exactly holds NO working-tree evidence. The two failing legs were not
+disobeying; they reasoned correctly from a retrieval that omits the deciding fact. Boatswain has
+no such fault (4/4 in arm E) because its opening hygiene retrieval already runs `git status` and
+`git diff <base>`.
+
+**Shipped 0.13.36 (`49a1597`), tests 5/5 green, pushed, installed 21:15:35.** Two lines: the
+opening pass gains `git status --porcelain`, and step 3 gains one clause — "An unmoved HEAD is
+not an empty diff: the role-advanced diff is the working tree the `git status` line reports."
+Folded into a pass QM already makes, so it costs no invocation, the same argument 0.13.35 rested
+on. Shipped ALONE deliberately: bundling it with the `:354` fix or the orphan guard would make
+the next battery unattributable.
+
+**VALIDATION OWED AND UNRUN — see the block at the top of this file.** The fault lives only on
+the installed channel and this process predates the install, so it could not be probed here.
+This is the third consecutive ship whose plugin-channel validation rides a restart; the
+difference is that this time the validation is written as the next session's FIRST action with a
+pre-stated pass bar (0/8) and a pre-stated failure route (do not patch further, route back).
+
+### ARM E — the consequence question dk asked, answered: LATENCY, not quality
+
+4 Boatswain custody legs on C4's actual post-fault tree (with its spurious green runrecord line).
+**All 4 fouled, zero commits, zero staged, tree-verified.** The architectural net holds: QM
+misses → Boatswain reports foul deck → redispatch through QM → Crew → custody. So the fault costs
+about **19 invocations / ~800k cache per occurrence** (one wasted QM leg ~10 inv + one Boatswain
+foul leg ~8 inv), ~5 inv per QM leg in expectation at 25% incidence. **No quality escape** — my
+earlier "the unplanked seam ships with a green behind it" was an OVERCLAIM and is corrected here.
+
+Legs banked `data/plankroute-0.13.35/` (arms A-E, 20 legs total).
+
+### The honest record of this finding, kept because it is the day's real lesson
+
+My reading of this one finding was wrong at every stage, and a probe corrected it each time:
+1. Called it HIGH with a mechanism ("QM picks the wrong rule between :125 and :296") — WRONG.
+2. Proposed a four-site text reorganization — NULL RESULT against its own control, retired.
+3. Recommended dropping it at ~8% with a fixture explanation — fixture explanation DEAD (arm D),
+   rate is ~25%.
+4. Recommended a SubagentStop hook — unwarranted, since arm E showed the net already holds 4/4.
+5. Actual fix: two lines closing a retrieval asymmetry, found only by probing the ROLE THAT DOES
+   NOT FAIL and asking what it does differently.
+Not one of those corrections came from thinking harder about the text. Every one came from a leg.
 
 ### Same session, continued: PLANK-ROUTING PROBED on dk's "proceed and probe in detail" — candidate fix RETIRED as a null result, and the battery finding's MECHANISM was wrong
 
