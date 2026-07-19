@@ -1003,6 +1003,33 @@ job, another role? Known classes: opening reads (batchable), independent hygiene
 run serves both, 0.13.8), custody reruns of caller-proven greens (inherit - decision
 table row 1 / wake record).
 
+## 0.13.33 spot-validation (2026-07-19, sonnet-pinned, HEAD-text - session process predates the install), banked under data/spotval-0.13.33/
+
+0.13.33 (bc731e4, tests 213/213) closed the two battery findings on dk's blanket
+proceed: recording routes with installation (the installing role writes one
+`dependency` line per installed name under `## Dependencies`; root cause was the
+example RIGGING showing `dependency: none` under a `focused` command naming the
+runner - examples bind, again), and confirmed feature+code lint chain in the one
+`lint` slot, feature lint first. Two greenfield legs, fresh quayfee spec, unborn
+HEAD, scripted sim-user answers, stop after specs+watchbill, general-purpose
+agents per prompts/preamble.md:
+
+| Leg | Inv | Cache | Out | Wall | vs 0.13.32 battery leg | Verdict |
+|---|---|---|---|---|---|---|
+| ts-bootstrap | 61 | 5.75M | 39.3k | 10m06s | 65 / 8.53M / 12m55s (plugin ch.) | FULL PASS 5/5 markers |
+| js-fastpath | 34 | 2.64M | 32.7k | 6m44s | 35 / 2.97M / 8m53s (plugin ch.) | FULL PASS 5/5 markers |
+
+Markers, tree-verified on both legs: (M1) `## Dependencies` populated 1:1 with
+package.json devDependencies (TS: 6/6 incl @types/node; JS: 5/5 incl jsdoc,
+which the sim user never named - the "installed name" semantics binding); (M2)
+`lint` chained gplint-first on both; (M3) plank-inventory `none`-on-TS /
+`jsdoc -X`-on-JS holds; (M4) tag exclusions survived the TS `--import`-glob
+recomposition on all five commands; (M5) initial commit self-made on unborn
+HEAD both legs. Model 100% sonnet both transcripts, zero leak. The finding-1
+seam closes on its exact reproduction shape at no measurable invocation cost.
+Caveat: HEAD-text channel - the 0.13.33 plugin-channel confirmation rides the
+next restarted session (the sonnet pilot session restarts anyway).
+
 ## Efficiency battery + 0.13.32 spot-validation ("wave 7 prep", 2026-07-18, sonnet, installed-plugin channel, session process postdates install)
 
 Owed re-run (three ships landed since wave 5/6: 0.13.30, 0.13.31, 0.13.32) plus the

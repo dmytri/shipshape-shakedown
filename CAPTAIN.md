@@ -1,5 +1,42 @@
 # Captain notes - shipshape-shakedown workstream
 
+## 2026-07-19 (fable session, continued): dk's "proceed on all but pilot" DISCHARGED - banking layer landed, 0.13.33 shipped + spot-validated FULL PASS, board clear for the sonnet pilot session
+
+dk's word: proceed on everything except pilot #5, which runs in a fresh sonnet
+session (standing pattern; also collects the 0.13.33 plugin-channel confirmation
+since it restarts anyway). Three things landed, in order:
+
+1. **Thin banking layer LIVE** (bf84770): `bin/bank.sh` + data/<wave>/ +
+   standing-procedure step 5 amended; both surviving waves banked same-session
+   (wave6-onboarding 4 legs, battery-spotval-0.13.32 17 legs incl nested, 124K).
+2. **0.13.33 SHIPPED** (bc731e4, tests 213/213, pushed, reinstalled): both
+   battery findings closed at root. Finding 1's root cause was a CONTRADICTION,
+   the known class: 0.13.28 routed dependency INSTALLATION by consumer but
+   RECORDING stayed assigned only to Captain's product-dependency selection,
+   and the fast-path example RIGGING showed `dependency: none` directly under a
+   `focused` command that names the runner - the example bound harder than the
+   letter (the 0.13.11 lesson recurring). Fix: recording routes with
+   installation, stated in the Articles + captain letter + shipwright shape +
+   templates + the example now reads `@cucumber/cucumber`. Finding 2 disposed
+   under dk's blanket: lints chain in the ONE `lint` slot, feature lint first,
+   no second key. Marker phrases for channel verification: `so \`none\` stands
+   only where nothing is installed`, `Recording routes with installation`,
+   `feature lint first`, `the shape grows no second key`.
+3. **Spot-validation FULL PASS, 2 HEAD-text sonnet legs** (numbers + marker
+   table in METRICS.md "0.13.33 spot-validation"; legs banked under
+   data/spotval-0.13.33/): Dependencies 1:1 with installed devDeps on BOTH
+   dialects including tools the sim user never named, lint chained gplint-first
+   both, none-on-TS/jsdoc-on-JS holds, tags survived --import recomposition,
+   both initial commits self-made. Zero cost inflation vs battery baselines.
+
+**QUEUE for the sonnet pilot session:** RESTART (this process predates the
+0.13.33 install), verify channel empirically via the marker phrases above, then
+PILOT #5 (TodoMVC, scenarios/pilot.md, oracle quarantine absolute, `shakedown`
+framework name): closes the +5 inv/leg custody-price watch (0.13.27/28) and
+first-exercises the Crew approach-cap (0.13.25). Wave-7 stays DEFERRED until
+yoink is ready (dk 2026-07-19). Instrument-3 matrix rides the banked corpus
+after that. Bank every leg per the amended step 5.
+
 ## 2026-07-18 (fable session): PILOT #4 RETROSPECTIVE EVAL (dk's ask: "eval last pilot") - zero legs dispatched; one HIGH harness finding (transcript durability is FALSE), AGENTS.md corrected
 
 Entry: /shakedown, deck reported (0.13.32 = last baseline, nothing moved), dk's
