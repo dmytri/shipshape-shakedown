@@ -1,0 +1,14 @@
+# source: /tmp/claude-1000/-home-exedev-shipshape-shakedown/2bde5324-0ae2-432c-8d49-6b69a3429acb/tasks/a8b7a6ec75cf5b353.output
+# banked: 2026-07-19T20:27:38Z
+plankroute-D3	1	20:24:53	15299	3	Skill:
+plankroute-D3	2	20:24:57	19484	190	Skill:
+plankroute-D3	3	20:25:01	26864	403	Bash:cat RIGGING.md && echo "---WATCHBILL---" && cat watchbill.json && echo
+plankroute-D3	4	20:25:07	52867	268	Bash:echo "---FEATURE---" && cat features/tide-range.feature 2>/dev/null &&
+plankroute-D3	5	20:25:10	53933	510	Read:range_steps.js ||| Read:steps.js ||| Read:tides.feature ||| Read:tide.js
+plankroute-D3	6	20:25:15	54358	418	Bash:\ ref="features/tide-range.feature:Daily tide range is computed"; \ np
+plankroute-D3	7	20:25:33	55970	1228	Bash:\ git status --porcelain=v1 && echo "---diff from base---" && git diff
+plankroute-D3	8	20:25:39	57912	248	Bash:git diff 0a557ee7ffa1493484574ad45d4366ea34fa4914 -- src/tide.js
+plankroute-D3	9	20:25:59	59266	1688	Bash:ls runrecord.jsonl 2>/dev/null; echo "exists?" $?
+plankroute-D3	10	20:26:01	59748	52	Read:runrecord.jsonl
+plankroute-D3	11	20:26:06	61456	1376	
+SUMMARY	plankroute-D3	invocations=11	cache_read=517157	out=6384	wall=20:24:53 to 20:26:06

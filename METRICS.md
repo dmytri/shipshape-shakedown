@@ -7,33 +7,34 @@ Probes the battery's finding 1 and its candidate fix. Rubric fixed BEFORE result
 `data/plankroute-0.13.35/`. State: fresh clones of the tw4 probe state, discriminating both ways
 (`tideRange` in-diff + unplanked -> Crew; `nextHighTide` beyond-diff + malformed -> harbour).
 
-| Arm | Channel | Text | P1 in-diff->Crew | P2 no over-correction | Inv mean | Cache mean |
-|---|---|---|---|---|---|---|
-| A control | HEAD-text | current 0.13.35 | **4/4** | 4/4 | 9.25 | 443k |
-| B candidate | HEAD-text | reorganized on location | **4/4** | 4/4 | 8.75 | 417k |
-| C control | installed plugin | current 0.13.35 | **3/4** | 4/4 | 10.75 | 494k |
+| Arm | Channel | Text | Dispatch | P1 in-diff->Crew | P2 |
+|---|---|---|---|---|---|
+| A control | HEAD-text | current 0.13.35 | thin, no base | **4/4** | 4/4 |
+| B candidate | HEAD-text | reorganized on location | thin, no base | **4/4** | 4/4 |
+| C control | installed | current 0.13.35 | thin, no base | **3/4** | 4/4 |
+| D control | installed | current 0.13.35 | **base commit named** | **3/4** | 4/4 |
 
-All 12: sonnet, zero nested spawns, zero commits, arm-unique doctrine marker verified per arm.
+All 16: sonnet, zero nested spawns, zero commits, doctrine marker verified per arm.
 
-**A 4/4 vs B 4/4 = NULL RESULT; the reorganization ships nothing**, per the rubric's own
-pre-stated rule. Cost delta inside noise, so no economy claim either.
+**1. Candidate RETIRED, null result.** A 4/4 vs B 4/4, cost flat (9.25 vs 8.75 inv mean). Per the
+rubric's pre-stated rule, both arms clean = no ship.
 
-**The fault reproduced 1/12 (C4), installed channel only, and the battery's stated mechanism was
-WRONG.** C4: "Neither seam was touched by this voyage's diff (HEAD is base, nothing dispatched
-yet)" - zero working-tree commands run, while `git status` carried `M src/tide.js`. It then
-declared the watch SPENT and appended a green runrecord line (tree-verified, 2 lines vs 1
-elsewhere). The QM does not choose the wrong rule between :125 and :296; it reaches the right
-rule and computes its input by inference. Arm B therefore cannot fix it - it asks the same
-question C4 already asked and answered wrongly.
+**2. The fixture hypothesis was WRONG.** Arm D named the base commit the Dispatch contract
+requires; C 3/4 vs D 3/4, identical. D2 failed WITH the base named, more cleanly than C4: "HEAD
+equals base commit; no role has edited yet" - while `git status` carried `M src/tide.js` and
+three untracked files. The missing base was a real harness-dispatch defect, not the cause.
 
-Doctrine already forbids the move (Hand-off custody: a tree claim is "the output of a command the
-role ran, never a recollection and never an inference"), making this ~8% compliance rather than a
-text gap. Downgraded HIGH -> MEDIUM. If hardened, the candidate is check-precedence on the
-routing input (`git status`/`git diff HEAD`, never HEAD-vs-base), a smaller and different change
-that owes its own probe.
+**3. Fault rate ~25% on the installed channel (2/8), 0/8 HEAD-text**, with teeth: both failures
+declared the watch SPENT, and C4 appended a green runrecord line (tree-verified, 2 vs 1). Channel
+comparison is confounded by the HEAD-text preamble's "read ALL fully before doing anything".
 
-Limits: n=4/arm, 1 failure total; A/B-vs-C confounded by channel and by the HEAD-text preamble's
-"read ALL fully before doing anything"; only A-vs-B is clean.
+**4. Mechanism isolated.** Legs running >=1 working-tree command: 5/5 correct. Legs running ZERO:
+1/3 correct - both failures among them, each stating the HEAD-vs-base inference in its own report.
+Fisher p ~ 0.11 at n=8: suggestive, not established; what lifts it above correlation is that the
+failing legs name their own faulty reasoning. Doctrine already bans the move (a tree claim is
+"the output of a command the role ran... never an inference"), so this is a compliance gap on a
+stated rule, and new prose is the wrong instrument. Candidate fix is mechanical, same shape as
+the orphan guard: QM SubagentStop, dirty tree + zero working-tree commands -> block once.
 
 ## Efficiency battery, 0.13.35 (2026-07-19, sonnet, installed-plugin channel, discharges 0.13.34+0.13.35 both, primed-order run)
 

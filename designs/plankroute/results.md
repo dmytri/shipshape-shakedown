@@ -1,87 +1,90 @@
-# plank-routing A/B/C — results, scored against the rubric fixed before the legs reported
+# plank-routing probe — 16 legs, four arms. Candidate fix RETIRED; fault CONFIRMED and its mechanism isolated.
 
-12 legs, 4 per arm, byte-identical state (fresh clones of the tw4 probe state, base `0a557ee`),
-all sonnet, zero nested spawns, zero commits. Banked `data/plankroute-0.13.35/`.
+Rubric fixed before results (`rubric.md`). Legs banked `data/plankroute-0.13.35/`. State: fresh
+clones of the tw4 probe state, discriminating both ways (`tideRange` in-diff + unplanked → Crew;
+`nextHighTide` beyond-diff + malformed → harbour). All 16: sonnet, zero nested spawns, zero
+commits, doctrine marker verified per arm.
 
-| Arm | Channel | Doctrine text | P1 in-diff → Crew | P2 no over-correction |
-|---|---|---|---|---|
-| A control | HEAD-text | current 0.13.35 | **4/4** | 4/4 |
-| B candidate | HEAD-text | reorganized on location | **4/4** | 4/4 |
-| C control | installed plugin | current 0.13.35 | **3/4** | 4/4 |
+| Arm | Channel | Text | Dispatch | P1 in-diff→Crew | P2 no over-correction |
+|---|---|---|---|---|---|
+| A control | HEAD-text | current 0.13.35 | thin, no base | **4/4** | 4/4 |
+| B candidate | HEAD-text | reorganized on location | thin, no base | **4/4** | 4/4 |
+| C control | installed | current 0.13.35 | thin, no base | **3/4** | 4/4 |
+| D control | installed | current 0.13.35 | **base commit named** | **3/4** | 4/4 |
 
-Integrity, every leg: arm-unique marker present and the other arm's absent (A/B), 0.13.35 marker
-present (C); 100% `claude-sonnet-5`; zero `Agent` spawns; zero commits.
+## 1. The candidate fix is a null result — RETIRED
 
-## The candidate is a NULL RESULT — do not ship it
+A 4/4 vs B 4/4, same channel, cost flat (9.25 vs 8.75 inv). Per the rubric's pre-stated rule,
+both arms clean = no ship. The four-site reorganization dk flagged as "big" buys nothing
+measurable. **Do not ship it.**
 
-A 4/4 vs B 4/4 on the same channel. The reorganization neither helped nor hurt, and it had no
-fault to fix in HEAD-text mode because the control never failed there. Per the rubric's own
-stated rule — *"Both arms at 4/4 = null result, no ship"* — **the reorganization ships nothing.**
+## 2. My fixture hypothesis was WRONG — naming the base commit changes nothing
 
-Cost was also flat (A mean 9.25 inv / 443k, B mean 8.75 inv / 417k), inside noise at n=4, so no
-economy claim rides on it either.
+I proposed that both observations came from dispatches missing the base commit the Dispatch
+contract requires, making this a tw17-class fixture defect. Arm D tested it: **C 3/4 vs D 3/4,
+identical.** D2 failed *with* the base named, and more cleanly than C4 did:
 
-## The fault IS real — it reproduced 1/12, on the installed channel only
+> "This seam is untouched by any current-voyage diff (**HEAD equals base commit; no role has
+> edited yet**), so it is plank drift beyond the current diff — defers to harbour."
 
-**C4 failed**, and its stated reasoning is the whole finding:
+It had the base, confirmed HEAD matched it, and concluded no role-advanced work existed — while
+`git status` showed `M src/tide.js` and three untracked files. The dispatch was a real defect and
+is worth fixing in the harness, but it is **not** the cause.
 
-> "Neither seam was touched by this voyage's diff (**HEAD is base, nothing dispatched yet**), so
-> both are plank drift beyond the current diff: deferred to harbour."
+## 3. The fault is real, ~25% on the installed channel, and has teeth
 
-It ran **zero** working-tree commands. It inferred "no role-advanced diff exists" from
-`HEAD == base commit`, while `git status` would have shown `M src/tide.js`. Downstream teeth,
-tree-verified: C4 declared the watch **spent** and appended a green line to `runrecord.jsonl`
-(2 lines vs 1 in every other arm-C tree) — the unplanked seam leaves Crew's hands with a
-recorded green behind it.
+2 failures in 8 installed-channel legs. Both declared the watch **spent**; C4 also appended a
+green line to `runrecord.jsonl` (tree-verified, 2 lines vs 1 elsewhere). The unplanked seam
+leaves Crew's hands with a recorded green behind it — the escape this rule exists to prevent.
 
-This is character-for-character the fault the 2026-07-19 session already recorded for the
-0.13.34 control arm: *"conflating an unmoved HEAD with no role-advanced work while the tree
-carried `M src/tide.js`."* Second independent observation, same mechanism.
+Zero failures in 8 HEAD-text legs. Channel is the apparent discriminator, but that comparison is
+confounded: the HEAD-text preamble says "read ALL fully before doing anything," which plausibly
+suppresses the fault on its own. Only A-vs-B and C-vs-D are clean comparisons.
 
-## My battery finding was RIGHT that there is a fault and WRONG about its mechanism
+## 4. The mechanism, isolated
 
-The battery write-up said the QM "applied the wrong one of two co-existing doctrine rules
-(dead-code-or-unspecified vs touched-seam-in-diff)." C4 shows something different: it applied the
-touched-seam rule **correctly** and computed its input **wrong**. It asked exactly the question
-arm B's text tells it to ask — *is the seam in the role-advanced diff?* — and answered it from
-the wrong evidence.
+| Ran a working-tree command? | Legs | Correct |
+|---|---|---|
+| Yes (1–3 calls) | C1, C3, D1, D3, D4 | **5/5** |
+| **Zero** | C2, C4, D2 | **1/3** |
 
-That is why arm B cannot fix it, and the numbers agree. A reorganization that makes the location
-question more prominent does not help a role that reaches the location question and then answers
-it by inference.
+Every failure ran zero working-tree commands and stated the HEAD-vs-base inference explicitly.
+Every leg that ran one routed correctly. C2 is the instructive near-miss: it also ran zero, and
+reached the right answer by a different route entirely ("every production seam is planked") —
+right conclusion, unbacked claim.
 
-Note the two failures used two different rationales: tw4 reached harbour via the
-dead-code/unspecified classification, C4 via the HEAD-vs-base inference. n=2, two routes, one
-destination. Neither is established as *the* mechanism.
+Statistical honesty: at n=8 this is Fisher p ≈ 0.11, **suggestive, not established**. What lifts
+it above correlation is that both failures *state the faulty reasoning in their own reports*, so
+mechanism and correlation agree.
 
-## Doctrine already forbids what C4 did
+**Doctrine already forbids this.** Hand-off custody: a tree claim is "the output of a command the
+role ran, never a recollection and **never an inference**." The failing legs asserted a tree fact
+they never ran a command for. This is a compliance gap on a stated rule, not a missing rule —
+which is exactly why new prose is the wrong instrument.
 
-`shipshape/SKILL.md`, Hand-off custody: *"A report states what the tree answered. Every factual
-claim a report makes about the tree … is the output of a command the role ran, never a
-recollection and **never an inference** from what the role wrote earlier."*
+## Recommendation — REVISED from "drop it"
 
-C4's "neither seam was touched by this voyage's diff" is an unbacked tree claim in a place
-doctrine explicitly bans inference. The rule exists, is load-bearing elsewhere (it fired in all
-three legs on 2026-07-15), and C4 broke it. **This is a compliance failure at ~8%, not a text
-gap** — and a text gap is the only thing new text can fix.
+I recommended dropping this when I believed it was ~8% and possibly a fixture artifact. At ~25%,
+with the fixture explanation dead and real escape consequences, that recommendation was wrong.
 
-## Recommendation
-
-1. **Ship nothing for finding #1.** The proposed reorganization is a null result against its own
-   control; the four-site change dk flagged as "big" buys nothing measurable.
-2. **Downgrade the battery finding from HIGH.** It is real and reproduced, but at 1/12 on one
-   channel, against a rule doctrine already states, with the mechanism mis-described in the
-   original write-up. Corrected on both counts here.
-3. **If dk wants hardening**, the candidate is *not* more prose — it is check-precedence applied
-   to the routing input: establish the role-advanced diff by running `git status --porcelain` /
-   `git diff HEAD`, never by comparing HEAD to the base commit. That is a smaller, different
-   change than the one probed here, aimed at the mechanism this probe actually found, and it owes
-   its own probe before it ships.
+1. **Ship nothing textual.** Confirmed twice over: the reorganization is null, and the rule the
+   roles are breaking is already written.
+2. **The fix, if any, is mechanical — and it is the same shape as the orphan guard.** At QM
+   `SubagentStop`: if the working tree is dirty *and* the transcript contains no working-tree
+   command, block once — "you reported on the role-advanced diff without running a command that
+   establishes it." Stack-agnostic, no plank parsing, no command denied. On this sample it fires
+   on exactly the 3 zero-command legs: both true faults, plus C2, whose claim was equally
+   unbacked and merely lucky. That is correct enforcement of the stated rule, not a false
+   positive.
+3. **Fix the harness dispatch too**, independently: probe dispatches must carry the base commit.
+   Mine did not, in all 12 of the first legs. Real fault, just not this one.
+4. **Not `planks-check.sh`.** It is file-level — `src/tide.js` carries a plank on `nextHighTide`,
+   so it passes C4's tree. Seam-level needs the plank join in a hook: stack-specific, wide blast
+   radius, already declined once.
 
 ## Limits
 
-- n=4/arm on a judgment call; 1 failure total. This sizes nothing precisely.
-- Arms A/B are HEAD-text and arm C installed-plugin, so A/B-vs-C is confounded by channel *and*
-  by the HEAD-text preamble's "read ALL fully before doing anything," which plausibly suppresses
-  the fault. The A-vs-B comparison is clean; the A-vs-C comparison is not.
-- Stop-before-dispatch reads routing from the report, not from an executed dispatch.
+- n=4/arm; 2 failures total. The ~25% rate is a point estimate on 8 legs, not a measurement.
+- The discriminator table is p ≈ 0.11 — suggestive.
+- A/B-vs-C/D confounded by channel and preamble strength.
+- Stop-before-dispatch reads routing from the report, not an executed dispatch.

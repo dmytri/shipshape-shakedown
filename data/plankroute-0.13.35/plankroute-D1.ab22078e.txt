@@ -1,0 +1,15 @@
+# source: /tmp/claude-1000/-home-exedev-shipshape-shakedown/2bde5324-0ae2-432c-8d49-6b69a3429acb/tasks/ab22078ee266620dc.output
+# banked: 2026-07-19T20:27:38Z
+plankroute-D1	1	20:24:47	0	5	Skill:
+plankroute-D1	2	20:24:50	19484	180	Skill:
+plankroute-D1	3	20:24:54	26863	266	Bash:cat RIGGING.md && echo "---WATCHBILL---" && cat watchbill.json && echo
+plankroute-D1	4	20:24:58	52856	2	Bash:echo "---FEATURE---" && cat features/tide-range.feature && echo "---ST
+plankroute-D1	5	20:25:02	53785	68	Bash:find . -path ./node_modules -prune -o -type f -print | grep -v '^\./\.
+plankroute-D1	6	20:25:05	54203	635	Read:tide.js ||| Read:range_steps.js ||| Read:steps.js ||| Read:tides.feature ||| Read:tides.json
+plankroute-D1	7	20:25:15	54495	651	Bash:echo "---plank-inventory---" && grep -rn "@planks" src && echo "---git
+plankroute-D1	8	20:25:22	56422	467	Bash:rg -n "@planks" src ||| Bash:git log --oneline -5 && echo "---status---" && git status --short
+plankroute-D1	9	20:25:27	57244	348	Bash:git diff src/tide.js
+plankroute-D1	10	20:25:59	57898	2826	Bash:ref="features/tide-range.feature:Daily tide range is computed"; npx cu
+plankroute-D1	11	20:26:05	58480	320	Bash:npx cucumber-js --dry-run --format usage-json --tags "not @captain and
+plankroute-D1	12	20:26:46	61441	4991	
+SUMMARY	plankroute-D1	invocations=12	cache_read=553171	out=10759	wall=20:24:47 to 20:26:46

@@ -1,0 +1,17 @@
+# source: /tmp/claude-1000/-home-exedev-shipshape-shakedown/2bde5324-0ae2-432c-8d49-6b69a3429acb/tasks/aa516b5844662dda2.output
+# banked: 2026-07-19T20:27:38Z
+plankroute-D2	1	20:24:48	0	75	Skill:
+plankroute-D2	2	20:24:50	19484	91	Skill:
+plankroute-D2	3	20:24:52	26865	243	Bash:cat RIGGING.md && echo "---WATCHBILL---" && cat watchbill.json && echo
+plankroute-D2	4	20:24:56	52769	306	Bash:echo "---FEATURE---" && cat features/tide-range.feature && echo "---ST
+plankroute-D2	5	20:25:00	53675	181	Bash:echo "---FEATURE---" && cat features/tide-range.feature && echo "---ST
+plankroute-D2	6	20:25:02	54152	7	Bash:echo "---FEATURES DIR---" && find features -type f && echo "---SRC---"
+plankroute-D2	7	20:25:06	54429	66	Read:range_steps.js
+plankroute-D2	8	20:25:08	54688	130	Read:steps.js
+plankroute-D2	9	20:25:09	54978	180	Read:tide.js
+plankroute-D2	10	20:25:43	55491	3	Bash:find features/data -type f 2>/dev/null; cat features/data/tides.json 2
+plankroute-D2	11	20:25:47	55926	3	Bash:timeout 90 npx cucumber-js "features/tide-range.feature" --name "^Dail
+plankroute-D2	12	20:25:51	58831	245	Bash:echo "---PLANK INVENTORY---" && (rg -n "@planks" src || true) && echo 
+plankroute-D2	13	20:26:07	59253	1270	Bash:HASH=$(GIT_INDEX_FILE="$(mktemp)" bash -c 'git read-tree HEAD && git a
+plankroute-D2	14	20:26:15	60805	1437	
+SUMMARY	plankroute-D2	invocations=14	cache_read=661346	out=4237	wall=20:24:48 to 20:26:15

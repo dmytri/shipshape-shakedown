@@ -1,0 +1,16 @@
+# source: /tmp/claude-1000/-home-exedev-shipshape-shakedown/2bde5324-0ae2-432c-8d49-6b69a3429acb/tasks/ad9de6189197f5d7e.output
+# banked: 2026-07-19T20:27:38Z
+plankroute-D4	1	20:24:53	15299	76	Skill:
+plankroute-D4	2	20:24:56	19484	5	Skill:
+plankroute-D4	3	20:25:00	26867	2	Bash:cat RIGGING.md && echo "---WATCHBILL---" && cat watchbill.json && echo
+plankroute-D4	4	20:25:05	52843	280	Bash:echo "---FEATURE---" && cat features/tide-range.feature 2>&1 && echo "
+plankroute-D4	5	20:25:08	53770	512	Read:range_steps.js ||| Read:steps.js ||| Read:runlog.js ||| Read:tide.js
+plankroute-D4	6	20:25:38	54345	2677	Bash:cat data/tides.json 2>&1 | head -30
+plankroute-D4	7	20:25:43	55973	356	Bash:ref="features/tide-range.feature:Daily tide range is computed"; npx cu
+plankroute-D4	8	20:25:47	58806	285	Bash:ref="features/tide-range.feature:Daily tide range is computed"; npx cu
+plankroute-D4	9	20:26:12	59333	3	Bash:HASH=$(GIT_INDEX_FILE="$(mktemp)" bash -c 'git read-tree HEAD && git a
+plankroute-D4	10	20:26:17	61142	210	Bash:cat runrecord.jsonl
+plankroute-D4	11	20:26:20	63448	219	Bash:git status --short
+plankroute-D4	12	20:26:26	63782	470	Bash:git diff HEAD -- src/tide.js
+plankroute-D4	13	20:26:47	64048	2953	
+SUMMARY	plankroute-D4	invocations=13	cache_read=649140	out=8048	wall=20:24:53 to 20:26:47
