@@ -1,5 +1,46 @@
 # Captain notes - shipshape-shakedown workstream
 
+## 2026-07-19 (opus session, continued): 0.13.34 SHIPPED on dk's word - the plank keyword dropped, clean break, re-validated same-session
+
+dk's call on the plank-join finding: match the step-definition pattern as-is. Investigated
+before agreeing, and the evidence went further than the original finding. The step definition's
+source literal and `step-usage`'s reported `pattern` are BYTE-IDENTICAL; the keyword is the
+binding construct (the function name), in neither string. Doctrine's `@planks("When I ask ...")`
+was a THIRD form assembled by hand from function name + literal, matching neither source. Worse,
+the keyword half was unfalsifiable by command: cucumber allows one pattern under two keywords
+and usage-json reports both with identical `pattern` strings, so no usage output ever says which
+keyword bound a definition - the form mandated a component only a source read could judge,
+against the check-precedence rule that a plank read by eye is unchecked, and made the derived
+plank-form check (shipwright:110) undecidable while claiming it decidable.
+
+SHIPPED 0.13.34 (99c6002), tests 5/5 green, pushed, installed. SEVEN sites, not the six first
+scoped: the Planking agreement's form and cross-reference rules, Crew's contract and second-pass
+retrieval, Shipwright's step-to-code mapping, harbour mapping step, and derived form check - plus
+**the glossary example table**, which carried `@planks("When the customer pays...")`. Leaving it
+would have taught the old form by example while the prose taught the new one: this harness's own
+oldest lesson, nearly re-committed inside the fix for it.
+
+Migration: CLEAN BREAK, dk's pick from an explicit two-option ask.
+
+**Re-validated same-session, HEAD-text (session process predates the install; marker `never
+carried into the plank` in both transcripts, old-form text 0x). Both legs PASS** - numbers in
+METRICS.md "0.13.34 plank-form re-validation", banked `data/plankjoin-0.13.34/`. Leg C (new-form
+tree, stale parameter) caught it by exact-string join. Leg D (old-form tree under new doctrine)
+caught both faults and cited the new rule verbatim.
+
+**Two results worth carrying forward:**
+1. **The clean break does NOT cascade-redden untouched seams during a voyage** (tree-verified,
+   leg D ruled the untouched keyword-led plank out of scope per the plank-drift-beyond-the-diff
+   clause). yoink and jolly will not go red in custody on upgrade; old-form planks surface at
+   harbour or under a conformance sweep. Narrower blast radius than the option was scoped to
+   have - worth telling the consumers.
+2. **No invocation win, and none is claimed.** A 9 / B 8 / C 8 / D 9, flat. 0.13.34 is a
+   decidability and correctness fix, not a measured economy fix. The economy claim rests on the
+   OWED scale variant (10+ planks, several stale) that the 0.13.33 probe's finding 3 still owes.
+
+STILL OPEN: the scale variant above; wave-7 yoink gate; cross-model portability WATCH; findings
+1 (foul-survives-lost-caller) and 2 (unscoped-rg bulkhead slips).
+
 ## 2026-07-19 (opus session): PLANK-JOIN PROBE - both legs PASS, three findings routed, none shipped
 
 Entry `/shakedown probe`. Deck: both repos clean and level, doctrine 0.13.33 (bc731e4),

@@ -1405,3 +1405,36 @@ cross-reference WAS a human read of two outputs, satisfying boatswain/SKILL.md:8
 read by eye is unchecked") in letter only. The trial-and-error pilot #5 measured is a SCALE
 effect. A scale variant (10+ planks, several stale) is owed before finding 3 can be priced or
 closed; nothing here disproves it.
+
+## 0.13.34 plank-form re-validation (2026-07-19, sonnet-pinned, HEAD-text - session process predates the install), banked under data/plankjoin-0.13.34/
+
+0.13.34 (99c6002, tests 5/5) dropped the keyword from the plank form on dk's word, clean
+break. Re-validated same-session. HEAD-text channel confirmed: marker `never carried into the
+plank` hit in BOTH transcripts (C 1x, D 2x), old-form `led by that definition` 0x in both.
+
+| Leg | State | Inv | Cache | Out | Wall | Verdict |
+|---|---|---|---|---|---|---|
+| C new-form join | both planks 0.13.34 form, tideRange param stale `{date}` | 8 | 370k | 1.4k | 73s | PASS |
+| D clean-break migration | state A untouched, keyword-led planks under new doctrine | 9 | 439k | 6.0k | 71s | PASS |
+
+Leg C: caught the stale parameter, joined by exact string match, noted the keyword "stripped
+correctly". Leg D: caught BOTH faults on the touched seam and cited the new rule verbatim
+("is never carried into the plank"), naming the correction in the new form.
+
+**Migration fact, tree-verified and reassuring for consumers: the clean break does NOT
+cascade-redden untouched seams during a voyage.** Leg D ruled `nextHighTide`'s keyword-led
+plank at `src/tide.js:2` "untouched by this diff, out of scope" - correct per the Blocker
+policy's plank-drift-beyond-the-diff clause. So yoink and jolly do not go red in custody on
+upgrade; old-form planks surface at harbour, or when a plank-form conformance check sweeps.
+Narrower blast radius than the clean-break option was scoped to have.
+
+**Honest negative: no invocation win, and none should be claimed.** A 9 / B 8 / C 8 / D 9 -
+flat. Both new-form legs still read step-definition source (C inv 6, D inv 6), now as ordinary
+evidence gathering rather than keyword recovery. At n=2 planks the join was never the cost
+driver, exactly as the 0.13.33 probe's finding 3 said. **0.13.34 is a decidability and
+correctness fix, not a measured economy fix**; the economy claim stands or falls on the owed
+scale variant (10+ planks, several stale), which finding 3 still owes.
+
+Probe-design caveat on record: C's uncommitted hunk is a docblock-only plank edit, whereas
+A/B/D's is the `tideRange` seam addition. The join test is like-for-like; the invocation
+comparison C-vs-A/B/D is not exactly.
