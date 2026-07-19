@@ -52,11 +52,15 @@ it is the exact vintage whose gaps wave 6 fixed (though fairness: 0.13.30-33 wou
 supplied a Pi invocation either); (b) CHANNEL - opencode + vendored skills, NO hooks, the
 weakest enforcement channel we ship; (c) TASK CLASS - a live-subprocess-agent eval harness is
 cross-repo integration work no doctrine text carries, arguably the hardest task any consuming
-project has faced. Conduct signals cut both ways: Terra mined sibling repos unprompted,
-applied the harness-failure rule correctly, and converged on assertion-over-invocation (all
-good); it also shipped an internally self-contradictory harness (--no-session vs required
-transcript - a coherence miss on its own artifact), churned QM across sessions, and left a
-whole voyage uncommitted. **WATCH opened: cross-model doctrine portability.** The shakedown
+project has faced. Conduct signals, corrected same day (dk: "I told it
+to mine sibling repos" - the mining was OPERATOR-DIRECTED, not Terra's initiative; the
+original credit is struck): to Terra's credit remain applying the harness-failure rule
+correctly and converging on assertion-over-invocation; against it, it shipped an internally
+self-contradictory harness (--no-session vs required transcript - a coherence miss on its own
+artifact), churned QM across sessions, left a whole voyage uncommitted, and needed the
+operator to point it at the working prior art two doors down. That last point sharpens the
+class rather than softening it: even WITH the reference harnesses in hand, the invocation
+mismatches survived several sessions. **WATCH opened: cross-model doctrine portability.** The shakedown
 has never validated doctrine text against a non-Claude model. Candidate probe when worth the
 spend: a same-class harness task on sonnet vs Terra on CURRENT doctrine, same channel, to
 separate task difficulty from model fit. Re-vendor yoink to current doctrine before drawing
