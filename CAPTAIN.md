@@ -79,6 +79,18 @@ ruling owed on the two RIGGING.md findings (Dependencies slot, gplint lint-slot)
 wave-7 A/B/C on dk's nod; pilot #5 owed at integration scale. NEW routed question:
 raw-transcript banking policy (above).
 
+QUEUE RE-ORDER (dk ruled, 2026-07-19): **wave-7 A/B/C is DEFERRED until yoink is
+ready** - arm C needs a seaworthy yoink and the wave-6 record already said
+"yoink seaworthiness is ours to finish first"; the wave folds the yoink gate,
+the architecture.md gate and the economy target, so it waits as one unit rather
+than running crippled. Resulting order: (1) thin banking layer into standing
+procedure - awaiting dk's word; (2) dk's ruling on the two RIGGING.md findings
+-> ship 0.13.33 -> cheap spot-validation; (3) PILOT #5 moves AHEAD of wave-7
+(runs on 0.13.32/0.13.33 text; closes the +5 inv/leg custody-price watch and
+first-exercises the Crew approach-cap); (4) wave-7 when yoink is ready; (5)
+instrument-3 matrix rides on banked pilot-5/wave-7 transcripts, measure-don't-
+move per dk's standing ruling.
+
 ADDENDUM 2026-07-19, cause CONFIRMED on dk's question ("is it a vm-cleanup of
 tmp?"): NO - neither /tmp cleanup nor app pruning. Filesystem birth times: this
 home dir 07-14 17:36, both repo clones 07-15 13:07/13:31 - **this VM is younger
