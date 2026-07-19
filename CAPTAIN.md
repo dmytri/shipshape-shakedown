@@ -37,6 +37,27 @@ first-exercises the Crew approach-cap (0.13.25). Wave-7 stays DEFERRED until
 yoink is ready (dk 2026-07-19). Instrument-3 matrix rides the banked corpus
 after that. Bank every leg per the amended step 5.
 
+**SAME DAY, dk's "do your probes": the efficiency battery ran on 0.13.33
+HEAD-text - 7/7 items PASS on economy (full table + wave totals in METRICS.md
+"0.13.33 efficiency battery"; legs banked under data/battery-0.13.33/), the
+0.13.33 seams fired live on BOTH derivation paths, and the battery does NOT
+block pilot #5. Two findings:**
+1. **HIGH, routed, dk's ruling owed: the pilot-#2 orphan class reproduced under
+   doctrine text alone** (tw13's QM ended its turn waiting on its backgrounded
+   sweep; operator resume required after ~10 idle minutes; post-resume conduct
+   flawless, zero redundant runs). First reproduction since 0.13.14, after 4+
+   clean passes - the watched wait class is stochastic, not extinguished. The
+   2026-07-15 disposition stands on record: if this is now worth a mechanical
+   fix, deny the WAIT CLASS in the hook, never Monitor alone (whack-a-mole,
+   pilot-#3-proven). dk rules whether one reproduction in ~6 runs re-opens it.
+2. **Fixture defect FIXED, recorded as the tw17 class (fixture wrong, role
+   right):** the tw3 probe state carried a pre-0.13.18 concrete-value plank -
+   malformed under six doctrine versions of probes since - and 4+ historical
+   custody legs committed past it; today's leg ran the join and ruled the foul.
+   Historical tw3 "PASS all arms" rows (waves 2-5, battery-0.13.32) carry an
+   asterisk: they also committed a malformed plank nobody scored. Fixture now
+   pattern-form; new tw3 hash baseline 0f57d9bd.
+
 ## 2026-07-18 (fable session): PILOT #4 RETROSPECTIVE EVAL (dk's ask: "eval last pilot") - zero legs dispatched; one HIGH harness finding (transcript durability is FALSE), AGENTS.md corrected
 
 Entry: /shakedown, deck reported (0.13.32 = last baseline, nothing moved), dk's

@@ -8,7 +8,7 @@ function nextHighTide(tides, after) {
 }
 
 /**
- * @planks("When I ask for the tide range on \"2026-07-12\"")
+ * @planks("When I ask for the tide range on {string}")
  */
 function tideRange(tides, day) {
   const heights = tides.filter((t) => t.time.startsWith(day)).map((t) => t.height);

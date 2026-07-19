@@ -1003,6 +1003,58 @@ job, another role? Known classes: opening reads (batchable), independent hygiene
 run serves both, 0.13.8), custody reruns of caller-proven greens (inherit - decision
 table row 1 / wake record).
 
+## 0.13.33 efficiency battery (2026-07-19, sonnet-pinned, HEAD-text, dk's "do your probes"), banked under data/battery-0.13.33/
+
+Owed after the 0.13.33 ship per the standing directive. HEAD-text (process
+predates the install); wave-2 HEAD-text legs are the like-for-like baselines,
+yesterday's plugin-channel battery quoted for trend only. Six legs + the
+morning's banked fastpath leg as the seventh item. Wave: 157 inv / 9.72M cache
+/ 118.2k out (10 banked files incl 3 nested Crew + the tw3 foul-catch leg),
+wave wall ~14m parallel. Model: 100% sonnet, every leg AND every nested child.
+
+| Leg | Inv | Cache | Wall | HEAD-text baseline (wave 2) | Verdict |
+|---|---|---|---|---|---|
+| tw1 crew-batching (+Crew 10/471k) | 24 | 1.37M | 3m26s | 20/973k/6.8m | PASS: ONE batched dispatch, 3 refs; flat hand-off, uncommitted at base |
+| tw2 notes-commit | 7 | 337k | 1m03s | 8/354k/54s | PASS: pathspec notes-only commit first try |
+| tw3 original state | 9 | 444k | 1m39s | - | CORRECT FOUL, see fixture finding below; no commit, join run not eyeballed |
+| tw3-b rerun, fixed state | 14 | 766k | 2m08s | 13/629k/2.7m | FULL PASS all arms; 0.13.27/28 support row fired live (new range_steps.js -> broad sweep, target itself inherited) |
+| tw4 plank-gap (+Crew 7/280k) | 19 | 1.10M | 4m46s | 16/834k/11.0m | PASS: own re-derivation, plank-only Crew, pattern-form plank, record void+fresh append |
+| tw5 no-plant fit-out | 36 | 3.31M | 10m06s | 26/2.51M/12.2m | PASS: zero plants, uncommitted, Dependencies POPULATED at fit-out (0.13.33 shipwright seam live); delta vs wave-2 = the known scope growth, no new inflation (yesterday plugin: 51/4.61M) |
+| tw13 slow-census (+Crew 7/284k) | 24 | 1.36M | 14m22s incl ~10m orphan idle | battery-0.13.32: 24/1.39M/17m27s | **FAIL marker 4: ORPHAN** - see finding |
+| fastpath-bootstrap (morning leg, spotval section) | 34 | 2.64M | 6m44s | band 7m24s-8m14s | PASS, under band |
+
+**FINDING, HIGH, routed to dk: the pilot-#2 orphan class REPRODUCED under
+doctrine text alone - first reproduction since 0.13.14 shipped, after 4+ clean
+passes on this exact probe.** tw13's QM backgrounded the over-cap broad sweep
+and ENDED ITS TURN "Waiting for the background sweep" (harness belt-and-braces
+lines withheld by probe design; doctrine text was the only guard and it did not
+hold this run). The background completion never resumed the finished agent -
+proven mechanically by the operator resume response "had no active task;
+resumed from transcript" after ~10 idle minutes. Post-resume the leg was
+flawless: the ONE sweep consumed (never re-run - runs.log shows 1 broad), one
+batched triple-focused classification, solo Crew with all 3 refs, record
+appended, flat hand-off. Everything but the turn boundary is clean, which makes
+this the pure stochastic residue of the watched wait class: the 2026-07-15
+disposition ("watch; if ever revisited, deny the CLASS, never Monitor alone")
+now has its first post-disposition reproduction. Not a 0.13.33 regression (no
+text on that seam changed); does NOT block pilot #5, whose dispatches carry the
+belt-and-braces lines as standing harness rule.
+
+**FINDING, fixture defect FIXED (the tw17-runrecord class: fixture wrong, role
+right):** fixtures/probe-states/tide-range-planked.js carried
+`@planks("...\"2026-07-12\"")` - the concrete-value form, CORRECT when the
+fixture was built (0.13.11 era) and malformed ever since dk's 0.13.18
+pattern-form inversion. The tw3 state has embedded a doctrine-foul plank for
+six doctrine versions, and at least 4 historical Boatswain legs (waves 2-5
+commits 2dd9382/e38f706/d0832cc/c320109, plus yesterday's 0.13.32 battery leg)
+committed it clean. Today's leg RAN the join and refused - the 0.13.23
+disposition biting on a state nobody knew was foul. Fixture corrected to
+pattern form; tw3-b hash baseline 0f57d9bd replaces 10d971bb.
+
+**0.13.33 seams confirmed on the battery too:** tw5's fit-out wrote
+`## Dependencies` 1:1 with what it installed (@cucumber/cucumber, c8, jsdoc) -
+the shipwright-path fix live; tw4's Crew authored its new plank in pattern form.
+
 ## 0.13.33 spot-validation (2026-07-19, sonnet-pinned, HEAD-text - session process predates the install), banked under data/spotval-0.13.33/
 
 0.13.33 (bc731e4, tests 213/213) closed the two battery findings on dk's blanket
