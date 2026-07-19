@@ -16,7 +16,10 @@ Full numbers in METRICS.md "Pilot #5 retrospective fold". What a fresh session n
    @planks-string extraction with 5-7 failed rg/grep/node variants. Candidate: an example
    command or a derived RIGGING.md slot for the join. This joins finding 1 (foul-survives-
    lost-caller gap) and finding 2 (unscoped-rg bulkhead slips) on dk's board - all three
-   unshipped, awaiting his word.
+   unshipped, awaiting his word. DISPOSITION (dk, same day): the plank join is now a NAMED
+   TEST CASE inside the wave-7 yoink gate - full design note recorded as the 2026-07-19
+   addendum to the wave-6 yoink DESIGN DISCUSSION below; the doctrine-text example command
+   stays available as the interim no-dep fix if dk wants it sooner.
 3. **Instrument 1 at pilot scale: THE JOB is 36.7% of inbound tokens, vs 15.6% at v0.13.23** -
    boilerplate down from 84% to 63.3%, opening block nearly halved (12.9% -> 7.5%),
    compilable waste 11.0% (was 14.7%). The 0.13.25 plugin-prefill + 0.13.24-0.13.33 text work
@@ -429,6 +432,26 @@ DESIGN DISCUSSION (dk, recorded; nothing shipped from it):
   fidelity. ADOPTION GATE = wave-7 A/B, orient-plans arm vs baseline, counting
   invocations + mistake/fix cycles (predicted: hygiene/QM legs -30-40%, bootstrap
   -15-20%, Crew flat). yoink seaworthiness is ours to finish first.
+  ADDENDUM 2026-07-19 (dk asked, ruled "yes, record"): **the plank join is a
+  NAMED TEST CASE inside the wave-7 yoink gate** - the best-evidenced candidate
+  yet. Pilot #5's fold measured the join as the largest N cluster on record
+  (~27 N inv across 3 legs, 0% worthiness: every join-running leg improvised
+  the @planks-string extraction with 5-7 failed rg/grep/node variants). The
+  join's gather+extract side is fully deterministic (plank-inventory +
+  step-usage + string extraction; judgment only at the final matched/stale/
+  malformed call), so a yoink plan embedded in the skill is a shipped WORKING
+  pipeline - fixes the root cause through the oldest lesson here (examples
+  bind, prose doesn't; a plan IS an executable example). Honest qualification,
+  stated so wave-7 measures the right thing: Boatswain's retrieval side is
+  ALREADY batched (one jsdoc&&cucumber&&gplint&&biome invocation), so this
+  candidate tests PLAN-AS-CARRIED-PIPELINE fidelity more than round-collapsing;
+  it extends "plans are retrieval allowlists" to "plans are extraction
+  pipelines". The 27-N baseline is the measuring stick for the arm. Sequencing
+  unchanged: nothing ships ahead of the gate (custody-path adoption is a bigger
+  step than arm C's original scope); the interim no-dep fix if dk wants the
+  bleeding stopped sooner is the already-routed example join command in
+  doctrine text / derived RIGGING.md slot, which yoink subsumes if the gate
+  passes.
 - architecture.md (https://architecture.md/ + timajwilliams/architecture
   prompt.md): adopt THE STANDARD WHOLE or not at all (standing decision below).
   The prompt's evidentiary rules are our Articles already; intent-bearing
