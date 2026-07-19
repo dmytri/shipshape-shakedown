@@ -83,6 +83,35 @@ nothing else (no notes, no fixtures, no scratch).
    and state in CAPTAIN.md here (notes migrated from ~/shipshape at the 2026-07-12
    handover; the shipshape repo gets doctrine commits only).
 
+## Probe-first (dk ruled, 2026-07-19). Which findings owe a probe BEFORE a fix ships
+
+Classify the finding, then route:
+
+- **Behavioural** - "a role did the wrong thing." OWES A PROBE BEFORE ANY FIX SHIPS,
+  with a control arm on the current text and a rubric fixed BEFORE the legs report.
+  Reason, on 2026-07-19's record: probing changed or retired the finding EVERY time it
+  was tried - pilot-#5 finding 3 (economy claim retired against a control), finding 1
+  (did not reproduce on either version), the Captain opening (did not reproduce; no fix
+  shipped, and the probe paid for itself), and the plank-routing finding, where 20 legs
+  retired the proposed fix as a null result, killed the operator's own fixture
+  hypothesis, corrected the stated mechanism, downgraded the severity, and only then
+  found the real cause by probing THE ROLE THAT DOES NOT FAIL and asking what it does
+  differently. Not one of those corrections came from re-reading the text.
+- **Textual** - a list missing a member, a form no command can check, two lines
+  contradicting, an example teaching against its own prose. Ships on a close read plus
+  green `tests/*.sh`; no behavioural probe owed, because the defect is in the artifact
+  and is visible in it. 0.13.34, 0.13.35 and 0.13.37 all rest on this footing.
+- A behavioural OBSERVATION may motivate a textual finding, but it does not license
+  skipping the probe when the fix is aimed at behaviour. State which footing a fix
+  rests on in its commit message.
+
+Two riders, both learned the same day:
+- **Probe the role that does NOT fail, not only the one that does.** The plank-routing
+  root cause was an asymmetry between QM and Boatswain, invisible until Boatswain was
+  probed on the same state.
+- **Ship one change per version where the seams are disjoint enough to attribute.**
+  Bundling is what produced an efficiency battery "owed twice over".
+
 ## Invariants
 
 - The shipshape repo stays clean during a shakedown except shipped fixes and

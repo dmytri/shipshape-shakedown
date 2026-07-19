@@ -18,32 +18,43 @@ requires it and my first 12 legs wrongly omitted it). **Expected: 0/8 fault.** A
 that and the line is not the fix — route back, do not patch further. Trees and rubric are
 reproducible from `designs/plankroute/`.
 
-**NEXT, in order, per the prior order's own "after the battery" sequence:**
-1. **dk's ruling owed on THREE findings, none shipped, all evidenced:**
-   - ~~**(tw4) plank routing**~~ **— CLOSED this session, no ruling owed.** Probed across 20
-     legs (arms A-E), mechanism found (a retrieval asymmetry, not a broken rule), fixed in
-     0.13.36, consequence measured as latency-not-quality. The only thing outstanding is the
-     VALIDATION named at the top of this file. Do not re-open it as a finding.
-   - **MEDIUM (tw13)**: `shipshape/SKILL.md:354` vs `:360` CONTRADICT for the multi-agent case
-     (354 forbids ending a turn waiting on another agent and forbids ending outside a final
-     report; 360 requires exactly that). Live evidence: tw13's QM burned 5 filler invocations
-     caught between them. Candidate fix in METRICS.md.
-   - **The orphan-class ruling, now with a designed and TESTED artifact to rule on** — see
-     `designs/orphan-guard/` (prototype + 15/15 replay tests + README). Two results dk should
-     read before ruling: **(a) the fix on the board — a PreToolUse wait-class deny — would NOT
-     have fired on the only live reproduction**, whose complete command list contains no wait
-     command at all (it ToolSearched for Monitor, never called it, ran `true`, stopped);
-     recommend rejecting it outright rather than deferring again. **(b) A SubagentStop guard
-     blocks the STOP not the command, adds no doctrine (it mechanises `SKILL.md:354`, which
-     line 358 explicitly asks a runtime to carry as machinery), and discriminates the 0.13.33
-     orphan from the clean 0.13.35 run of the same probe on the same state, with zero false
-     positives across ten real role legs.** NOTHING SHIPPED, nothing written to `~/shipshape`.
-2. **Wave 7**, once the above are ruled on.
+**ALL THREE QUEUED RULINGS DISCHARGED on dk's "proceed with all 3" (2026-07-19). Nothing is
+waiting on dk in this block except what the validations return.**
 
-ALSO CARRY, unresolved and dk's to read: the META-FINDING further below - two consecutive pilot
-findings failed to reproduce in probe fixtures. If probe states are systematically too clean,
-"cheapest covering scenario" is pointing at the wrong instrument, and that bears on wave 7's
-design.
+1. **`:354` vs `:360` contradiction - SHIPPED in 0.13.37 (`b761b64`).** Subtractive: the wrong
+   list member ("or another agent") and the absolute first sentence both go; the rule now names
+   the real distinction, that a role never ends its turn holding work that CANNOT RESUME IT, and
+   a dispatched agent is not that case.
+2. **Orphan class - RULED and SHIPPED in the same version.** The PreToolUse wait-class deny
+   carried since 2026-07-15 is REJECTED ON EVIDENCE, not deferred again: it would not have fired
+   on the only live reproduction, whose full command list contains no wait command at all. Do not
+   revisit it. In its place `hooks/scripts/background-custody.sh` (SubagentStop) blocks a stop
+   holding unconsumed backgrounded output - blocks the STOP, never a command. 7 new cases in
+   tests/hooks.sh, plus 15/15 replay against real transcripts including the 0.13.33 orphan and
+   the clean 0.13.35 run of the same probe.
+3. **Probe-first - RULED and RECORDED in AGENTS.md** as a new standing section, in the sharpened
+   form: BEHAVIOURAL findings owe a probe with a control and a pre-fixed rubric before any fix
+   ships; TEXTUAL defects ship on a close read plus green tests. Two riders: probe the role that
+   does NOT fail, and ship one attributable change per version.
+
+**TWO VALIDATIONS ARE NOW OWED, both unrun, both riding the same restart.** They cover DISJOINT
+seams, so one session can run both without confounding them:
+- **0.13.36** (QM opening retrieval) - the arm C/D re-run described at the top of this file.
+  Marker `An unmoved HEAD is not an empty diff`. Bar: 0/8.
+- **0.13.37** (turn-ending text + background-custody hook) - the tw13 slow-census probe from
+  `scenarios/probes.md`, which is the state that produces backgrounded work, dispatched WITHOUT
+  the harness background-task lines so doctrine and hook are the only things holding. Marker
+  `holding work that cannot resume it`. Watch for: the hook firing at all (it should be silent
+  on a well-behaved leg), no legitimate command denied, and the multi-agent filler-invocation
+  pattern gone.
+
+4. **Wave 7** - now gated only on the two validations above and its own yoink gate (2-of-3:
+   green @eval landed, custody + push outstanding, and NO git remote configured in that repo,
+   which is not ours to fix).
+
+ALSO CARRY, unresolved and dk's to read: the META-FINDING further below - probe fixtures may be
+systematically too clean to reproduce pilot-scale faults. Item 3 above absorbs most of it, but
+the fixture-realism half is untouched and bears on wave 7's design.
 <!-- =================== END QUEUE ===================== -->
 
 ## 2026-07-19 (sonnet session): EFFICIENCY BATTERY 0.13.35 — primed order discharged, one HIGH finding, orphan-class non-reproduction datum, installed-plugin channel confirmed live
