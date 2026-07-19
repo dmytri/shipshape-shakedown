@@ -39,6 +39,46 @@ failed to reproduce in probe fixtures. If probe states are systematically too cl
 covering scenario" is pointing at the wrong instrument, and that bears on wave 7's design.
 <!-- =================== END PRIMED ORDER =================== -->
 
+## 2026-07-19 (opus session, close): CAPTAIN-OPENING PROBE DID NOT REPRODUCE - no fix shipped - and the day's DOMINANT PATTERN, dk's read owed
+
+Ran the reproduction BEFORE any fix, on dk's "probe", per the day's own lesson. State mirrored
+yoink: dirty tree with harbour output in flight, two unresolved `@captain @conformance`
+skeletons, no watchbill, CAPTAIN.md carrying a diagnosed root cause. Dispatch: the user's only
+word `captain`, stop after the opening. Numbers in METRICS.md "Captain opening-posture probe",
+banked `data/captain-posture/`.
+
+**DID NOT REPRODUCE (6 inv / 63s, zero writes).** The opening PROPOSED: dirty tree classified as
+"work in flight, not dirt" and attributed to Shipwright's harbour write-scope exception; absent
+watchbill read as "the healthy resting state"; two threads named and offered, asking only which
+first. **The doctrine text is not the cause. NOTHING SHIPPED** - a fix would have been aimed at a
+target that is not there. The probe paid for itself.
+
+Fixture defect owned (tw17 class, SECOND of the day, both mine): the planted root-cause note was
+incoherent, since `tidesOfType` already returns a fresh array. The Captain caught it unprompted
+and refused to spec against it before tracing.
+
+### THE DOMINANT PATTERN OF THE DAY - dk's read owed before wave 7
+
+THREE consecutive findings failed to reproduce, in TWO distinct causes:
+- **Findings 3 and 1** (pilot #5, sonnet, plugin channel) failed in PROBE FIXTURES, both against
+  controls. Cause: the fixture - one file, plank-inventory ready-made rather than derived, no
+  voyage context. **Probe states are systematically too clean to reproduce pilot-scale faults.**
+- **The Captain opening** (yoink, DeepSeek, opencode, vendored 0.13.33) failed on sonnet/HEAD.
+  Cause: NOT the text. What remains is model, channel, or vintage - and it is the only finding
+  today from the only non-Claude Captain we run. A datum for the PARKED cross-model WATCH, not a
+  verdict; dk parked that comparison deliberately and this does not unpark it.
+
+**The consequence dk should rule on:** /shakedown's own default is "the cheapest scenario
+covering seams that moved", which resolves to a probe - and a probe reproduced NONE of three
+findings today. Two doctrine ships (0.13.34, 0.13.35) went out on findings that do not
+reproduce. BOTH ARE KEPT, because each rested on a textual defect that survived independently of
+the failed reproduction (0.13.34: the plank form matched neither of its sources and was
+uncheckable by command; 0.13.35: a two-item list where three belong, with the control
+demonstrating a real mis-routing). Both are recorded with validation weaker than claimed at ship
+time. The third was correctly NOT shipped, because the probe ran first.
+**Question routed: should probe-first become the standing rule before ANY consumer- or
+pilot-sourced doctrine fix?** On today's evidence I would say yes.
+
 ## 2026-07-19 (opus session, continued): CONSUMER FINDING from yoink's latest opencode Captain session (dk's pointer) - Captain's opening CLASSIFIES but never PROPOSES
 
 dk: "the captain doesn't really seem like they know what they are supposed to do, even tho stuff

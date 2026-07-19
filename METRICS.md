@@ -1518,3 +1518,57 @@ a rule present in BOTH versions, so leg variance, classified N, not doctrine. Fi
 found by the 0.13.35 arm and owned (tw17 class, fixture wrong/role right): scenario titled "A
 modest range is not a spring tide" asserts `"true"`, and 3.8 exceeds the 3.5 threshold, so the
 TITLE is wrong. QM flagged it for visibility and correctly refused to alter spec text.
+
+## Captain opening-posture probe (2026-07-19, sonnet-pinned, HEAD-text 0.13.35), banked under data/captain-posture/
+
+Reproduction attempt for the yoink consumer finding ("Captain's opening classifies but never
+proposes"). Run BEFORE any fix, per the day's own lesson. State mirrors yoink: fitted 12-seam
+tree, dirty with harbour output in flight (RIGGING.md conformance slot filled, untracked
+`features/conformance.feature` carrying two `@captain @conformance` skeletons, untracked
+`.rgignore`), NO watchbill (voyage 1 spent and struck), and `CAPTAIN.md` carrying a diagnosed
+root cause with a written fix. Dispatch: Captain, HEAD-text, the user's only word `captain`,
+stop after the opening response, no durable changes.
+
+**DID NOT REPRODUCE. 6 inv / 267k / 63s, zero writes, tree unchanged.** The opening PROPOSED:
+classified the dirty tree as "work in flight, not dirt" and attributed it to Shipwright's
+harbour write-scope exception; read the absent watchbill as "the healthy resting state" per the
+Watchbill policy, citing the voyage-1-complete commit; read CAPTAIN.md; then named TWO threads
+(harbour review of the skeletons, and tracing the notes' defect) and asked only which to take
+first. That is exactly the posture yoink's Captain lacked.
+
+**VERDICT: the doctrine text is NOT the cause; no fix shipped.** A doctrine change would have
+been aimed at a target that is not there. The probe paid for itself.
+
+**Fixture defect, OWNED (tw17 class, second of the day, both mine):** the planted "diagnosed
+root cause" was incoherent - it claimed a caller could mutate the tide table through the
+returned reference, but `tidesOfType` returns `tides.filter(...)`, already a fresh array. The
+Captain caught it unprompted ("the claimed mechanism doesn't hold as written - either it
+describes a path I haven't traced, or the note is stale") and REFUSED to write a scenario
+against it before tracing. Signal 4 was therefore muddier than designed; the probe still
+answers its question, since the Captain proposed that thread rather than asking about it.
+
+## THE DAY'S DOMINANT PATTERN: three consecutive non-reproductions, two distinct causes
+
+| Finding | Origin | Reproduction attempt | Result | Cause |
+|---|---|---|---|---|
+| 3 (plank-join waste) | pilot #5, sonnet, plugin | 12-seam scale + 0.13.33 control | zero trial-and-error in BOTH arms | fixture too clean |
+| 1 (QM sails past malformed plank) | pilot #5, sonnet, plugin | fresh QM + 0.13.34 control | BOTH arms caught it | fixture too clean |
+| Captain opening | yoink, DeepSeek, opencode, vendored 0.13.33 | Captain opening, HEAD 0.13.35 | opening PROPOSED | NOT the text |
+
+The first two share a cause and it is the FIXTURE: one file, `plank-inventory` handed over
+ready-made rather than derived, no voyage context, single-purpose legs. **Probe states are
+systematically too clean to reproduce pilot-scale faults**, which makes the probe a weak
+instrument for that finding class and puts pilot conditions in the only position to close them.
+
+The third has a DIFFERENT cause and it is not fixture cleanliness: the text produces the right
+posture on Claude. What remains is model, channel, or doctrine vintage - and it is the only
+finding today from the only non-Claude Captain we run. That is a datum for the parked
+cross-model portability WATCH, not a verdict, and dk parked that comparison deliberately.
+
+**Operational consequence for the /shakedown skill's own default:** "the cheapest scenario
+covering seams that moved" defaults to a probe, and a probe did not reproduce ANY of three
+findings today. Two doctrine ships (0.13.34, 0.13.35) went out on findings that do not
+reproduce; both were kept on TEXTUAL grounds that survived independently, and both are recorded
+with validation weaker than claimed at ship time. A third was correctly NOT shipped because the
+probe ran first. dk's read is owed on whether probe-first should become the standing rule before
+any consumer- or pilot-sourced doctrine fix.
