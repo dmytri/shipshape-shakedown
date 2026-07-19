@@ -1,5 +1,47 @@
 # Captain notes - shipshape-shakedown workstream
 
+## 2026-07-19 (opus session): PLANK-JOIN PROBE - both legs PASS, three findings routed, none shipped
+
+Entry `/shakedown probe`. Deck: both repos clean and level, doctrine 0.13.33 (bc731e4),
+installed plugin 0.13.33 (09:51:32 UTC), this session's process 17:23:51 UTC - postdates the
+install, so installed-plugin channel legal and CONFIRMED (marker `Recording routes with
+installation` 1x in both leg transcripts). Nothing had moved since the 0.13.33 baselines, so
+the run took the top open item: pilot #5 finding 3, the plank-join trial-and-error.
+
+New probe `plank-join` added to scenarios/probes.md; numbers and evidence in METRICS.md
+"plank-join probe"; per-invocation audits banked under `data/plankjoin-0.13.33/`.
+
+Design: a stale plank (`{date}` where the bound pattern is `{string}`) on a Crew-touched seam,
+suite GREEN, so the join is the ONLY detector. Leg B byte-identical plus a `plank-join`
+command slot in RIGGING.md - same doctrine text both legs, isolating the slot candidate.
+
+**Outcome: both legs PASS**, tree-verified (no commit, diff and stale plank intact). Doctrine
+held: a green QM hand-off did not buy a commit, the fault routed to Crew via QM as unfinished
+work rather than deferring to harbour. A 9 inv/393k/60s 7P/2N; B 8 inv/351k/45s 7P/1N.
+
+**Three findings routed to dk, nothing shipped:**
+1. **`step-usage` carries no keyword, so the specified join is not directly computable.** The
+   Planking agreement requires the plank string led by `Given/When/Then`; cucumber
+   `usage-json` has no keyword field. BOTH legs paid an extra retrieval reading step-def
+   source to recover it. Candidate: state the normalization in the cross-reference rule, or
+   drop the keyword from the plank form. This is the sharpest of the three - a mechanical
+   under-specification against the tool that supplies the join's own inputs.
+2. **A RIGGING slot doctrine does not name is inert.** Leg B read the `plank-join` slot and
+   never ran it. Pilot #5's candidate ("example command OR derived RIGGING slot") is now
+   split: the slot alone does nothing. If the fix ships, it ships as doctrine text.
+3. **Probe limitation, stated plainly: at n=2 planks this does NOT reproduce the ~27 N
+   cluster.** By-eye join is cheap and correct at this scale, and both legs did exactly that
+   while leg A's report claimed "not by-read-only" - boatswain/SKILL.md:82 satisfied in letter
+   only. The pilot-#5 cost is a SCALE effect. **A scale variant (10+ planks, several stale) is
+   OWED** before finding 3 can be priced or closed; nothing here disproves it.
+
+Standing open items unchanged: wave-7 yoink gate (green @eval + custody + push) still blocked
+on yoink's own tree; cross-model portability WATCH open with its re-vendor precondition met;
+findings 1 (foul-survives-lost-caller) and 2 (unscoped-rg bulkhead slips) still on dk's board.
+
+Environment note, not a doctrine fault: a grep-substitution hook blocked the RIGGING
+`plank-inventory` command verbatim in BOTH legs, costing 1 N invocation each on the rg retry.
+
 ## 2026-07-19 (sonnet session, continued): YOINK @eval HARNESS EVIDENCE (dk's pointer, "read ~/yoink captains notes") - consuming-project real-use data, first non-Claude consumer, recorded alongside the wave-6 yoink observations
 
 dk pointed at ~/yoink/CAPTAIN.md: the project "had a really hard time setting up working

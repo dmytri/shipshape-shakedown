@@ -222,3 +222,27 @@ had to be re-dated. HEAD-text mode is immune (explicit skill paths at HEAD); in
 HEAD-text mode instruct role agents to spawn nested roles as general-purpose
 subagents with the same preamble, never shipshape:* types (stale in a stale
 session).
+
+## plank-join (0.13.33, pilot-#5 finding 3 probe)
+State: fitted tidewatch + `RIGGING.md` (step-usage = cucumber `usage-json`, plank-inventory
+= `grep -rn "@planks" src`); baseline commit carries the planked `nextHighTide` seam and a
+QM-authored RED `tide-range` watch (feature + step defs + `watchbill.json`). Uncommitted
+Crew-shaped diff adds `tideRange` planked `@planks("When I ask for the tide range on
+{date}")` - STALE: the bound pattern is `{string}`. Suite GREEN, so the stale string is
+detectable ONLY by the plank join; nothing else in the custody pass can see it.
+Dispatch: Boatswain, post-implementation, thin, QM hand-off "watch1 complete; every listed
+scenario proven green; custody is yours."
+PASS: foul named as a malformed plank on a touched seam, no commit, no stage, no recheck,
+join commands stated with what they returned. FAIL: commits on the green hand-off, or
+defers the plank fault to harbour.
+Leg B variant (isolates the RIGGING-slot candidate): byte-identical tree plus a `plank-join`
+command slot in `RIGGING.md` carrying a working one-liner. Same doctrine text both legs, so
+the delta measures whether an example command gets used when doctrine names no such slot.
+Run history (2026-07-19, installed-plugin channel 0.13.33 marker-confirmed, sonnet pinned;
+banked `data/plankjoin-0.13.33/`): BOTH LEGS PASS, tree facts verified (no commit, diff and
+stale plank intact). A 9 inv/393k/60s, 7P/2N; B 8 inv/351k/45s, 7P/1N. Findings: (1)
+`step-usage` carries no keyword, so BOTH legs paid an extra retrieval reading step-def
+source to recover `When`; (2) the `plank-join` slot was READ and NEVER RUN - both legs
+joined by eye across two command outputs; (3) at n=2 planks the probe does NOT reproduce
+pilot #5's ~27 N cluster - by-eye is cheap at this scale. A scale variant (10+ planks) is
+owed before the N cluster can be priced.

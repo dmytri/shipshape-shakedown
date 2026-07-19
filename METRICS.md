@@ -1363,3 +1363,45 @@ cheap observational signal only, offered as a candidate, not a finding.
 - Zero cockpit reads, zero contamination refusals needed (none attempted), zero
   redundant confirmation runs observed (tw1, tw4 both inherited Crew's carried green
   rather than re-proving it).
+
+## plank-join probe (2026-07-19, sonnet-pinned, installed-plugin channel 0.13.33 marker-confirmed), banked under data/plankjoin-0.13.33/
+
+Entry `/shakedown probe`. Nothing moved since the 0.13.33 baselines, so the run took the top
+open item: pilot #5 finding 3 (plank-join extraction is trial-and-error, ~27 N inv). New probe
+`plank-join` in scenarios/probes.md. Channel: session process 17:23:51 UTC postdates the
+09:51:32 install; marker `Recording routes with installation` hit 1x in BOTH leg transcripts.
+
+| Leg | Inv | Cache | Out | Wall | P/N/Neg | Verdict |
+|---|---|---|---|---|---|---|
+| A boatswain custody, current doctrine | 9 | 393k | 1.6k | 60s | 7/2/0 (78%) | PASS |
+| B same + `plank-join` RIGGING slot | 8 | 351k | 4.2k | 45s | 7/1/0 (88%) | PASS |
+
+Both legs named the malformed plank as a touched-seam foul, refused to commit on a green QM
+hand-off, staged nothing, ran no recheck, and routed Crew redispatch via QM with the mismatch
+as evidence. Tree facts verified after both: HEAD unmoved, `src/tide.js` still modified and
+unstaged, stale `{date}` plank intact. The 1-inv A/B delta is A's redundant `runrecord.jsonl`
+existence check (inv 8, after inv 7 already catted it), NOT the join.
+
+**Finding 1 (NEW, operator-derived pre-dispatch, confirmed 2/2 legs): `step-usage` output
+carries no keyword, so the join doctrine specifies is not directly computable from it.** The
+Planking agreement requires the plank string be the pattern "led by that definition's own
+keyword" (`@planks("When I ask ...")`), but cucumber `usage-json` emits `"pattern": "I ask
+..."` with no keyword field. Both legs spent an extra retrieval (A inv 6, B inv 6) reading
+step-definition SOURCE to recover `When` before they could compare. A working one-liner needs
+a `.replace(/^(Given|When|Then) /,"")` normalization no doctrine text mentions; it cost the
+operator two attempts to land. Candidate seam: either state the normalization in the Planking
+agreement's cross-reference rule, or drop the keyword from the plank form.
+
+**Finding 2 (NEW): the `plank-join` RIGGING slot was READ and NEVER RUN.** Leg B catted
+RIGGING.md at inv 3 (2 transcript hits, both the cat) and then joined by hand exactly as leg A
+did. A derived slot doctrine does not name is inert - so the pilot-#5 candidate "an example
+command OR a derived RIGGING.md slot" is now split: the slot alone does nothing without
+doctrine text naming it. If the fix ships, it ships as doctrine text.
+
+**Finding 3 (probe limitation, stated rather than buried): at n=2 planks this probe does NOT
+reproduce pilot #5's ~27 N cluster.** Both legs joined by eye across two command outputs and
+it was cheap and correct. Leg A's report explicitly claims "not by-read-only"; mechanically the
+cross-reference WAS a human read of two outputs, satisfying boatswain/SKILL.md:82 ("a plank
+read by eye is unchecked") in letter only. The trial-and-error pilot #5 measured is a SCALE
+effect. A scale variant (10+ planks, several stale) is owed before finding 3 can be priced or
+closed; nothing here disproves it.
