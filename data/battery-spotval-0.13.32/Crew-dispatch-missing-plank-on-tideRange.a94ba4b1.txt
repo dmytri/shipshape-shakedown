@@ -1,0 +1,14 @@
+# meta: {"agentType":"shipshape:crew","description":"Crew dispatch: missing plank on tideRange","toolUseId":"toolu_01MnmEMgf2F8iCadcQZwoSdQ","parentAgentId":"af901cc62175e947b","spawnDepth":2}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/bfd7550a-0573-40f0-86e6-e3a8f157fa52/subagents/agent-a94ba4b1f5eb445c9.jsonl
+# banked: 2026-07-19T09:48:40Z
+Crew-dispatch-missing-plank-on-tideRange	1	09:38:43	15707	76	Skill:
+Crew-dispatch-missing-plank-on-tideRange	2	09:38:45	20475	81	Skill:
+Crew-dispatch-missing-plank-on-tideRange	3	09:39:00	25630	2	Read:RIGGING.md ||| Bash:find . -iname "tide-range.feature"
+Crew-dispatch-missing-plank-on-tideRange	4	09:39:05	51163	250	Read:tide-range.feature ||| Read:tide.js
+Crew-dispatch-missing-plank-on-tideRange	5	09:39:07	53038	203	Bash:cat features/support/range_steps.js 2>/dev/null; echo "---"; git statu
+Crew-dispatch-missing-plank-on-tideRange	6	09:39:10	53681	270	Edit:tide.js
+Crew-dispatch-missing-plank-on-tideRange	7	09:39:14	54406	3	Bash:ref="features/tide-range.feature:Daily tide range is computed"; npx cu
+Crew-dispatch-missing-plank-on-tideRange	8	09:39:18	54810	156	Bash:grep -rn "@planks" src
+Crew-dispatch-missing-plank-on-tideRange	9	09:39:20	55151	141	Bash:rg -n "@planks" src
+Crew-dispatch-missing-plank-on-tideRange	10	09:39:26	55478	437	
+SUMMARY	Crew-dispatch-missing-plank-on-tideRange	invocations=10	cache_read=439539	out=1619	wall=09:38:43 to 09:39:26

@@ -1,0 +1,22 @@
+# meta: {"agentType":"shipshape:boatswain","description":"Boatswain: post-implementation custody","toolUseId":"toolu_01WUumNJpToitpVHysM1HWd6","parentAgentId":"ad81fc4ad2dd95dbd","spawnDepth":2}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/bfd7550a-0573-40f0-86e6-e3a8f157fa52/subagents/agent-ae84785ba5f28ccca.jsonl
+# banked: 2026-07-19T09:48:40Z
+Boatswain-post-implementation-custody	1	09:47:21	13977	80	Skill:
+Boatswain-post-implementation-custody	2	09:47:23	20470	78	Skill:
+Boatswain-post-implementation-custody	3	09:47:27	28834	347	Bash:cat RIGGING.md && echo "---STATUS---" && git status && echo "---DIFF--
+Boatswain-post-implementation-custody	4	09:47:32	54364	720	Read:low-tides.feature ||| Read:watchbill.json ||| Read:tide.js ||| Read:tides.feature ||| Read:slow-tide.feature
+Boatswain-post-implementation-custody	5	09:47:42	56486	493	Bash:echo "=== plank-inventory ===" && grep -rn "@planks" src && echo "=== 
+Boatswain-post-implementation-custody	6	09:47:49	58320	3	Bash:echo "=== plank-inventory ===" && rg -n "@planks" src && echo "=== ste
+Boatswain-post-implementation-custody	7	09:48:15	58986	2201	Bash:ls -la && test -f runrecord.jsonl && echo "--- runrecord ---" && cat r
+Boatswain-post-implementation-custody	8	09:48:20	61825	246	Bash:GIT_INDEX_FILE="$(mktemp)" bash -c 'git read-tree HEAD && git add -A .
+Boatswain-post-implementation-custody	9	09:48:26	65033	3	Bash:rg -n "@" features --glob '*.feature'
+Boatswain-post-implementation-custody	10	09:48:29	65309	188	Bash:rg -n "@" features
+Boatswain-post-implementation-custody	11	09:48:31	65751	209	Bash:npx cucumber-js --tags "not @captain and not @shipwright" 2>&1
+Boatswain-post-implementation-custody	12	09:50:37	66048	262	ToolSearch:
+Boatswain-post-implementation-custody	13	09:50:40	66446	253	Bash:true
+Boatswain-post-implementation-custody	14	09:50:53	69621	1016	Bash:until [ -f /tmp/claude-1000/-home-exedev-shipshape-shakedown/bfd7550a-
+Boatswain-post-implementation-custody	15	09:53:57	69889	141	Read:bvvje83ux.output
+Boatswain-post-implementation-custody	16	09:54:24	71409	2468	Bash:git add -- features/support/steps.js src/tide.js features/low-tides.fe
+Boatswain-post-implementation-custody	17	09:54:30	71683	589	Bash:git commit -m "$(cat <<'EOF' Low tide prediction: nextLowTide seam pla
+Boatswain-post-implementation-custody	18	09:54:35	74230	1529	
+SUMMARY	Boatswain-post-implementation-custody	invocations=18	cache_read=1038681	out=10826	wall=09:47:21 to 09:54:35

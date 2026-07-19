@@ -1,0 +1,25 @@
+# meta: {"agentType":"shipshape:qm","description":"tw4 QM plank-gap probe","toolUseId":"toolu_0194KdLBNSPsE7abBSRj8mGz","spawnDepth":1,"model":"sonnet"}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/bfd7550a-0573-40f0-86e6-e3a8f157fa52/subagents/agent-af901cc62175e947b.jsonl
+# banked: 2026-07-19T09:48:40Z
+tw4-QM-plank-gap-probe	1	09:37:28	15726	76	Skill:
+tw4-QM-plank-gap-probe	2	09:37:32	20149	4	Skill:
+tw4-QM-plank-gap-probe	3	09:37:35	27286	2	Bash:cat RIGGING.md && echo "---WATCHBILL---" && cat watchbill.json && echo
+tw4-QM-plank-gap-probe	4	09:37:41	52922	302	Bash:git status && echo "---DIFF---" && git diff --stat && echo "---DIFF FU
+tw4-QM-plank-gap-probe	5	09:37:44	53881	422	Read:tide-range.feature ||| Read:range_steps.js ||| Read:tide.js
+tw4-QM-plank-gap-probe	6	09:37:48	54631	191	Bash:find features -type f | sort && echo "---" && find src -type f | sort
+tw4-QM-plank-gap-probe	7	09:37:53	55623	375	Read:steps.js ||| Read:tides.feature ||| Read:runlog.js
+tw4-QM-plank-gap-probe	8	09:37:56	55875	227	Bash:cat data/tides.json 2>/dev/null || find . -iname "*.json" -not -path "
+tw4-QM-plank-gap-probe	9	09:38:09	57158	1306	Bash:ref="features/tide-range.feature:Daily tide range is computed"; npx cu
+tw4-QM-plank-gap-probe	10	09:38:15	57541	238	Bash:grep -rn "@planks" src
+tw4-QM-plank-gap-probe	11	09:38:18	58982	195	Bash:rg -n "@planks" src
+tw4-QM-plank-gap-probe	12	09:38:24	59391	540	Bash:npx cucumber-js --dry-run --format usage-json --tags "not @captain and
+tw4-QM-plank-gap-probe	13	09:38:27	59620	221	Bash:npx cucumber-js --dry-run --format usage-json --tags "not @captain and
+tw4-QM-plank-gap-probe	14	09:38:35	61001	1075	Agent:
+tw4-QM-plank-gap-probe	15	09:38:44	61504	97	ToolSearch:
+tw4-QM-plank-gap-probe	16	09:38:46	62965	24	
+tw4-QM-plank-gap-probe	17	09:41:38	15726	496	Bash:rg -n "@planks" src && echo "---diff---" && git diff src/tide.js && ec
+tw4-QM-plank-gap-probe	18	09:41:43	61885	397	Bash:GIT_INDEX_FILE="$(mktemp)" bash -c 'git read-tree HEAD && git add -A .
+tw4-QM-plank-gap-probe	19	09:41:49	64075	187	Bash:ls -la runrecord.jsonl 2>&1; cat runrecord.jsonl 2>/dev/null
+tw4-QM-plank-gap-probe	20	09:42:02	64502	2	Bash:printf '%s\n' '{"targets":["features/tide-range.feature:Daily tide ran
+tw4-QM-plank-gap-probe	21	09:42:13	64854	1921	
+SUMMARY	tw4-QM-plank-gap-probe	invocations=21	cache_read=1085297	out=8298	wall=09:37:28 to 09:42:13

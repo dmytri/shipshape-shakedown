@@ -1,0 +1,55 @@
+# meta: {"agentType":"shipshape:shipwright","description":"tw5 no-plant fit-out probe","toolUseId":"toolu_01Ds5WMyDv6SQ8kzm3XgbrfE","spawnDepth":1,"model":"sonnet"}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/bfd7550a-0573-40f0-86e6-e3a8f157fa52/subagents/agent-af2e2205ba5b31dd5.jsonl
+# banked: 2026-07-19T09:48:40Z
+tw5-no-plant-fit-out-probe	1	09:37:30	13977	75	Skill:
+tw5-no-plant-fit-out-probe	2	09:37:33	20105	90	Skill:
+tw5-no-plant-fit-out-probe	3	09:37:35	36974	4	Bash:echo "--- git status ---" && git status && echo "--- git log ---" && g
+tw5-no-plant-fit-out-probe	4	09:37:40	62516	312	Bash:echo "--- package.json ---" && cat package.json && echo "--- .gitignor
+tw5-no-plant-fit-out-probe	5	09:37:43	63284	125	Read:tide.js
+tw5-no-plant-fit-out-probe	6	09:37:45	63830	126	Read:tides.feature
+tw5-no-plant-fit-out-probe	7	09:37:49	64073	58	Read:steps.js
+tw5-no-plant-fit-out-probe	8	09:37:52	64423	128	Read:runlog.js
+tw5-no-plant-fit-out-probe	9	09:37:55	64933	125	Read:tides.json
+tw5-no-plant-fit-out-probe	10	09:37:58	65299	444	Bash:ls -la node_modules/.bin/ 2>&1 | head -20 && echo "---" && find . -max
+tw5-no-plant-fit-out-probe	11	09:38:10	65595	764	Bash:npm ping 2>&1 | head -5; echo "EXIT:$?"
+tw5-no-plant-fit-out-probe	12	09:39:18	66548	5701	Bash:npx cucumber-js --help 2>&1 | head -80
+tw5-no-plant-fit-out-probe	13	09:40:08	67354	4551	Bash:find /home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/ac0
+tw5-no-plant-fit-out-probe	14	09:41:34	74526	100	Read:templates.md
+tw5-no-plant-fit-out-probe	15	09:41:37	79191	244	Bash:which rg 2>&1; which ag 2>&1; ls -la README* 2>&1; echo "---"; cat pac
+tw5-no-plant-fit-out-probe	16	09:41:43	80981	251	Bash:which rg; echo "---readme---"; test -f README.md && echo "exists" || e
+tw5-no-plant-fit-out-probe	17	09:41:53	81413	842	Bash:npm install --save-dev c8 jsdoc 2>&1 | tail -30
+tw5-no-plant-fit-out-probe	18	09:41:59	81683	188	Bash:echo "=== discover ===" && npx cucumber-js --dry-run --tags "not @capt
+tw5-no-plant-fit-out-probe	19	09:42:05	82583	286	Bash:echo "=== focused (single) ===" && bash -c 'files=(); names=(); for re
+tw5-no-plant-fit-out-probe	20	09:42:09	82899	334	Bash:echo "=== focused (batch, two refs same file) ===" && bash -c 'files=(
+tw5-no-plant-fit-out-probe	21	09:42:14	83324	3	Bash:echo "=== broad/coverage (c8-wrapped @logic) ===" && npx c8 --reporter
+tw5-no-plant-fit-out-probe	22	09:42:32	83826	1279	Bash:echo "=== broad/coverage (c8-wrapped, default tier) ===" && npx c8 --r
+tw5-no-plant-fit-out-probe	23	09:42:47	84571	865	Bash:npx c8 --reporter=text --reporter=json-summary --include 'src/**' -- n
+tw5-no-plant-fit-out-probe	24	09:42:55	86310	391	Bash:echo "=== step-usage ===" && npx cucumber-js --dry-run --format usage-
+tw5-no-plant-fit-out-probe	25	09:43:00	87888	314	Bash:echo "=== jsdoc -X on src ===" && npx jsdoc -X -r src 2>&1 | head -80
+tw5-no-plant-fit-out-probe	26	09:43:56	89087	4772	Bash:npm view gherkin-lint 2>&1 | head -20; echo "---"; npm view @cucumber/
+tw5-no-plant-fit-out-probe	27	09:44:02	90288	140	Bash:npm view gplint 2>&1 | head -30
+tw5-no-plant-fit-out-probe	28	09:46:18	95657	12641	Bash:rg -n "setTimeout\(|sleep\(|nock\(|jest\.mock\(|sinon\." features/supp
+tw5-no-plant-fit-out-probe	29	09:46:26	96358	377	Bash:rg -n "setTimeout\(|sleep\(|nock\(|jest\.mock\(|sinon\." ; echo "exit:
+tw5-no-plant-fit-out-probe	30	09:46:30	109187	256	Bash:mkdir -p /tmp/claude-1000/-home-exedev-shipshape-shakedown/bfd7550a-05
+tw5-no-plant-fit-out-probe	31	09:46:36	109573	52	Write:verification-conformance.json
+tw5-no-plant-fit-out-probe	32	09:46:38	109844	168	Write:.rgignore
+tw5-no-plant-fit-out-probe	33	09:46:40	110485	874	Write:RIGGING.md
+tw5-no-plant-fit-out-probe	34	09:46:48	110759	476	Write:AGENTS.md
+tw5-no-plant-fit-out-probe	35	09:46:54	111741	280	Write:README.md
+tw5-no-plant-fit-out-probe	36	09:46:58	112325	359	Edit:tide.js
+tw5-no-plant-fit-out-probe	37	09:47:01	112709	188	Bash:npx jsdoc -X -r src 2>&1 | rg -A3 '"comment"' | head -20
+tw5-no-plant-fit-out-probe	38	09:47:05	113202	618	Write:watchbill-shape.feature
+tw5-no-plant-fit-out-probe	39	09:47:15	113530	60	Write:perturbation-quiescence.feature
+tw5-no-plant-fit-out-probe	40	09:47:21	114261	500	Write:plank-integrity.feature
+tw5-no-plant-fit-out-probe	41	09:47:25	114819	311	Write:scantling-hygiene.feature
+tw5-no-plant-fit-out-probe	42	09:47:29	115431	379	Write:verification-conformance.feature
+tw5-no-plant-fit-out-probe	43	09:47:32	115856	278	Bash:echo "=== discover (all, sanity parse check) ===" && npx cucumber-js -
+tw5-no-plant-fit-out-probe	44	09:47:38	116347	243	Bash:echo "=== discover (excluding @captain/@shipwright) ===" && npx cucumb
+tw5-no-plant-fit-out-probe	45	09:47:44	116872	3	Bash:echo "=== harbour full regression (coverage command, @logic tier) ==="
+tw5-no-plant-fit-out-probe	46	09:48:06	117257	1597	Bash:git status --short
+tw5-no-plant-fit-out-probe	47	09:48:18	117999	934	Read:package.json
+tw5-no-plant-fit-out-probe	48	09:48:23	119742	290	Read:RIGGING.md
+tw5-no-plant-fit-out-probe	49	09:48:26	120835	230	Bash:git status --short --ignored | rg "coverage|logs"
+tw5-no-plant-fit-out-probe	50	09:48:30	121969	229	Read:tide.js
+tw5-no-plant-fit-out-probe	51	09:48:40	122210	2438	
+SUMMARY	tw5-no-plant-fit-out-probe	invocations=51	cache_read=4606449	out=46293	wall=09:37:30 to 09:48:40

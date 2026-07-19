@@ -1,0 +1,31 @@
+# meta: {"agentType":"shipshape:boatswain","description":"Boatswain post-implementation custody for quayline","toolUseId":"toolu_0133W5yQs8syq1trr1agBJBw","parentAgentId":"ab98b0743fa11e4c6","spawnDepth":2}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/bfd7550a-0573-40f0-86e6-e3a8f157fa52/subagents/agent-ac7b0c7b59af65171.jsonl
+# banked: 2026-07-19T09:48:40Z
+Boatswain-post-implementation-custody-for-quayline	1	09:50:02	15693	79	Skill:
+Boatswain-post-implementation-custody-for-quayline	2	09:50:04	20135	78	Skill:
+Boatswain-post-implementation-custody-for-quayline	3	09:50:07	28497	282	Bash:cat RIGGING.md && echo "---STATUS---" && git status && echo "---DIFF--
+Boatswain-post-implementation-custody-for-quayline	4	09:50:13	54027	3	Bash:find . -path ./node_modules -prune -o -type f -print | grep -v '^\./\.
+Boatswain-post-implementation-custody-for-quayline	5	09:50:16	55043	124	Read:berthing-window.feature
+Boatswain-post-implementation-custody-for-quayline	6	09:50:19	55433	119	Read:index.js
+Boatswain-post-implementation-custody-for-quayline	7	09:50:20	56207	171	Read:berthing-window.steps.js
+Boatswain-post-implementation-custody-for-quayline	8	09:50:23	57164	120	Read:watchbill.json
+Boatswain-post-implementation-custody-for-quayline	9	09:50:26	57992	431	Bash:(npx jsdoc -X -r src > /tmp/plank_inv.json 2>/tmp/plank_inv.err; echo 
+Boatswain-post-implementation-custody-for-quayline	10	09:50:31	58306	166	Bash:echo "---STEP USAGE---" && cat /tmp/step_usage.txt && echo "---LINT---
+Boatswain-post-implementation-custody-for-quayline	11	09:50:33	58780	150	Bash:cat /tmp/plank_inv.err | head -50; echo "---"; wc -l /tmp/plank_inv.js
+Boatswain-post-implementation-custody-for-quayline	12	09:50:55	60463	1829	Bash:grep -rn "planks" src features --include="*.js" 
+Boatswain-post-implementation-custody-for-quayline	13	09:50:59	60756	211	Bash:rg -n "planks" src features
+Boatswain-post-implementation-custody-for-quayline	14	09:51:02	62758	275	Bash:rg -n "PERTURBATION" src features; echo "exit:$?"; cat package.json; e
+Boatswain-post-implementation-custody-for-quayline	15	09:51:05	63013	191	Bash:rg -n "PERTURBATION" src features; echo "exit:$?"
+Boatswain-post-implementation-custody-for-quayline	16	09:51:10	63476	298	Bash:rg -n "PERTURBATION" src
+Boatswain-post-implementation-custody-for-quayline	17	09:51:12	63855	129	Bash:rg -n "PERTURBATION" features
+Boatswain-post-implementation-custody-for-quayline	18	09:51:13	64168	169	Read:package.json
+Boatswain-post-implementation-custody-for-quayline	19	09:51:17	64312	229	Bash:cat .gitignore; echo "---gplintrc---"; cat .gplintrc; echo "---biome--
+Boatswain-post-implementation-custody-for-quayline	20	09:51:23	64804	427	Bash:for p in @biomejs/biome @cucumber/cucumber c8 gplint jsdoc; do printf 
+Boatswain-post-implementation-custody-for-quayline	21	09:51:30	65718	1	Bash:git status --porcelain=v1 | head -30 && echo "---node_modules---" && l
+Boatswain-post-implementation-custody-for-quayline	22	09:51:44	66217	2	Bash:npx cucumber-js features/berthing-window.feature --tags "not @captain 
+Boatswain-post-implementation-custody-for-quayline	23	09:52:05	66581	2	Bash:rm watchbill.json && git status --porcelain=v1
+Boatswain-post-implementation-custody-for-quayline	24	09:52:08	67527	172	Bash:git add -- .gitignore .gplintrc CAPTAIN.md RIGGING.md biome.json featu
+Boatswain-post-implementation-custody-for-quayline	25	09:52:09	69544	371	Bash:git commit -m "$(cat <<'EOF' Fit out quayline and ship berthing-window
+Boatswain-post-implementation-custody-for-quayline	26	09:52:13	69823	143	Bash:git status
+Boatswain-post-implementation-custody-for-quayline	27	09:52:30	70993	1093	
+SUMMARY	Boatswain-post-implementation-custody-for-quayline	invocations=27	cache_read=1561285	out=7265	wall=09:50:02 to 09:52:30

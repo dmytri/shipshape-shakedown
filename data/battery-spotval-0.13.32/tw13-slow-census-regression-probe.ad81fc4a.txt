@@ -1,0 +1,28 @@
+# meta: {"agentType":"shipshape:qm","description":"tw13 slow-census regression probe","toolUseId":"toolu_016DrbB9ZLKxpTqPENCS3A2S","spawnDepth":1,"model":"sonnet"}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/bfd7550a-0573-40f0-86e6-e3a8f157fa52/subagents/agent-ad81fc4ad2dd95dbd.jsonl
+# banked: 2026-07-19T09:48:40Z
+tw13-slow-census-regression-probe	1	09:37:32	15726	76	Skill:
+tw13-slow-census-regression-probe	2	09:37:34	20061	78	Skill:
+tw13-slow-census-regression-probe	3	09:37:38	27198	393	Bash:cat RIGGING.md && echo "---WATCHBILL---" && cat watchbill.json && echo
+tw13-slow-census-regression-probe	4	09:37:50	52728	885	Bash:find features -type f | sort && echo "---SRC---" && find src -type f |
+tw13-slow-census-regression-probe	5	09:37:53	53762	875	Read:low-tides.feature ||| Read:slow-tide.feature ||| Read:tides.feature ||| Read:steps.js ||| Read:slow_steps.js ||| Read:runlog.js ||| Read:tide.js
+tw13-slow-census-regression-probe	6	09:39:09	54724	5960	Bash:cat data/tides.json 2>/dev/null; echo "---"; cat package.json; echo "-
+tw13-slow-census-regression-probe	7	09:39:15	57388	2	Bash:cat AGENTS.md 2>/dev/null; echo "---gitignore---"; cat .gitignore 2>/d
+tw13-slow-census-regression-probe	8	09:39:23	63668	556	Bash:cat .rgignore; echo "---readme---"; cat README.md; echo "---logs---"; 
+tw13-slow-census-regression-probe	9	09:39:33	64940	194	Bash:npx cucumber-js --dry-run --tags "not @captain and not @shipwright" 2>
+tw13-slow-census-regression-probe	10	09:41:47	65737	3	Edit:steps.js
+tw13-slow-census-regression-probe	11	09:41:54	66630	441	Edit:steps.js
+tw13-slow-census-regression-probe	12	09:42:02	68138	4	Bash:npx cucumber-js --dry-run --tags "not @captain and not @shipwright" 2>
+tw13-slow-census-regression-probe	13	09:42:10	68715	1	Bash:npx cucumber-js --tags "not @captain and not @shipwright" 2>&1 | tail 
+tw13-slow-census-regression-probe	14	09:44:52	69223	1546	Agent:
+tw13-slow-census-regression-probe	15	09:45:03	70212	71	Bash:echo waiting for crew notification
+tw13-slow-census-regression-probe	16	09:45:06	72140	113	
+tw13-slow-census-regression-probe	17	09:46:34	15726	5	Bash:git status --porcelain && echo "---diff stat---" && git diff --stat &&
+tw13-slow-census-regression-probe	18	09:46:49	70669	1029	Bash:test -f runrecord.jsonl && cat runrecord.jsonl || echo "no runrecord.j
+tw13-slow-census-regression-probe	19	09:46:57	77369	66	Bash:HASH="b83c13ca61cb58801950993b60357bfb372fcbf2" cat >> runrecord.jsonl
+tw13-slow-census-regression-probe	20	09:47:04	78415	3	Bash:grep -rn "@planks" src
+tw13-slow-census-regression-probe	21	09:47:07	79305	234	Bash:rg -n "@planks" src
+tw13-slow-census-regression-probe	22	09:47:11	79894	2	Agent:
+tw13-slow-census-regression-probe	23	09:47:24	80192	2	
+tw13-slow-census-regression-probe	24	09:54:59	15726	679	
+SUMMARY	tw13-slow-census-regression-probe	invocations=24	cache_read=1388286	out=13218	wall=09:37:32 to 09:54:59

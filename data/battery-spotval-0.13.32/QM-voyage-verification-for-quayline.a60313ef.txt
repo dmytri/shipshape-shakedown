@@ -1,0 +1,25 @@
+# meta: {"agentType":"shipshape:qm","description":"QM voyage verification for quayline","toolUseId":"toolu_0145LXCoC59BCqed5UibDYp9","spawnDepth":2,"parentAgentId":"ab98b0743fa11e4c6"}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/bfd7550a-0573-40f0-86e6-e3a8f157fa52/subagents/agent-a60313ef4f20a2a36.jsonl
+# banked: 2026-07-19T09:48:40Z
+QM-voyage-verification-for-quayline	1	09:45:49	15726	76	Skill:
+QM-voyage-verification-for-quayline	2	09:45:53	20026	84	Skill:
+QM-voyage-verification-for-quayline	3	09:45:55	27163	321	Bash:cat RIGGING.md && echo "---WATCHBILL---" && cat watchbill.json && echo
+QM-voyage-verification-for-quayline	4	09:46:03	52699	469	Bash:echo "=== feature file ===" && cat features/berthing-window.feature &&
+QM-voyage-verification-for-quayline	5	09:46:07	53732	182	Bash:find . -type f -not -path './node_modules/*' -not -path './.git/*' | s
+QM-voyage-verification-for-quayline	6	09:46:11	54875	3	Bash:cat package.json && echo "---gitignore---" && cat .gitignore && echo "
+QM-voyage-verification-for-quayline	7	09:46:25	55140	2	Bash:ls node_modules/.bin 2>/dev/null | head -5 || echo "NO_NODE_MODULES"; 
+QM-voyage-verification-for-quayline	8	09:46:31	56468	196	Bash:npx cucumber-js --dry-run --tags "not @captain and not @shipwright" 2>
+QM-voyage-verification-for-quayline	9	09:47:04	57649	3079	Bash:mkdir -p /tmp/claude-1000/-home-exedev-shipshape-shakedown/bfd7550a-05
+QM-voyage-verification-for-quayline	10	09:47:13	59133	692	Write:berthing-window.steps.js
+QM-voyage-verification-for-quayline	11	09:47:16	62227	177	Bash:npx cucumber-js features/berthing-window.feature --tags "not @captain 
+QM-voyage-verification-for-quayline	12	09:47:25	63033	3	Bash:npx biome check features 2>&1
+QM-voyage-verification-for-quayline	13	09:47:28	67016	2	Bash:npx biome check --write features 2>&1 && npx biome check features 2>&1
+QM-voyage-verification-for-quayline	14	09:47:34	68510	1263	Agent:
+QM-voyage-verification-for-quayline	15	09:47:46	69417	68	Bash:echo waiting
+QM-voyage-verification-for-quayline	16	09:47:51	71063	261	
+QM-voyage-verification-for-quayline	17	09:49:27	15726	670	Bash:echo "=== lint ===" && npx biome check src features 2>&1 && echo "=== 
+QM-voyage-verification-for-quayline	18	09:49:32	69281	261	Bash:grep -n "@planks" -r src && echo "=== step-usage ===" && npx cucumber-
+QM-voyage-verification-for-quayline	19	09:49:37	72454	279	Bash:rg -n "@planks" src && echo "=== step-usage ===" && npx cucumber-js --
+QM-voyage-verification-for-quayline	20	09:49:41	72886	169	Bash:git status --short
+QM-voyage-verification-for-quayline	21	09:49:53	74662	701	
+SUMMARY	QM-voyage-verification-for-quayline	invocations=21	cache_read=1158886	out=8958	wall=09:45:49 to 09:49:53

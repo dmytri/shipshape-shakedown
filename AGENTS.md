@@ -58,9 +58,14 @@ nothing else (no notes, no fixtures, no scratch).
    born 07-14 17:36, both repo clones 07-15, so that work ran on a previous
    exe.dev VM whose disk is gone; no cleanupPeriodDays configured. gitignored
    or otherwise uncommitted local copies die the same way - only content pushed
-   to origin survives). Mine every leg SAME-SESSION and bank every number a future analysis
-   could need in METRICS.md/CAPTAIN.md; raw-transcript re-analysis (P/N/Neg fold,
-   inbound.py, plan.py, retrieval graph) is only possible within the window.
+   to origin survives). Mine every leg SAME-SESSION and BANK it: `bin/bank.sh
+   <wave> <transcript.jsonl>` writes the per-invocation audit to
+   data/<wave>/<leg>.txt - commit data/ with the session record (KBs; this is
+   the layer that survives, dk-approved 2026-07-19). BorgBase covers raw jsonl
+   for ~6 months on the vykar cron (see CAPTAIN.md 2026-07-19 + ~/swamp
+   AGENTS.md Visitors recipes); raw-transcript re-analysis (P/N/Neg fold,
+   inbound.py, plan.py, retrieval graph) is only possible while raw survives -
+   fold same-session, bank the numbers.
 6. **IEPE**: analyse the instruction as the execution trajectory it produces, per
    `scenarios/iepe.md`. `bin/inbound.py` and `bin/inbound-fleet.py` decompose inbound
    context weight (exact; the ledger identity closes at drift +0 or the numbers are
