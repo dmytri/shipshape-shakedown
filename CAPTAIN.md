@@ -1,5 +1,67 @@
 # Captain notes - shipshape-shakedown workstream
 
+## 2026-07-19 (sonnet session, continued): YOINK @eval HARNESS EVIDENCE (dk's pointer, "read ~/yoink captains notes") - consuming-project real-use data, first non-Claude consumer, recorded alongside the wave-6 yoink observations
+
+dk pointed at ~/yoink/CAPTAIN.md: the project "had a really hard time setting up working
+@eval scenarios." Read the notes, the tree, and the harness code. Evidence, then the reading.
+
+**What happened there.** The @eval scenarios are a live-agent eval tier: boot a real Pi coding
+agent in a throwaway workspace/HOME with the vendored yoink skill, assert it batches retrieval
+through yoink, retain evidence (exit status, stdout/stderr, session JSONL) under coverage/eval.
+The struggle ran three layers: (1) credential/env sourcing from sibling repos' .env files; (2)
+the Pi invocation itself - the first harness was SELF-CONTRADICTORY (`--no-session` passed
+while the scenario required a session transcript), omitted `--provider`/`--session-dir`, used a
+positional prompt over `-p`, set no XDG paths - every correction discovered by manually mining
+two sibling repos (~/jolly, ~/estelle) with working Pi harnesses; (3) the output contract,
+still unresolved (harness asserts on `--mode json` stdout while their own notes observe Jolly
+trusts session JSONL instead). State at read time: resolution plan partially applied (`-p`/
+`--provider`/`--session-dir` in, `--no-session` out, and - their smartest move - an executable
+ASSERTION over the recorded Pi command line); XDG still unset; latest run (today 15:29) hit
+the wall dk described: SIGTERM at exactly the 360s timeout, stdout/stderr/session.jsonl ALL
+ZERO BYTES. Deck: a whole voyage (19 modified files) uncommitted atop 4 commits, custody
+blocked behind the red eval tier, repo never pushed - wave 6's "custody cadence worth a look"
+observation still standing.
+
+**Doctrine reading (routed, nothing shipped):**
+1. **It is the plank-join finding at project scale - third independent examples-bind
+   confirmation this week.** A known-good pipeline existed the whole time (Jolly's invocation);
+   nothing bound it; it was reinvented by trial-and-error across sessions until they encoded
+   the working example as an executable assertion.
+2. **Sharpest hook: 0.13.28's own words - "a derived command that has never run is a claim,
+   not a value" - currently proves only the RUNNER at fit-out.** yoink's RIGGING.md records a
+   full eval tier (broad-eval, coverage-eval, credentials policy) that never had one green run
+   when fitted; the struggle is the price of inheriting that unproven claim. Candidate seam:
+   extend the fitting-proof obligation to every configured tier's driver, cost-noted (proving
+   an eval tier = one live LLM run at fit-out).
+3. **Doctrine held where it applies**: the notes correctly apply the Verification agreement's
+   harness-defect rule ("Empty evidence after the timeout is a harness failure, not a Yoink
+   product failure" - repair, never rerun-until-green), and the tier policy slot carried
+   credentials cleanly.
+4. **Wave-7 gate now concrete**: yoink seaworthiness = green @eval + custody committed + repo
+   pushed. Remaining known deltas from Jolly's working shape: XDG paths, and asserting on
+   session JSONL instead of JSON-mode stdout. If both land and Pi still SIGTERMs empty, the
+   fault is below the harness (auth/network/model), not the invocation.
+
+**The model dimension (dk's note, recorded with its confounds).** yoink is the first Shipshape
+consumer running on GPT 5.6 Terra - every other session here has been Claude (sonnet/fable/
+haiku) or DeepSeek. dk's observation: a supposedly capable model had the most struggles. Three
+confounds keep this from being a model verdict at n=1: (a) VERSION - the vendored doctrine is
+0.13.28-era text (boatswain byte-matches 2a9e59a), i.e. it PREDATES the whole 0.13.30-0.13.33
+onboarding overhaul that yoink's own earlier failures motivated - the doctrine was not fresh,
+it is the exact vintage whose gaps wave 6 fixed (though fairness: 0.13.30-33 would not have
+supplied a Pi invocation either); (b) CHANNEL - opencode + vendored skills, NO hooks, the
+weakest enforcement channel we ship; (c) TASK CLASS - a live-subprocess-agent eval harness is
+cross-repo integration work no doctrine text carries, arguably the hardest task any consuming
+project has faced. Conduct signals cut both ways: Terra mined sibling repos unprompted,
+applied the harness-failure rule correctly, and converged on assertion-over-invocation (all
+good); it also shipped an internally self-contradictory harness (--no-session vs required
+transcript - a coherence miss on its own artifact), churned QM across sessions, and left a
+whole voyage uncommitted. **WATCH opened: cross-model doctrine portability.** The shakedown
+has never validated doctrine text against a non-Claude model. Candidate probe when worth the
+spend: a same-class harness task on sonnet vs Terra on CURRENT doctrine, same channel, to
+separate task difficulty from model fit. Re-vendor yoink to current doctrine before drawing
+any model conclusion.
+
 ## 2026-07-19 (sonnet session, continued): PILOT #5 RETROSPECTIVE FOLD (dk's "eval pilot") - the fold done SAME-SESSION while the raw data exists, closing the loop pilot #4's lost transcripts opened
 
 Full numbers in METRICS.md "Pilot #5 retrospective fold". What a fresh session needs:
