@@ -1,5 +1,57 @@
 # Captain notes - shipshape-shakedown workstream
 
+## 2026-07-19 (opus session, continued): 0.13.35 SHIPPED and validated against a control - and the META-FINDING that gates how this harness reads its own pilot findings
+
+0.13.35 (5616ed0, tests 5/5, pushed, installed) on dk's "proceed" over the recommendation set.
+Finding 1's hole was ONE CLAUSE: QM's re-derivation list named a MISSING plank and behaviour
+EXCEEDING the planked steps, and not a STALE or MALFORMED one - two items where three belong.
+Naming it alone would not have sufficed, since nothing in QM's routine ran the join (plank drift
+is harbour work), so step 5 now runs plank-inventory and step-usage in the pass it already makes
+and joins by exact string match. Affordable only because of 0.13.34: the join is now exact-string
+set membership, measured ~0.63s, no invocation of its own.
+
+**Validated with a control, and the control corrected me. Numbers in METRICS.md "0.13.35
+finding-1 regression". BOTH arms caught all 3 malformed planks** - the prediction that a 0.13.34
+QM would sail past a green watch was WRONG. The real delta is ROUTING: 0.13.35 -> Crew (correct,
+seams in hand); 0.13.34 -> deferred to Shipwright at harbour on the reasoning "HEAD matches base
+commit unmoved", conflating an unmoved HEAD with no role-advanced work while the tree carried
+`M src/tide.js`. That fault has teeth (the malformed plank ships, seam leaves Crew's hands), so
+0.13.35 is KEPT - but its validation is weaker than claimed at ship time and it was shipped
+against a finding that does not reproduce. Recorded.
+
+**META-FINDING, the day's most important result, routed to dk: TWO CONSECUTIVE pilot findings
+failed to reproduce in probe fixtures.** Finding 3 collapsed against a control this morning;
+finding 1 did not reproduce here on EITHER doctrine version, though pilot #5's QM sailed past
+twice. The common cause is not doctrine, it is the FIXTURE - 12 seams in one file,
+plank-inventory ready-made in RIGGING.md rather than derived, no voyage context, single-purpose
+legs. **Probe states may be systematically too clean to reproduce pilot-scale faults**, which
+would make the probe a weak instrument for this whole finding class and put pilot conditions in
+the only position to close them. Needs dk's read: it bears on how every future pilot finding
+gets triaged, and on whether "cheapest covering scenario" should stop defaulting to a probe.
+
+### WAVE 7 IS GATED - three items, in order
+
+1. **EFFICIENCY BATTERY, owed TWICE over (0.13.34 and 0.13.35) and NOT RUN.** The battery's own
+   text: "After shipping a doctrine version, BEFORE ANY PILOT WORK." Wave 7 is pilot-class work,
+   so this is a literal precondition, not a preference. Could not run this session: CHANNEL (this
+   process started 17:23:51, 0.13.34 installed 17:37:52 and 0.13.35 later still, so plugin
+   resolution is snapshotted stale) and MODEL TIER (dk's rule - probes run on sonnet, and pinning
+   alone does not hold because the async-resumption leak sends a pinned leg to the SESSION model
+   at its first nested-child resumption; this session is opus).
+   **FIRST ACTION IN A RESTARTED SONNET SESSION.**
+2. **0.13.34 and 0.13.35 have NEVER run on the installed-plugin channel.** Every leg today was
+   HEAD-text. The plugin-channel confirmation for both ships is owed and rides the same restart.
+3. **Orphan-class hook: dk's ruling still owed, nothing shipped.** Design NOT built, deliberately:
+   it would be a PreToolUse Bash deny in bash-custody.sh, and a too-broad wait-class pattern
+   breaks legitimate commands across every voyage, with dk's own prior disposition warning this
+   area is whack-a-mole. Shown before pushed, not after.
+
+Also open and unchanged: the planks-check.sh hook has finding 1's gap MECHANICALLY (tests only
+that a changed file carries some @planks( token, never its form); closing it there means running
+the project runner from a SubagentStop hook - stack-specific, wide blast radius, and reaches
+plugin consumers only, never the skills-vendor channel yoink uses. Doctrine went first.
+yoink gate 2-of-3 (green @eval landed; custody + push outstanding, NO git remote in that repo).
+
 ## 2026-07-19 (opus session, continued): SCALE VARIANT + CONTROL - finding 3's economy claim RETIRES; efficiency battery QUEUED, not run
 
 The variant owed this morning, run with a proper control. Numbers in METRICS.md "Plank-join

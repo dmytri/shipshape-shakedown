@@ -1473,3 +1473,48 @@ benefit - now tested rather than asserted.** Finding 3's economy claim RETIRES. 
 pilot observation stays on the board as pilot-conditions-only: real projects spread planks
 across files, must DERIVE `plank-inventory` rather than read it ready-made from RIGGING.md, and
 carry voyage context into the leg. The next pilot answers it; another probe will not.
+
+## 0.13.35 finding-1 regression + 0.13.34 control (2026-07-19, sonnet-pinned, HEAD-text), banked under data/finding1-0.13.35/
+
+0.13.35 (5616ed0, tests 5/5) named the malformed plank in QM's re-derivation clause and folded
+the join into step 5's existing pass. Validated against a control. State: twscale (12 seams, 3
+malformed planks among 9 correct, 6-target watch, suite GREEN, uncommitted role-advanced diff),
+fresh QM dispatched THIN at role+base-commit only - finding 1's exact shape. Control arm same
+state, 0.13.34 skill text from 99c6002.
+
+| Arm | Caught | Routed to | Inv | Cache | Out | Wall |
+|---|---|---|---|---|---|---|
+| 0.13.35 | 3/3 | **Crew**, 3 parallel mates, seams in hand | 11 | 561k | 8.0k | 94s |
+| 0.13.34 control | 3/3 | **Shipwright at harbour**, deferred | 12 | 645k | 4.0k | 101s |
+
+**BOTH arms caught all three. 0.13.35 is NOT the difference between catching and missing, and
+the prediction that a 0.13.34 QM would sail past a green watch was WRONG.** The control ran the
+join on its own initiative.
+
+**The real delta is ROUTING, and it is a genuine fault.** The control deferred on the reasoning
+"None of these seams sit in a role-advanced diff this voyage, HEAD matches base commit unmoved."
+Tree verified in both arms: `M src/tide.js`. HEAD is unmoved, but the working tree carries
+exactly the role-advanced diff and the malformed planks sit inside it. The control conflated
+"HEAD unmoved" with "no role-advanced work" and sent in-hand Crew work to harbour - the seam
+leaves Crew's hands and the malformed plank ships. 0.13.35 routed it correctly.
+
+**META-FINDING, and the most important result of the day: this is the SECOND CONSECUTIVE pilot
+finding that fails to reproduce in a probe fixture.** Finding 3 (plank-join waste) collapsed
+against a control this morning; finding 1 (QM sails past a malformed plank on a green watch)
+did not reproduce here, on EITHER doctrine version. Pilot #5's QM did sail past, twice. Neither
+of mine did. Common cause is not the doctrine - it is the fixture: 12 seams in ONE file,
+`plank-inventory` sitting ready in `RIGGING.md` rather than derived, no voyage context, a
+single-purpose leg with nothing else in hand. **Probe states may be systematically too clean to
+reproduce pilot-scale faults.** If so, the probe is a weak instrument for this finding class and
+pilot conditions are the only place these close. This belongs on the board above either
+individual result.
+
+0.13.35 is KEPT: the clause genuinely listed two cases where three belong, and the control
+demonstrated a real consequence. But its validation is weaker than claimed at ship time, and it
+was shipped against a finding that does not reproduce. Both facts recorded.
+
+Leg notes: control ran SIX separate focused runs where step 5 requires ONE batched invocation -
+a rule present in BOTH versions, so leg variance, classified N, not doctrine. Fixture defect
+found by the 0.13.35 arm and owned (tw17 class, fixture wrong/role right): scenario titled "A
+modest range is not a spring tide" asserts `"true"`, and 3.8 exceeds the 3.5 threshold, so the
+TITLE is wrong. QM flagged it for visibility and correctly refused to alter spec text.
