@@ -89,6 +89,24 @@ ran on a previous exe.dev VM whose disk is gone. No cleanupPeriodDays configured
 in-repo copy dies exactly the way the transcripts died - only committed-and-pushed
 content survives VM replacement. AGENTS.md corrected accordingly.
 
+ADDENDUM 2 same day, backup search via ~/swamp (dk's ask) - DISCHARGED, verdict
+definitive both ways: (1) pilot #4 is UNRECOVERABLE from backups - the BorgBase
+account holds 7 repos and none was written between 2026-05-06 and 2026-07-15;
+the old VM never backed up (vykar was first configured on THIS VM 07-15 ~14:07,
+first snapshot 07-15 13:58, host telnik, and that earliest snapshot contains no
+.claude/projects at all). (2) Going FORWARD the exposure is largely closed
+without committing raw jsonl: vykar backs up all of /home/exedev to BorgBase
+(repo ticumlna) on a frequent cron, .claude/projects included (verified in the
+latest snapshot: 203 entries incl. the wave transcripts), retention
+24h/7d/4w/6m - so raw transcripts that live >1 backup interval on this VM are
+reachable for ~6 months via `vykar restore`/`vykar snapshot find`, surviving VM
+replacement (recovery workflow exists in ~/swamp). Revised banking
+recommendation: commit the THIN layer only (per-leg mine.sh summaries + P/N/Neg
+folds in data/, KBs); rely on BorgBase for raw-transcript reach; drop the
+commit-gzipped-raw idea. Caveat that keeps the thin layer mandatory: BorgBase
+retention thins to monthly after 4 weeks, and anything needed past ~6 months or
+analysis-ready must be in the repo.
+
 ## 2026-07-18 (sonnet session, same day as wave 6): efficiency battery + 0.13.32 spot-validation run, MIXED gate, two findings routed, wave-7 deferred on dk's word
 
 Entry: dk asked for /shakedown pilot; deck check showed both queue items (efficiency
