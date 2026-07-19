@@ -79,6 +79,16 @@ ruling owed on the two RIGGING.md findings (Dependencies slot, gplint lint-slot)
 wave-7 A/B/C on dk's nod; pilot #5 owed at integration scale. NEW routed question:
 raw-transcript banking policy (above).
 
+ADDENDUM 2026-07-19, cause CONFIRMED on dk's question ("is it a vm-cleanup of
+tmp?"): NO - neither /tmp cleanup nor app pruning. Filesystem birth times: this
+home dir 07-14 17:36, both repo clones 07-15 13:07/13:31 - **this VM is younger
+than pilot #4**. The transcripts were never here; pilots #1-#4/GOAL-2/waves 1-5
+ran on a previous exe.dev VM whose disk is gone. No cleanupPeriodDays configured
+(default ~30d), so single-VM retention was never the problem. Also explains wave
+6's 38-commit-stale clone. Consequence for dk's gitignore idea: a gitignored
+in-repo copy dies exactly the way the transcripts died - only committed-and-pushed
+content survives VM replacement. AGENTS.md corrected accordingly.
+
 ## 2026-07-18 (sonnet session, same day as wave 6): efficiency battery + 0.13.32 spot-validation run, MIXED gate, two findings routed, wave-7 deferred on dk's word
 
 Entry: dk asked for /shakedown pilot; deck check showed both queue items (efficiency

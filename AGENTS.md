@@ -52,10 +52,13 @@ nothing else (no notes, no fixtures, no scratch).
    on EVERY task-notification immediately - tree-diff alone missed a stalled QM
    for ~25m (pilot #2).
    Transcripts live at `~/.claude/projects/<proj>/<session>/subagents/agent-*.jsonl`
-   but the old "DURABLE, nothing needs harvesting" claim is FALSE (2026-07-18:
-   everything before 07-15 was pruned - pilot #4, the GOAL-2 14-leg session, waves
-   1-5 raw transcripts all gone; observed retention ~3-4 days or a VM lifecycle
-   event). Mine every leg SAME-SESSION and bank every number a future analysis
+   but the old "DURABLE, nothing needs harvesting" claim is FALSE (2026-07-18/19:
+   pilot #4, the GOAL-2 14-leg session, and waves 1-5 raw transcripts are all
+   gone; cause CONFIRMED 07-19 as VM mortality, not pruning - this home dir was
+   born 07-14 17:36, both repo clones 07-15, so that work ran on a previous
+   exe.dev VM whose disk is gone; no cleanupPeriodDays configured. gitignored
+   or otherwise uncommitted local copies die the same way - only content pushed
+   to origin survives). Mine every leg SAME-SESSION and bank every number a future analysis
    could need in METRICS.md/CAPTAIN.md; raw-transcript re-analysis (P/N/Neg fold,
    inbound.py, plan.py, retrieval graph) is only possible within the window.
 6. **IEPE**: analyse the instruction as the execution trajectory it produces, per
