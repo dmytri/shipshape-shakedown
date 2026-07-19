@@ -1438,3 +1438,38 @@ scale variant (10+ planks, several stale), which finding 3 still owes.
 Probe-design caveat on record: C's uncommitted hunk is a docblock-only plank edit, whereas
 A/B/D's is the `tideRange` seam addition. The join test is like-for-like; the invocation
 comparison C-vs-A/B/D is not exactly.
+
+## Plank-join SCALE variant + 0.13.33 control (2026-07-19, sonnet-pinned, HEAD-text), banked under data/plankjoin-scale/
+
+The variant owed by the 0.13.33 probe's finding 3. State: 12 planked seams, 6 touched by an
+uncommitted Crew-shaped diff, 3 faulty planks of DISTINCT kinds among 9 correct ones - stale
+parameter (`{date}`), keyword-form fault, wording drift - suite GREEN, so the join is the only
+detector for all three. Control arm: same state rebuilt in 0.13.33 keyword-led form, same three
+fault kinds, dispatched against 0.13.33 skill text extracted from bc731e4 (doctrine served
+verified per arm: control carries `led by that definition`, 0x `never carried into the plank`).
+
+| Arm | Planks | Faults | Inv | Cache | Out | Wall | Failed extraction attempts |
+|---|---|---|---|---|---|---|---|
+| 0.13.34 | 12 | 3/3 caught | 6 | 245k | 5.2k | 52s | **0** |
+| 0.13.33 control | 12 | 3/3 caught | 8 | 386k | 10.1k | 104s | **0** |
+
+Both arms PASS: all three faults named and distinguished by kind, the three touched-but-correct
+seams cleared, guard clauses correctly ruled within Crew's contract, no commit, no stage, no
+recheck, tree facts verified after both.
+
+**VERDICT: pilot #5 finding 3's economy claim is NOT REPRODUCIBLE under controlled conditions,
+in either doctrine version.** Zero join trial-and-error in BOTH arms at 6x the plank count that
+failed to reproduce it at n=2 this morning. The ~27 N cluster does not arise from the doctrine
+text in a fixture.
+
+**The 6-vs-8 delta is NOT claimed as a win.** n=1 per arm, inside the spread of every leg today
+(0.13.34: 6/8/9; 0.13.33: 8/9/8, overlapping). The control's extra invocations went to runrecord
+hunting and feature-file reading, NOT to the join, and it spent 10.1k out vs 5.2k producing a
+richer per-hunk recheck-selection table - more REPORTING work, not more JOIN work. Reading that
+as an efficiency win is the error class this harness exists to catch.
+
+**0.13.34 therefore stands as a correctness and decidability fix with no measured economy
+benefit - now tested rather than asserted.** Finding 3's economy claim RETIRES. The underlying
+pilot observation stays on the board as pilot-conditions-only: real projects spread planks
+across files, must DERIVE `plank-inventory` rather than read it ready-made from RIGGING.md, and
+carry voyage context into the leg. The next pilot answers it; another probe will not.

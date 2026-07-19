@@ -1,5 +1,46 @@
 # Captain notes - shipshape-shakedown workstream
 
+## 2026-07-19 (opus session, continued): SCALE VARIANT + CONTROL - finding 3's economy claim RETIRES; efficiency battery QUEUED, not run
+
+The variant owed this morning, run with a proper control. Numbers in METRICS.md "Plank-join
+SCALE variant + 0.13.33 control", banked `data/plankjoin-scale/`. 12 seams, 3 faults of
+distinct kinds among 9 correct planks, suite green so the join is the only detector; control
+arm rebuilt in 0.13.33 form against 0.13.33 skill text from bc731e4, doctrine served verified
+per arm.
+
+**Both arms PASS 3/3. ZERO join trial-and-error in EITHER arm** - at 6x the plank count that
+failed to reproduce it at n=2. **Pilot #5 finding 3's economy claim is not reproducible under
+controlled conditions and RETIRES.** The 6-vs-8 invocation delta is explicitly NOT claimed:
+n=1 per arm, inside today's spread, and the control's extra invocations went to runrecord
+hunting and reporting (10.1k out vs 5.2k, a richer per-hunk recheck table), not to the join.
+
+**0.13.34 stands as a correctness and decidability fix with NO measured economy benefit -
+tested now, not asserted.** The underlying pilot observation stays on the board as
+pilot-conditions-only (real projects spread planks across files, must DERIVE plank-inventory
+rather than read it ready-made, and carry voyage context). Next PILOT answers it; no further
+probe will.
+
+**EFFICIENCY BATTERY: OWED for 0.13.34, QUEUED, NOT RUN - and it could not honestly run in
+this session on two counts.** (1) CHANNEL: battery is specified on the installed-plugin
+channel; 0.13.34 installed 17:37:52 but this session's process started 17:23:51, so plugin
+resolution is snapshotted at 0.13.33 - subagents serve stale text. (2) MODEL TIER: dk's
+2026-07-13 rule is that probes run on sonnet and pinning alone is NOT enough, because the
+async-resumption leak sends a pinned leg to the SESSION model at its first nested-child
+resumption; this session is opus, so battery legs with nested spawns (fast-path-bootstrap,
+slow-census) would escalate and be void by that rule. Today's legs were unaffected: all
+single-role Boatswain custody, no nested children, nothing could escalate.
+**FIRST ITEM FOR A RESTARTED SONNET SESSION.**
+
+STILL OPEN, needing dk's ruling and no further run: finding 1 (malformed plank on a green watch
+does not reach a fresh QM - 0.13.34 ENLARGED its population) and the orphan/wait class (one
+reproduction in ~6 runs, disposition already on record). Also open: wave-7 yoink gate, now
+2-of-3 (green @eval landed - Pi blocks on a piped stdin, execFile forces stdio pipe; fix is
+spawn with stdin ignored; exit 0 / 66.5s / 7.2MB session vs SIGTERM / 360s / zero bytes) with
+custody and push outstanding and NO git remote configured in that repo. Cross-model WATCH:
+yoink Captain moved Terra -> DeepSeek, but the swap is confounded (predecessor left the exact
+narrowing diagnostic written down, doctrine re-vendored same morning, different task phase) -
+no verdict at n=1, dk parked the comparison.
+
 ## 2026-07-19 (opus session, continued): 0.13.34 SHIPPED on dk's word - the plank keyword dropped, clean break, re-validated same-session
 
 dk's call on the plank-join finding: match the step-definition pattern as-is. Investigated
