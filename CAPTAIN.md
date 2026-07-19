@@ -39,6 +39,56 @@ failed to reproduce in probe fixtures. If probe states are systematically too cl
 covering scenario" is pointing at the wrong instrument, and that bears on wave 7's design.
 <!-- =================== END PRIMED ORDER =================== -->
 
+## 2026-07-19 (opus session, continued): CONSUMER FINDING from yoink's latest opencode Captain session (dk's pointer) - Captain's opening CLASSIFIES but never PROPOSES
+
+dk: "the captain doesn't really seem like they know what they are supposed to do, even tho stuff
+is uncommitted and there are @captain scenarios." Read the session from opencode's SQLite store
+(~/.local/share/opencode/opencode.db, session ses_084460ef "Captain"). Evidence, then the reading.
+
+**What it did well, on record:** loaded shipshape then captain; batched retrieval correctly (one
+glob + one grep + git status, then three reads - no per-file round trips); reported the deck
+ACCURATELY (uncommitted RIGGING.md, .rgignore, features/shipshape-conformance.feature with
+@captain scenarios, no watchbill); wrote nothing without approval; asked before making a durable
+plan. On dk's "what do you think?" it produced a correct assessment and the RIGHT plan in one
+pass - promote the two conformance skeletons, then watchbill the Pi fix plus both eval scenarios
+- and independently caught that `typecheck` covers only src/cli.ts.
+
+**The miss: its opening move was an open-ended discovery question** ("What product behaviour do
+you want to specify or change?") **on a deck where FOUR durable signals already named the work:**
+(1) dirty tree carrying harbour output in flight; (2) two unresolved `@captain @conformance`
+skeletons owing captain:102's three-disposal review; (3) no watchbill; (4) CAPTAIN.md carrying a
+DIAGNOSED root cause with a written next step (the Pi stdin deadlock, execFile forcing a piped
+stdin, fix = spawn with stdin ignored). captain:38 requires it to settle standing state from
+those signals and "classify all applicable situations: discovery, spec maintenance, blocker
+resolution, unready working tree, post-Boatswain outbound". It RETRIEVED every signal and
+REPORTED them, then classified none - handing the decision back to the user as discovery.
+
+**Candidate seam, routed, NOT shipped: Captain's opening classifies but never proposes.** The
+skill's default posture is discovery (captain:18 "Discovery is open-ended exploration. Do not
+jump to writing specs"), and no rule says a deck that already names its work is NOT a discovery
+situation. The capability is demonstrably present - one nudge produced the right plan - so this
+is an OPENING-POSTURE gap, not a competence gap. Note the shape that is missing already exists
+in this harness's own operator cockpit: /shakedown reports the deck in two lines, PROPOSES a
+scope, then asks ONE question. The cockpit does what the doctrine does not.
+
+Confounds stated: n=1; yoink vendors 0.13.33 (0.13.34 marker absent), predating both of today's
+ships, though neither touched Captain's opening; DeepSeek; opencode/no-hooks channel.
+
+NOT SHIPPED and deliberately queued: 0.13.34 and 0.13.35 are both still unvalidated on the
+plugin channel, and a third unvalidated ship would compound that. This waits behind the battery.
+Related instrument-1 datum for whoever picks it up: the opening block was already measured
+falling 12.9% -> 7.5% of inbound across the 0.13.24-0.13.33 work, so the opening is a section
+that has been tuned for COST; this finding says it also needs tuning for POSTURE.
+
+Also observed in that tree, no action taken: yoink's fit-out has advanced well since this
+morning - @eval committed (14eebf2), RIGGING step-usage/plank-inventory/typecheck slots now
+POPULATED where they were `none`, and eight dependency lines recorded, the 0.13.33
+recording-routes-with-installation rule visibly working in a real consumer. One gap worth a look
+when someone is next in there: plank-inventory is a token search (`rg -n '@planks...'`) and
+`conformance: none`, but the Planking agreement requires that where plank-inventory falls back
+to token search, the verification-conformance rule set MUST carry two plank rules, each proven
+red by a plant. That obligation is currently unmet.
+
 ## 2026-07-19 (opus session, continued): 0.13.35 SHIPPED and validated against a control - and the META-FINDING that gates how this harness reads its own pilot findings
 
 0.13.35 (5616ed0, tests 5/5, pushed, installed) on dk's "proceed" over the recommendation set.
