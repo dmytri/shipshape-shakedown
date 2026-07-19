@@ -1,5 +1,36 @@
 # Captain notes - shipshape-shakedown workstream
 
+## 2026-07-19 (sonnet session, continued): PILOT #5 RETROSPECTIVE FOLD (dk's "eval pilot") - the fold done SAME-SESSION while the raw data exists, closing the loop pilot #4's lost transcripts opened
+
+Full numbers in METRICS.md "Pilot #5 retrospective fold". What a fresh session needs:
+
+1. **P/N/Neg complete, 720/720 classified, ledger closes exactly**: 611 P / 104 N / 5 Neg,
+   fleet worth density 83.9% - the best fleet density of any large wave on record (wave 3:
+   ~88% positive count on 332 inv but no density; pilot #4: permanently unfoldable). The 5
+   Neg are exactly the run's already-known faults (2 misplaced initial Writes, 3 unscoped-rg
+   slips) - the fold found no NEW negative class, which is itself evidence the run-time
+   report was honest.
+2. **ONE new finding only the fold could see, routed to dk with the other two: the plank-join
+   is trial-and-error, ~27 N invocations across 3 legs (the largest N cluster in the pilot).**
+   Doctrine states the join, no example command exists, so every Boatswain/QM reinvents the
+   @planks-string extraction with 5-7 failed rg/grep/node variants. Candidate: an example
+   command or a derived RIGGING.md slot for the join. This joins finding 1 (foul-survives-
+   lost-caller gap) and finding 2 (unscoped-rg bulkhead slips) on dk's board - all three
+   unshipped, awaiting his word.
+3. **Instrument 1 at pilot scale: THE JOB is 36.7% of inbound tokens, vs 15.6% at v0.13.23** -
+   boilerplate down from 84% to 63.3%, opening block nearly halved (12.9% -> 7.5%),
+   compilable waste 11.0% (was 14.7%). The 0.13.25 plugin-prefill + 0.13.24-0.13.33 text work
+   measurably collected the economy the IEPE recompile alone could not. Doctrine-share trend
+   is the number to watch across future pilots.
+4. Operator mis-dispatch priced: the pre-clean/post-implementation confusion cost ~14 inv /
+   ~780k cache (boatswain-preclean at 20% density, its hygiene wholly re-derived by the
+   correct redispatch). Dispatch `job:` values matter; pre-clean never commits.
+
+Method caveat on record: classification is sonnet-judgment over banked audits (command column
+truncates ~70 chars); totals and cache ledger exact, borderline calls not. Fold delegated to 4
+parallel classifiers, chain context supplied, reconciled to the standing skill-loads-are-P
+convention before aggregation.
+
 ## 2026-07-19 (sonnet session): PILOT #5 RUN - FULL PASS in 3 clean iterations, zero regressions, the cleanest pilot to date. Two findings routed, none shipped.
 
 Entry: `/shakedown pilot`. Deck check: this repo and `~/shipshape` both clean/level with origin;

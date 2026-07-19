@@ -222,6 +222,69 @@ of a 9-leg voyage-1 chain incl. 8 nested Crew mates), boatswain-voyage1-foul (44
 plank catch). Model split: sonnet 720/720 invocations, zero leak, verified per-leg via
 `message.model`.
 
+### Pilot #5 retrospective fold (2026-07-19, same-session, dk's "eval pilot") - the fold pilot #4 lost, done while the data exists
+
+**P/N/Neg, all 720 invocations classified** (delegated to 4 parallel sonnet classifiers over the
+banked per-invocation audits, chain context supplied, skill-load convention reconciled to the
+standing all-P rule; cache ledger closes exactly at 55,787,475 = the banked total):
+
+| Chain | Inv | P | N | Neg | Worth density |
+|---|---|---|---|---|---|
+| Voyage-1 build (Captain, QM, 8 Crew) | 304 | 276 | 26 | 2 | 90% |
+| Custody/foul chain (2 QM, Crew, 4 Boatswain, Captain) | 182 | 136 | 44 | 2 | 73% |
+| Iteration 2 (Captain, QM, 2 Crew, Boatswain) | 125 | 101 | 23 | 1 | 80% |
+| Iteration 3 (Captain, QM, Crew, Boatswain) | 109 | 98 | 11 | 0 | 88% |
+| **FLEET** | **720** | **611** | **104** | **5** | **83.9%** (84.9% positive by count) |
+
+The 5 Neg are exactly the run's known faults, no new ones: 2 = crew-new-todo-foundation writing
+`index.html`/`app.js` at project root (the relocate rework's cause), 3 = the unscoped-`rg`
+bulkhead slips (finding 2). Leg extremes: crew-todo-editing, crew-new-todo-persist, crew-iter3-fix
+and qm-refused-contamination at 100% density; boatswain-preclean-nocommit at 20% (the operator
+pre-clean mis-dispatch, priced: 11 of 17 invocations re-derived wholesale by the next leg, ~14 inv
++ ~780k cache wasted); boatswain-voyage1-foul at 69% (real catch, expensive hunt - see below).
+
+**NEW pattern the run-time report missed, visible only in the fold: plank-join extraction is
+trial-and-error, ~27 N invocations across 3 legs (boatswain-voyage1-foul 14, boatswain-recheck 6,
+qm-voyage1 8).** Each leg that runs the plank join reinvents the `@planks`-string-to-step-pattern
+extraction with 5-7 failed `rg`/`grep`/node-parse variants before landing one that works. The
+doctrine states the join ("every `@planks` string is one of the step-definition patterns
+`step-usage` reported") but derives no command shape for it - and "what binds: examples, not
+prose" is this harness's own oldest lesson. Candidate (routed, not shipped): give the join an
+example command or a derived `RIGGING.md` slot. This is the single largest N cluster in the pilot.
+
+**Instrument 1 (inbound weight), fleet-exact, ledger closed:** THE JOB is **36.7%** of the 58.4M
+tokens read - vs **15.6%** at the v0.13.23 baseline; boilerplate (shared Articles 29.1% + role
+skills 9.0% + harness floor 25.1%) is down from 84% to **63.3%**. Shared Articles' share fell
+36.9% -> 29.1%, floor 33.5% -> 25.1%, role skills 14.0% -> 9.0%. Per-role JOB share: QM 44.3%,
+Boatswain 38.9%, Captain 37.8%, Crew 24.5% (Crew still reads ~25.6k of shared Articles to do a
+job that is a quarter of its context - the Crew-offcut question from GOAL 2 stands, still minor).
+Mean context per invocation, fleet: 77.5k (heaviest: boatswain-recheck 106k, qm-voyage1 106k,
+captain-voyage1 100k; lightest full leg: crew-relocate 47k).
+
+**Retrieval-plan (plan.py), fleet:** compilable waste **11.0%** (79 of 720; opening block 7.5% +
+independent runs 3.5%) - down from 14.7% at the GOAL-2 baseline, with the opening block nearly
+halved (12.9% -> 7.5%): the 0.13.25 plugin-prefill lever partially collected what the IEPE
+recompile could not. Worst legs by waste%: boatswain-iter2-custody 38% (a 7-call and two 3-call
+independent runs), qm-refused 33% (floor effect, 3 inv), boatswain-preclean 29%. Best: the 8
+voyage-1 Crew mates at 1-10%.
+
+**Class tally deltas (fold into the running tally):** opening skill reads +54 P (2/leg x 27, all
+consumed); plank-join extraction trials +27 N (NEW class, 0% worthiness, merge candidate - see
+above); redundant confirmation runs +18 N (qm-fresh-rederivation's 7 per-watch re-greens of
+already-proven scenarios + boatswain-preclean's 11 re-derived hygiene invocations - both charged
+to their causes, the finding-1 doctrine gap and the operator mis-dispatch, not to role
+discipline); polls +7 N (5 tiny Captain PROJ-echo polls, 1 QM wait placeholder, 1 Boatswain ps
+check); redundant re-reads +15 N; unscoped-search bulkhead slips +3 Neg (finding 2); misplaced
+initial Writes +2 Neg; commits +4 P (61014cb, f073bf2, 9362b7b, e3301ad, 837e810 - 5 commits, 4
+custody + 1 Captain bootstrap); contamination refusals +1 P (qm-refused, 100% density at 3 inv -
+the cheapest correct leg in the pilot).
+
+**Caveat, stated plainly:** the P/N/Neg classification is judgment over banked audits whose
+command column truncates at ~70 chars (classifiers used output-size and cache-growth signals for
+opaque rows and verified the rework chain end-to-end); the chain totals and cache ledger are
+exact, individual borderline calls are not. Same method as every prior fold, now stated
+explicitly.
+
 ## 0.13.27/0.13.28 blast-radius probes (2026-07-14, sonnet, HEAD-text, tw17/tw18)
 
 Three Boatswain custody legs on the pilot-#4 regression reproduced as a state. HEAD-text mode
