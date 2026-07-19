@@ -1,0 +1,14 @@
+# source: /tmp/claude-1000/-home-exedev-shipshape-shakedown/2bde5324-0ae2-432c-8d49-6b69a3429acb/tasks/ab78d51de9f4d094d.output
+# banked: 2026-07-19T20:14:52Z
+plankroute-B3	1	20:12:17	15575	276	Read:SKILL.md ||| Read:SKILL.md
+plankroute-B3	2	20:12:22	20013	368	Read:SKILL.md ||| Bash:pwd && ls -la && git status 2>&1 | head -50
+plankroute-B3	3	20:12:27	48110	259	Bash:cat RIGGING.md && echo "---WATCHBILL---" && cat watchbill.json && echo
+plankroute-B3	4	20:12:34	55120	662	Bash:echo "=== feature ===" && cat features/tide-range.feature && echo "===
+plankroute-B3	5	20:12:41	56043	482	Bash:grep -rn "Given\|tide table\|@planks" features/support src 2>/dev/null
+plankroute-B3	6	20:12:45	57310	301	Bash:GIT_INDEX_FILE="$(mktemp)" bash -c 'git read-tree HEAD && git add -A .
+plankroute-B3	7	20:13:01	58054	1446	Bash:echo "=== discover ===" && npx cucumber-js --dry-run --tags "not @capt
+plankroute-B3	8	20:13:08	58383	293	Bash:npx cucumber-js --dry-run --format usage-json --tags "not @captain and
+plankroute-B3	9	20:13:32	60844	5	Read:tide.js
+plankroute-B3	10	20:13:51	61491	1667	Bash:grep -rn "@captain\|@shipwright" features 2>/dev/null; echo "done"
+plankroute-B3	11	20:14:07	63436	1	
+SUMMARY	plankroute-B3	invocations=11	cache_read=554379	out=5760	wall=20:12:17 to 20:14:07

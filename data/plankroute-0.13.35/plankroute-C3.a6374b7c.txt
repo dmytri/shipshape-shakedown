@@ -1,0 +1,15 @@
+# source: /tmp/claude-1000/-home-exedev-shipshape-shakedown/2bde5324-0ae2-432c-8d49-6b69a3429acb/tasks/a6374b7c68ade2346.output
+# banked: 2026-07-19T20:16:31Z
+plankroute-C3	1	20:14:19	15299	76	Skill:
+plankroute-C3	2	20:14:24	19465	78	Skill:
+plankroute-C3	3	20:14:27	26848	254	Bash:cat RIGGING.md 2>&1; echo "---WATCHBILL---"; cat watchbill.json 2>&1; 
+plankroute-C3	4	20:14:32	52739	322	Bash:echo "---FEATURE---"; cat features/tide-range.feature; echo "---LS FEA
+plankroute-C3	5	20:14:36	53656	510	Read:range_steps.js ||| Read:steps.js ||| Read:tide.js ||| Read:tides.feature
+plankroute-C3	6	20:14:42	54134	400	Bash:grep -rn "@planks" src; echo "---git log tide.js---"; git log --onelin
+plankroute-C3	7	20:14:47	55746	206	Bash:rg -n "@planks" src; echo "---git log tide.js---"; git log --oneline -
+plankroute-C3	8	20:14:51	56317	342	Bash:git diff -- src/tide.js; echo "---runlog---"; cat features/support/run
+plankroute-C3	9	20:14:59	56843	699	Bash:ref="features/tide-range.feature:Daily tide range is computed"; npx cu
+plankroute-C3	10	20:15:04	57629	236	Bash:echo "---plank-inventory---"; grep -rn "@planks" src; echo "---step-us
+plankroute-C3	11	20:15:07	58463	278	Bash:echo "---plank-inventory (rg)---"; rg -n "@planks" src; echo "---step-
+plankroute-C3	12	20:15:39	58870	3972	
+SUMMARY	plankroute-C3	invocations=12	cache_read=566009	out=7373	wall=20:14:19 to 20:15:39

@@ -9,8 +9,15 @@ the "2026-07-19 (sonnet session): EFFICIENCY BATTERY 0.13.35" entry below and ME
 
 **NEXT, in order, per the prior order's own "after the battery" sequence:**
 1. **dk's ruling owed on THREE findings, none shipped, all evidenced:**
-   - **HIGH (tw4)**: QM misrouted a missing plank on its own touched watch-target to harbour
-     instead of Crew — reproduced, doctrine text quoted both ways in the METRICS.md entry.
+   - **~~HIGH~~ MEDIUM (tw4) — PROBED, mechanism CORRECTED, candidate fix RETIRED.** See
+     `designs/plankroute/results.md`. 12 legs A/B/C. The reorganization fix is a NULL RESULT
+     against its own control (4/4 vs 4/4) and **ships nothing**. The fault is real but rare
+     (1/12, installed channel only) and my battery write-up **mis-described its mechanism**: the
+     QM does not pick the wrong rule, it applies the right rule to an input it inferred rather
+     than ran (`"HEAD is base, nothing dispatched yet"` with `M src/tide.js` in the tree, zero
+     working-tree commands). Doctrine already forbids that inference (report-fidelity rule), so
+     this is ~8% compliance, not a text gap. If hardened at all, the candidate is check-precedence
+     on the routing input, not more prose — and it owes its own probe.
    - **MEDIUM (tw13)**: `shipshape/SKILL.md:354` vs `:360` CONTRADICT for the multi-agent case
      (354 forbids ending a turn waiting on another agent and forbids ending outside a final
      report; 360 requires exactly that). Live evidence: tw13's QM burned 5 filler invocations
@@ -73,6 +80,48 @@ doctrine contradiction between `SKILL.md:354` and `:360` for the multi-agent cas
 "self-devised turn-bridging" the run-time report called it. Full text in METRICS.md finding 3.
 The run-time characterisation was wrong and is corrected there; recording that here because this
 harness's own rule is that the fold sees what the run does not.
+
+### Same session, continued: PLANK-ROUTING PROBED on dk's "proceed and probe in detail" — candidate fix RETIRED as a null result, and the battery finding's MECHANISM was wrong
+
+Full account `designs/plankroute/results.md`; rubric fixed BEFORE the legs reported
+(`designs/plankroute/rubric.md`); 12 legs banked `data/plankroute-0.13.35/`. State: fresh clones
+of the tw4 probe state, which discriminates both ways (`tideRange` in-diff and unplanked → Crew;
+`nextHighTide` beyond-diff and malformed → harbour), so over-correction fails as loudly as
+under-routing. All sonnet, zero nested spawns (stop-before-dispatch, so no escalation in this
+opus session), zero commits, arm-unique doctrine markers verified per arm.
+
+**Result: A (control, HEAD-text) 4/4, B (reorganized text, HEAD-text) 4/4, C (control, installed
+plugin) 3/4.** Per the rubric's own pre-stated rule, both arms at 4/4 is a NULL RESULT and the
+reorganization SHIPS NOTHING. Cost flat too (A 9.25 inv mean, B 8.75, inside noise). The
+four-site change dk flagged as "big" buys nothing measurable — dk's instinct was right.
+
+**The fault is real, reproduced 1/12, installed channel only — and I described it wrongly in the
+battery entry.** C4's own words: "Neither seam was touched by this voyage's diff (HEAD is base,
+nothing dispatched yet)". It ran ZERO working-tree commands and inferred no-diff-exists from
+HEAD==base while `git status` carried `M src/tide.js`. It then declared the watch SPENT and
+appended a green runrecord line (tree-verified: 2 lines vs 1 in every other arm-C tree) — the
+unplanked seam leaves Crew's hands with a recorded green behind it. This is character-for-
+character the fault this file already recorded for the 0.13.34 control arm ("conflating an
+unmoved HEAD with no role-advanced work while the tree carried `M src/tide.js`") — second
+independent observation, same mechanism.
+
+So the battery's HIGH finding was right that a fault exists and **wrong about what it is**: the
+QM does not pick the wrong rule between :125 and :296. It reaches the right rule, asks exactly
+the question arm B's text tells it to ask, and answers it from evidence it never ran. That is
+why arm B cannot fix it, and the numbers agree. Doctrine ALREADY bans the move (Hand-off
+custody: a tree claim is "the output of a command the role ran, never a recollection and never
+an inference"), so this is a ~8% compliance failure, not a text gap — and text is the only thing
+new text fixes. Downgraded HIGH → MEDIUM, mechanism corrected, candidate fix retired.
+
+Caveat kept honest: n=2 failures total (tw4, C4) reached harbour by two DIFFERENT rationales
+(dead-code classification; HEAD-vs-base inference), so neither is established as *the* mechanism.
+And A/B-vs-C is confounded by channel plus the HEAD-text preamble's "read ALL fully before doing
+anything," which plausibly suppresses the fault; only A-vs-B is a clean comparison.
+
+**This is the FOURTH consecutive finding whose probe changed or retired it** (finding 3, finding
+1, the Captain opening, now this). The probe-first question this file already routed to dk is no
+longer a nice-to-have: on today's record, probing before shipping has changed the answer every
+single time it was asked.
 
 ### Same session, continued: ORPHAN-CLASS HOOK DESIGNED AND SHOWN, NOT SHIPPED (queue item 2 discharged)
 

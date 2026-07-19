@@ -1,5 +1,40 @@
 # Metrics: how to read a shakedown
 
+## plank-routing A/B/C probe (2026-07-19, sonnet, 12 legs, dk's "proceed and probe in detail")
+
+Probes the battery's finding 1 and its candidate fix. Rubric fixed BEFORE results
+(`designs/plankroute/rubric.md`); full account `designs/plankroute/results.md`; legs banked
+`data/plankroute-0.13.35/`. State: fresh clones of the tw4 probe state, discriminating both ways
+(`tideRange` in-diff + unplanked -> Crew; `nextHighTide` beyond-diff + malformed -> harbour).
+
+| Arm | Channel | Text | P1 in-diff->Crew | P2 no over-correction | Inv mean | Cache mean |
+|---|---|---|---|---|---|---|
+| A control | HEAD-text | current 0.13.35 | **4/4** | 4/4 | 9.25 | 443k |
+| B candidate | HEAD-text | reorganized on location | **4/4** | 4/4 | 8.75 | 417k |
+| C control | installed plugin | current 0.13.35 | **3/4** | 4/4 | 10.75 | 494k |
+
+All 12: sonnet, zero nested spawns, zero commits, arm-unique doctrine marker verified per arm.
+
+**A 4/4 vs B 4/4 = NULL RESULT; the reorganization ships nothing**, per the rubric's own
+pre-stated rule. Cost delta inside noise, so no economy claim either.
+
+**The fault reproduced 1/12 (C4), installed channel only, and the battery's stated mechanism was
+WRONG.** C4: "Neither seam was touched by this voyage's diff (HEAD is base, nothing dispatched
+yet)" - zero working-tree commands run, while `git status` carried `M src/tide.js`. It then
+declared the watch SPENT and appended a green runrecord line (tree-verified, 2 lines vs 1
+elsewhere). The QM does not choose the wrong rule between :125 and :296; it reaches the right
+rule and computes its input by inference. Arm B therefore cannot fix it - it asks the same
+question C4 already asked and answered wrongly.
+
+Doctrine already forbids the move (Hand-off custody: a tree claim is "the output of a command the
+role ran, never a recollection and never an inference"), making this ~8% compliance rather than a
+text gap. Downgraded HIGH -> MEDIUM. If hardened, the candidate is check-precedence on the
+routing input (`git status`/`git diff HEAD`, never HEAD-vs-base), a smaller and different change
+that owes its own probe.
+
+Limits: n=4/arm, 1 failure total; A/B-vs-C confounded by channel and by the HEAD-text preamble's
+"read ALL fully before doing anything"; only A-vs-B is clean.
+
 ## Efficiency battery, 0.13.35 (2026-07-19, sonnet, installed-plugin channel, discharges 0.13.34+0.13.35 both, primed-order run)
 
 Ran once per the primed order's "owed twice over, run once" (0.13.35 supersedes 0.13.34's
@@ -41,7 +76,10 @@ never as a dedicated round trip. The join did not inflate any leg's invocation c
 
 **Findings, routed to dk, nothing shipped:**
 
-1. **HIGH — reproduced, a live MISS against this exact probe's own designed PASS criterion.**
+1. **[SUPERSEDED same session — PROBED, mechanism corrected, downgraded to MEDIUM, candidate fix
+   retired as a null result. See "plank-routing A/B/C" below and `designs/plankroute/results.md`.
+   The reading below of WHY the QM deferred is wrong; it is kept verbatim as the run-time record.]
+   HIGH — reproduced, a live MISS against this exact probe's own designed PASS criterion.**
    tw4 (QM plank-gap / "unplanked-foul Leg B") is designed so PASS = "QM detects the plank gap...
    dispatches Crew with scenario ref + foul as evidence, Crew ACCEPTS the plank-only target."
    This run's QM instead ruled the missing plank on `tideRange` — the watch's OWN target, added
