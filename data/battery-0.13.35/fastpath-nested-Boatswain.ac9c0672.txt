@@ -1,0 +1,31 @@
+# meta: {"agentType":"shipshape:boatswain","description":"Boatswain post-implementation custody","toolUseId":"toolu_01VYEn17iiBGjZLdB5pEyYdH","parentAgentId":"a161f87ab089bd5c5","spawnDepth":2}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/998fa6ea-9f2b-4002-b2fa-695dce0f5a5b/subagents/agent-ac9c0672114d6053d.jsonl
+# banked: 2026-07-19T19:41:20Z
+fastpath-nested-Boatswain	1	19:35:08	13977	71	Skill:
+fastpath-nested-Boatswain	2	19:35:10	19446	78	Skill:
+fastpath-nested-Boatswain	3	19:35:14	27803	324	Bash:cat RIGGING.md && echo "---STATUS---" && git status && echo "---DIFF--
+fastpath-nested-Boatswain	4	19:35:20	53694	450	Bash:git show --stat 20638245ff1fd15fd24eccf62c2f797be8b27b5c && echo "---"
+fastpath-nested-Boatswain	5	19:35:24	54831	244	Bash:find features src -type f | sort && echo "---watchbill---" && cat watc
+fastpath-nested-Boatswain	6	19:35:27	55403	132	Read:berth-reservation.feature
+fastpath-nested-Boatswain	7	19:35:30	56140	131	Read:berth-reservation.js
+fastpath-nested-Boatswain	8	19:35:32	57009	140	Read:berth_reservation_steps.js
+fastpath-nested-Boatswain	9	19:35:34	57687	176	Bash:npm install --no-audit --no-fund 2>&1 | tail -20
+fastpath-nested-Boatswain	10	19:35:38	58531	294	Bash:npx jsdoc -X -r src > /tmp/plank-inventory.json 2>&1; echo "EXIT:$?"; 
+fastpath-nested-Boatswain	11	19:35:51	58845	919	Bash:npx biome check --write . 2>&1; echo "EXIT:$?"
+fastpath-nested-Boatswain	12	19:35:55	61306	225	Bash:npx gplint 'features/**/*.feature' 2>&1; echo "EXIT_LINT_FEATURE:$?"; 
+fastpath-nested-Boatswain	13	19:35:59	62405	283	Bash:npx jsdoc -X -r src 2>&1 | python3 -c " import json,sys data=json.load
+fastpath-nested-Boatswain	14	19:36:03	62757	168	Bash:npx jsdoc -X -r src 2>&1 | grep -o '@planks[^"]*"[^"]*"' | sort -u
+fastpath-nested-Boatswain	15	19:36:06	63419	168	Bash:npx jsdoc -X -r src 2>&1 | rg -o '@planks[^"]*"[^"]*"' | sort -u
+fastpath-nested-Boatswain	16	19:36:08	63775	227	Bash:npx jsdoc -X -r src > /tmp/plank-inv.json 2>&1 rg -o '@planks\("[^"]*"
+fastpath-nested-Boatswain	17	19:36:12	64131	271	Bash:rg -o 'planks' /tmp/plank-inv.json | wc -l rg -c 'planks' /tmp/plank-i
+fastpath-nested-Boatswain	18	19:36:16	64373	148	Bash:rg -n 'planks' /tmp/plank-inv.json | head -40
+fastpath-nested-Boatswain	19	19:36:21	64667	546	Bash:ls -la src/ && cat AGENTS.md 2>&1 | head -50 && echo "---gitignore---"
+fastpath-nested-Boatswain	20	19:36:35	65629	1042	Bash:cat .gplintrc && echo "---biome---" && cat biome.json && echo "---pkgl
+fastpath-nested-Boatswain	21	19:36:37	66399	209	Bash:npx cucumber-js features/berth-reservation.feature --tags "not @captai
+fastpath-nested-Boatswain	22	19:36:44	67916	6	Bash:git status --porcelain
+fastpath-nested-Boatswain	23	19:36:47	68242	268	Bash:git add -- .gitignore .gplintrc AGENTS.md CAPTAIN.md RIGGING.md biome.
+fastpath-nested-Boatswain	24	19:37:00	68721	1110	Bash:git rm --cached -q watchbill.json && rm -f watchbill.json && git add -
+fastpath-nested-Boatswain	25	19:37:03	69122	206	Bash:git status --porcelain
+fastpath-nested-Boatswain	26	19:37:05	70272	384	Bash:git commit -m "$(cat <<'EOF' Fit out quayline and land berth reservati
+fastpath-nested-Boatswain	27	19:37:20	70602	1169	
+SUMMARY	fastpath-nested-Boatswain	invocations=27	cache_read=1567102	out=9389	wall=19:35:08 to 19:37:20

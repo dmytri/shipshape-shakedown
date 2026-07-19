@@ -1,0 +1,11 @@
+# meta: {"agentType":"shipshape:crew","description":"Crew: implement nextLowTide seam","toolUseId":"toolu_016TBzj1hdstCHcr4ksrQzte","parentAgentId":"a26c0c7c289e5aa7b","spawnDepth":2}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/998fa6ea-9f2b-4002-b2fa-695dce0f5a5b/subagents/agent-a354d38fff9ff55a6.jsonl
+# banked: 2026-07-19T19:41:20Z
+tw13-nested-Crew-lowtide	1	19:33:09	15279	74	Skill:
+tw13-nested-Crew-lowtide	2	19:33:11	19820	78	Skill:
+tw13-nested-Crew-lowtide	3	19:33:14	24990	262	Bash:cat RIGGING.md 2>/dev/null; echo ---; cat features/low-tides.feature 2
+tw13-nested-Crew-lowtide	4	19:33:20	50881	288	Bash:cat data/tides.json
+tw13-nested-Crew-lowtide	5	19:33:24	52640	352	Edit:tide.js
+tw13-nested-Crew-lowtide	6	19:33:31	53084	161	Bash:npx cucumber-js features/low-tides.feature --tags "not @captain and no
+tw13-nested-Crew-lowtide	7	19:33:35	53577	324	
+SUMMARY	tw13-nested-Crew-lowtide	invocations=7	cache_read=270271	out=1539	wall=19:33:09 to 19:33:35

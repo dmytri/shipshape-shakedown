@@ -1,43 +1,66 @@
 # Captain notes - shipshape-shakedown workstream
 
 <!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
-## >>> NEXT SESSION: PRIMED ORDER (written 2026-07-19 by the opus session at dk's request) <<<
+## >>> NEXT SESSION: QUEUE (updated 2026-07-19 by the sonnet session that ran the primed battery) <<<
 
-**dk's standing instruction, given verbatim this session: "prime shakedown so I don't need to
-type more." That is authorization to PROCEED AUTONOMOUSLY on the scope below. Do NOT ask the
-usual one focus question - it is pre-answered here. Report the deck in two lines, then run.**
+**The primed efficiency battery (both bullets below) is DISCHARGED this session — full account in
+the "2026-07-19 (sonnet session): EFFICIENCY BATTERY 0.13.35" entry below and METRICS.md's
+"Efficiency battery, 0.13.35" section.** Do not re-run it; read the entry instead.
 
-**RUN: the efficiency battery (`scenarios/probes.md` -> "## efficiency battery"), owed TWICE
-over, for 0.13.34 (99c6002) AND 0.13.35 (5616ed0).** Its own text gates wave 7: "After shipping
-a doctrine version, BEFORE ANY PILOT WORK." Nothing pilot-class runs until this is green.
+**NEXT, in order, per the prior order's own "after the battery" sequence:**
+1. **dk's ruling owed on this session's HIGH finding** (tw4: QM misrouted a missing plank on its
+   own touched watch-target to harbour instead of Crew — reproduced, evidenced, doctrine text
+   quoted both ways in the METRICS.md entry) before any fix ships.
+2. **dk's ruling on the orphan-class hook** — still not designed, still not shown. New datum this
+   session: tw13 slow-census did NOT orphan under 0.13.35 doctrine alone (contrast the 0.13.33
+   run, filed `tw13-slow-census-ORPHAN`) — one non-reproduction, does not close the question by
+   itself.
+3. **Wave 7**, once 1-2 are ruled on.
 
-FOCUS dk has already given, fold it in: neither ship has EVER run on the installed-plugin
-channel, so this battery is also their first plugin-channel exposure. Weight the report toward
-(a) economy vs the newest baselines, and (b) whether 0.13.35's step-5 plank join inflates QM
-legs - it is the one change that adds work to a hot path, and it must cost ~0.63s folded into an
-existing pass, NOT an invocation of its own. A doctrine fix that inflates unrelated probes routes
-back to dk before wave 7 resumes.
+ALSO CARRY, unresolved and dk's to read: the META-FINDING further below - two consecutive pilot
+findings failed to reproduce in probe fixtures. If probe states are systematically too clean,
+"cheapest covering scenario" is pointing at the wrong instrument, and that bears on wave 7's
+design.
+<!-- =================== END QUEUE ===================== -->
 
-PRECONDITIONS, verify before spending anything:
-- SESSION MODEL must be sonnet, not a pin. If this session is not sonnet, STOP and say so: the
-  async-resumption leak sends a pinned leg to the session model at its first nested-child
-  resumption, and any escalated leg is void.
-- CHANNEL must be installed-plugin. Restart-not-/clear was required; confirm EMPIRICALLY by
-  marker-grepping the first leg's transcript for `Green scenarios do not discharge plank form`
-  (unique to 0.13.35). Zero hits = stale snapshot = report it and run HEAD-text instead, saying
-  which channel the numbers came from.
-- Both repos clean and level with origin; installed plugin should read 0.13.35.
+## 2026-07-19 (sonnet session): EFFICIENCY BATTERY 0.13.35 — primed order discharged, one HIGH finding, orphan-class non-reproduction datum, installed-plugin channel confirmed live
 
-COST: last full battery was ~168 inv / 11.4M cache. Owed twice over, run once.
+Entry: bare `/shakedown`. The primed order at the top of this file (written by the prior opus
+session) pre-answered the focus question and authorized autonomous proceeding; bootstrap
+confirmed both repos clean/level with origin, doctrine 0.13.35 (`5616ed0`), installed plugin
+0.13.35 installed 18:12:38 UTC, this session's process started 19:23:35 UTC (postdates install),
+session model sonnet (confirmed via process cmdline and empirically via `message.model` on all
+230 mined invocations, zero leak). Channel confirmed empirically: the 0.13.35-unique marker
+`Green scenarios do not discharge plank form` hit in both QM legs whose routine reaches that
+sentence (tw4, tw13).
 
-AFTER THE BATTERY, in order: (1) dk's ruling on the orphan-class hook - design it and SHOW it,
-do not ship it; a too-broad PreToolUse wait-class deny breaks legitimate commands across every
-voyage and dk's own prior disposition warns this area is whack-a-mole. (2) Wave 7.
+Ran the full battery once, discharging both the 0.13.34 and 0.13.35 obligations together (0.13.35
+supersedes 0.13.34's changes, per the prior order's own "owed twice over, run once"): tw1-5, tw13,
+fast-path-bootstrap, 13 legs total incl. 6 nested, all mined and banked to `data/battery-0.13.35/`.
+**230 invocations / 12.99M cache / 93.9k out, 100% sonnet.** Full per-leg table, the economy
+comparison, and dk's specific step-5-join-cost ask (CONFIRMED folded, zero invocation of its own,
+every QM/Boatswain leg) are in METRICS.md's "Efficiency battery, 0.13.35" section — not restated
+here. Headline economy: -15% invocations / -25% cache vs the 0.13.33 battery on the like-for-like
+leg subset (fast-path wasn't in that dataset) — within and beating the battery's own ~10% bar.
 
-ALSO CARRY, unresolved and dk's to read: the META-FINDING below - two consecutive pilot findings
-failed to reproduce in probe fixtures. If probe states are systematically too clean, "cheapest
-covering scenario" is pointing at the wrong instrument, and that bears on wave 7's design.
-<!-- =================== END PRIMED ORDER =================== -->
+**One HIGH finding, routed to dk, not shipped:** tw4's QM ruled a missing plank on its own watch's
+touched seam (`tideRange`, added uncommitted this voyage) as harbour-deferred dead-code judgment,
+never dispatching Crew — a live, reproduced MISS against this exact probe's own designed PASS
+("QM detects the plank gap... dispatches Crew"). `shipshape/SKILL.md:296` is unconditional that a
+missing/stale/malformed plank on a touched seam in the role-advanced diff is unfinished Crew work
+that routes to Crew, and only plank drift BEYOND the diff defers to harbour — the seam was
+verifiably inside the diff by the QM's own `git status` read the same turn. Contrast tw1 and
+tw13, both correct on the same fault shape at different watch scopes (scenario-ref vs tier-tag).
+Full evidence chain in METRICS.md.
+
+**Secondary observations, not routed as findings on this sample:** the orphan/wait class did not
+reproduce on tw13 this run (doctrine alone, no harness background-task lines) — contrast the
+0.13.33 baseline's orphan; tw13's QM bridged two concurrent nested Crew dispatches with ~7 cheap
+filler invocations (`echo waiting`/`sleep 1`/`true`) rather than a clean turn-end, a self-devised
+turn-bridging pattern worth watching if it recurs; tw13's plank-only Crew fix (one string change)
+cost 12 invocations, in the same family as pilot #5's plank-join trial-and-error finding.
+
+QUEUE: see the primed block above.
 
 ## 2026-07-19 (opus session, close): CAPTAIN-OPENING PROBE DID NOT REPRODUCE - no fix shipped - and the day's DOMINANT PATTERN, dk's read owed
 

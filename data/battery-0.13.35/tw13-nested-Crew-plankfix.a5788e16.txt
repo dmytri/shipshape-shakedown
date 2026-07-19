@@ -1,0 +1,16 @@
+# meta: {"agentType":"shipshape:crew","description":"Crew: fix malformed plank on nextHighTide","toolUseId":"toolu_01LhyVaNNBgPYjkvqgTcVXgt","parentAgentId":"a26c0c7c289e5aa7b","spawnDepth":2}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/998fa6ea-9f2b-4002-b2fa-695dce0f5a5b/subagents/agent-a5788e163de8427a6.jsonl
+# banked: 2026-07-19T19:41:20Z
+tw13-nested-Crew-plankfix	1	19:33:09	15279	3	Skill:
+tw13-nested-Crew-plankfix	2	19:33:11	19712	78	Skill:
+tw13-nested-Crew-plankfix	3	19:33:14	24882	176	Bash:cat RIGGING.md
+tw13-nested-Crew-plankfix	4	19:33:19	50773	201	Bash:cat features/tides.feature && echo ---- && cat features/slow-tide.feat
+tw13-nested-Crew-plankfix	5	19:33:21	51517	247	Edit:tide.js
+tw13-nested-Crew-plankfix	6	19:33:24	52165	302	Bash:\ npx cucumber-js "features/tides.feature" --name "^Next high tide aft
+tw13-nested-Crew-plankfix	7	19:35:29	52553	267	Bash:sleep 5; cat /tmp/claude-1000/-home-exedev-shipshape-shakedown/998fa6e
+tw13-nested-Crew-plankfix	8	19:35:38	53517	250	Bash:sleep 30; cat /tmp/claude-1000/-home-exedev-shipshape-shakedown/998fa6
+tw13-nested-Crew-plankfix	9	19:35:40	54128	96	ToolSearch:
+tw13-nested-Crew-plankfix	10	19:35:44	54574	239	Bash:until ! kill -0 $(pgrep -f "cucumber-js.*slow-tide" | head -1) 2>/dev/
+tw13-nested-Crew-plankfix	11	19:37:46	57583	150	Bash:cat /tmp/claude-1000/-home-exedev-shipshape-shakedown/998fa6ea-9f2b-40
+tw13-nested-Crew-plankfix	12	19:37:52	58476	450	
+SUMMARY	tw13-nested-Crew-plankfix	invocations=12	cache_read=545159	out=2459	wall=19:33:09 to 19:37:52

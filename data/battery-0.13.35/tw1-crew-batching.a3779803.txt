@@ -1,0 +1,22 @@
+# source: /tmp/claude-1000/-home-exedev-shipshape-shakedown/998fa6ea-9f2b-4002-b2fa-695dce0f5a5b/tasks/a3779803812ab5fa6.output
+# banked: 2026-07-19T19:30:59Z
+tw1-crew-batching	1	19:28:45	0	73	Skill:
+tw1-crew-batching	2	19:28:47	19461	115	Skill:
+tw1-crew-batching	3	19:28:53	26840	433	Bash:cat RIGGING.md && echo "---WATCHBILL---" && cat watchbill.json && echo
+tw1-crew-batching	4	19:28:57	52768	343	Bash:echo "---FEATURE---" && cat features/low-tides.feature && echo "---FIN
+tw1-crew-batching	5	19:29:01	53910	134	Read:steps.js
+tw1-crew-batching	6	19:29:03	54593	181	Read:tide.js
+tw1-crew-batching	7	19:29:06	55110	302	Bash:cat features/tides.feature && echo "---DATA---" && find data -type f 2
+tw1-crew-batching	8	19:29:10	55443	246	Bash:echo "---PLANK-INVENTORY---" && grep -rn "@planks" src && echo "---STE
+tw1-crew-batching	9	19:29:13	56107	212	Bash:echo "---PLANK-INVENTORY---" && rg -n "@planks" src && echo "---STEP-U
+tw1-crew-batching	10	19:29:25	56524	915	Bash:npx cucumber-js features/low-tides.feature --tags "not @captain and no
+tw1-crew-batching	11	19:29:30	57903	253	Edit:steps.js
+tw1-crew-batching	12	19:29:36	59442	448	Edit:steps.js
+tw1-crew-batching	13	19:29:38	59838	209	Bash:npx cucumber-js features/low-tides.feature --tags "not @captain and no
+tw1-crew-batching	14	19:29:42	60429	952	Agent:
+tw1-crew-batching	15	19:29:51	61421	75	Bash:sleep 1
+tw1-crew-batching	16	19:29:58	62748	352	
+tw1-crew-batching	17	19:30:20	15298	338	Bash:echo "---SRC---" && cat src/tide.js && echo "---PLANK-INVENTORY---" &&
+tw1-crew-batching	18	19:30:28	61428	899	Bash:HASH=$(GIT_INDEX_FILE="$(mktemp)" bash -c 'git read-tree HEAD && git a
+tw1-crew-batching	19	19:30:36	63458	853	
+SUMMARY	tw1-crew-batching	invocations=19	cache_read=932721	out=7333	wall=19:28:45 to 19:30:36

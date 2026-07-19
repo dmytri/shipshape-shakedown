@@ -1,5 +1,93 @@
 # Metrics: how to read a shakedown
 
+## Efficiency battery, 0.13.35 (2026-07-19, sonnet, installed-plugin channel, discharges 0.13.34+0.13.35 both, primed-order run)
+
+Ran once per the primed order's "owed twice over, run once" (0.13.35 supersedes 0.13.34's
+changes; both obligations discharge together). Preconditions verified before spending: session
+model sonnet (process cmdline `--model sonnet`, confirmed live via `message.model` on every
+invocation incl. nested/depth-3 spawns — 230/230 `claude-sonnet-5`, zero leak); both repos clean
+and level with origin; installed plugin 0.13.35 (`5616ed0`, installed 18:12:38 UTC), this
+session's process started 19:23:35 UTC — postdates install. Channel CONFIRMED empirically: the
+0.13.35 marker `Green scenarios do not discharge plank form` hit in both QM legs that reach that
+text (tw4, tw13); the fast-path Captain/nested-QM/nested-Boatswain legs never touch that sentence
+so its absence there is expected, not a stale-snapshot signal.
+
+Seven top-level legs (tw1-5, tw13, fast-path-bootstrap) + 6 nested (1 tw1 Crew, 2 tw13 Crew, 1
+fastpath nested-QM, 1 fastpath nested-Crew at depth 3, 1 fastpath nested-Boatswain), all mined
+and banked to `data/battery-0.13.35/`.
+
+| Leg | Inv | Cache | Out | Notes |
+|---|---|---|---|---|
+| tw1 crew-batching (QM) | 19 | 933k | 7.3k | ONE batched Crew Agent-call (PASS); +nested Crew 6/216k/1.0k |
+| tw2 captain notes-commit | 6 | 124k | 1.4k | notes-only commit, tree clean |
+| tw3 boatswain notes-arms (FOUL-CATCH) | 9 | 403k | 3.8k | malformed plank on touched seam correctly refused, no commit |
+| tw4 QM plank-gap | 12 | 569k | 6.3k | **MISS — see finding below** |
+| tw5 no-plant fit-out (Shipwright) | 33 | 2.48M | 23.3k | zero plants, tree left uncommitted for custody |
+| tw13 slow-census (QM, doctrine alone, no BG lines) | 30 | 1.77M | 12.3k | +2 nested Crew (7/270k, 12/545k); no orphan this run |
+| fast-path-bootstrap (Captain) | 46 | 3.06M | 15.7k | +nested QM 16/776k, nested Crew 7/274k, nested Boatswain 27/1.57M |
+| **Wave total** | **230** | **12.99M** | **93.9k** | 13 legs incl. nested |
+
+**Economy vs 0.13.33 battery** (`data/battery-0.13.33/`, same leg set minus fast-path, which
+that dataset didn't carry): 134 inv / 7.31M this run vs 157 inv / 9.72M then — **-15% inv, -25%
+cache, within the battery's own ~10% bar and beating it.** tw13's own comparison is not
+like-for-like: the 0.13.33 run is filed `tw13-slow-census-ORPHAN` (deadlocked, 24 inv to a stall);
+this run's tw13 completed cleanly to a Final report with a spent watchbill — see finding below,
+not a regression.
+
+**dk's specific ask (b), the step-5 plank-join hot-path cost: CONFIRMED folded, zero invocations
+of its own.** Every QM/Boatswain leg ran `plank-inventory` and `step-usage` inside a single Bash
+call already retrieving other tree facts (tw1 step 8, tw3 step 5, tw4 step 7, tw13 steps 17-18) —
+never as a dedicated round trip. The join did not inflate any leg's invocation count.
+
+**Findings, routed to dk, nothing shipped:**
+
+1. **HIGH — reproduced, a live MISS against this exact probe's own designed PASS criterion.**
+   tw4 (QM plank-gap / "unplanked-foul Leg B") is designed so PASS = "QM detects the plank gap...
+   dispatches Crew with scenario ref + foul as evidence, Crew ACCEPTS the plank-only target."
+   This run's QM instead ruled the missing plank on `tideRange` — the watch's OWN target, added
+   uncommitted this voyage (`git status`: `M src/tide.js` since the fit-out commit) — as
+   harbour-deferred "dead-code-or-unspecified judgment" (citing `shipshape/SKILL.md:125`) and
+   never dispatched Crew. But `shipshape/SKILL.md:296` is explicit and un-conditional on the fault
+   kind: "On a touched seam in the role-advanced diff, a plank that is missing, stale, or
+   malformed is the same fault, unfinished Crew work, and routes to Crew for redispatch... Only
+   plank drift beyond the current diff defers to harbour." `tideRange` is inside the current diff
+   by the QM's own `git status` read the same turn — the seam is not pre-existing, it is this
+   voyage's own unfinished Crew work. The QM applied the wrong one of two co-existing doctrine
+   rules (dead-code-or-unspecified vs touched-seam-in-diff) to a case the second rule names
+   explicitly. Contrast tw1 and tw13, both correct: tw1's QM found a comparable pre-existing
+   malformed plank OUTSIDE its scenario-ref watch's scope and correctly deferred it to harbour;
+   tw13's QM found a comparable pre-existing malformed plank INSIDE its tier-tag watch's broader
+   scope (the whole `@logic` tier) and correctly dispatched Crew for it. tw4's seam fails neither
+   scope test — it is inside the diff AND inside the watch — yet still deferred. Needs a ruling:
+   sharpen `shipshape/SKILL.md:125`'s dead-code-or-unspecified rule to explicitly exclude seams
+   present in the uncommitted role-advanced diff, since that clause is currently strong enough
+   prose on its own to out-argue the touched-seam rule in a live QM's judgment.
+2. **Positive, not a finding: the orphan/wait class (tw13 slow-census) did NOT reproduce this
+   run** — doctrine alone (no harness background-task lines), and the turn ended in a clean Final
+   report with a spent watchbill and zero live background tasks. Contrast the 0.13.33 baseline,
+   which is filed `tw13-slow-census-ORPHAN`. One non-reproduction in the small sample dk's queue
+   already tracks ("one reproduction in ~6 runs") — does not by itself close the orphan-class
+   ruling still owed, but is a data point toward it.
+3. **LOW — observed, not confirmed as a class: tw13's QM bridged two concurrent nested Crew
+   dispatches with ~7 trivial filler invocations** (`echo "holding..."`/`echo waiting`, `sleep 1`,
+   `true` x3 — cache barely grows across them, ~69k to ~75k) rather than ending its turn cleanly.
+   This is cheap and did not deadlock, but it is a self-devised turn-bridging pattern in the same
+   family as pilot #3's self-devised sync-marker finding, now observed under doctrine alone with
+   no harness belt-and-braces text to explain it away. Worth a look if it recurs; not routed as a
+   ship candidate on n=1.
+4. **Observed, not routed: tw13's plank-only Crew fix (change one string in a docblock) cost 12
+   invocations / 545k cache** — high for the size of the edit, in the same family as pilot #5's
+   plank-join trial-and-error finding (not re-derived here in full; noted for whoever next audits
+   Crew-side plank-fix cost).
+
+**Positive markers, tree-verified:** tw2 notes-only commit (clean deck after); tw3's foul-catch
+left the tree exactly as reported (no staging, no commit); tw5's fit-out RIGGING/scantling/
+conformance artifacts all present, left uncommitted for custody, zero-plant fitting (no
+planted-red proofs run at fit-out, correctly deferred to QM promotion per `shipshape:110`);
+fast-path-bootstrap's `RIGGING.md` is exactly the five required values with every optional slot
+`none`, full voyage (bootstrap through custody commit and notes trim) in ~9m04s, under the ~10m
+target; zero cockpit reads anywhere (no leg touched this harness's own scenario/probe text).
+
 ## The three numbers per leg (bin/mine.sh on the task transcript)
 
 - invocations: model API calls (grouped by message.id). The primary cost driver -

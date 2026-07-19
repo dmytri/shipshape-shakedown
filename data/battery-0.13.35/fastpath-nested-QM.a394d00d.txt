@@ -1,0 +1,20 @@
+# meta: {"agentType":"shipshape:qm","description":"QM voyage on quayline berth-reservation spec","toolUseId":"toolu_01JcukN2RkPb7N65CerULBSc","spawnDepth":2,"parentAgentId":"a161f87ab089bd5c5"}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/998fa6ea-9f2b-4002-b2fa-695dce0f5a5b/subagents/agent-a394d00d506aee0ef.jsonl
+# banked: 2026-07-19T19:41:20Z
+fastpath-nested-QM	1	19:32:54	15298	71	Skill:
+fastpath-nested-QM	2	19:32:56	19349	136	Skill:
+fastpath-nested-QM	3	19:32:59	26726	283	Bash:cat RIGGING.md && echo "---WATCHBILL---" && cat watchbill.json && echo
+fastpath-nested-QM	4	19:33:04	52673	356	Bash:echo "=== feature ===" && cat features/berth-reservation.feature && ec
+fastpath-nested-QM	5	19:33:08	53730	367	Bash:cat package.json 2>/dev/null; echo "---"; find . -maxdepth 2 -not -pat
+fastpath-nested-QM	6	19:33:12	54879	198	Bash:ls -la src && find src -type d && echo "node_modules present?" && ls n
+fastpath-nested-QM	7	19:33:15	55639	217	Bash:npx cucumber-js --dry-run --format usage --tags "not @captain and not 
+fastpath-nested-QM	8	19:33:41	55927	2835	Write:berth_reservation_steps.js
+fastpath-nested-QM	9	19:33:48	56210	203	Bash:npx cucumber-js features/berth-reservation.feature --tags "not @captai
+fastpath-nested-QM	10	19:33:53	59167	335	Bash:npx cucumber-js --dry-run --format usage --tags "not @captain and not 
+fastpath-nested-QM	11	19:33:57	60077	1305	Agent:
+fastpath-nested-QM	12	19:34:10	61174	21	
+fastpath-nested-QM	13	19:34:37	15298	262	Bash:npx cucumber-js features/berth-reservation.feature --tags "not @captai
+fastpath-nested-QM	14	19:34:40	61267	225	Bash:cat src/berth-reservation.js && echo "=== step-usage ===" && npx cucum
+fastpath-nested-QM	15	19:34:50	62957	193	Bash:git status --short
+fastpath-nested-QM	16	19:35:00	65335	517	
+SUMMARY	fastpath-nested-QM	invocations=16	cache_read=775706	out=7524	wall=19:32:54 to 19:35:00
