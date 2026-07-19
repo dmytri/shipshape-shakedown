@@ -1,0 +1,48 @@
+# meta: {"agentType":"shipshape:boatswain","description":"Pilot 5 Boatswain leg: custody commit","toolUseId":"toolu_01XFGk3yUdZjWntKm9PkTLAA","spawnDepth":1,"model":"sonnet"}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/9f927b62-6bbe-4429-99e2-7f00ba8fe07a/subagents/agent-a0d9da8a7e9b3a27a.jsonl
+# banked: 2026-07-19T12:21:38Z
+boatswain-voyage1-foul	1	12:12:58	13977	80	Skill:
+boatswain-voyage1-foul	2	12:13:01	20150	88	Skill:
+boatswain-voyage1-foul	3	12:13:06	28516	408	Bash:pwd && ls -la
+boatswain-voyage1-foul	4	12:13:10	54161	322	Bash:cat RIGGING.md && echo "-----STATUS-----" && git status && echo "-----
+boatswain-voyage1-foul	5	12:13:14	55254	143	Read:b926kt1xh.txt
+boatswain-voyage1-foul	6	12:13:20	56523	451	Bash:echo "---STAT---" && git diff --stat 61014cb673ad9b3025b96b9972804d60b
+boatswain-voyage1-foul	7	12:13:28	78192	592	Bash:find features/step_definitions features/support js -type f && echo "--
+boatswain-voyage1-foul	8	12:13:31	79227	160	Read:app.js
+boatswain-voyage1-foul	9	12:13:37	81315	273	Read:index.html
+boatswain-voyage1-foul	10	12:13:44	86176	669	Bash:(npx jsdoc -X js > /tmp/plank-inventory.json 2>/tmp/plank-inventory.er
+boatswain-voyage1-foul	11	12:13:50	86929	60	Bash:cat /tmp/step-usage.txt
+boatswain-voyage1-foul	12	12:13:55	87655	345	Bash:grep -n -i "unused\|UNDEFINED\|0 scenarios\|steps)" /home/exedev/.clau
+boatswain-voyage1-foul	13	12:13:58	88286	126	Bash:tail -80 /home/exedev/.claude/projects/-home-exedev-shipshape-shakedow
+boatswain-voyage1-foul	14	12:14:03	88646	437	Bash:grep -oE "^(Given|When|Then)\(" -n /tmp/claude-1000/-home-exedev-ships
+boatswain-voyage1-foul	15	12:14:12	92415	2	Bash:wc -l /tmp/plank-inventory.err /tmp/plank-inventory.json 2>/dev/null; 
+boatswain-voyage1-foul	16	12:14:17	92860	396	Bash:grep -c "@planks" js/app.js && echo "---bare check (outside comments)-
+boatswain-voyage1-foul	17	12:14:21	93242	291	Bash:rg -c "@planks" js/app.js && echo "---" && rg -n "@planks" js/ feature
+boatswain-voyage1-foul	18	12:14:27	93811	692	Bash:node -e ' const doclets = JSON.parse(require("fs").readFileSync("/tmp/
+boatswain-voyage1-foul	19	12:14:34	94110	356	Bash:rg -o '@planks(-provisional)?\("[^"]+"\)' js/app.js | sort | uniq -c
+boatswain-voyage1-foul	20	12:14:37	95037	184	Bash:rg -o '@planks(-provisional)?\("[^"]+"\)' js/app.js
+boatswain-voyage1-foul	21	12:14:40	95581	220	Bash:rg -o '@planks[^)]*\)' js/
+boatswain-voyage1-foul	22	12:14:43	95953	190	Bash:rg -n "planks" js/app.js
+boatswain-voyage1-foul	23	12:14:49	96361	524	Bash:node -e ' const planks = JSON.parse(require("fs").readFileSync("/tmp/p
+boatswain-voyage1-foul	24	12:15:21	97501	2800	Bash:node -e ' const doclets = JSON.parse(require("fs").readFileSync("/tmp/
+boatswain-voyage1-foul	25	12:15:39	98116	1582	Bash:npx jsdoc -X -a all js > /tmp/plank-inventory-all.json 2>/tmp/plank-in
+boatswain-voyage1-foul	26	12:16:10	101480	2647	Bash:node -e ' const fs = require("fs"); const lines = fs.readFileSync("/ho
+boatswain-voyage1-foul	27	12:16:18	103073	407	Read:steps.js
+boatswain-voyage1-foul	28	12:16:48	106095	3187	Bash:cat /tmp/biome.txt
+boatswain-voyage1-foul	29	12:17:18	111180	2654	Bash:npx biome check . --write > /tmp/biome-write.txt 2>&1; echo EXIT:$?; c
+boatswain-voyage1-foul	30	12:17:23	115779	214	Read:index.html
+boatswain-voyage1-foul	31	12:17:27	119012	204	Edit:index.html
+boatswain-voyage1-foul	32	12:17:31	119295	421	Bash:npx biome check . > /tmp/biome-recheck.txt 2>&1; echo EXIT:$?; cat /tm
+boatswain-voyage1-foul	33	12:17:37	119627	287	Bash:rg -n "PERTURBATION" . --hidden -g '!node_modules' -g '!package-lock.j
+boatswain-voyage1-foul	34	12:17:40	120128	227	Bash:rg -n "PERTURBATION" js/ features/ index.html
+boatswain-voyage1-foul	35	12:17:44	120591	299	Bash:cat package.json && echo "---node_modules top-level dirs count---" && 
+boatswain-voyage1-foul	36	12:17:48	120833	363	Bash:ls node_modules | rg -i "todomvc" ; echo "exit:$?"
+boatswain-voyage1-foul	37	12:18:07	121448	1656	Bash:rg -n "todomvc" package-lock.json | head -5; echo "exit:$?"
+boatswain-voyage1-foul	38	12:18:16	121820	2	Read:hooks.js
+boatswain-voyage1-foul	39	12:18:20	123485	240	Bash:for f in features/support/poll.js features/support/todo-storage.js fea
+boatswain-voyage1-foul	40	12:19:01	124658	2	Bash:rg -n "planks|addEventListener|new Router|newTodoInput.focus" js/app.j
+boatswain-voyage1-foul	41	12:19:20	127410	1132	Bash:git status --porcelain=v1 && echo "---diff js/app.js (boatswain hygien
+boatswain-voyage1-foul	42	12:19:26	132056	307	Bash:git diff -- package.json && echo "---lock diff stat---" && git diff --
+boatswain-voyage1-foul	43	12:19:38	133426	917	Bash:rg -n "@captain|@shipwright" features/
+boatswain-voyage1-foul	44	12:19:51	133988	3180	
+SUMMARY	boatswain-voyage1-foul	invocations=44	cache_read=4225378	out=29737	wall=12:12:58 to 12:19:51

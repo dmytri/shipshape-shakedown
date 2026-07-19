@@ -1,0 +1,21 @@
+# meta: {"agentType":"shipshape:boatswain","description":"Pilot 5 Boatswain leg: commit RIGGING/CAPTAIN fix","toolUseId":"toolu_01WMnEh9yiUSkBqP2wKrCYXR","spawnDepth":1,"model":"sonnet"}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/9f927b62-6bbe-4429-99e2-7f00ba8fe07a/subagents/agent-a6379efe333381408.jsonl
+# banked: 2026-07-19T12:51:05Z
+boatswain-commit-rigging-fix	1	12:48:07	15915	4	Skill:
+boatswain-commit-rigging-fix	2	12:48:09	20027	5	Skill:
+boatswain-commit-rigging-fix	3	12:48:12	28389	6	Bash:pwd && git log --oneline -5 && git rev-parse HEAD f073bf2 2>&1 | head 
+boatswain-commit-rigging-fix	4	12:48:18	54025	449	Bash:cat RIGGING.md && echo "---STATUS---" && git status && echo "---DIFF--
+boatswain-commit-rigging-fix	5	12:48:26	54489	730	Bash:echo "--- package.json ---" && cat package.json && echo "--- grep todo
+boatswain-commit-rigging-fix	6	12:48:32	56185	278	Bash:cat package.json
+boatswain-commit-rigging-fix	7	12:48:38	57088	555	Bash:rg -n "todomvc-common|todomvc-app-css" --hidden -g '!CAPTAIN.md' -g '!
+boatswain-commit-rigging-fix	8	12:48:43	57508	308	Bash:rg -n "todomvc-common|todomvc-app-css" .
+boatswain-commit-rigging-fix	9	12:48:59	58239	1548	Bash:echo "--- index.html ---" && rg -n "todomvc-common|todomvc-app-css" in
+boatswain-commit-rigging-fix	10	12:49:15	59745	1338	Bash:npx jsdoc -X js > /tmp/claude-1000/-home-exedev-shipshape-shakedown/9f
+boatswain-commit-rigging-fix	11	12:49:23	61327	295	Bash:SC=/tmp/claude-1000/-home-exedev-shipshape-shakedown/9f927b62-6bbe-442
+boatswain-commit-rigging-fix	12	12:50:03	62694	3263	Bash:npx cucumber-js --dry-run --tags "not @captain and not @shipwright" 2>
+boatswain-commit-rigging-fix	13	12:50:08	65056	313	Bash:ls watchbill.json 2>&1; git status --porcelain
+boatswain-commit-rigging-fix	14	12:50:15	68458	588	Bash:git add -- RIGGING.md CAPTAIN.md && git status --porcelain
+boatswain-commit-rigging-fix	15	12:50:18	68804	361	Bash:git commit -m "$(cat <<'EOF' Rigging hygiene: strike unwired todomvc-c
+boatswain-commit-rigging-fix	16	12:50:23	69418	158	Bash:git status
+boatswain-commit-rigging-fix	17	12:50:39	69976	2481	
+SUMMARY	boatswain-commit-rigging-fix	invocations=17	cache_read=927343	out=12680	wall=12:48:07 to 12:50:39

@@ -1,0 +1,16 @@
+# meta: {"agentType":"shipshape:crew","description":"Crew: restore filter on browser back","toolUseId":"toolu_01YPoirPek23cBpxs9avm4gx","parentAgentId":"a052fb8953a190132","spawnDepth":2}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/9f927b62-6bbe-4429-99e2-7f00ba8fe07a/subagents/agent-a4120679d220fa8ef.jsonl
+# banked: 2026-07-19T13:07:48Z
+crew-restore-filter-on-back	1	13:04:15	15929	76	Skill:
+crew-restore-filter-on-back	2	13:04:16	20347	5	Skill:
+crew-restore-filter-on-back	3	13:04:19	25504	373	Bash:cat RIGGING.md ||| Bash:sed -n '1,120p' features/routing.feature
+crew-restore-filter-on-back	4	13:04:24	51135	184	Bash:ls -la && echo --- && ls features/step_definitions && echo --- && cat 
+crew-restore-filter-on-back	5	13:04:28	53143	164	Bash:ls js && echo --- && grep -rn "planks" js | head -50
+crew-restore-filter-on-back	6	13:04:33	58544	136	Bash:ls js && echo --- && rg -n "planks" js
+crew-restore-filter-on-back	7	13:04:36	58879	121	Read:app.js
+crew-restore-filter-on-back	8	13:05:17	60217	3835	Bash:npx cucumber-js features/routing.feature --tags "not @captain and not 
+crew-restore-filter-on-back	9	13:05:27	65177	837	Edit:app.js
+crew-restore-filter-on-back	10	13:05:35	69439	171	Read:app.js
+crew-restore-filter-on-back	11	13:05:38	70447	251	Bash:npx cucumber-js features/routing.feature --tags "not @captain and not 
+crew-restore-filter-on-back	12	13:05:48	75736	1005	
+SUMMARY	crew-restore-filter-on-back	invocations=12	cache_read=624497	out=7158	wall=13:04:15 to 13:05:48

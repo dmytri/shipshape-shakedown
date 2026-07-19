@@ -1,0 +1,32 @@
+# meta: {"agentType":"shipshape:crew","description":"Crew: build bulk todo actions","toolUseId":"toolu_015c7W7jF6HpvgFuTeUpv5wg","parentAgentId":"a62d7a9cae2b1e2a4","spawnDepth":2}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/9f927b62-6bbe-4429-99e2-7f00ba8fe07a/subagents/agent-a5b3faee3c6ff412f.jsonl
+# banked: 2026-07-19T12:12:23Z
+crew-bulk-actions	1	11:53:25	15929	76	Skill:
+crew-bulk-actions	2	11:53:27	21466	85	Skill:
+crew-bulk-actions	3	11:53:29	26623	169	Bash:cat RIGGING.md
+crew-bulk-actions	4	11:53:34	52265	317	Read:bulk-actions.feature ||| Bash:grep -n "Mark all\|Clear completed\|toggle-all" -A5 -B5 assets/app-spe
+crew-bulk-actions	5	11:53:38	53013	301	Bash:sed -n '1,90p' assets/app-spec.md ||| Read:app.js
+crew-bulk-actions	6	11:53:44	54563	314	Read:index.html ||| Read:steps.js
+crew-bulk-actions	7	11:53:54	58332	547	Bash:grep -n "footer\|Clear completed\|counter\|main.*hidden" features/*.fe
+crew-bulk-actions	8	11:53:58	63304	152	Bash:rg -n "footer|Clear completed|counter|main.*hidden|hidden" features/*.
+crew-bulk-actions	9	11:54:01	64037	178	Bash:rg -n "footer|Clear completed|counter|hidden" features
+crew-bulk-actions	10	11:54:38	64375	4	Bash:rg -n 'the person checks "|the person unchecks "|the person clicks "' 
+crew-bulk-actions	11	11:54:54	65253	1314	Bash:cat features/todo-completion.feature features/todo-editing.feature fea
+crew-bulk-actions	12	11:55:33	68703	3668	Read:todo-storage.js
+crew-bulk-actions	13	11:55:51	71443	1443	Bash:rg -n "hidden" css node_modules/todomvc-app-css 2>/dev/null | head -30
+crew-bulk-actions	14	11:55:53	75705	175	Bash:find . -maxdepth 3 -not -path "./node_modules*" -not -path "./.git*" |
+crew-bulk-actions	15	11:56:01	77163	338	Read:app-template.index.html
+crew-bulk-actions	16	11:56:07	77636	4	Edit:index.html
+crew-bulk-actions	17	11:56:12	79152	356	Edit:app.js
+crew-bulk-actions	18	11:56:16	79844	4	Edit:app.js
+crew-bulk-actions	19	11:56:32	80330	788	Read:app.js
+crew-bulk-actions	20	11:56:35	81200	655	Edit:app.js
+crew-bulk-actions	21	11:56:54	84707	1371	Bash:rg -n '@planks' js/app.js
+crew-bulk-actions	22	11:57:29	85492	4	Edit:app.js
+crew-bulk-actions	23	11:57:37	87365	4	Edit:app.js
+crew-bulk-actions	24	11:57:43	91567	858	Edit:app.js
+crew-bulk-actions	25	11:57:51	92175	174	Bash:npx cucumber-js features/bulk-actions.feature --tags "not @captain and
+crew-bulk-actions	26	11:57:57	93139	1	Bash:npx cucumber-js features/new-todo.feature --tags "not @captain and not
+crew-bulk-actions	27	11:58:05	93426	241	Bash:npx jsdoc -X js 2>&1 | rg -A2 '"name": "syncToggleAll"|"name": "syncCl
+crew-bulk-actions	28	11:58:17	94050	856	
+SUMMARY	crew-bulk-actions	invocations=28	cache_read=1952257	out=14397	wall=11:53:25 to 11:58:17

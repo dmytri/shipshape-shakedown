@@ -1,0 +1,16 @@
+# meta: {"agentType":"shipshape:crew","description":"Crew: relocate app.js under js/","toolUseId":"toolu_01PTRrapmzv9fTZsuV6kdhtr","parentAgentId":"a62d7a9cae2b1e2a4","spawnDepth":2}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/9f927b62-6bbe-4429-99e2-7f00ba8fe07a/subagents/agent-abaf79ccf5e49fc3a.jsonl
+# banked: 2026-07-19T12:12:23Z
+crew-relocate-appjs	1	11:45:43	15929	76	Skill:
+crew-relocate-appjs	2	11:45:45	20545	74	Skill:
+crew-relocate-appjs	3	11:45:49	25702	315	Bash:cat RIGGING.md
+crew-relocate-appjs	4	11:45:54	51333	178	Bash:ls -la && echo --- && cat features/new-todo.feature && echo --- && ls 
+crew-relocate-appjs	5	11:45:56	52227	251	Read:app.js ||| Read:index.html
+crew-relocate-appjs	6	11:46:01	54856	197	Bash:npx jsdoc -X js 2>&1 | head -20
+crew-relocate-appjs	7	11:46:05	55922	8	Bash:mkdir -p js && git mv app.js js/app.js
+crew-relocate-appjs	8	11:46:08	56244	132	Bash:mv app.js js/app.js && ls js
+crew-relocate-appjs	9	11:46:11	56449	188	Edit:index.html
+crew-relocate-appjs	10	11:46:14	56589	3	Bash:npx jsdoc -X js 2>&1 | head -60
+crew-relocate-appjs	11	11:46:17	56905	190	Bash:npx cucumber-js features/new-todo.feature --tags "not @captain and not
+crew-relocate-appjs	12	11:46:27	57702	626	
+SUMMARY	crew-relocate-appjs	invocations=12	cache_read=560403	out=2238	wall=11:45:43 to 11:46:27

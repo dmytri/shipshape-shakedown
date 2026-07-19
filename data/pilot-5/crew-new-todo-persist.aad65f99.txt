@@ -1,0 +1,16 @@
+# meta: {"agentType":"shipshape:crew","description":"Crew: persist new todo on creation","toolUseId":"toolu_01U5Yc3UdTDUTTkx9NutjK4b","parentAgentId":"a62d7a9cae2b1e2a4","spawnDepth":2}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/9f927b62-6bbe-4429-99e2-7f00ba8fe07a/subagents/agent-aad65f99cc9ad0acb.jsonl
+# banked: 2026-07-19T12:12:23Z
+crew-new-todo-persist	1	12:01:34	15929	74	Skill:
+crew-new-todo-persist	2	12:01:36	20667	78	Skill:
+crew-new-todo-persist	3	12:01:38	25821	294	Bash:cat RIGGING.md ||| Bash:cat features/persistence.feature
+crew-new-todo-persist	4	12:01:42	51456	320	Bash:sed -n '1,320p' features/step_definitions/steps.js | grep -n "contains ||| Bash:ls js/
+crew-new-todo-persist	5	12:01:53	52985	159	Bash:rg -n "contains an item titled|new todo input and presses Enter|writeT
+crew-new-todo-persist	6	12:01:55	53539	341	Read:steps.js ||| Read:steps.js
+crew-new-todo-persist	7	12:01:58	53921	174	Bash:rg -n "writeTodos|addTodo|function addTodo|new-todo|@planks" js/app.js
+crew-new-todo-persist	8	12:02:03	55079	165	Read:app.js
+crew-new-todo-persist	9	12:02:09	56189	1090	Edit:app.js
+crew-new-todo-persist	10	12:02:16	59412	180	Bash:npx cucumber-js features/persistence.feature --tags "not @captain and 
+crew-new-todo-persist	11	12:02:21	60632	219	Bash:for f in new-todo todo-completion todo-editing bulk-actions counter; d
+crew-new-todo-persist	12	12:02:37	60922	414	
+SUMMARY	crew-new-todo-persist	invocations=12	cache_read=566552	out=3508	wall=12:01:34 to 12:02:37

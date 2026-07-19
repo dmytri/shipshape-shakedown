@@ -117,6 +117,111 @@ before/after), commits +2 P (both unborn-HEAD initial commits, first live firing
 of the new seam), polls +2 N (L1 async child), cockpit reads +0 (boundary 4/4
 incl. two unborn-HEAD greenfield states).
 
+## Pilot #5 (2026-07-19, sonnet, installed-plugin channel, doctrine 0.13.33, todopilot6, main-loop runner architecture)
+
+First pilot since 0.13.26-0.13.33 (onboarding overhaul, dependency consumer-routing, blast-radius
+fix). Closes the two items the queue named for this pilot: the 0.13.27/28 +5 inv/leg custody-price
+watch (fired live, repeatedly - see below) and the first exercise anywhere of Crew's 0.13.25
+approach-cap (STILL unexercised - every fix converged on its first approach). Scaffold: unborn
+HEAD + vendored `assets/app-spec.md`/`app-template.index.html` placed untracked, per the 0.13.30
+greenfield-fork pattern (no operator README commit - Captain's own bootstrap action makes the
+first commit, matching wave 6's G1 probe, now proven at integration scale for the first time).
+
+**Outcome: FULL PASS in 3 clean iterations, zero regressions, zero wasted iterations - the
+cleanest pilot to date.** Oracle grading (tastejs/todomvc pinned ff43b02e, both operator patches
+applied, framework=shakedown, quarantine held throughout - verified via transcript grep on every
+leg, zero leaks):
+
+| Iteration | Result |
+|---|---|
+| 1 (unmodified voyage 1) | 24/29 (ties pilot #4's best-ever cold open) |
+| 2 (edit-mode hide, empty-edit-via-blur, back-button restore, direct-All-view) | 26/29 |
+| 3 (label-hide completion, saveEdit double-invocation guard) | 28/29, 0 failing, 1 pending - **"All specs passed!"** |
+
+Every iteration's oracle failure was translated to genuine product-language feedback (never test
+output/selectors) and every translated item landed a REAL, root-caused fix: iteration 2's routing
+fix rewrote `applyFilter` to rebuild from `localStorage` per filter change (the prior `li.remove()`
+permanently dropped filtered-out items, breaking back-button restore); iteration 3's fix found and
+fixed the actual root cause of a recurring `NotFoundError` (Enter-to-save on an empty title calls
+`li.remove()` while the input still has focus, so the native `blur` `remove()` fires re-entrantly on
+an already-removed node) with a `destroyed` reentrancy guard, not a workaround. No plateau, no
+shipped-then-caught regression (contrast pilot #4, which needed 4 iterations incl. one regression
+detour and one plateau-confirmation to reach the same terminal state via an operator exemption
+patch rather than further iteration).
+
+**Invocations: 720 total, scaffold to full pass** (27 legs, all mined, all banked to
+`data/pilot-5/`). Voyage 1 (scaffold, incl. a plank-foul detour - see findings): 486 inv. Iteration
+2: 125 inv. Iteration 3: 109 inv. **Cache-read: 55.79M. Output: 433.2k.** 100% sonnet across every
+leg including every nested Crew spawn - zero model leak (this session's own model is sonnet
+throughout, so the historical "later nested spawns fall to session model" leak class could not
+manifest here regardless; a methodological ceiling on what this pilot can show on that axis, not a
+finding). Not directly comparable to pilot #4's 232 inv (first reach of 28/29) since that number
+excluded the regression/plateau detour and 0.13.26-0.13.33 doctrine has grown scope since (wave 6's
+"efficiency battery" finding: Shipwright/Captain now derive materially more at fit-out/bootstrap).
+
+**0.13.27/28 custody-price watch: fired live, repeatedly, confirmed working as designed.** Every
+custody pass whose diff touched verification-support files (`steps.js`, `hooks.js`, `world.js`)
+correctly ran the `broad` enumeration sweep rather than a file-scoped focused rerun (iteration 2
+custody: 38-scenario broad sweep; iteration 3 custody: 38-scenario broad sweep) - the +5 inv/leg
+rule from 0.13.27/28 firing exactly as shipped, on real support-touching legs, for the first time at
+pilot scale.
+
+**Findings routed to dk, none shipped:**
+
+1. **HIGH - doctrine gap, reproduced twice: the "foul survives a lost caller" guarantee
+   (boatswain/SKILL.md:77, qm/SKILL.md:72) does not fire for a malformed (not missing) plank when
+   the underlying scenarios are already green and `RIGGING.md`'s `runrecord` is `none`.** Boatswain
+   caught a real malformed-plank fault (5 `@planks` docblocks sat on bare statements/anonymous
+   callbacks, not declarations, so `jsdoc -X` silently failed to attach them) and correctly refused
+   to commit, per the 0.13.23-era plank-join rule - this is the FIRST live (non-staged-probe)
+   observation of exactly this fault class. But redispatching a fresh QM at role+base-commit only
+   (the QM row's absolute contract) did NOT rediscover it: QM's own rule treats an already-green
+   listed scenario as complete (qm/SKILL.md step 4) and plank-drift hunting is explicitly "harbour
+   work," not QM's routine job (qm/SKILL.md:26) - so a thin redispatch is a structural no-op for
+   this exact fault shape, and with `runrecord: none` there is no durable trace of Boatswain's
+   custody attempt for a context-cleared QM to find another way. Confirmed twice: once when a fuller
+   hand-off was refused as contamination (correct, separate finding below), once when a legitimate
+   thin dispatch silently completed without ever inspecting plank form. Operator worked around it
+   this session by dispatching Crew directly with evidence-only content (no diagnosis, no fix
+   prescription) - a substitution the current role-dispatch chain has no other route for. Needs a
+   ruling: either the self-healing claim should be narrowed to exclude the malformed-plank-on-a-
+   green-watch case, or `runrecord` should stop being optional wherever this property is relied on,
+   or QM's routine should gain a mandatory plank-form check on every watch (not just harbour).
+2. **MEDIUM - reproducible bulkhead-discipline slip, 3 independent instances in one voyage (2
+   Boatswain, 1 QM), each self-caught.** Each instance ran an unscoped `rg`/search across the whole
+   tree while chasing a stale dependency-name reference (`todomvc-common`/`todomvc-app-css`/
+   "editing"), briefly surfacing `CAPTAIN.md` content into context before self-correcting to a
+   properly-scoped rerun. Zero downstream effect in all three (no finding or decision was ever drawn
+   from the exposed content) - but 3/3 on the same search shape ("any stale reference to X,
+   tree-wide") is a real, repeatable rate, not noise. This is the exact tradeoff the 0.13.26 bulkhead
+   fix accepted on purpose: bare/untargeted `rg` is one of the hook's proven-safe forms (the hook
+   cannot know in advance whether a given search will return `CAPTAIN.md`), so content-blindness on
+   this shape rests entirely on role discipline - and that discipline failed at a real rate this
+   pilot. Candidate fix: nudge role skills toward pathspec-excluding `CAPTAIN.md` by default on any
+   repo-wide content search, independent of the hook.
+3. **Positive, tree-verified: the 0.13.28/0.13.33 dependency consumer-routing rule held correctly
+   all voyage.** `RIGGING.md`'s Dependencies slot distinguished rigging/toolchain deps (installed at
+   bootstrap: cucumber, gplint, biome, jsdoc, playwright) from product deps whose consumer is Crew
+   (`director` - installed the moment the routing seam needed it) from a genuinely unwired pair
+   (`todomvc-common`/`todomvc-app-css` - declared, never consumed by any scenario, correctly
+   identified as drift by Boatswain and STRUCK by Captain rather than force-installed, since no
+   scenario required them - a legitimate vanilla-CSS-free design call, not a defect).
+4. **LOW, operator-side dispatch mistakes, cost ~34 inv:** the plugin dispatch-guard hook correctly
+   denied one over-full QM->Boatswain hand-off paste (thin-dispatch cap), self-healed on retry; and
+   the operator (this session) mis-dispatched Boatswain with `job: pre-clean` when a role-advanced
+   diff existed and `post-implementation` (which commits) was correct - pre-clean scans but never
+   commits, so a durable-artifact fix sat uncommitted for one extra leg. Both are operator mistakes,
+   not doctrine defects, named here only because they're a real, avoidable cost.
+5. **Crew's approach-cap (0.13.25) remains unexercised after 5 pilots.** Every fix this pilot,
+   including the double-invocation guard, converged on its first approach. Standing gap in test
+   coverage of that rule, not a new finding.
+
+Leg accounting (27 legs, all mined and banked to `data/pilot-5/`; wave/voyage boundaries above):
+top invocation legs were boatswain-recheck-commit (45), captain-voyage1 (75), qm-voyage1 (85, top
+of a 9-leg voyage-1 chain incl. 8 nested Crew mates), boatswain-voyage1-foul (44, the malformed-
+plank catch). Model split: sonnet 720/720 invocations, zero leak, verified per-leg via
+`message.model`.
+
 ## 0.13.27/0.13.28 blast-radius probes (2026-07-14, sonnet, HEAD-text, tw17/tw18)
 
 Three Boatswain custody legs on the pilot-#4 regression reproduced as a state. HEAD-text mode

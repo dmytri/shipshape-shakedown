@@ -1,0 +1,38 @@
+# meta: {"agentType":"shipshape:qm","description":"Pilot 5 QM leg: iteration 2 build voyage","toolUseId":"toolu_01YFYw4EC3f5HW233GzniuDF","spawnDepth":1,"model":"sonnet"}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/9f927b62-6bbe-4429-99e2-7f00ba8fe07a/subagents/agent-a052fb8953a190132.jsonl
+# banked: 2026-07-19T13:07:36Z
+qm-iteration2-voyage	1	12:59:44	13977	79	Skill:
+qm-iteration2-voyage	2	12:59:46	20105	5	Skill:
+qm-iteration2-voyage	3	12:59:51	27247	291	Bash:cat RIGGING.md && echo "---WATCHBILL---" && cat watchbill.json && echo
+qm-iteration2-voyage	4	12:59:57	52951	473	Bash:echo "--STATUS--" && git status --porcelain=v1 && echo "--FEATURES--" 
+qm-iteration2-voyage	5	13:00:02	54083	611	Read:todo-editing.feature ||| Read:routing.feature ||| Read:steps.js
+qm-iteration2-voyage	6	13:00:13	54799	828	Bash:find js -type f | sort && echo "---" && wc -l js/*.js 2>/dev/null
+qm-iteration2-voyage	7	13:00:18	62494	121	Read:app.js
+qm-iteration2-voyage	8	13:00:24	63342	504	Bash:find . -maxdepth 2 -name "*.html" -not -path "./node_modules/*" && ech
+qm-iteration2-voyage	9	13:00:29	68302	7	Bash:find . -maxdepth 2 -name "*.css" -not -path "./node_modules/*" && echo
+qm-iteration2-voyage	10	13:00:33	69271	217	Bash:find . -maxdepth 2 -name "*.css" -not -path "./node_modules/*" && echo
+qm-iteration2-voyage	11	13:00:36	69704	171	Bash:rg -n "editing" --type css
+qm-iteration2-voyage	12	13:00:39	70095	146	Bash:ls *.css assets/*.css 2>/dev/null; rg -n "editing"
+qm-iteration2-voyage	13	13:01:44	70331	5429	Bash:ls node_modules/.bin/cucumber-js 2>/dev/null && cat package.json 2>/de
+qm-iteration2-voyage	14	13:01:49	71712	345	Bash:npx cucumber-js features/todo-editing.feature features/routing.feature
+qm-iteration2-voyage	15	13:02:03	77299	1000	Read:world.js ||| Read:todo-storage.js ||| Read:poll.js
+qm-iteration2-voyage	16	13:02:10	78520	293	Read:hooks.js
+qm-iteration2-voyage	17	13:02:23	80728	1333	Edit:steps.js
+qm-iteration2-voyage	18	13:02:32	81648	611	Edit:steps.js
+qm-iteration2-voyage	19	13:02:34	83118	336	Bash:npx cucumber-js features/todo-editing.feature features/routing.feature
+qm-iteration2-voyage	20	13:03:18	83866	2728	Bash:npx cucumber-js features/todo-editing.feature --tags "not @captain and
+qm-iteration2-voyage	21	13:03:29	85047	880	Bash:echo "=== TARGET 1 ===" && npx cucumber-js features/todo-editing.featu
+qm-iteration2-voyage	22	13:04:05	87911	3017	Agent: ||| Agent:
+qm-iteration2-voyage	23	13:04:34	89686	1589	Bash:echo "waiting for crew notifications"
+qm-iteration2-voyage	24	13:04:39	93501	160	
+qm-iteration2-voyage	25	13:05:59	15948	256	
+qm-iteration2-voyage	26	13:06:08	15948	753	Bash:npx cucumber-js features/todo-editing.feature features/routing.feature
+qm-iteration2-voyage	27	13:06:19	94654	437	Bash:git diff -- js/app.js
+qm-iteration2-voyage	28	13:06:25	96976	317	Bash:rg -n "applyFilterToItem" js/app.js
+qm-iteration2-voyage	29	13:06:30	98495	3	Bash:npx jsdoc -X js 2>&1 | rg -o '"@planks[^"]*"|"@planks-provisional[^"]*
+qm-iteration2-voyage	30	13:06:38	98928	419	Bash:rg -n "@planks" js/app.js
+qm-iteration2-voyage	31	13:06:41	99489	237	Bash:npx cucumber-js --dry-run --format usage --tags "not @captain and not 
+qm-iteration2-voyage	32	13:06:52	100956	562	Bash:npx gplint features 2>&1 | tail -40 && echo "---biome---" && npx biome
+qm-iteration2-voyage	33	13:07:05	104867	704	Bash:git status --porcelain=v1 && echo "---diffstat---" && git diff --stat
+qm-iteration2-voyage	34	13:07:23	105501	1437	
+SUMMARY	qm-iteration2-voyage	invocations=34	cache_read=2441499	out=26299	wall=12:59:44 to 13:07:23

@@ -1,0 +1,22 @@
+# meta: {"agentType":"shipshape:crew","description":"Crew: hide checkbox/destroy on edit","toolUseId":"toolu_018MXzvyRy3tVVSkGcZjZ8Fx","parentAgentId":"a052fb8953a190132","spawnDepth":2}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/9f927b62-6bbe-4429-99e2-7f00ba8fe07a/subagents/agent-a34943168cd6ef711.jsonl
+# banked: 2026-07-19T13:07:48Z
+crew-hide-controls-on-edit	1	13:04:12	13977	76	Skill:
+crew-hide-controls-on-edit	2	13:04:14	20378	74	Skill:
+crew-hide-controls-on-edit	3	13:04:16	25535	175	Bash:cat RIGGING.md
+crew-hide-controls-on-edit	4	13:04:20	51166	138	Bash:sed -n '1,40p' features/todo-editing.feature
+crew-hide-controls-on-edit	5	13:04:22	51894	169	Bash:grep -n "hidden\|checkbox\|destroy" features/step_definitions/steps.js
+crew-hide-controls-on-edit	6	13:04:25	52805	235	Bash:ls && find . -maxdepth 2 -not -path './node_modules*' -not -path './.g
+crew-hide-controls-on-edit	7	13:04:28	53545	145	Bash:grep -n "editing\|toggle\|destroy" js/app.js | head -60
+crew-hide-controls-on-edit	8	13:04:30	54060	231	Bash:grep -rn "editing" index.html assets/app-template.index.html js/ 2>/de
+crew-hide-controls-on-edit	9	13:04:34	54921	164	Bash:rg -n "editing" index.html js/ 2>/dev/null; find . -iname "*.css" -not
+crew-hide-controls-on-edit	10	13:04:39	55323	68	Bash:rg -n "editing" index.html js
+crew-hide-controls-on-edit	11	13:04:42	55673	145	Read:index.html
+crew-hide-controls-on-edit	12	13:04:47	55911	467	Read:app.js
+crew-hide-controls-on-edit	13	13:05:17	56540	2874	Edit:app.js
+crew-hide-controls-on-edit	14	13:05:25	60344	496	Edit:app.js
+crew-hide-controls-on-edit	15	13:05:27	63347	343	Edit:app.js
+crew-hide-controls-on-edit	16	13:05:31	63973	190	Bash:npx cucumber-js features/todo-editing.feature --tags "not @captain and
+crew-hide-controls-on-edit	17	13:05:42	64422	361	Bash:git diff --stat && npx cucumber-js features/todo-editing.feature --tag
+crew-hide-controls-on-edit	18	13:05:51	68187	695	
+SUMMARY	crew-hide-controls-on-edit	invocations=18	cache_read=922001	out=7046	wall=13:04:12 to 13:05:51

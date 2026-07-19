@@ -1,0 +1,24 @@
+# meta: {"agentType":"shipshape:qm","description":"Pilot 5 QM leg: fresh custody-foul re-derivation","toolUseId":"toolu_019HY1nawN2kciUXGFmvCLg7","spawnDepth":1,"model":"sonnet"}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/9f927b62-6bbe-4429-99e2-7f00ba8fe07a/subagents/agent-a6a5a416ded42694f.jsonl
+# banked: 2026-07-19T12:31:10Z
+qm-fresh-rederivation-noop	1	12:23:22	15948	76	Skill:
+qm-fresh-rederivation-noop	2	12:23:26	20059	5	Skill:
+qm-fresh-rederivation-noop	3	12:23:30	27198	292	Bash:cat RIGGING.md && echo "---WATCHBILL---" && cat watchbill.json && echo
+qm-fresh-rederivation-noop	4	12:23:36	53003	335	Bash:find . -path ./node_modules -prune -o -type f -print | grep -v '^\./\.
+qm-fresh-rederivation-noop	5	12:23:43	55098	498	Bash:ls -la features/
+qm-fresh-rederivation-noop	6	12:23:48	55699	1227	Read:new-todo.feature ||| Read:todo-completion.feature ||| Read:todo-editing.feature ||| Read:bulk-actions.feature ||| Read:counter.feature ||| Read:persistence.feature ||| Read:routing.feature ||| Read:steps.js ||| Read:app.js
+qm-fresh-rederivation-noop	7	12:24:00	56625	1168	Read:hooks.js ||| Read:world.js ||| Read:todo-storage.js ||| Read:poll.js ||| Read:static-server.js ||| Read:json-schema.js ||| Read:index.html
+qm-fresh-rederivation-noop	8	12:24:09	71738	354	Bash:cat package.json && echo --- && ls node_modules 2>/dev/null | head -5 
+qm-fresh-rederivation-noop	9	12:24:39	76948	2586	Bash:npx playwright --version && node -e "try{require('playwright').chromiu
+qm-fresh-rederivation-noop	10	12:24:44	78084	315	Bash:npx cucumber-js features/new-todo.feature \   --name "^An empty todo l
+qm-fresh-rederivation-noop	11	12:24:50	80711	261	Bash:npx cucumber-js features/todo-completion.feature \   --name "^Checking
+qm-fresh-rederivation-noop	12	12:24:55	81247	304	Bash:npx cucumber-js features/todo-editing.feature \   --name "^Double-clic
+qm-fresh-rederivation-noop	13	12:25:00	81686	349	Bash:npx cucumber-js features/bulk-actions.feature \   --name '^Checking "M
+qm-fresh-rederivation-noop	14	12:25:06	82211	274	Bash:npx cucumber-js features/counter.feature \   --name "^Counter shows th
+qm-fresh-rederivation-noop	15	12:25:11	82823	290	Bash:npx cucumber-js features/persistence.feature \   --name "^Creating a t
+qm-fresh-rederivation-noop	16	12:25:17	83290	320	Bash:npx cucumber-js features/routing.feature \   --name '^The "All" filter
+qm-fresh-rederivation-noop	17	12:25:27	83787	4	Bash:grep -n "@captain\|@shipwright" features/*.feature
+qm-fresh-rederivation-noop	18	12:25:30	84333	135	Bash:rg -n "@captain|@shipwright" features/
+qm-fresh-rederivation-noop	19	12:25:39	84915	761	Bash:git status --porcelain
+qm-fresh-rederivation-noop	20	12:25:55	85065	2154	
+SUMMARY	qm-fresh-rederivation-noop	invocations=20	cache_read=1340468	out=11708	wall=12:23:22 to 12:25:55

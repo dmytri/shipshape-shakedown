@@ -1,5 +1,82 @@
 # Captain notes - shipshape-shakedown workstream
 
+## 2026-07-19 (sonnet session): PILOT #5 RUN - FULL PASS in 3 clean iterations, zero regressions, the cleanest pilot to date. Two findings routed, none shipped.
+
+Entry: `/shakedown pilot`. Deck check: this repo and `~/shipshape` both clean/level with origin;
+`~/shipshape` at 0.13.33 (`bc731e4`, installed 09:51:32 UTC); this session's own process started
+11:14:59 UTC, postdating the install, so the queued RESTART was already satisfied and the
+installed-plugin channel was live from the start (confirmed empirically: 0.13.33 marker phrases
+`Recording routes with installation` and `feature lint first` both hit on the first Captain leg's
+transcript). dk confirmed the cost (AskUserQuestion) before spending anything, per the pilot's own
+one-line-cost-confirmation rule.
+
+**Full account, numbers, and the four-axis analysis are in METRICS.md's "Pilot #5" section - not
+restated here in full.** Headline: scaffold (unborn HEAD, vendored assets untracked, matching the
+0.13.30 greenfield-fork pattern - Captain's own bootstrap commit `61014cb`, first time this exact
+seam has fired at integration/pilot scale) through oracle grade 1 (24/29, ties pilot #4's best cold
+open) through two iterations of genuine product-language feedback (never test output/selectors,
+quarantine held and verified via transcript grep on every leg) to **28/29, 0 failing, 1 pending -
+"All specs passed!" at iteration 3.** 720 invocations / 55.79M cache / 433.2k out across 27 legs,
+100% sonnet, zero model leak. Zero regressions, zero plateau, zero wasted iteration - every
+translated feedback item landed a real, root-caused fix (notably: iteration 3's fix found the actual
+cause of a recurring `NotFoundError` - `saveEdit`'s `li.remove()` on an empty-title Enter fires a
+native `blur` re-entrantly on an already-removed node - and closed it with a `destroyed` guard, not
+a workaround). This closes the two things the queue named for this pilot: the 0.13.27/28 +5 inv/leg
+custody-price watch fired live and repeatedly (every support-touching custody leg correctly ran the
+`broad` sweep, never a narrow rerun); Crew's 0.13.25 approach-cap remains **unexercised** - every fix
+converged on its first approach, this pilot included.
+
+**Two findings routed to dk, neither shipped (full text in METRICS.md):**
+
+1. **HIGH - a real doctrine gap, reproduced twice this voyage.** The "foul survives a lost caller"
+   guarantee (`boatswain/SKILL.md:77`, `qm/SKILL.md:72`) - the claim that a fresh, role+base-commit-
+   only QM redispatch can independently rediscover a custody foul Boatswain found - does NOT actually
+   fire for a malformed-plank fault (content correct, placement wrong: 5 `@planks` docblocks sat on
+   bare statements/anonymous callbacks, so `jsdoc -X` silently failed to attach them - the FIRST live,
+   non-staged observation of this exact fault class) when the underlying scenarios are already green
+   and `RIGGING.md`'s `runrecord` is `none`. QM's own contract treats an already-green watch as
+   complete and explicitly excludes plank-drift hunting from its routine job ("hunting it is harbour
+   work") - so a genuinely thin redispatch is a structural no-op here, confirmed twice live (once via
+   a correct contamination refusal when I over-supplied hand-off content, once via a clean thin
+   dispatch that silently completed without ever inspecting plank form). With no run-record, there is
+   no other durable trace for a context-cleared QM to find. I worked around it operator-side by
+   dispatching Crew directly with evidence-only content (no diagnosis/fix prescription) - the current
+   role-dispatch chain has no legal route for this case as written. **Needs your ruling**: narrow the
+   self-healing claim to exclude this fault shape, stop treating `runrecord` as optional wherever this
+   property matters, or add a mandatory plank-form check to QM's own routine.
+2. **MEDIUM - a reproducible bulkhead-discipline slip, 3-for-3 this voyage (2 Boatswain, 1 QM), all
+   self-caught, zero downstream effect.** Each instance ran an unscoped `rg`/search across the whole
+   tree while chasing a stale dependency-name reference, briefly surfacing `CAPTAIN.md` content
+   before self-correcting to a properly-scoped rerun. This is the 0.13.26 bulkhead fix's own accepted
+   tradeoff showing its cost: bare/untargeted `rg` is a sanctioned safe form the hook cannot block (it
+   can't know in advance what a search will return), so content-blindness on this shape rests on role
+   discipline alone - and it failed at a real, repeated rate. Candidate fix: nudge role skills to
+   pathspec-exclude `CAPTAIN.md` by default on any repo-wide content search.
+
+Also recorded, not routed as findings: RIGGING.md's dependency consumer-routing rule (0.13.28/33)
+held correctly all voyage - toolchain deps installed at bootstrap, `director` installed the moment
+Crew's seam needed it, `todomvc-common`/`todomvc-app-css` correctly identified as unwired drift and
+STRUCK rather than force-installed (a legitimate vanilla-CSS-free design call, not a defect); two
+operator-side dispatch mistakes cost ~34 inv (an over-full hand-off the guard correctly denied, and
+one `job: pre-clean` dispatch where `post-implementation` was needed to actually commit) - named for
+completeness, not doctrine defects.
+
+**Oracle grading mechanics** (for the next pilot session): cloned tastejs/todomvc fresh into the
+scratchpad at the pinned commit, applied both `fixtures/oracle/*.patch` files, built the pilot app
+into `examples/shakedown/` (copying `index.html`, `js/app.js`, and the vendored `node_modules/
+director` - this project has no build step), served via `npm run server`, graded with `npx cypress
+run --env framework=shakedown`. `cypress install` needed one explicit run first (npm's
+`allowScripts` blocked the postinstall binary download). Watch the double-background trap: a
+`nohup ... & ` inside a `run_in_background:true` Bash call reports "completed" the instant the OUTER
+shell returns, not when the actual backgrounded process finishes - caught this live on grade 1 (log
+showed only 3 passing lines when the notification said "completed"); fixed by polling the log file
+for the `Run Finished` marker via a proper `until`-loop background command instead.
+
+**QUEUE for the next session:** dk's ruling owed on the two findings above. Wave-7 A/B/C stays
+deferred until yoink is ready (unchanged). Instrument-3 matrix now has a fresh, clean 720-invocation
+pilot corpus to ride alongside wave-7's, whenever that runs (measure-don't-move per dk's standing
+ruling).
+
 ## 2026-07-19 (fable session, continued): dk's "proceed on all but pilot" DISCHARGED - banking layer landed, 0.13.33 shipped + spot-validated FULL PASS, board clear for the sonnet pilot session
 
 dk's word: proceed on everything except pilot #5, which runs in a fresh sonnet

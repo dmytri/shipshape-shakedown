@@ -1,0 +1,14 @@
+# meta: {"agentType":"shipshape:crew","description":"Crew: build todo editing behavior","toolUseId":"toolu_01CCBssgY3daaUpbJJBC4iKH","parentAgentId":"a62d7a9cae2b1e2a4","spawnDepth":2}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/9f927b62-6bbe-4429-99e2-7f00ba8fe07a/subagents/agent-ab3e029fef1c421f6.jsonl
+# banked: 2026-07-19T12:12:23Z
+crew-todo-editing	1	11:51:02	15929	75	Skill:
+crew-todo-editing	2	11:51:04	21283	78	Skill:
+crew-todo-editing	3	11:51:08	26438	387	Bash:cat RIGGING.md ||| Read:todo-editing.feature
+crew-todo-editing	4	11:51:11	52073	295	Bash:sed -n '1,260p' features/step_definitions/steps.js ||| Read:app-spec.md
+crew-todo-editing	5	11:51:17	53859	248	Read:app.js ||| Read:index.html
+crew-todo-editing	6	11:52:01	59831	6193	Edit:app.js
+crew-todo-editing	7	11:52:17	61841	187	Bash:npx cucumber-js features/todo-editing.feature --tags "not @captain and
+crew-todo-editing	8	11:52:22	68164	247	Bash:npx cucumber-js features/new-todo.feature --tags "not @captain and not
+crew-todo-editing	9	11:52:30	68463	185	Bash:npx jsdoc -X js 2>&1 | grep -c '"kind"' ; echo "jsdoc ran ok"
+crew-todo-editing	10	11:52:38	68937	608	
+SUMMARY	crew-todo-editing	invocations=10	cache_read=496818	out=8503	wall=11:51:02 to 11:52:38

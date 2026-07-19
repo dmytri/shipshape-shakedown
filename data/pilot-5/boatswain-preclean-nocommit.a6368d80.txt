@@ -1,0 +1,21 @@
+# meta: {"agentType":"shipshape:boatswain","description":"Pilot 5 Boatswain leg: custody for RIGGING/CAPTAIN fix","toolUseId":"toolu_01JsVWRng95Tj8jnHASvKjPW","spawnDepth":1,"model":"sonnet"}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/9f927b62-6bbe-4429-99e2-7f00ba8fe07a/subagents/agent-a6368d80e92473efb.jsonl
+# banked: 2026-07-19T12:47:59Z
+boatswain-preclean-nocommit	1	12:44:13	15915	3	Skill:
+boatswain-preclean-nocommit	2	12:44:15	19999	79	Skill:
+boatswain-preclean-nocommit	3	12:44:20	28365	244	Bash:ls -la && git status && git log --oneline -5
+boatswain-preclean-nocommit	4	12:44:24	54001	300	Bash:cat RIGGING.md && echo "---STATUS---" && git status && echo "---DIFF--
+boatswain-preclean-nocommit	5	12:44:29	55039	425	Bash:cat package.json && echo "---" && cat index.html && echo "---nodemodul
+boatswain-preclean-nocommit	6	12:44:41	56586	3	Bash:grep -i todomvc package-lock.json | head -20; echo "---git status untr
+boatswain-preclean-nocommit	7	12:44:49	57606	949	Bash:(npx jsdoc -X js; echo "===JSDOC_EXIT:$?==="; npx cucumber-js --dry-ru
+boatswain-preclean-nocommit	8	12:44:56	58350	188	Bash:grep -n "===.*_EXIT:" /home/exedev/.claude/projects/-home-exedev-ships
+boatswain-preclean-nocommit	9	12:45:00	59897	303	Bash:rg -n "===.*_EXIT:" /home/exedev/.claude/projects/-home-exedev-shipsha
+boatswain-preclean-nocommit	10	12:45:04	60273	207	Read:b505phls8.txt
+boatswain-preclean-nocommit	11	12:45:11	60764	516	Read:hygiene_run.txt
+boatswain-preclean-nocommit	12	12:45:20	70199	510	Bash:grep -n "@planks\|ATTENTION\|jsdoc" /tmp/claude-1000/-home-exedev-ship
+boatswain-preclean-nocommit	13	12:45:36	72609	1356	Bash:grep -rn "todomvc-common\|todomvc-app-css" --include="*" . --exclude-d
+boatswain-preclean-nocommit	14	12:45:41	75136	196	Bash:rg -n "todomvc-common|todomvc-app-css" . ; echo "exit:$?"
+boatswain-preclean-nocommit	15	12:45:54	76667	1163	Bash:ls -la | grep -i ignore; cat .gitignore 2>/dev/null; find . -maxdepth 
+boatswain-preclean-nocommit	16	12:46:48	78066	4584	Bash:grep -n "===JSDOC_EXIT" /tmp/claude-1000/-home-exedev-shipshape-shaked
+boatswain-preclean-nocommit	17	12:47:14	79417	3139	
+SUMMARY	boatswain-preclean-nocommit	invocations=17	cache_read=978889	out=14165	wall=12:44:13 to 12:47:14
