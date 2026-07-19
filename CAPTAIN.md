@@ -64,7 +64,14 @@ mismatches survived several sessions. **WATCH opened: cross-model doctrine porta
 has never validated doctrine text against a non-Claude model. Candidate probe when worth the
 spend: a same-class harness task on sonnet vs Terra on CURRENT doctrine, same channel, to
 separate task difficulty from model fit. Re-vendor yoink to current doctrine before drawing
-any model conclusion.
+any model conclusion. DISCHARGED same day, and the CHANNEL POLICY is now dk-ruled and
+standing: **plugin for Claude, skills(.sh vendor) for opencode, nothing for other runtimes.**
+Executed: `npx skills update` run in BOTH consumers (~/yoink, ~/jolly), all six vendored
+SKILL.md files verified byte-equal to 0.13.33 HEAD, Articles marker phrase confirmed in both;
+the user-scope Claude plugin was already 0.13.33, so both channels now serve current text in
+both repos. Nothing committed in either consumer (jolly's vendor paths are git-ignored;
+yoink's tree stays its own mid-voyage custody's business). ~/estelle and ~/swamp carry no
+shipshape vendor - correctly nothing, per the policy.
 
 ## 2026-07-19 (sonnet session, continued): PILOT #5 RETROSPECTIVE FOLD (dk's "eval pilot") - the fold done SAME-SESSION while the raw data exists, closing the loop pilot #4's lost transcripts opened
 
