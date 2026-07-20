@@ -42,7 +42,11 @@ defer to harbour), and count working-tree commands per leg - the pre-fix discrim
 correct when a leg ran one, 1/3 when it ran none.
 **If the bar misses: DO NOT PATCH FURTHER. Route back to dk.** The line is then not the fix.
 
-### STEP 2 - validate 0.13.37 (turn-ending text + background-custody hook). ~50 inv / ~2.5M.
+### STEP 2 - validate 0.13.37 (turn-ending text + background-custody hook) AND 0.13.38. ~70 inv / ~3.5M.
+
+**0.13.38 additionally owes a COST CHECK on change B** (the strike's new third rung can order a
+focused run the old text forbade): compare custody-leg invocations against the 0.13.35 battery
+baselines in METRICS.md. Marker for 0.13.38: `Captain never writes production code`.
 
 Shipped `b761b64`, UNVALIDATED. Two changes on one seam: `:354` no longer contradicts `:360`
 (a role never ends its turn holding work that CANNOT RESUME IT; a dispatched agent is not that
@@ -116,6 +120,37 @@ ALSO CARRY, unresolved and dk's to read: the META-FINDING further below - probe 
 systematically too clean to reproduce pilot-scale faults. `scenarios/wave7.md` addresses the
 fixture-realism half by construction; the general question is still open.
 <!-- =================== END PRIMED ORDER =================== -->
+
+## 2026-07-20: 0.13.38 SHIPPED (f86dd31) on dk's word - three layers of the deadlock - and yoink RE-VENDORED to it
+
+Tests 5/5, pushed, installed 0.13.38. **A, B and C from `designs/deadlock/proposed-0.13.38.md`
+shipped together**, deliberately as one release because they are three layers of ONE fault:
+
+- **A, Wake policy**: the run record is read at its `runrecord` path; it is git-ignored by design,
+  so a git-tracking check such as `git ls-files` and a bare `rg` sweep both report it missing when
+  it is present. Closes the confirmed mechanism.
+- **B, `boatswain:99`**: the strike falls back to running the watchbill's own entries when neither
+  a hand-off nor a current-hash record carries the evidence - mirroring recheck selection, which
+  has had that ladder all along. The strike now terminates.
+- **C, Blocker policy**: Captain's authority at sea, in dk's framing. The Articles exist so
+  production code derives from durable specs, not to stop Captain making progress; Captain may
+  name a deadlock or a critical correction no available role can make, take the minimal
+  progress-restoring action, and record it. **Absolute boundary: Captain never writes production
+  code.** Reaching the rule is itself a doctrine defect, reported as one.
+
+**yoink RE-VENDORED**: `npx skills update` run in ~/yoink, all six SKILL.md files verified
+BYTE-EQUAL to 0.13.38 HEAD, and all five markers present (A, B, C plus 0.13.36's and 0.13.37's).
+They were four versions behind; they are now current. Nothing was committed in their tree - the
+vendored path is theirs to commit under their own custody.
+
+**What unsticks them is C**: striking a spent watchbill and making the custody commit are both
+non-application-code actions, so their Captain now holds the authority to resolve the deadlock
+without any further doctrine. A and B stop it recurring.
+
+**Owed and unrun, all three riding the same restart:** 0.13.36, 0.13.37 and 0.13.38 have NO
+plugin-channel validation. B is the one piece with a behavioural effect and owes a cost check
+against the battery states - it can order a focused run the old text forbade. Disjoint seams
+(QM retrieval / turn-ending / custody strike) keep them attributable in one battery.
 
 ## 2026-07-20: yoink's deadlock ROOT CAUSE CONFIRMED from their transcript, and dk's ruling that CAPTAIN MAY BREAK A DEADLOCK
 
