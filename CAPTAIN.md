@@ -90,6 +90,67 @@ systematically too clean to reproduce pilot-scale faults. `scenarios/wave7.md` a
 fixture-realism half by construction; the general question is still open.
 <!-- =================== END PRIMED ORDER =================== -->
 
+## 2026-07-20: CONSUMER FINDING from ~/yoink Captain notes (dk's pointer) - the FLAT HAND-OFF ORPHANED THE WATCHBILL STRIKE. Structural, dated to 0.13.17, ROUTED NOT SHIPPED.
+
+dk: "see latest notes from ~/yoink captain for upstream feedback." Read `~/yoink/CAPTAIN.md`
+(68 lines) and verified every claim against that tree rather than trusting the notes.
+
+**Their "Shipshape Dispatch Findings" section carries three items. The third is a real doctrine
+deadlock and it dates to a specific commit.**
+
+Their words: "Boatswain requires spent-watch evidence before it strikes `watchbill.json`. Its
+dispatch contract permits only job, base commit, and advanced target references, so Captain
+cannot convey QM's spent evidence. A Boatswain return asks Captain for evidence that the contract
+bars Captain from supplying... This leaves a green target with a retained watchbill and no legal
+custody path."
+
+**Verified, and it is exact.** Boatswain strikes on ONE of two routes (`boatswain/SKILL.md:99`):
+(a) "when the caller's hand-off reports the watchbill spent", or (b) "the run record corroborates
+every watchbill entry green at the current deck-state hash".
+- Route (a) is STRUCTURALLY UNREACHABLE under the flat hand-off. `git log -S` dates the strike
+  rule to **0.13.2** (`6a8a242`), when QM dispatched Boatswain directly - so the caller's hand-off
+  WAS QM's and could legally report "spent". **0.13.17** (`85e9e6f`) made the hand-off flat: "QM's
+  caller dispatches custody", i.e. Captain. The same commit set the Dispatch contract's Boatswain
+  row to "job, base commit, and the advanced target references" (`shipshape/SKILL.md:339`) and
+  **never widened it to carry the spent fact**. The rule still names a caller that can no longer
+  speak. Latent since 0.13.17; a real consumer hit it first.
+- Route (b) is OPTIONAL by doctrine ("where `runrecord` is `none`, no record is kept and custody
+  falls back to rerun"), and in yoink's tree it is unusable for a second reason - see below.
+
+**Secondary defect, tree-verified, worth its own line:** yoink's `coverage/runrecord.json` carries
+two entries for the same target, and the second's hash is
+`e69de29bb2d1d6434b8b29ae775ad8c2e48c5391` - **git's empty-blob hash**. A role computed a
+deck-state hash and recorded the hash of nothing, a line that can never corroborate against any
+real deck (current hash there is `36ffc19...`). Whatever produced it, the record is malformed, so
+even the surviving route was shut in that tree.
+
+**NOT a fit-out fault, checked before blaming the consumer:** doctrine REQUIRES the git-ignored
+homing yoink used - `shipwright/SKILL.md`: "derive `runrecord` as a git-ignored wake path... and
+confirm the path is ignored", and templates.md says the same. `coverage/runrecord.json` under a
+gitignored `coverage/` is conformant. Their fit-out is right; the gap is ours.
+
+**This is independent confirmation of pilot #5's still-open finding 1, from the opposite
+direction.** That finding said the "foul survives a lost caller" property fails when `runrecord`
+is `none`, and asked whether runrecord should stop being optional wherever a property depends on
+it. yoink shows the GREEN direction failing for the same root: the flat hand-off left the strike
+depending on a record doctrine does not require. Two manifestations, one root, now with a real
+consumer behind it.
+
+**Classification per the new probe-first rule: TEXTUAL.** Three lines that together make route (a)
+unreachable are visible in the artifacts; no behavioural probe is owed for the defect, though
+yoink's observation corroborates it. Candidate fix, smallest form: widen the Dispatch contract's
+Boatswain row to carry the spent-watch fact for a post-implementation job, OR reword the strike
+rule so it does not name a channel the contract closed. **ROUTED, NOT SHIPPED** - and note it
+would be a THIRD unvalidated version riding the restart, which is the accumulation problem this
+harness already has once. dk's call whether it goes before or after the two owed validations.
+
+**Their other two items, for completeness:** (1) Captain->QM refusing target/failing-run evidence
+as contamination is doctrine working as designed - the bulkhead is durable-artifacts-only and
+`watchbill.json` is the channel; their own note records the correct thin retry. Not a finding.
+(2) "run record did not persist on the committed deck" is the same root as the third item; a
+git-ignored record is never on the committed deck BY DESIGN, so a role reading "durable" as
+"committed" would be misreading it - worth watching, but the structural gap above is the real one.
+
 ## 2026-07-19 (sonnet session): EFFICIENCY BATTERY 0.13.35 — primed order discharged, one HIGH finding, orphan-class non-reproduction datum, installed-plugin channel confirmed live
 
 Entry: bare `/shakedown`. The primed order at the top of this file (written by the prior opus
