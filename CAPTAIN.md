@@ -48,9 +48,16 @@ seams, so one session can run both without confounding them:
   on a well-behaved leg), no legitimate command denied, and the multi-agent filler-invocation
   pattern gone.
 
-4. **Wave 7** - now gated only on the two validations above and its own yoink gate (2-of-3:
-   green @eval landed, custody + push outstanding, and NO git remote configured in that repo,
-   which is not ours to fix).
+4. **Wave 7 - DESIGNED AND READY TO RUN, gated on three named preconditions.** The full design,
+   with arms, measures, and PASS bars all fixed IN ADVANCE per the new probe-first rule, is now
+   `scenarios/wave7.md`. Gates: (a) both validations above green; (b) sonnet session, since wave
+   7 has nested spawns by design and an opus session voids it; (c) yoink seaworthy.
+   **yoink moved on 2026-07-19/20 and its gate is nearly shut**: @eval is GREEN (exit 0, 64s,
+   3.5MB session.jsonl, against the old SIGTERM/360s/zero-bytes), custody is committed across 7
+   commits, and a git remote NOW EXISTS (`git@github.com:dmytri/yoink.git`) where before there
+   was none. Outstanding there: 2 unpushed commits and one uncommitted `D watchbill.json`.
+   **The push is outbound, Captain-only, in dk's own repo - the harness did not and will not do
+   it.** Arm C unblocks the moment it lands; arms A and B do not depend on it.
 
 ALSO CARRY, unresolved and dk's to read: the META-FINDING further below - probe fixtures may be
 systematically too clean to reproduce pilot-scale faults. Item 3 above absorbs most of it, but
