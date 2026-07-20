@@ -59,6 +59,41 @@ class or only narrowed it.
 Banked `data/slowcensus-0.13.37-38-validation/` (4 legs). 0.13.37 and 0.13.38 do NOT clear
 validation on this evidence — contrast 0.13.36, which cleared cleanly above.
 
+### Rate rerun, n=8 (2026-07-20, same session, same tw13 state, 5 more QM legs)
+
+Same probe, same base commit, doctrine alone (no harness background-task lines), sonnet,
+0.13.38 marker confirmed 1/1 in all 5 new transcripts, 5/5 sonnet (one leg's own nested
+`Agent` tool_use carried `model: sonnet` for its own Crew/Boatswain dispatch — not a leak,
+confirmed by inspecting the tool_use input, not the invocation's `message.model`, which is
+`claude-sonnet-5` throughout).
+
+**7/5 new legs (tw13-4,5,6,7,8) all PASS clean** — one executing sweep, correct Crew batch,
+proper Final report, zero live background tasks at stop. tw13-7 went further than the others
+unprompted (no stop instruction was given) and nested all the way through Boatswain custody
+to a clean commit (`3ca1df1`) — a legal but more expensive path than the flat hand-off the
+other legs took; noted, not a fault. Invocations: 23, 26, 33, 27, 30 (139 total / 8.06M
+cache).
+
+**Combined n=8 rate: 7/8 clean, 1/8 (12.5%) reproduced the deadlock (tw13-3 from the first
+batch).** This narrows the original "1/3" framing — the failure is real and tree-verified
+(tw13-3 produced nothing: no runrecord, no commit, no low-tide step definitions), and at n=8
+it looks like a low-frequency compliance gap rather than a systemic failure of the fix.
+
+**Sharper cut, checked against the transcripts directly (grep for the runtime's own
+"moved to the background" line, not inferred):** only 3 of the 8 legs actually crossed the
+runtime's ~120s auto-background boundary at all (tw13-3, tw13-6, tw13-8) — the other 5's
+sweeps completed inside the foreground budget on those runs and never exercised the fix's
+target condition. **Of the 3 legs that DID hit the boundary, 2 recovered cleanly (tw13-6,
+tw13-8: read the output file to its summary line, continued, one committed all the way
+through custody) and 1 deadlocked (tw13-3).** So the real denominator for "does the fix hold
+when the condition it targets actually fires" is 3, not 8, and the rate is **1/3 (33%),
+not 1/8 (12.5%)** — the wider n=8 mostly added legs whose sweep finished in time and so never
+tested the fix at all. This is a materially different and more concerning number than the
+headline 12.5% suggests, at a small sample (n=3 boundary-crossing events). A probe that
+reliably forces the auto-background boundary every time (rather than relying on wall-clock
+chance around the ~150s sleep vs the ~120s cap) is needed to get a trustworthy rate. Routed to
+dk alongside the original finding; NOT closed, NOT downgraded — if anything, sharpened.
+
 ## 0.13.36 validation, arm D repeat (2026-07-20, sonnet, installed-plugin channel, 8 legs, primed-order Step 1)
 
 Reproduces arm D exactly (`designs/plankroute/results.md`/`rubric.md`): tw4 probe state
