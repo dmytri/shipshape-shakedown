@@ -1,5 +1,11 @@
 # Captain notes - shipshape-shakedown workstream
 
+> **START HERE: the standing PRIMED ORDER is at the `>>> PRIMED ORDER for a CLEAN RESTART <<<`
+> heading below (written 2026-07-20, opus session). Read it before acting on anything above it.
+> It says: DO NOT run Pilot #6 next. Fix the stale probe fixtures, then run the installed-channel
+> validation this restart exists to enable. The pilot order that preceded it is ARCHIVED, marked
+> DO NOT RUN. The entries above this line are the record of how that order was reached.**
+
 ## 2026-07-20 (opus session, continued): 0.13.41 SHIPPED, PAIRED BATTERY RUN - doctrine cost is FLAT, and the PROBE FIXTURES have been stale since 0.13.34
 
 **0.13.41 SHIPPED (`6e46a72`) on dk's "proceed"**, tests 231/231 green, installed 15:32:19Z. The
