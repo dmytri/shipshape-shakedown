@@ -221,7 +221,102 @@ on wall-clock chance around the ~150s sleep vs the ~120s cap), so a trustworthy 
 probe redesign, not more reruns of this one.
 
 <!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
-## >>> PRIMED ORDER for a CLEAN RESTART (written 2026-07-20 at dk's "prime for new session and pilot") <<<
+## >>> PRIMED ORDER for a CLEAN RESTART (written 2026-07-20, opus session, at dk's "is everything ready for a restart") <<<
+
+**SUPERSEDES the pilot order below (now marked ARCHIVED). DO NOT RUN PILOT #6 NEXT.** That order
+was written before this session's audit and paired battery. Running a pilot next would spend
+pilot-scale cost on doctrine with five unvalidated versions and on probe fixtures that are known
+broken - and the pilot's own baseline arm would inherit both. The evidence for that call is in
+the two 2026-07-20 opus-session entries at the top of this file and in METRICS.md's paired-battery
+section.
+
+### DECK AS LEFT (verified at hand-off, not recalled)
+
+- `~/shipshape` clean, level with origin, HEAD `6e46a72` = **0.13.41**. Tests 231/231 green.
+  Scratchpad worktrees pruned; the repo holds doctrine only.
+- Installed plugin **0.13.41**, `gitCommitSha` `6e46a72`, installed 15:32:19Z, scope `user`.
+  Plugin HEAD and doctrine HEAD agree.
+- `~/shipshape-shakedown` clean and level with origin. All 8 battery legs banked to
+  `data/paired-battery-0.13.41/`.
+- **This restart is the whole point: 0.13.36 through 0.13.41 have NO installed-channel
+  behavioural validation.** Every leg this session ran HEAD-text because the process predated the
+  installs. A fresh process finally snapshots 0.13.41.
+
+### PRECONDITIONS - verify before spending anything
+
+1. **SESSION MODEL SONNET.** Every baseline in METRICS.md is sonnet, and the async-resumption leak
+   sends nested spawns to the SESSION model. An opus session makes the numbers incomparable.
+2. **CHANNEL CONFIRMED EMPIRICALLY, never from timestamps.** Dispatch one leg, then grep its raw
+   transcript for a 0.13.41-unique string: `Unreachable code is the exception this list does not
+   carry` (shared Articles) or `per the Transient output policy` in qm/boatswain/shipwright (the
+   pre-0.13.41 text read "per the Wake policy"). Zero hits = stale snapshot = STOP and report.
+   If `shipshape:qm` etc. fail to resolve as a `subagent_type`, that is the plugin-agent registry
+   gap this file records for 2026-07-20 - route it to dk, do not fall back to HEAD-text.
+3. **`git fetch` both repos FIRST**, before reading anything.
+
+### THE ORDER OF WORK, and why this order
+
+**STEP 1 - FIX THE PROBE FIXTURES. dk's word owed; nothing else is trustworthy until this lands.**
+`fixtures/probe-states/` carries 8 planks in the pre-0.13.34 keyword-bearing form
+(`station.js`, `tide-range-planked.js`, `tide-range-unplanked.js`, `tide-fitted.js`), plus
+`scenarios/probes.md:230` teaches that form. The fixtures were authored at the 0.13.11 era and
+never updated; 0.13.34 silently made every one of them malformed BY CONSTRUCTION. Confirmed
+damage: **tw3 stopped testing its own subject** (it is a clean-custody probe for the content-blind
+CAPTAIN.md bulkhead and should END IN A COMMIT - the 0.13.33 control did exactly that,
+`f52037e`), and the 0.13.35 battery scored that foul as a doctrine success at a matching
+invocation count. **Scope check before repairing: tw4 and the 0.13.36 validation SURVIVE** - that
+probe tests diff-membership, and `nextHighTide` is genuinely beyond-diff and genuinely malformed,
+so the deferral is correct whatever the cause. tw1/tw2/tw6 carry the same stale planks and their
+verdicts have NOT been checked - check them as part of this step.
+
+**STEP 2 - INSTALLED-CHANNEL VALIDATION BATTERY.** This is what the restart exists for. Re-run the
+tw1/tw3/tw4/tw5 leg set on the installed channel (thin `shipshape:*` dispatches, not HEAD-text)
+against the HEAD-text numbers this session banked. The comparison matters because the
+plank-routing probe already established HEAD-text SUPPRESSES compliance faults (4/4 there vs 3/4
+installed) - so this session's clean economy result is measured on the forgiving channel and does
+not transfer. Expect ~90-110 inv per arm.
+
+**STEP 3 - RUN THE PARKED 0.13.40 ROUTING PROBE.** Fully built, never run, rubric fixed IN ADVANCE
+at `designs/depfitout/rubric.md` with the decision rule and null-result handling already stated -
+read it before touching anything and do not redesign it. Two seams: Crew REFUSING to install a
+recorded-but-uninstalled dependency, and Shipwright taking up a policy-ordered upgrade that has no
+failing target. Neither has been tested; the only 0.13.40 evidence anywhere is one happy-path
+Shipwright leg. The probe states may need rebuilding after Step 1 changes the fixtures.
+
+**STEP 4 - THE STEP 2 DEADLOCK FINDING, still open and still the biggest behavioural risk.**
+1/3 of legs that actually crossed the runtime's ~120s auto-background boundary deadlocked
+completely. The stated blocker is that no probe reliably FORCES that boundary - it depends on
+wall-clock chance around a ~150s sleep vs a ~120s cap - so a trustworthy rate needs a probe
+REDESIGN, not more reruns. This lives precisely in the pilot-scale condition wave 7 exercises.
+
+**THEN, and only then, reconsider the pilot and wave 7.** Both are pilot-class cost and each needs
+its own separate one-line cost confirmation from dk per the standing rule in `scenarios/pilot.md`.
+
+### ROUTED, NOT SHIPPED - dk's ruling owed on each
+
+From `designs/doctrine-audit-0.13.40/results.md`: `shipwright:110` (4,368 bytes in ONE paragraph,
+9.7% of its file, read ~26x/leg - the largest cost concentration in the corpus), `captain:54`
+(4,781 bytes, 20.1% of its file), the four-site restatement of the 0.13.40 dependency rule, and
+`shipshape:384`'s rationale prose (still the longest line in the shared Articles at ~2,100 chars).
+All are SUBTRACTIVE EDITS TO LIVE RULES: the defect is visible in the artifact, but the edit aims
+at what roles do with the text, so each owes a probe with a control per AGENTS.md's sharpened rule.
+
+### WHAT THIS SESSION ESTABLISHED, so it is not re-derived
+
+- **Doctrine economy is SOUND.** Eight versions, +3.1% corpus bytes, and cost is FLAT on
+  like-for-like legs (tw4 -1 inv/-9% cache, tw1 flat), with mean context per invocation LOWER on
+  0.13.41 for three of four legs. Do not re-litigate this; it has a paired control.
+- **Growth is 56% concentrated in the shared Articles**, the 5-role file. That is the axis to
+  watch, not total size.
+- 0.13.35 and 0.13.36 are net ZERO chars, 0.13.39 net NEGATIVE - the fold-into-an-existing-pass
+  discipline is real and verified from the diffs.
+- The tw5 Shipwright leg's +17 inv is NOT a regression: it bought away four Captain blocker
+  round-trips and finished 55s FASTER in wall-clock.
+
+<!-- =================== END PRIMED ORDER =================== -->
+
+<!-- ========== [ARCHIVED - DO NOT RUN] pilot order, superseded above ========== -->
+## [ARCHIVED] PRIMED ORDER (written 2026-07-20 at dk's "prime for new session and pilot") - DO NOT RUN, superseded
 
 **Supersedes the prior primed order below (archived, not deleted, starting "PRIMED ORDER for
 a CLEAN RESTART (written ... clean restart)") — its Steps 1-3 are DONE this session (0.13.36
