@@ -117,6 +117,71 @@ systematically too clean to reproduce pilot-scale faults. `scenarios/wave7.md` a
 fixture-realism half by construction; the general question is still open.
 <!-- =================== END PRIMED ORDER =================== -->
 
+## 2026-07-20: yoink's deadlock ROOT CAUSE CONFIRMED from their transcript, and dk's ruling that CAPTAIN MAY BREAK A DEADLOCK
+
+**My proposed workaround was WRONG and dk called it: "you work around didn't work".** I said
+Captain could carry "watchbill spent" because nothing mechanically blocks it on a hookless
+channel. The enforcement is not in the guard, it is in the RECEIVER: Boatswain is required to
+reject extra dispatch content as contamination, so a conforming Boatswain refuses it whether or
+not a hook exists. Their note says exactly that. I reasoned about the mechanism and ignored the
+role instruction.
+
+**ROOT CAUSE, confirmed from the actual opencode transcript (ses_081bc09ceffeAUbpS7VDQgtKki,
+2026-07-20 06:43) rather than inferred.** The Boatswain custody leg tested for the run record's
+existence with:
+
+```
+git ls-files --error-unmatch -- watchbill.json coverage/runrecord.json
+```
+
+whose recorded output is:
+
+```
+error: pathspec 'coverage/runrecord.json' did not match any file(s) known to git
+watchbill.json
+EXIT: 1
+```
+
+`git ls-files --error-unmatch` tests GIT TRACKING. `shipwright/SKILL.md` REQUIRES the run record
+to be git-ignored ("derive `runrecord` as a git-ignored wake path... and confirm the path is
+ignored"). **So the existence check cannot succeed on a correctly-fitted run record, by
+construction.** Not "custody reads a different state" and not "a different hash calculation",
+their two hypotheses - custody never found the file at all. Route (b) is unreachable via any
+git-based or search-based discovery, and `rg` misses it too, since rg honours `.gitignore`.
+
+Why our probes never caught it: our fixture legs reach the record by direct path (`test -f
+runrecord.jsonl`, `tail runrecord.jsonl`). yoink's reached for git. Doctrine names NEITHER, and a
+role whose whole opening retrieval is git-based (`cat RIGGING.md && git status && git diff && git
+log`) will naturally reach for a git-based existence check. The trap is latent in every consumer.
+
+**FIX 1 (mechanical, textual, no behavioural cost): say how the run record is read.** One
+sentence in the Wake policy - the record is read by its `RIGGING.md` path; it is git-ignored by
+design, so git-tracking checks and ignore-honouring searches will not find it and must not be
+used to test its existence. This alone unblocks yoink, because with the record actually read,
+route (b) works as designed.
+
+**FIX 2, and dk's ruling, the more important one: "captain must feel empowered to resolve
+deadlocks, it's not code."** Shipshape's roles are AGENTS WITH JUDGMENT, not code paths. The
+contract discipline exists to keep context clean, not to produce unbreakable states. yoink's last
+bullet is the indictment: "The process has no defined escalation or durable evidence channel for
+this contradiction." Captain is the human-facing seat, owns the voyage, resolves blockers, and can
+ask the user - it is the only role positioned to break a deadlock, and doctrine currently gives it
+no authority to.
+
+Candidate rule, routed not shipped: **when no legal role transition can make progress, Captain
+names the deadlock, states the evidence it has, and takes the minimal action that restores
+progress - including an action normally reserved to another role - and records it as a named
+decision.** Guards so it stays an escape hatch and not a bypass: it is Captain-only; the deadlock
+and the action are both recorded; and it is a last resort after the legal routes are shown
+exhausted. This generalises beyond the watchbill: it is the answer to every future unknown
+deadlock, where fix 1 answers only this one.
+
+**Consequence for the shipping queue:** fix 1 is textual with no behavioural cost and needs no
+probe. Fix 2 is doctrine of a different weight - it grants an authority - and dk should rule on
+the wording before it ships. The strike-ladder fix recorded above is now LOWER priority: with the
+record actually readable, route (b) stops failing, and the ladder becomes the belt-and-braces it
+was meant to be rather than the load-bearing fix.
+
 ## 2026-07-20: BARE-HAND-OFF AUDIT (dk: "review all handoffs... resolve this before wave 7") - ONE systemic drift, ONE non-terminating property, THREE silent gaps
 
 Full account `designs/handoff-audit/results.md`. Four parallel role audits over HEAD doctrine
