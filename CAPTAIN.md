@@ -51,6 +51,37 @@ for pilot-scale work, which is exactly where auto-backgrounding is likeliest to 
 Next: Step 3 (bare-hand-off audit fix), per the primed order below, still in force. Step 2's
 finding is now the standing blocker for treating 0.13.37/38 as validated.
 
+## 2026-07-20 (sonnet session, continued): 0.13.39 SHIPPED on dk's "ship" - bare-hand-off audit, four one-line fixes
+
+Verified every HANDOFF-ONLY claim in `designs/handoff-audit/results.md` against the quoted
+line before touching anything, per the audit's own re-verification discipline. **One of the
+audit's five findings was already moot**: its "non-terminating strike" fix (give
+`boatswain:99` a third rung mirroring recheck's) is the exact text already shipped in 0.13.38
+(the audit read 0.13.37 HEAD, one version behind what actually landed same day) — no edit
+needed there, confirmed by reading the live line.
+
+Shipped the other four, all one clause each, none adding a mechanism:
+1. `shipshape/SKILL.md:366` generalized "If QM sees no blocker, the deck is clean, not lost"
+   to any reporting role — closes the Boatswain->Captain / Shipwright->Captain /
+   Captain->Shipwright hand-off-dependency gap.
+2. `shipshape/SKILL.md:342` + `qm/SKILL.md` dropped the "fresh session" scoping on the HEAD
+   base-commit fallback, matching `:326`'s stated preference for isolated-subagent transitions.
+3. `crew/SKILL.md:33` states solo as the default when the solo/parallel marker is absent.
+4. `boatswain/SKILL.md:100` gives the self-selected custody path a commit-subject default
+   when neither a scenario/watch nor a harbour session is determinable.
+
+`tests/*.sh` 231/231 green, committed `ad245ce`, pushed, reinstalled — **0.13.39, installed
+13:26:41Z** (note: install scope reads `user` this time, was `project` for 0.13.38; not
+investigated, flagging in case it matters for a future channel check). **This session's own
+plugin snapshot is now stale for 0.13.39** by the standing rule (resolution pins at process
+start) — 0.13.39 rides the next restart for its own installed-channel validation, same
+pattern as 0.13.36/37/38 before it. Not validated this session; nothing here claims it is.
+
+Wave 7 gate status: Step 3 done. Step 2's live deadlock-reproduction finding is still open
+and unresolved — it is a BEHAVIOURAL finding on 0.13.37/38, which 0.13.39 does not touch, so
+it still stands as the reason wave 7 (pilot-class, real background-task exposure) should not
+start on a bare "proceed" without dk weighing it first.
+
 <!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
 ## >>> PRIMED ORDER for a CLEAN RESTART (written 2026-07-20 at dk's "prime shakedown for clean restart") <<<
 
