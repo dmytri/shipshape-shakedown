@@ -227,9 +227,14 @@ session).
 State: fitted tidewatch + `RIGGING.md` (step-usage = cucumber `usage-json`, plank-inventory
 = `grep -rn "@planks" src`); baseline commit carries the planked `nextHighTide` seam and a
 QM-authored RED `tide-range` watch (feature + step defs + `watchbill.json`). Uncommitted
-Crew-shaped diff adds `tideRange` planked `@planks("When I ask for the tide range on
+Crew-shaped diff adds `tideRange` planked `@planks("I ask for the tide range on
 {date}")` - STALE: the bound pattern is `{string}`. Suite GREEN, so the stale string is
 detectable ONLY by the plank join; nothing else in the custody pass can see it.
+(Form note, 2026-07-20: this example read `"When I ask ..."` until the fixture repair.
+0.13.34 dropped the binding keyword from the plank form, so the old text carried TWO
+faults - a retired form AND the `{date}` drift - and a role could foul it on form alone
+without ever running the join, defeating the "ONLY by the plank join" design. The
+keyword is gone; the `{date}` drift is the whole fault, as intended.)
 Dispatch: Boatswain, post-implementation, thin, QM hand-off "watch1 complete; every listed
 scenario proven green; custody is yours."
 PASS: foul named as a malformed plank on a touched seam, no commit, no stage, no recheck,

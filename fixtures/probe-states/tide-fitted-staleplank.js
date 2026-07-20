@@ -7,9 +7,4 @@ function nextHighTide(tides, after) {
   return next;
 }
 
-function tideRange(tides, day) {
-  const heights = tides.filter((t) => t.time.startsWith(day)).map((t) => t.height);
-  return Math.round((Math.max(...heights) - Math.min(...heights)) * 10) / 10;
-}
-
-module.exports = { nextHighTide, tideRange };
+module.exports = { nextHighTide };

@@ -6,6 +6,73 @@
 > validation this restart exists to enable. The pilot order that preceded it is ARCHIVED, marked
 > DO NOT RUN. The entries above this line are the record of how that order was reached.**
 
+## 2026-07-20 (opus session, RESTART): STEP 1 DISCHARGED - probe fixtures repaired, tw3 revalidated on the INSTALLED CHANNEL, and the fixture-drift finding is now systemic
+
+Entry: bare `/shakedown`, dk answered "proceed as proposed". Bootstrap: both repos clean and level
+with origin, doctrine HEAD `6e46a72` = 0.13.41, installed plugin 0.13.41 (`6e46a72`, 15:32:19Z,
+scope user), **this process started 16:12:01Z so the snapshot is finally LIVE** - the restart's
+whole premise holds. Full account in METRICS.md's top section; banked `data/fixture-repair-0.13.41/`.
+
+**PRECONDITION FAILURE NAMED BEFORE SPENDING: this session is OPUS, not sonnet.** The primed
+order's precondition 1 requires sonnet because every baseline is sonnet and the async-resumption
+leak sends nested spawns to the SESSION model. So **Step 2's installed-channel battery did NOT run
+and must not run here** - it would produce numbers that cannot be compared to the HEAD-text arm it
+exists to be measured against. Step 1 is fixture text and model-independent, so it ran. The single
+validation leg was sonnet-PINNED and held 25/25, but a pin on one flat leg is not the same
+guarantee as a sonnet session for a nested battery.
+
+**CHANNEL CONFIRMED EMPIRICALLY - the first installed-channel exercise of 0.13.41 anywhere.** Both
+0.13.41-unique markers hit in the raw transcript, the pre-0.13.41 `per the Wake policy` string hit
+zero. `shipshape:boatswain` resolved as a subagent_type with no registry gap this time (contrast
+the 2026-07-20 sonnet session, which needed dk's `/doctor`). **The five-version installed-channel
+debt is now being paid down, one leg in.**
+
+**THE REPAIR, and a correction to the order's own scope.** The order scoped this as "8 planks in 4
+fixture files + `scenarios/probes.md:230`". **That scope was INCOMPLETE and following it literally
+would have repaired one dead probe by creating another.** tw4's second arm is a BEYOND-DIFF
+malformed `nextHighTide` deferring to harbour - and that malformation WAS the stale keyword. A
+uniform strip leaves nothing to defer, making "zero over-correction" a marker that cannot fail:
+precisely the tw3 failure mode under repair. Fixed by restoring INTENT rather than form -
+`nextHighTide`'s plank is now `{date}` against the bound `{string}`, placed in the BASELINE COMMIT
+via a new `tide-fitted-staleplank.js` wired for tw4 alone, since a plank fault inside the diff
+routes to Crew and inverts the probe. Tree-verified after rebuild.
+
+**SECOND CORRUPTED DATUM, previously unrecorded: the plank-join probe was DOUBLE-FAULTED** (retired
+keyword AND the `{date}` drift), so a role could foul it on form alone without ever running the
+join - defeating its own "detectable ONLY by the plank join" design. `data/plankjoin-0.13.33/`
+therefore cannot establish what it is cited for, and **0.13.34's commit message cites it as
+evidence**. 0.13.34 still stands on TEXTUAL grounds; its behavioural evidence is weaker than
+recorded. Said plainly rather than left to be rediscovered.
+
+**tw3 REVALIDATED, repair CONFIRMED:** 13 inv / 638k, commit `5c95510`, reached the bulkhead and
+staged `CAPTAIN.md` content-blind, struck the spent watchbill, clean tree - **the 0.13.33 control's
+exact invocation count at -7% cache** (control 13 inv / 687k, commit `f52037e`; pre-repair 0.13.41
+fouled at 9 inv). The paired battery's tw3 divergence is now proven in BOTH directions to be
+fixture drift, not doctrine, and that row is corrected in METRICS.md.
+
+**Scope check on the rest, tree-verified:** all six states rebuild green; tw1/tw2/tw3/tw13 planks
+all join; tw6's four NO-MATCH planks are its designed undefined-steps state. **tw3 was the ONLY
+corrupted verdict** - tw1 and tw13 carried INCIDENTAL fixture-caused work, not wrong verdicts. But
+cleaning the shared baseline removes that work, so **tw1/tw13 counts will drop and are no longer
+like-for-like with the banked n=8 and battery numbers. The next battery must RE-BASELINE, not
+compare across the repair.**
+
+**NEW harness finding, minor but structural:** the fixture's own `RIGGING.md` named
+`plank-inventory: grep -rn "@planks" src`, which the plugin's `bash-custody.sh` DENIES for any
+recursive grep (path-blind by design and correct - GNU grep never reads the ignore artifact). The
+hook named the right replacement and the role recovered in one invocation. Checked before blaming
+either side: **doctrine teaches `grep -rn` nowhere**, so this is purely our 0.13.11-era fixture
+invention, silently taxing every plank-inventory leg. Fixed to `rg -n "@planks" src`. NOT a doctrine
+finding.
+
+**META, and it is the real result of this step: fixture drift is now a SYSTEMIC PROPERTY of this
+harness, not three accidents.** Three instances in one step - tw3's corrupted foul-catch, the
+double-faulted plank-join example, the hook-denied plank-inventory command - all the same shape:
+**fixtures drifted out from under probes and the probes kept reporting success.** Fixtures are
+versioned against doctrine and NOTHING CHECKS that they still mean what they meant. dk's ruling
+owed on whether the harness should carry a conformance check of its own fixtures against current
+doctrine (cheap: the plank/`step-usage` join already exists and is what caught all of this).
+
 ## 2026-07-20 (opus session, continued): 0.13.41 SHIPPED, PAIRED BATTERY RUN - doctrine cost is FLAT, and the PROBE FIXTURES have been stale since 0.13.34
 
 **0.13.41 SHIPPED (`6e46a72`) on dk's "proceed"**, tests 231/231 green, installed 15:32:19Z. The
@@ -262,7 +329,15 @@ section.
 
 ### THE ORDER OF WORK, and why this order
 
-**STEP 1 - FIX THE PROBE FIXTURES. dk's word owed; nothing else is trustworthy until this lands.**
+**STEP 1 - [DONE 2026-07-20, opus restart session. See the top entry.] FIX THE PROBE FIXTURES.**
+Repaired, tw3 revalidated on the installed channel (commit `5c95510`, 13 inv / 638k = the 0.13.33
+control's exact count at -7% cache). NOTE two corrections to this step's own text below: its stated
+scope was INCOMPLETE (a uniform keyword strip would have killed tw4's beyond-diff control arm - the
+malformation had to be restored as `{date}` in the baseline commit), and tw1/tw13 verdicts were
+NOT corrupted, only their COSTS, so the next battery must re-baseline rather than compare across
+the repair. Original text follows.
+
+**dk's word owed; nothing else is trustworthy until this lands.**
 `fixtures/probe-states/` carries 8 planks in the pre-0.13.34 keyword-bearing form
 (`station.js`, `tide-range-planked.js`, `tide-range-unplanked.js`, `tide-fitted.js`), plus
 `scenarios/probes.md:230` teaches that form. The fixtures were authored at the 0.13.11 era and

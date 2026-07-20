@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 
 /**
- * @planks("When a tide station is provisioned for the cove")
+ * @planks("a tide station is provisioned for the cove")
  */
 function provisionStation(tides) {
   const root = path.resolve(__dirname, "..");
@@ -16,14 +16,14 @@ function provisionStation(tides) {
 }
 
 /**
- * @planks("When the station reports the next high tide after {string}")
+ * @planks("the station reports the next high tide after {string}")
  */
 function stationReport(station, after) {
   return nextHighTide(station.tides, after).time;
 }
 
 /**
- * @planks("When the station checks low water below {float}")
+ * @planks("the station checks low water below {float}")
  */
 function lowWaterAlert(station, threshold) {
   const hit = station.tides.find((t) => t.type === "low" && t.height < threshold);
@@ -32,7 +32,7 @@ function lowWaterAlert(station, threshold) {
 }
 
 /**
- * @planks("When the dashboard opens")
+ * @planks("the dashboard opens")
  */
 function openDashboard(stationProvider) {
   const station = stationProvider();

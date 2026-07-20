@@ -1,5 +1,97 @@
 # Metrics: how to read a shakedown
 
+## FIXTURE REPAIR + tw3 revalidation (2026-07-20, opus session, sonnet leg, INSTALLED CHANNEL, primed-order Step 1)
+
+Discharges Step 1 of the primed order. Harness-side only: **no doctrine was touched.**
+
+**FIRST INSTALLED-CHANNEL EXERCISE OF 0.13.41 ANYWHERE.** This session's process started
+16:12:01Z, postdating the 15:32:19Z install, so the snapshot is finally live. Channel CONFIRMED
+EMPIRICALLY, not from timestamps: both 0.13.41-unique markers hit in the raw transcript
+(`per the Transient output policy` 1, `Unreachable code is the exception this list does not carry`
+1) and the pre-0.13.41 string `per the Wake policy` hit **0**. Model 25/25 `claude-sonnet-5` - the
+explicit pin held on every invocation despite an opus session, so the leg is comparable to the
+sonnet baselines. Banked `data/fixture-repair-0.13.41/`.
+
+### The repair
+
+8 planks in 4 fixture files carried the pre-0.13.34 keyword-bearing form; `scenarios/probes.md:230`
+taught it too. 0.13.34 made the keyword a non-matching string, so every one was malformed BY
+CONSTRUCTION on any 0.13.34+ run. Base scaffold declares `I ask for the next high tide after
+{string}` (`fixtures/tidewatch/features/support/steps.js:11`), so the keyword was the SOLE defect
+on the repaired planks - verified against `step-usage` on rebuilt trees, not by eye.
+
+**The order's stated scope ("8 planks in 4 files + probes.md:230") was INCOMPLETE, and following it
+literally would have repaired one dead probe by creating another.** tw4 discriminates two ways:
+in-diff unplanked `tideRange` -> Crew, and **beyond-diff malformed `nextHighTide` -> harbour**. That
+second arm's malformation WAS the stale keyword. A uniform strip leaves nothing to defer, so
+"correctly defers `nextHighTide`, zero over-correction" becomes a marker that CANNOT FAIL - the exact
+tw3 failure mode being repaired. Fixed by restoring INTENT, not form: `nextHighTide`'s plank is now
+`{date}` against the bound `{string}`, and it lives in the BASELINE COMMIT
+(`fixtures/probe-states/tide-fitted-staleplank.js`, wired for tidewatch4 alone in
+`bin/probe-states.sh`) so it stays beyond-diff. A plank fault inside the diff routes to Crew and
+inverts the discrimination. Tree-verified after rebuild: tw4's `git diff -- src/tide.js` touches
+ONLY `tideRange`; the `{date}` plank is byte-identical in HEAD and working tree.
+
+**Consequence for the 0.13.36 validation:** its 8/8 stands - the deferral was correct on its own
+terms - but its REPRODUCTION RECIPE has changed. A rerun of arm D now meets a `{date}` fault, not a
+keyword fault. Recorded so the next rerun does not read as a regression.
+
+**SECOND corrupted datum found, previously unrecorded: the plank-join probe was DOUBLE-FAULTED.**
+`probes.md:230` read `@planks("When I ask for the tide range on {date}")` - a retired form AND the
+`{date}` drift. Its own design says the stale string is "detectable ONLY by the plank join", but a
+role could foul it on form alone without ever running the join. So `data/plankjoin-0.13.33/` cannot
+distinguish "ran the join" from "spotted a bad keyword" - and **0.13.34's commit message cites that
+probe as its evidence**. 0.13.34 still stands on TEXTUAL grounds; its behavioural evidence is weaker
+than the record claimed. Keyword stripped; the `{date}` drift is now the whole fault, as designed.
+
+### tw3 revalidation: the repair is CONFIRMED, and the divergence was ENTIRELY fixture drift
+
+One `shipshape:boatswain` post-implementation leg, thin (job + project root + base `5058b35` + the
+background-task lines), sonnet pinned.
+
+| tw3 Boatswain | Inv | Cache | Out | Outcome |
+|---|---|---|---|---|
+| 0.13.33 control (pre-repair) | 13 | 687k | 1.7k | commit `f52037e` |
+| 0.13.41 (pre-repair) | 9 | 435k | 1.8k | **fouled on scaffolding, no commit** |
+| **0.13.41 (post-repair)** | **13** | **638k** | **4.3k** | **commit `5c95510`** |
+
+The repaired probe reaches the bulkhead it exists to test: staged `CAPTAIN.md` content-blind (`git
+add -- CAPTAIN.md`, never opened, diffed or grepped), struck the spent watchbill, committed, clean
+tree. **Identical invocation count to the 0.13.33 control at -7% cache.** The paired battery's tw3
+row - filed "NO - different outcomes" - is now comparable, and the divergence is proven in BOTH
+directions to be fixture drift, not doctrine.
+
+### Scope check on the other states, tree-verified after rebuild
+
+All six states rebuild green. Plank/`step-usage` join per tree: tw1, tw2, tw3, tw13 all MATCH. tw6's
+four station planks NO-MATCH **by design** - its state is "4 undefined scenarios; QM authors
+verification", so no pattern is reported yet, and the plank strings are correct-by-construction for
+the step definitions QM will write. **tw3 was the ONLY corrupted verdict.** tw1 and tw13 carried
+INCIDENTAL fixture-caused work, not wrong verdicts (0.13.35's finding 1 records tw1 deferring that
+plank to harbour and tw13 dispatching Crew for it) - so cleaning the shared baseline REMOVES that
+work. **tw1/tw13 invocation counts will drop and are no longer like-for-like with the banked n=8 and
+battery numbers; the next battery must RE-BASELINE, not compare across the repair.**
+
+### NEW finding, harness-side, minor but structural: the fixture configured a command doctrine's own hook denies
+
+`fixtures/probe-states/RIGGING.md:27` named `plank-inventory: grep -rn "@planks" src`. The plugin's
+`bash-custody.sh` denies ANY recursive grep (line 93: "recursive grep, which never reads the ignore
+artifact") - path-blind BY DESIGN, since GNU grep never reads the ignore artifact and the hook
+cannot know `src` is safe without the fragile path analysis it deliberately avoids. **The hook is
+correct**: it named the right replacement and the role recovered in one invocation (inv 6 -> 7,
+`rg`). Checked before blaming either side: doctrine teaches `grep -rn` NOWHERE (zero hits across all
+skills; its defaults are `jsdoc -X` on plain JS and `<derived or none>` in templates). This is
+purely our fixture's 0.13.11-era invention, structurally denied since the hook's grep rule shipped,
+silently taxing every plank-inventory leg one invocation. Fixed to `rg -n "@planks" src`. **Not a
+doctrine finding.**
+
+**META, now a systemic property rather than three accidents: three separate instances of fixtures
+drifting out from under probes while the probes kept reporting success** (tw3's corrupted
+foul-catch, the double-faulted plank-join example, the hook-denied plank-inventory command). The
+fixture-realism meta-finding is no longer a hypothesis about pilot-scale realism; it is a
+demonstrated maintenance gap in this harness. Fixtures are versioned against doctrine and nothing
+checks that they still mean what they meant.
+
 ## Paired battery, 0.13.41 vs 0.13.33 (2026-07-20, opus session, sonnet legs, HEAD-text BOTH arms, 8 legs)
 
 dk's ask: is doctrine tight before wave 7 and its pilot. Design: **paired arms, same channel,
@@ -13,7 +105,7 @@ measures DOCTRINE TEXT, not the plugin channel. Banked `data/paired-battery-0.13
 |---|---|---|---|---|
 | tw4 QM plank-gap | 13 inv / 660k / 4.2k | 14 inv / 727k / 3.8k | **-1 inv, -9% cache** | yes |
 | tw1 QM crew-batching | 17 inv / 891k / 7.3k | 17 inv / 860k / 3.8k | **0 inv, +3.6% cache** | yes |
-| tw3 Boatswain notes-arms | 9 inv / 435k / 1.8k | 13 inv / 687k / 1.7k | n/a | **NO - different outcomes** |
+| tw3 Boatswain notes-arms | 9 inv / 435k / 1.8k | 13 inv / 687k / 1.7k | n/a | **NO - different outcomes** [RESOLVED same day: fixture drift, not doctrine. After the Step 1 repair, 0.13.41 commits at 13 inv / 638k - the control's exact invocation count at -7% cache. See the top section.] |
 | tw5 Shipwright fit-out | 49 inv / 3.95M / 16.2k | 32 inv / 2.64M / 10.9k | +17 inv | **NO - different work** |
 | **Arm total** | **88 inv / 5.94M / 29.5k** | **76 inv / 4.92M / 20.3k** | | |
 

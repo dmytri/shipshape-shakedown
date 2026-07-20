@@ -24,7 +24,7 @@ Procedure lives in the skills. Every role reads this on open.
 - broad: `npx cucumber-js --tags "not @captain and not @shipwright"`
 - coverage: none
 - step-usage: `npx cucumber-js --dry-run --format usage-json --tags "not @captain and not @shipwright"`
-- plank-inventory: `grep -rn "@planks" src`
+- plank-inventory: `rg -n "@planks" src`
 - typecheck: none
 - lint: none
 - conformance: none

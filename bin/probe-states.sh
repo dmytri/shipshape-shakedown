@@ -28,6 +28,12 @@ for i in 1 2 3 4 6; do
   cp "$FX/tide-fitted.js" "$TARGET/tidewatch$i/src/tide.js"
   echo 'runrecord.jsonl' >> "$TARGET/tidewatch$i/.gitignore"
 done
+# tidewatch4 alone commits a MALFORMED nextHighTide plank ({date}; the bound pattern is
+# {string}). It must be in the BASELINE COMMIT, not the diff: the probe's second arm is a
+# beyond-diff plank fault that must defer to harbour, and a plank fault inside the diff
+# would route to Crew and invert the discrimination. tide-range-unplanked.js carries the
+# identical string so the plank line never appears in the role-advanced diff.
+cp "$FX/tide-fitted-staleplank.js" "$TARGET/tidewatch4/src/tide.js"
 for i in 2 3; do cp "$FX/CAPTAIN.md" "$TARGET/tidewatch$i/CAPTAIN.md"; done
 for i in 1 2 3 4 6; do
   git -C "$TARGET/tidewatch$i" add -A
