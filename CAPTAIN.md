@@ -1,68 +1,94 @@
 # Captain notes - shipshape-shakedown workstream
 
 <!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
-## >>> NEXT SESSION: QUEUE (updated 2026-07-19 by the sonnet session that ran the primed battery) <<<
+## >>> PRIMED ORDER for a CLEAN RESTART (written 2026-07-20 at dk's "prime shakedown for clean restart") <<<
 
-**The primed efficiency battery (both bullets below) is DISCHARGED this session — full account in
-the "2026-07-19 (sonnet session): EFFICIENCY BATTERY 0.13.35" entry below and METRICS.md's
-"Efficiency battery, 0.13.35" section.** Do not re-run it; read the entry instead.
+**dk's instruction, verbatim: "ok prime shakedown for clean restart." That is authorization to
+PROCEED AUTONOMOUSLY through the order below. Do NOT ask the usual one focus question - it is
+pre-answered here. Report the deck in two lines, then run.**
 
-**FIRST ACTION NEXT SESSION — 0.13.36 VALIDATION IS OWED AND UNRUN.** Shipped this session
-(`49a1597`, tests 5/5, pushed, installed 21:15:35). It could NOT be validated here: the fault it
-fixes appears only on the installed-plugin channel (2/8 installed vs 0/8 HEAD-text), and this
-process snapshotted 0.13.35 at 19:52, so subagents serve stale text. **Restart, confirm the
-channel by marker-grepping the first leg for `An unmoved HEAD is not an empty diff` (unique to
-0.13.36), then re-run arm C/D**: 8 legs, installed channel, sonnet, the tw4 probe state,
-stop-before-dispatch, dispatch WITH the base commit named (arm D form — the Dispatch contract
-requires it and my first 12 legs wrongly omitted it). **Expected: 0/8 fault.** Anything above
-that and the line is not the fix — route back, do not patch further. Trees and rubric are
-reproducible from `designs/plankroute/`.
+### PRECONDITIONS - verify before spending anything, in this order
 
-**ALL THREE QUEUED RULINGS DISCHARGED on dk's "proceed with all 3" (2026-07-19). Nothing is
-waiting on dk in this block except what the validations return.**
+1. **SESSION MODEL MUST BE SONNET.** Not a pin - the session itself. Step 3 has nested spawns by
+   design, and the async-resumption leak sends even a pinned leg to the SESSION model at its
+   first nested-child resumption, so an opus session VOIDS the work. If this session is not
+   sonnet, STOP and say so.
+2. **CHANNEL MUST BE INSTALLED-PLUGIN, CONFIRMED EMPIRICALLY, NEVER FROM TIMESTAMPS.** Installed
+   is 0.13.37 (`b761b64`). Dispatch the first leg, then grep its transcript for
+   `holding work that cannot resume it` (unique to 0.13.37) and
+   `An unmoved HEAD is not an empty diff` (unique to 0.13.36). Zero hits on either = stale
+   snapshot = STOP and report; this exact check failed on 2026-07-19 evening and correctly
+   blocked the work. Both validations below are installed-channel-only: the faults do not appear
+   in HEAD-text (0/8 there vs 2/8 installed), so HEAD-text mode CANNOT substitute.
+3. **Both repos clean and level with origin.** `git fetch` this repo FIRST, before reading
+   anything - a stale clone mis-bases the whole session.
 
-1. **`:354` vs `:360` contradiction - SHIPPED in 0.13.37 (`b761b64`).** Subtractive: the wrong
-   list member ("or another agent") and the absolute first sentence both go; the rule now names
-   the real distinction, that a role never ends its turn holding work that CANNOT RESUME IT, and
-   a dispatched agent is not that case.
-2. **Orphan class - RULED and SHIPPED in the same version.** The PreToolUse wait-class deny
-   carried since 2026-07-15 is REJECTED ON EVIDENCE, not deferred again: it would not have fired
-   on the only live reproduction, whose full command list contains no wait command at all. Do not
-   revisit it. In its place `hooks/scripts/background-custody.sh` (SubagentStop) blocks a stop
-   holding unconsumed backgrounded output - blocks the STOP, never a command. 7 new cases in
-   tests/hooks.sh, plus 15/15 replay against real transcripts including the 0.13.33 orphan and
-   the clean 0.13.35 run of the same probe.
-3. **Probe-first - RULED and RECORDED in AGENTS.md** as a new standing section, in the sharpened
-   form: BEHAVIOURAL findings owe a probe with a control and a pre-fixed rubric before any fix
-   ships; TEXTUAL defects ship on a close read plus green tests. Two riders: probe the role that
-   does NOT fail, and ship one attributable change per version.
+### STEP 1 - validate 0.13.36 (QM opening retrieval). ~90 inv / ~4M.
 
-**TWO VALIDATIONS ARE NOW OWED, both unrun, both riding the same restart.** They cover DISJOINT
-seams, so one session can run both without confounding them:
-- **0.13.36** (QM opening retrieval) - the arm C/D re-run described at the top of this file.
-  Marker `An unmoved HEAD is not an empty diff`. Bar: 0/8.
-- **0.13.37** (turn-ending text + background-custody hook) - the tw13 slow-census probe from
-  `scenarios/probes.md`, which is the state that produces backgrounded work, dispatched WITHOUT
-  the harness background-task lines so doctrine and hook are the only things holding. Marker
-  `holding work that cannot resume it`. Watch for: the hook firing at all (it should be silent
-  on a well-behaved leg), no legitimate command denied, and the multi-agent filler-invocation
-  pattern gone.
+Shipped `49a1597`, UNVALIDATED. Fault: a QM concluded "HEAD equals base commit; no role has
+edited yet" while `git status` carried `M src/tide.js`, deferred in-diff Crew work to harbour and
+declared the watch spent. Fix gives QM's opening pass `git status --porcelain` plus one clause.
 
-4. **Wave 7 - DESIGNED AND READY TO RUN, gated on three named preconditions.** The full design,
-   with arms, measures, and PASS bars all fixed IN ADVANCE per the new probe-first rule, is now
-   `scenarios/wave7.md`. Gates: (a) both validations above green; (b) sonnet session, since wave
-   7 has nested spawns by design and an opus session voids it; (c) yoink seaworthy.
-   **yoink moved on 2026-07-19/20 and its gate is nearly shut**: @eval is GREEN (exit 0, 64s,
-   3.5MB session.jsonl, against the old SIGTERM/360s/zero-bytes), custody is committed across 7
-   commits, and a git remote NOW EXISTS (`git@github.com:dmytri/yoink.git`) where before there
-   was none. Outstanding there: 2 unpushed commits and one uncommitted `D watchbill.json`.
-   **The push is outbound, Captain-only, in dk's own repo - the harness did not and will not do
-   it.** Arm C unblocks the moment it lands; arms A and B do not depend on it.
+Reproduce arm D exactly, it is written up in `designs/plankroute/results.md` and `rubric.md`:
+build the tw4 probe state (`bin/probe-states.sh <dir>`, use `tidewatch4`), clone it 8x, dispatch
+8 `shipshape:qm` legs, sonnet, **WITH the base commit named** (`0a557ee...` for a fresh build,
+whatever `probe-states.sh` prints otherwise), `Job`/role + project root + base only, plus
+"Stop before dispatching any subagent. In your Final report, name the next role and the exact
+targets and evidence you would carry to it."
+
+**BAR: 0/8 route the in-diff unplanked `tideRange` to harbour.** Baseline to beat is 2/8.
+Also score, as before: no over-correction (`nextHighTide`, beyond-diff and malformed, must still
+defer to harbour), and count working-tree commands per leg - the pre-fix discriminator was 5/5
+correct when a leg ran one, 1/3 when it ran none.
+**If the bar misses: DO NOT PATCH FURTHER. Route back to dk.** The line is then not the fix.
+
+### STEP 2 - validate 0.13.37 (turn-ending text + background-custody hook). ~50 inv / ~2.5M.
+
+Shipped `b761b64`, UNVALIDATED. Two changes on one seam: `:354` no longer contradicts `:360`
+(a role never ends its turn holding work that CANNOT RESUME IT; a dispatched agent is not that
+case), and `hooks/scripts/background-custody.sh` blocks a SubagentStop that holds unconsumed
+backgrounded output.
+
+Run the **tw13 slow-census** probe from `scenarios/probes.md` - it is the state that produces
+auto-backgrounded work - dispatched WITHOUT the harness background-task lines, so doctrine and
+hook are the only things holding. 2-3 legs is enough.
+
+**WATCH FOR, all three:**
+- the hook stays SILENT on a well-behaved leg (it should never fire when output is consumed
+  in-turn, as 0.13.35's tw13 did via `Read:bpczcw513.output`);
+- NO legitimate command is denied anywhere - the hook blocks stops, never commands, and any
+  command denial is a regression;
+- the multi-agent FILLER pattern is gone: 0.13.35's tw13 burned 5 invocations
+  (`echo waiting`/`sleep 1`/`true` x3) caught between `:354` and `:360`. Its absence is the text
+  fix working.
+
+### STEP 3 - WAVE 7, only if steps 1 and 2 are both green.
+
+Full design, arms, measures and PASS bars are ALREADY FIXED in `scenarios/wave7.md` - read it,
+do not redesign it, and do not soften a bar after seeing a number. Arms A and B can run
+regardless. **Arm C additionally needs yoink pushed**: as of 2026-07-20 yoink has green @eval
+(exit 0, 64s, 3.5MB session.jsonl), custody committed over 7 commits, and a remote now exists
+(`git@github.com:dmytri/yoink.git`), with 2 commits unpushed and one uncommitted
+`D watchbill.json`. **That push is outbound, Captain-only, dk's own repo - NEVER do it from this
+harness.** If it has not landed, run A and B, and say plainly that C is deferred.
+
+COST: steps 1+2 ~140 inv / ~6.5M. Step 3 is pilot-class, budget ~400-700 inv / ~25-40M; confirm
+that cost with dk before starting step 3 only, per the pilot cost rule. Steps 1 and 2 need no
+further confirmation.
+
+### STANDING RULES THAT NOW BIND THIS WORK
+
+- **Probe-first, in the sharpened form** (AGENTS.md, new section, dk-ruled 2026-07-19):
+  BEHAVIOURAL findings owe a probe with a control and a rubric fixed BEFORE the legs report;
+  TEXTUAL defects ship on a close read plus green `tests/*.sh`. Two riders: probe the role that
+  does NOT fail, and ship one attributable change per version.
+- **Nothing ships without dk's word** except where he pre-approved the cycle.
+- **Bank every leg same-session** (`bin/bank.sh`); raw transcripts die with the VM.
 
 ALSO CARRY, unresolved and dk's to read: the META-FINDING further below - probe fixtures may be
-systematically too clean to reproduce pilot-scale faults. Item 3 above absorbs most of it, but
-the fixture-realism half is untouched and bears on wave 7's design.
-<!-- =================== END QUEUE ===================== -->
+systematically too clean to reproduce pilot-scale faults. `scenarios/wave7.md` addresses the
+fixture-realism half by construction; the general question is still open.
+<!-- =================== END PRIMED ORDER =================== -->
 
 ## 2026-07-19 (sonnet session): EFFICIENCY BATTERY 0.13.35 — primed order discharged, one HIGH finding, orphan-class non-reproduction datum, installed-plugin channel confirmed live
 
