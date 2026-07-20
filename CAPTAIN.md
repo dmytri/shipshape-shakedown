@@ -157,11 +157,42 @@ Two consequences:
 
 **Classification per the new probe-first rule: TEXTUAL.** Three lines that together make route (a)
 unreachable are visible in the artifacts; no behavioural probe is owed for the defect, though
-yoink's observation corroborates it. Candidate fix, smallest form: widen the Dispatch contract's
-Boatswain row to carry the spent-watch fact for a post-implementation job, OR reword the strike
-rule so it does not name a channel the contract closed. **ROUTED, NOT SHIPPED** - and note it
+yoink's observation corroborates it. Candidate fix, FIRST FORM WITHDRAWN and replaced on dk's
+architectural challenge - see the next paragraph. **ROUTED, NOT SHIPPED** - and note it
 would be a THIRD unvalidated version riding the restart, which is the accumulation problem this
 harness already has once. dk's call whether it goes before or after the two owed validations.
+
+**dk's ARCHITECTURAL RULING, same day, and it retires my proposed fix: "doctrine should never
+require anything in handoffs, as handoffs could be bare."** Widening the Boatswain row - my first
+proposal - makes hand-off content MORE load-bearing and is the wrong shape. Checked against the
+text, and dk's rule is not a new principle: it is doctrine's OWN established pattern, applied in
+at least five places, with the strike as the single outlier.
+
+| Hand-off fact | Bare fallback doctrine already provides |
+|---|---|
+| base commit | `shipshape:342` - a fresh session with none takes `HEAD` |
+| Captain->QM content | `shipshape:364` - QM derives everything from durable artifacts BY DESIGN |
+| Boatswain's job | `boatswain:60` - self-select heuristics apply precisely when no dispatch names it |
+| a custody foul | `boatswain:77` - "the foul survives a lost caller"; a fresh QM re-derives it |
+| run record absent | `shipshape:463` - "custody falls back to rerun" |
+| **watchbill spent** | **NONE - and `boatswain:99` actively forecloses one: "orders no run of its own"** |
+
+**REVISED FIX, per dk's rule: give the strike a precedence ladder that always terminates.**
+(1) the hand-off reports spent, where one was given; (2) else the run record corroborates at the
+current deck-state hash; (3) else verify the entries by running them - the rerun fallback custody
+already has everywhere else. Economy is preserved in the common case, because 1 and 2 are tried
+first; the difference is that 3 EXISTS, so a bare hand-off can no longer deadlock. This also
+subsumes pilot #5's finding 1 option "stop treating runrecord as optional wherever this property
+matters" - with a terminating ladder, runrecord optionality stops carrying weight it cannot bear.
+
+Precise statement of the rule, for the record, since the literal form is slightly too strong:
+hand-offs DO legitimately carry things (Crew needs failure evidence, QM needs the watchbill). The
+binding version is **no property may depend SOLELY on hand-off content** - carried content is an
+optimization, and a durable route must always exist. That is what all five rows above do.
+
+**Audit owed, partial so far:** the table above came from grepping the fallbacks doctrine already
+names. A systematic sweep for OTHER properties that depend solely on hand-off content, with no
+durable route, has NOT been done and is now the cheapest high-value doctrine audit on the board.
 
 **Their other two items, for completeness:** (1) Captain->QM refusing target/failing-run evidence
 as contamination is doctrine working as designed - the bulkhead is durable-artifacts-only and
