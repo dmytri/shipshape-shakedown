@@ -62,7 +62,34 @@ hook are the only things holding. 2-3 legs is enough.
   (`echo waiting`/`sleep 1`/`true` x3) caught between `:354` and `:360`. Its absence is the text
   fix working.
 
-### STEP 3 - WAVE 7, only if steps 1 and 2 are both green.
+### STEP 3 - BARE-HAND-OFF AUDIT AND ITS FIX. dk: "we need to resolve this before wave 7."
+
+**This GATES wave 7 and outranks it.** dk's rule, ruled 2026-07-20: **no property may depend
+SOLELY on hand-off content** - hand-offs can be bare (fresh session, context clear, skill-only
+consumer with no guard, a human relaying by hand), so carried content is an optimization and a
+durable route must always exist. Doctrine already honours this in five places and broke it in
+one; see the 2026-07-20 yoink entry below for the table and the dating.
+
+Why it gates wave 7 specifically, beyond dk's word: **wave 7's arm C IS carried orientation
+material.** Measuring the economy of carried content across a role chain whose carried-content
+contract is itself defective would confound the wave's central measurement. Fix the contract,
+then measure carrying things over it.
+
+Work owed here, in order:
+1. **Read the audit findings** recorded in the 2026-07-20 entry below (four parallel role audits:
+   QM, Boatswain, Crew, Shipwright+Captain, each asked where its routine dead-ends on a bare
+   dispatch). VERIFY every HANDOFF-ONLY claim against the quoted line yourself before acting -
+   the audit was delegated, and delegated reads have been wrong here before.
+2. **Fix the known one**: the watchbill strike (`boatswain:99`) gets a terminating precedence
+   ladder - hand-off if given, else run record at the current deck-state hash, else verify the
+   entries by running them, the rerun fallback custody already has elsewhere. Do NOT widen the
+   Dispatch contract's Boatswain row; that was proposed and RETIRED, since it makes hand-off
+   content more load-bearing, the opposite of the rule.
+3. **Fix, or consciously accept with a written reason, every other HANDOFF-ONLY finding.**
+4. These are TEXTUAL defects by the probe-first rule, so they ship on a close read plus green
+   `tests/*.sh` - but they are doctrine, so they still need dk's word before shipping.
+
+### STEP 4 - WAVE 7, only once steps 1-3 are green.
 
 Full design, arms, measures and PASS bars are ALREADY FIXED in `scenarios/wave7.md` - read it,
 do not redesign it, and do not soften a bar after seeing a number. Arms A and B can run
@@ -72,9 +99,9 @@ regardless. **Arm C additionally needs yoink pushed**: as of 2026-07-20 yoink ha
 `D watchbill.json`. **That push is outbound, Captain-only, dk's own repo - NEVER do it from this
 harness.** If it has not landed, run A and B, and say plainly that C is deferred.
 
-COST: steps 1+2 ~140 inv / ~6.5M. Step 3 is pilot-class, budget ~400-700 inv / ~25-40M; confirm
-that cost with dk before starting step 3 only, per the pilot cost rule. Steps 1 and 2 need no
-further confirmation.
+COST: steps 1+2 ~140 inv / ~6.5M. Step 3 is analysis plus a small textual ship, cheap. Step 4
+(wave 7) is pilot-class, budget ~400-700 inv / ~25-40M; confirm THAT cost with dk before starting
+it, per the pilot cost rule. Steps 1-3 need no further confirmation.
 
 ### STANDING RULES THAT NOW BIND THIS WORK
 
