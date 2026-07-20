@@ -117,6 +117,51 @@ systematically too clean to reproduce pilot-scale faults. `scenarios/wave7.md` a
 fixture-realism half by construction; the general question is still open.
 <!-- =================== END PRIMED ORDER =================== -->
 
+## 2026-07-20: BARE-HAND-OFF AUDIT (dk: "review all handoffs... resolve this before wave 7") - ONE systemic drift, ONE non-terminating property, THREE silent gaps
+
+Full account `designs/handoff-audit/results.md`. Four parallel role audits over HEAD doctrine
+(0.13.37), each asked adversarially where its routine dead-ends on a dispatch carrying only role +
+project root. **Every HANDOFF-ONLY claim was then re-verified by the operator against the quoted
+line, and TWO were DOWNGRADED on that check** - the delegated reads were right about the text and
+wrong about the consequence. That re-verification step is not optional.
+
+**THE SYSTEMIC ONE, and it is a single over-narrow scoping.** `shipshape:324` puts a hand-off
+dependency on EVERY transition ("On any transition, the preceding role's final-report blockers and
+open questions are the first work item"). `shipshape:366` gives the durable fallback to EXACTLY
+ONE ("If QM sees no blocker, the deck is clean, not lost") - grep-verified as appearing nowhere
+else in any of the six skills. So Boatswain->Captain, Shipwright->Captain and Captain->Shipwright
+carry the dependency with no net: Shipwright cannot learn Captain's blockers on a bare dispatch
+(its read scope deliberately excludes CAPTAIN.md, so no artifact carries them), and Captain cannot
+learn Boatswain's or Shipwright's. FIX: generalize :366 from QM to any reporting role. One clause,
+subtractive, closes all three consequences.
+
+**THE NON-TERMINATING ONE, whose fix already exists eight lines above it.** The watchbill strike
+(`boatswain:99`) terminates per-role but never for the SYSTEM. Boatswain's RECHECK selection
+(`boatswain:94-95`) carries the exact ladder the strike lacks: hand-off, else run record at the
+current hash, **else follow the planks and RUN it**. The strike's third rung is missing and
+explicitly foreclosed ("orders no run of its own"). FIX: mirror recheck's ladder. Economy is
+untouched, since rungs 1-2 are tried first; the point is only that rung 3 exists. Subsumes pilot
+#5 finding 1's runrecord-optionality option.
+
+**THREE SILENT GAPS, one line each:** the base-commit fallback is scoped to "fresh session" while
+`:326` says an isolated subagent "is preferred", so the preferred mechanism is not the one the
+fallback names (empirically benign - every bare-dispatch leg in this session's arms resolved it to
+HEAD by analogy); `crew:33`'s solo/parallel marker has no stated behaviour when absent, unlike the
+two fields beside it at `:37` which both have explicit stops; and `boatswain:100`'s commit-subject
+form cannot be derived when the job was self-selected, since `:42`'s test is diff-presence alone
+and cannot separate post-Crew custody from harbour custody.
+
+**TWO THINGS THAT ARE NOT DRIFT**, both downgraded on re-verification: Crew halting with "No
+target. Crew stop." is CORRECT leaf-role behaviour - Crew is never a chain entry point, QM
+re-derives from the watchbill, so the property survives at the system level even though the role
+cannot act alone. And Captain's "passing verification" trigger IS derivable: Boatswain's recheck
+always terminates in evidence and Boatswain commits only in post-implementation, so a custody
+commit at HEAD is itself the proof, readable with `git log`.
+
+**Five text changes, four of them one line, none adding a mechanism.** All TEXTUAL by the
+probe-first rule, so they ship on a close read plus green `tests/*.sh` - but they are doctrine,
+need dk's word, and GATE wave 7 per dk's ruling.
+
 ## 2026-07-20: CONSUMER FINDING from ~/yoink Captain notes (dk's pointer) - the FLAT HAND-OFF ORPHANED THE WATCHBILL STRIKE. Structural, dated to 0.13.17, ROUTED NOT SHIPPED.
 
 dk: "see latest notes from ~/yoink captain for upstream feedback." Read `~/yoink/CAPTAIN.md`
@@ -131,7 +176,13 @@ cannot convey QM's spent evidence. A Boatswain return asks Captain for evidence 
 bars Captain from supplying... This leaves a green target with a retained watchbill and no legal
 custody path."
 
-**Verified, and it is exact.** Boatswain strikes on ONE of two routes (`boatswain/SKILL.md:99`):
+**[OPERATOR CORRECTION, same day: that last phrase OVERSTATES it, and the error was MINE.**
+`boatswain:99` ends "leave it and name it in the report for Captain", so custody COMMITS fine and
+only the STRIKE never terminates. I verified yoink's mechanism but adopted their consequence
+claim without reading the clause - the exact discipline failure this harness keeps catching. The
+finding stands; its severity was wrong. See `designs/handoff-audit/results.md`.]
+
+**Verified - the MECHANISM is exact; the consequence claim is not, see the correction above.** Boatswain strikes on ONE of two routes (`boatswain/SKILL.md:99`):
 (a) "when the caller's hand-off reports the watchbill spent", or (b) "the run record corroborates
 every watchbill entry green at the current deck-state hash".
 - Route (a) is STRUCTURALLY UNREACHABLE under the flat hand-off. `git log -S` dates the strike
