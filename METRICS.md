@@ -1,5 +1,64 @@
 # Metrics: how to read a shakedown
 
+## 0.13.37/0.13.38 validation, tw13 slow-census (2026-07-20, sonnet, installed-plugin channel, 4 legs, primed-order Step 2)
+
+3 `shipshape:qm` legs on fresh tw13 clones (base `7934c4a`), dispatched thin (project root +
+base commit only) and deliberately WITHOUT the harness's background-task lines — the probe
+tests whether 0.13.37's turn-ending text fix and the `background-custody.sh` SubagentStop hook
+hold the line on their own, per `scenarios/probes.md`'s slow-census design. Plus one
+`shipshape:boatswain` post-implementation custody leg on tw13-1 (its diff touches
+`features/support/steps.js`, a verification-support file) for 0.13.38's owed change-B cost
+check. Channel confirmed: 0.13.38-unique marker `Captain never writes production code` hit
+1/1 in all 4 raw transcripts. Model: 4/4 sonnet.
+
+**MIXED RESULT — 2/3 QM legs pass clean, 1/3 REPRODUCES THE DEADLOCK the fix targets.**
+
+- **tw13-1, tw13-2: PASS, all 4 markers.** One executing tier sweep, Crew dispatched
+  (nested, foreground) with refs + evidence, correct harbour deferral on the pre-existing
+  malformed `nextHighTide` plank, turn ended in a proper Final report naming Boatswain +
+  targets + base commit, zero live background tasks at stop. 23 inv/1.21M and 30 inv/1.65M
+  respectively (both leg totals; higher than the 12-15 inv tw4 legs because these builds run
+  a full enumeration sweep plus a nested nested Crew fix, not a plank-only correction).
+- **tw13-3: FAIL, live reproduction.** Ran the tier sweep in foreground
+  (`npx cucumber-js --tags ... 2>&1 | tail -150`, no `run_in_background`); the runtime's own
+  ~120s cap auto-backgrounded it mid-command ("Command did not complete within its 120s
+  timeout and was moved to the background... You will be notified when it completes.").
+  The QM's NEXT and LAST action was one filler invocation, `echo "waiting for background
+  sweep to complete"` — the exact filler shape 0.13.35's finding 3 already named and 0.13.37
+  was supposed to close — then its turn ended with **no Final report, the output file never
+  read, and the backgrounded sweep never consumed.** Tree-verified: no `runrecord.jsonl`,
+  no low-tide step definitions written, no commit — the leg produced nothing. No hook fired
+  to block this stop (checked: no deny/block tool_result in the transcript around the stop).
+  13 inv / 627k cache to reach the dead end.
+- **Boatswain custody cost check (change B):** the support-touching custody leg on tw13-1
+  ran the tier's full broad sweep (6/6 scenarios, corroborating the watchbill) rather than a
+  file-scoped focused rerun — change B's third rung firing as designed — struck the spent
+  watchbill, committed (`12817db`). **22 inv / 1.31M cache.** Higher than the 0.13.27 GATE
+  baseline (14 inv/760k, support-touch, broad sweep, no strike/commit) and the 0.13.26 control
+  (9 inv/422k) in METRICS.md's blast-radius section, but that baseline leg didn't also strike
+  a watchbill or make a commit, so the comparison is not apples-to-apples; no closer
+  strike+commit+support-touch 0.13.35 baseline is on record to compare against directly. Not
+  claiming a regression — flagging the number as a data point the next battery should
+  re-measure like-for-like.
+
+**FINDING, HIGH, routed to dk, NOT SHIPPED — behavioural, owes a probe verdict before any
+fix (per the probe-first rule, since this is exactly that kind of finding: "a role did the
+wrong thing").** 0.13.37's turn-ending fix (`SKILL.md:354`/`:360` reconciliation) and the
+`background-custody.sh` SubagentStop hook were shipped to close precisely this stall shape
+(pilot #2's original deadlock, 0.13.35's tw13 filler-invocation finding). On a clean,
+undoctored reproduction of the state that triggers it, doctrine alone did NOT hold: 1/3 legs
+recreated the stall almost verbatim, down to the same filler-echo shape as the pre-fix
+finding. Two sub-questions for a follow-up probe, not yet answered here: (1) did the
+`background-custody.sh` hook fire at all on this stop and silently fail, or does it not reach
+this stop shape (a QM ending its own turn, not a nested-child return) by construction? (2) is
+1/3 the true rate, or noise at n=3 — the pre-fix baseline was itself not 3/3 (0.13.33's only
+live reproduction was 1 run; 0.13.35's rerun of the same state was 0/1 clean). Needs a
+larger-n rerun with a fixed rubric before ruling on whether 0.13.37/38 actually closes this
+class or only narrowed it.
+
+Banked `data/slowcensus-0.13.37-38-validation/` (4 legs). 0.13.37 and 0.13.38 do NOT clear
+validation on this evidence — contrast 0.13.36, which cleared cleanly above.
+
 ## 0.13.36 validation, arm D repeat (2026-07-20, sonnet, installed-plugin channel, 8 legs, primed-order Step 1)
 
 Reproduces arm D exactly (`designs/plankroute/results.md`/`rubric.md`): tw4 probe state

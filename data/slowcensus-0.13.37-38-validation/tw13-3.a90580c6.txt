@@ -1,0 +1,17 @@
+# meta: {"agentType":"shipshape:qm","description":"tw13 slow-census leg 3","toolUseId":"toolu_015ezujZPwqqVoRe5gnraf8Y","spawnDepth":1,"model":"sonnet"}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/f074af86-92ab-42c4-8691-5958b58b6fcc/subagents/agent-a90580c6a3eb70619.jsonl
+# banked: 2026-07-20T13:13:38Z
+tw13-3	1	13:05:16	15203	74	Skill:
+tw13-3	2	13:05:18	19230	5	Skill:
+tw13-3	3	13:05:23	26679	333	Bash:cat RIGGING.md && echo "---WATCHBILL---" && cat watchbill.json && echo
+tw13-3	4	13:05:30	53056	349	Bash:cat features/low-tides.feature && echo "---LS FEATURES---" && find fea
+tw13-3	5	13:05:35	54060	195	Bash:echo "=== tides.feature ===" && cat features/tides.feature && echo "==
+tw13-3	6	13:05:37	54764	263	Bash:cat features/support/steps.js && echo "=== runlog.js ===" && cat featu
+tw13-3	7	13:05:42	55436	316	Bash:cat data/tides.json 2>/dev/null; find . -iname "*.json" -path "*data*"
+tw13-3	8	13:05:45	56421	3	Bash:echo "=== plank-inventory ===" && grep -rn "@planks" src && echo "=== 
+tw13-3	9	13:05:50	56987	203	Bash:echo "=== plank-inventory ===" && rg -n "@planks" src
+tw13-3	10	13:05:54	57389	164	Bash:npx cucumber-js --dry-run --format usage-json --tags "not @captain and
+tw13-3	11	13:06:08	57637	1000	Bash:npx cucumber-js --tags "not @captain and not @shipwright" 2>&1 | tail 
+tw13-3	12	13:08:16	59280	351	Bash:echo "waiting for background sweep to complete"
+tw13-3	13	13:08:28	60471	4	
+SUMMARY	tw13-3	invocations=13	cache_read=626613	out=3260	wall=13:05:16 to 13:08:28

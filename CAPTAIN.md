@@ -27,8 +27,29 @@ completely on its designed reproduction. Channel confirmed empirically (0.13.36 
 8/8), 8/8 sonnet. 103 inv / 4.97M cache / ~24.4k out, banked `data/plankroute-0.13.36-validation/`,
 full account in METRICS.md. **0.13.36 is no longer riding the restart as unvalidated.**
 
-Next: Step 2 (validate 0.13.37 + 0.13.38, tw13 slow-census, ~70 inv), then Step 3 (bare-hand-off
-audit fix), per the primed order below, still in force.
+**STEP 2 result: MIXED — 0.13.37/38 do NOT clear validation.** tw13 slow-census, 3 QM legs
+dispatched without the harness background-task lines (doctrine-alone test) + 1 Boatswain
+custody cost-check leg. 2/3 QM legs clean; **1/3 (tw13-3) reproduced pilot #2's deadlock shape
+live**: foreground tier sweep hit the runtime's ~120s auto-background cap, the QM emitted one
+filler `echo "waiting for background sweep to complete"` (the exact shape 0.13.35 already
+found and 0.13.37 shipped to close), then ended its turn with no Final report, output file
+never read, nothing produced. No hook visibly blocked the stop. HIGH finding, ROUTED NOT
+SHIPPED, full evidence and the two open sub-questions (did the hook fire at all; is 1/3 real
+or n=3 noise) in METRICS.md's "0.13.37/0.13.38 validation" section. Custody cost-check leg
+(change B, support-touching, broad sweep + strike + commit): 22 inv/1.31M, higher than the
+nearest 0.13.27-era baseline but that baseline didn't also strike+commit, so not a clean
+like-for-like — flagged, not claimed as regression. Banked
+`data/slowcensus-0.13.37-38-validation/`.
+
+**This changes Step 3's footing.** The primed order's Step 3 (bare-hand-off audit) is
+textual and unaffected. But Step 4 (wave 7) explicitly gates on "steps 1-3 green" — and
+Step 2 is not green. Proceeding to Step 3's textual work (it's independent of this finding
+and gates wave 7 either way), but flagging now: wave 7 should not start on dk's nod alone
+without addressing this finding first, or at minimum acknowledging it as a known-open risk
+for pilot-scale work, which is exactly where auto-backgrounding is likeliest to recur.
+
+Next: Step 3 (bare-hand-off audit fix), per the primed order below, still in force. Step 2's
+finding is now the standing blocker for treating 0.13.37/38 as validated.
 
 <!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
 ## >>> PRIMED ORDER for a CLEAN RESTART (written 2026-07-20 at dk's "prime shakedown for clean restart") <<<

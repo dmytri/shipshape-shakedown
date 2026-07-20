@@ -1,0 +1,26 @@
+# meta: {"agentType":"shipshape:boatswain","description":"tw13-1 Boatswain custody cost-check","toolUseId":"toolu_01Tv4kRndSbCkoPMPbXR9hEj","spawnDepth":1,"model":"sonnet"}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/f074af86-92ab-42c4-8691-5958b58b6fcc/subagents/agent-ac4eb0aad703933d5.jsonl
+# banked: 2026-07-20T13:19:35Z
+tw13-1-boatswain-custody	1	13:14:10	13977	70	Skill:
+tw13-1-boatswain-custody	2	13:14:12	19276	77	Skill:
+tw13-1-boatswain-custody	3	13:14:19	27657	2	Bash:cat RIGGING.md && echo "---STATUS---" && git status && echo "---DIFF--
+tw13-1-boatswain-custody	4	13:14:25	54020	146	Read:low-tides.feature
+tw13-1-boatswain-custody	5	13:14:30	56057	229	Bash:cat watchbill.json && echo "---" && cat data/tides.json 2>/dev/null &&
+tw13-1-boatswain-custody	6	13:14:38	56513	3	Bash:grep -rn "@planks" src && echo "---step-usage---" && npx cucumber-js -
+tw13-1-boatswain-custody	7	13:14:42	57394	6	Bash:rg -n "@planks" src && echo "---step-usage---" && npx cucumber-js --dr
+tw13-1-boatswain-custody	8	13:14:50	58118	414	Bash:GIT_INDEX_FILE="$(mktemp)" bash -c 'git read-tree HEAD && git add -A .
+tw13-1-boatswain-custody	9	13:15:20	60743	2171	Bash:rg -n "PERTURBATION" --hidden -g '!node_modules' . ; echo "---feature 
+tw13-1-boatswain-custody	10	13:15:26	61189	197	Bash:rg -n "PERTURBATION" . ; echo "---feature files---"; ls features; echo
+tw13-1-boatswain-custody	11	13:15:29	63535	291	Bash:git status --porcelain=v1 -- CAPTAIN.md; ls -la CAPTAIN.md 2>&1; git l
+tw13-1-boatswain-custody	12	13:15:50	64186	4	Bash:npx cucumber-js --tags "not @captain and not @shipwright" 2>&1 | tail 
+tw13-1-boatswain-custody	13	13:17:57	64605	2	ToolSearch:
+tw13-1-boatswain-custody	14	13:18:00	66340	158	
+tw13-1-boatswain-custody	15	13:18:04	69412	2	Bash:ls -la /tmp/claude-1000/-home-exedev-shipshape-shakedown/49b898e8-d6e0
+tw13-1-boatswain-custody	16	13:18:10	69714	216	Read:bofx0c50p.output
+tw13-1-boatswain-custody	17	13:18:36	71894	2	Bash:cat /tmp/claude-1000/-home-exedev-shipshape-shakedown/49b898e8-d6e0-48
+tw13-1-boatswain-custody	18	13:18:50	72815	874	Bash:git status --porcelain=v1 && echo "---hash---" && GIT_INDEX_FILE="$(mk
+tw13-1-boatswain-custody	19	13:18:54	75263	2	Bash:rm watchbill.json && git add -- features/support/steps.js src/tide.js 
+tw13-1-boatswain-custody	20	13:19:01	76215	3	Bash:git add -- features/support/steps.js src/tide.js features/low-tides.fe
+tw13-1-boatswain-custody	21	13:19:05	76522	269	Bash:git commit -m "$(cat <<'EOF' Add low tide prediction  Covers features/
+tw13-1-boatswain-custody	22	13:19:23	76925	2	
+SUMMARY	tw13-1-boatswain-custody	invocations=22	cache_read=1312370	out=5140	wall=13:14:10 to 13:19:23
