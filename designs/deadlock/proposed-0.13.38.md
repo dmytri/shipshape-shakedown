@@ -46,27 +46,47 @@ one scenario; our fixtures carry one to four. The earlier worry that this inflat
 largely answered by that bound, but it is the one part of this ship with a behavioural effect and
 it owes the cost check named below.
 
-## C — Captain may resolve a deadlock (Blocker policy, `shipshape/SKILL.md:390`)
+## C — Captain's authority at sea (Blocker policy, `shipshape/SKILL.md:390`)
 
-dk's ruling, and the one that generalises. Answers yoink's own indictment: *"The process has no
-defined escalation or durable evidence channel for this contradiction."*
+dk's ruling, in dk's own framing, which is broader AND better bounded than my first draft:
+
+> "the goal of shipshape is not prevent the captain from keeping progress going, it's ensure code
+> is derived from durable specs, the captain should always strive to follow the agreements, but if
+> they have to take matters into their own hands to resolve deadlocks or to make critical
+> (non-application-code) corrections at sea, that's what their authority is for"
+
+**My first draft was wrong**: it permitted "an action normally reserved to another role" with no
+limit, which would have licensed Captain to write production code — breaching the exact guarantee
+the Articles exist to provide. dk's framing supplies the boundary: the authority is bounded by the
+purpose it serves.
 
 ADD a row to the routing table:
 
-> | A deadlock: no legal transition can make progress | Captain | Captain, by the minimal
-> progress-restoring action, recorded |
+> | A deadlock, or a critical correction no available role may make | Captain | Captain, by the
+> minimal action that restores progress, recorded |
 
 ADD after the table:
 
-> **Deadlock resolution is Captain's.** These Articles bind agents with judgment, not code paths.
-> Contract discipline exists to keep context clean; it never exists to produce a state no legal
-> move can leave. When every route to the next step demands evidence no role may supply, or an
-> action no available role may take, Captain names the deadlock, states the routes it tried and
-> the evidence it holds, takes the minimal action that restores progress — including one normally
-> reserved to another role — and records it as a named decision in its notes and its report. This
-> is a last resort and not a bypass: the legal routes are shown exhausted first, and the record
-> makes the deviation auditable. A deadlock that reaches this rule is a doctrine defect; report it
-> as one.
+> **Captain's authority at sea.** These Articles exist so that production code derives from
+> durable specs. They do not exist to stop Captain making progress. Captain strives to follow
+> them, and departs from them only where following them would stall the voyage or leave a fault
+> uncorrected. Where no legal transition can make progress, or a critical correction is owed that
+> no available role may make, Captain names the situation, states the routes it tried, takes the
+> minimal action that restores progress, and records it as a named decision in its notes and its
+> report.
+>
+> One boundary holds absolutely: **Captain never writes production code.** That is the guarantee
+> these Articles exist to protect, and it always routes through a durable spec to QM and Crew.
+> Everything else is within Captain's authority when the voyage would otherwise stall: striking a
+> spent watchbill, making a custody commit, correcting rigging, repairing a malformed record.
+>
+> A situation that reaches this rule is a doctrine defect. Report it as one, so the rule stays a
+> last resort rather than a habit.
+
+**Note what C alone already does for yoink**: striking a spent watchbill and making the custody
+commit are both non-application-code actions, so a Captain holding this authority resolves their
+deadlock today without A or B. A and B remain right — they stop the deadlock arising — but C is
+the one that unblocks a consumer already stuck.
 
 ## Shipping judgment
 
