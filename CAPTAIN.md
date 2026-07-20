@@ -136,6 +136,25 @@ it. yoink shows the GREEN direction failing for the same root: the flat hand-off
 depending on a record doctrine does not require. Two manifestations, one root, now with a real
 consumer behind it.
 
+**CORRECTION on dk's challenge, same day ("skill-only agents have no dispatch row iiuc") - the
+bar is DOCTRINAL, NEVER MECHANICAL, in BOTH channels, and that sharpens the finding.** Checked:
+skill-only consumers DO carry the row (yoink's vendored `.agents/skills/shipshape/SKILL.md` has
+it); what they lack is `dispatch-guard.sh`. But the guard does not enforce the row's CONTENTS
+either - read it: it blocks the Captain-notes sentinel and caps a Captain-originated dispatch at
+2500 characters, nothing more. "The watchbill is spent, QM reported green" is under 60 characters
+and passes the guard untouched. So on the plugin channel and the skills channel alike, the only
+thing stopping Captain conveying the spent fact is the text of the Dispatch contract.
+
+Two consequences:
+1. **The deadlock binds exactly the roles that CONFORM.** A Captain that reads the contract and
+   obeys it cannot supply the evidence and deadlocks; a Captain that ignores the contract sails
+   through. yoink's Captain conformed - its note says the return "asks Captain for evidence that
+   the contract bars Captain from supplying", i.e. it saw the bar and respected it. A rule whose
+   only victims are the well-behaved is the worst shape a rule can have, and it is the strongest
+   argument for fixing this promptly.
+2. **The fix is therefore cheaper than first stated: purely textual, one row, no hook work**, and
+   it unblocks both channels at once. My earlier framing implied a mechanical bar; it is not one.
+
 **Classification per the new probe-first rule: TEXTUAL.** Three lines that together make route (a)
 unreachable are visible in the artifacts; no behavioural probe is owed for the defect, though
 yoink's observation corroborates it. Candidate fix, smallest form: widen the Dispatch contract's
