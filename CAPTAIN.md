@@ -6,6 +6,52 @@
 > validation this restart exists to enable. The pilot order that preceded it is ARCHIVED, marked
 > DO NOT RUN. The entries above this line are the record of how that order was reached.**
 
+## 2026-07-20 (opus session, RESTART, continued): 0.13.43 + 0.13.44 SHIPPED - jolly's git-diff leak closed, and the "obligation with no act" sweep dk ordered
+
+**0.13.43 (`144a0b6`) - jolly's git-diff leak, BOTH LAYERS.** Tests 241/241 (10 new hook cases).
+Doctrine's Deck state Article now names the guarded form (`git diff <base> -- . ':!CAPTAIN.md'`,
+same pathspec on `show`/`log -p`/`stash show -p`) and calls an unscoped diff of a tree whose notes
+have moved an unchecked read; the hook gains the matching branch, guarding the FORM not the command
+(`--stat`/`--name-only`/`--name-status` and the exclusion pathspec all stay open).
+
+**Why doctrine and not just the hook, and this is the load-bearing reasoning:** `shipshape:332`
+SANCTIONS `/qm` on a fresh session as the isolation fallback, and on that route the runtime sets no
+`agent_type`, so NO hook fires at all. A hook-only fix would have made the guarded route safer
+while the sanctioned fallback stayed bare - widening the exact asymmetry jolly warned of. **Also
+corrected jolly's own example:** `git diff features/ CAPTAIN.md` was ALREADY denied (it names the
+file); what was open is the form that NAMES NOTHING. Verified by running the guard, not reading it.
+Boatswain's opening already used the guarded form, so this generalises what one role did already.
+
+**THE SWEEP (dk: "yes, sweep"), four parallel readers, every quote re-verified by the operator.**
+Seven candidates; **one died on re-verification** - `shipshape:207`'s scantling-reference obligation
+ALREADY has its act, derived as a methodology check at `shipwright:110`; the reader searched the
+shared Articles and missed that the act lives in a role file. **Third time today re-verification
+changed a finding. It is not optional.**
+
+**0.13.44 (`e56f284`) SHIPPED, the two with an obvious act.** Tests 241/241.
+1. **`boatswain:51,58`** - the perturbation-removal check judges a seam against "`AGENTS.md`
+   standards" while the opening pass retrieved only `RIGGING.md`, and the same paragraph declares
+   "Every step below reads from this output". `AGENTS.md` appears ONCE in the whole file: in the
+   obligation. **dk challenged this ("isn't AGENTS.md injected always?") and it was settled
+   EMPIRICALLY, not argued:** in today's tw3 Boatswain leg, which never read the file, ZERO bytes of
+   its content reached context; the Shipwright legs carried it only because they read it explicitly.
+   Roles run isolated. **And the deeper reason the challenge sharpened rather than killed it:
+   doctrine must not rest on a runtime behaviour that varies by channel** - jolly runs opencode, and
+   a rule that only works where the harness injects the file silently fails the consumers most
+   likely to need it. Fix is retrieval, not a note.
+2. **`shipwright:131`** - "several seams whose planks all carry the same step" is invisible to a
+   step that evaluates one seam at a time. No new tooling: group the already-run `plank-inventory`
+   output by plank string.
+
+**ROUTED, NOT SHIPPED - four real ones with NO obvious act.** Each needs a derivation designed, and
+inventing one under pre-wave-7 time pressure is how a mechanism nobody validates gets shipped:
+`qm:72` (a seam whose "behaviour exceeds its planked steps" - the string join structurally cannot
+see it and scenarios stay green), `shipwright:136` ("restates one another scenario owns" - needs a
+cross-scenario comparison), `shipwright:137` (a boundary constraint "from the real import graph
+alone" - `knip` could supply the graph, nothing ties it to a directionality check), `shipshape:217`
+(reports name a deferred plant "unproven until it has been red", but nothing durable records
+proven-vs-never-proven and both states run green).
+
 ## 2026-07-20 (opus session, RESTART, continued): 0.13.42 SHIPPED AND VALIDATED SAME SESSION (0/4 -> 4/4), FIXTURE-CONFORMANCE CHECK BUILT, jolly's git-diff gap VERIFIED
 
 dk: "I want the deps finding in doctrine before wave 7... the best possible pre wave 7 shipshape
