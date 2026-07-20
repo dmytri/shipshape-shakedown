@@ -6,6 +6,67 @@
 > validation this restart exists to enable. The pilot order that preceded it is ARCHIVED, marked
 > DO NOT RUN. The entries above this line are the record of how that order was reached.**
 
+## 2026-07-20 (opus session, RESTART, continued): 0.13.42 SHIPPED AND VALIDATED SAME SESSION (0/4 -> 4/4), FIXTURE-CONFORMANCE CHECK BUILT, jolly's git-diff gap VERIFIED
+
+dk: "I want the deps finding in doctrine before wave 7... the best possible pre wave 7 shipshape
+shipped." Done, and validated rather than asserted. Also built the fixture-conformance check dk
+approved, and verified two upstream findings from ~/jolly.
+
+**0.13.42 SHIPPED (`8fa93c9`)**, tests 231/231, pushed, installed. Full account in METRICS.md;
+banked `data/depfitout-0.13.42-validation/`.
+
+**THE FINDING WAS CORRECTED BEFORE THE FIX SHIPPED.** My run-time reading was "0.13.40 supplied the
+authority and left the obligation unstated". **WRONG** - `shipwright/SKILL.md:122` already ordered
+it in as many words. I nearly shipped a fix for a rule that already exists, the exact defect class
+this file records twice. Caught by verifying against the quoted line first.
+
+**What the probe really found is better: compliance splits INSIDE ONE SENTENCE.** 2/2 legs obeyed
+"recorded but not installed is installed here"; 0/4 obeyed "a version the policy holds behind
+current stable is drift Shipwright upgrades here". **Mechanism: OBSERVABILITY.** A missing
+dependency announces itself through a resolution failure that carries its name; a held version
+produces no failure and appears in no output the pass already reads, so it is found only by asking.
+3/4 legs ran no version query while successfully reaching the registry to install other tooling in
+the same pass - they could have asked and did not. Network confound checked and cleared.
+
+**The fix names the ACT, not a new rule** - one sentence folded into the existing pass: ask through
+the package manager's own outdated report, and "a version judged current by eye is unchecked".
+
+**VALIDATED, same states/channel/model, one sentence different: 0/4 -> 4/4 upgraded, 1/4 -> 4/4 ran
+a version query, all four reaching for `npm outdated` BY NAME.** Cleanest single-change result this
+harness has produced, and a direct confirmation of the diagnosed mechanism.
+
+**STANDING LESSON, second instance: "what binds is examples, not prose."** Same shape as pilot #5's
+plank-join finding. **Cheapest high-value audit now on the board: sweep the corpus for other
+obligations that name no act.**
+
+**FIXTURE-CONFORMANCE CHECK BUILT on dk's yes** - `bin/fixture-check.py` +
+`fixtures/probe-states/expected-defects.json`. The design problem was intent: probe states are
+DELIBERATELY defective, so every deliberate defect is declared, and the check fails two ways -
+**DRIFT** (an undeclared defect: the fixture rotted) and **DEAD ARM** (a declared defect that is no
+longer a defect: the probe still reports success while testing nothing). Covers planks vs
+step-usage, watchbill shape, hook-denied RIGGING commands, unconsumed probe dependencies, and
+hoisted "absent" dependencies - one rule per instance found today. Green on current fixtures, and
+**proven by planting both of today's actual failures**: the pre-0.13.34 keyword plank (caught as
+DRIFT) and "repairing" tw4's deliberate `{date}` plank (caught as DEAD ARM - the exact mistake the
+primed order would have led me into).
+
+**~/jolly UPSTREAM, both VERIFIED against our own hook by running it, not by reading:**
+1. **`git diff` is an unguarded reader of CAPTAIN.md - CONFIRMED, but jolly's stated example is not
+   the proof and the difference matters.** `git diff features/ CAPTAIN.md` IS denied (it names the
+   file). What is ALLOWED is bare `git diff` on a dirty tree, plus `git show`, `git log -p`,
+   `git stash show -p` - forms that dump the notes' content while NAMING NOTHING, so the
+   mention-based notecheck cannot see them and the result-set branch never considers them (it
+   enumerates grep/rg/ag/ack only). jolly's fix shape is right: guard, do not deny, since roles
+   genuinely need the role-advanced diff. Our own tw3 Boatswain reached for the correct pathspec-
+   excluded form unprompted today (`git diff <base> -- . ':!CAPTAIN.md'`), so naming it should land.
+   ROUTED, not shipped - dk's word owed.
+2. **The slash path is entirely unguarded - CONFIRMED.** With no `agent_type` the hook exits 0
+   immediately, so `/shipshape:qm` in the main loop has NO custody at all. No hook edit can close
+   this; it needs the skill refusing to proceed when it cannot observe its own enforcement, or role
+   identity carried by a vector the slash path also sets. jolly's framing is the sharp part: a rule
+   enforced on one route and not the other is WORSE than one enforced on neither, because the
+   guarded route teaches the operator to trust the guard. **Architectural, dk's call.**
+
 ## 2026-07-20 (opus session, RESTART, continued): STEP 3 RUN - 0.13.40 SHIP STANDS on seam 1, and the UPGRADE half has NO TRIGGER
 
 dk: "probe way", then "probe deeply". Ran the parked 0.13.40 routing probe, 23 legs, rubric

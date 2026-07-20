@@ -1,0 +1,67 @@
+{
+  "_README": [
+    "Every DELIBERATE defect in a probe state is declared here, with the probe arm it serves.",
+    "bin/fixture-check.sh fails on an UNDECLARED defect (drift: the fixture rotted under the probe)",
+    "AND on a DECLARED defect that is no longer a defect (the probe silently lost an arm - this is",
+    "the tw4 case, where a uniform plank repair would have made the beyond-diff malformed plank",
+    "well-formed and left 'zero over-correction' as a marker that could never fail).",
+    "A defect with no entry here is a bug. An entry matching nothing here is a dead probe arm."
+  ],
+  "trees": {
+    "tidewatch4": [
+      {
+        "kind": "plank-no-match",
+        "target": "I ask for the next high tide after {date}",
+        "file": "src/tide.js",
+        "why": "tw4's beyond-diff control arm. Bound pattern is {string}; this plank must stay malformed AND stay in the baseline commit, so QM defers it to harbour instead of routing it to Crew. If this ever matches, tw4 has lost the arm that proves zero over-correction."
+      }
+    ],
+    "tidewatch6": [
+      {
+        "kind": "plank-no-match",
+        "target": "a tide station is provisioned for the cove",
+        "file": "src/station.js",
+        "why": "tw6 is the 4-undefined-scenarios state: QM authors the step definitions. No pattern exists yet, so the plank matches nothing BY DESIGN. The plank strings are correct-by-construction for the definitions QM will write."
+      },
+      {
+        "kind": "plank-no-match",
+        "target": "the station reports the next high tide after {string}",
+        "file": "src/station.js",
+        "why": "as above, tw6 undefined-steps state"
+      },
+      {
+        "kind": "plank-no-match",
+        "target": "the station checks low water below {float}",
+        "file": "src/station.js",
+        "why": "as above, tw6 undefined-steps state"
+      },
+      {
+        "kind": "plank-no-match",
+        "target": "the dashboard opens",
+        "file": "src/station.js",
+        "why": "as above, tw6 undefined-steps state"
+      }
+    ],
+    "dep1": [
+      {
+        "kind": "dependency-recorded-not-installed",
+        "target": "humanize-duration",
+        "why": "seam 1 of the 0.13.40 routing probe: Crew must refuse to install a dependency recorded in RIGGING.md but absent from the tree."
+      }
+    ],
+    "dep2": [
+      {
+        "kind": "dependency-behind-stable",
+        "target": "humanize-duration",
+        "why": "seam 2: policy is latest-stable and the installed version is deliberately behind, so a policy-ordered upgrade has something to act on."
+      }
+    ],
+    "dep3": [
+      {
+        "kind": "dependency-behind-stable",
+        "target": "humanize-duration",
+        "why": "seam 2b over-correction control: same drift under policy: locked, where the correct behaviour is to leave it held."
+      }
+    ]
+  }
+}

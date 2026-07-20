@@ -1,5 +1,57 @@
 # Metrics: how to read a shakedown
 
+## 0.13.42 SHIPPED AND VALIDATED SAME SESSION: 0/4 -> 4/4 on the seam it targets
+
+dk: "I want the deps finding in doctrine before wave 7... the best possible pre wave 7 shipshape
+shipped." Shipped `8fa93c9`, tests 231/231 green, installed. Banked
+`data/depfitout-0.13.42-validation/`. 4/4 sonnet.
+
+**THE FINDING WAS CORRECTED BEFORE THE FIX SHIPPED, and the correction is the point.** The
+run-time reading was "0.13.40 supplied the authority and left the obligation unstated". **That was
+WRONG.** `shipwright/SKILL.md:122` already ordered it: *"a version the policy holds behind current
+stable is drift Shipwright upgrades here, and a dependency recorded under `## Dependencies` but not
+installed is installed here."* A fix for a missing rule would have duplicated an existing one - the
+exact defect class this file records twice before. Verified against the quoted line first, per the
+harness's own re-verification discipline.
+
+**What the probe actually found is sharper: compliance splits INSIDE ONE SENTENCE.**
+
+| Clause of `shipwright:122` | Legs complying |
+|---|---|
+| "recorded ... but not installed is installed here" | **2/2** (seam 1b) |
+| "a version the policy holds behind current stable is drift Shipwright upgrades here" | **0/4** (seam 2) |
+
+**Mechanism, tree-verified, not inferred: the two clauses differ in OBSERVABILITY.** An uninstalled
+dependency announces itself - the code that needs it fails to resolve and the failure carries the
+name. A held version produces no failure and appears in no output the harbour pass already reads,
+so it is found only by asking. 3/4 seam-2 legs ran no version query at all, **while successfully
+reaching the registry to install `c8`/`jsdoc` in the same pass** - so they could have asked and did
+not. Network confound checked and cleared: 1 of 8 legs (a control) hit registry trouble; the
+treatment arm demonstrably had network.
+
+**The fix names the ACT, not a new rule.** One sentence folded into the pass that already carries
+the obligation: ask through the package manager's own outdated report, read the answer from that
+output, and *"a version judged current by eye is unchecked"* - the corpus's own check-precedence
+idiom. No new mechanism, no new `RIGGING.md` slot, no new obligation.
+
+**VALIDATION, same states, same channel, same model, one sentence different:**
+
+| | 0.13.41 (pre-fix baseline) | 0.13.42 |
+|---|---|---|
+| upgraded the held dependency to stable | **0/4** | **4/4** |
+| ran an outward version query | 1/4 | **4/4** |
+
+All four ran `npm outdated` BY NAME, upgraded 3.33.2 -> 3.34.0, and re-ran the regression to prove
+it green. 11/22/23/28 inv. **This is the cleanest single-change result the harness has produced,
+and it is a direct confirmation of the diagnosed mechanism**: the obligation was present all along,
+and naming the act turned a silent condition into an observable one.
+
+**Standing lesson, now with a second instance: "what binds is examples, not prose."** This is the
+same shape as pilot #5's plank-join finding (doctrine states the join, derives no command shape,
+roles reinvent or skip it). Two independent confirmations that an obligation without a named act is
+an obligation roles do not discharge. **Candidate audit, cheapest high-value one on the board:
+sweep the corpus for other obligations that name no act.**
+
 ## 0.13.40 DEPENDENCY-ROUTING PROBE (2026-07-20, opus session, sonnet legs, HEAD-text both arms, 23 legs)
 
 Primed-order Step 3, run on dk's "probe way" + "probe deeply". Rubric fixed in advance

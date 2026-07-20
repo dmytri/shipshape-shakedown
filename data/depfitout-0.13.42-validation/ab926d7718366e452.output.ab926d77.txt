@@ -1,0 +1,26 @@
+# source: /tmp/claude-1000/-home-exedev-shipshape-shakedown/17bd0731-8f5d-443b-a8fa-0171c42b398a/tasks/ab926d7718366e452.output
+# banked: 2026-07-20T18:50:28Z
+ab926d7718366e452.output	1	18:45:43	15523	230	Read:SKILL.md ||| Read:SKILL.md ||| Read:templates.md
+ab926d7718366e452.output	2	18:45:47	19831	179	Read:SKILL.md
+ab926d7718366e452.output	3	18:45:50	59902	193	Bash:git status && git log --oneline -5 && ls -la
+ab926d7718366e452.output	4	18:45:55	66415	2	Bash:cat RIGGING.md && echo "---AGENTS---" && cat AGENTS.md ||| Bash:find src features data logs -type f | sort
+ab926d7718366e452.output	5	18:46:02	67224	656	Read:tide.js ||| Read:wait.js ||| Bash:cat .rgignore && echo "---gitignore---" && cat .gitignore && echo "---
+ab926d7718366e452.output	6	18:46:09	68597	208	Bash:for f in features/tides.feature features/tide-wait.feature features/su
+ab926d7718366e452.output	7	18:47:08	69971	5349	Bash:npx cucumber-js --dry-run --tags "not @captain and not @shipwright" 2> ||| Bash:npx cucumber-js --dry-run --format usage-json --tags "not @captain and
+ab926d7718366e452.output	8	18:47:17	71212	561	Bash:rg -n "@planks" src ||| Bash:npx cucumber-js --tags "@logic and not @captain and not @shipwright" 2
+ab926d7718366e452.output	9	18:47:25	78035	387	Bash:npx cucumber-js --tags "not @captain and not @shipwright" 2>&1 | tail 
+ab926d7718366e452.output	10	18:47:48	78810	1880	Bash:ls -la logs/ && find logs -type f -exec cat {} \; 2>/dev/null | head -
+ab926d7718366e452.output	11	18:48:03	79310	918	Bash:grep -rn "@shipwright\|@captain" features/ --include=*.feature
+ab926d7718366e452.output	12	18:48:07	81865	370	Bash:npm outdated 2>&1; echo "exit:$?"
+ab926d7718366e452.output	13	18:48:11	82798	312	Bash:npm ls @cucumber/cucumber humanize-duration
+ab926d7718366e452.output	14	18:48:15	83243	194	Bash:npm install humanize-duration@3.34.0 2>&1 | tail -20
+ab926d7718366e452.output	15	18:48:18	83652	181	Bash:npx cucumber-js --tags "not @captain and not @shipwright" 2>&1 | tail 
+ab926d7718366e452.output	16	18:48:22	83905	181	Bash:git diff --stat && git status
+ab926d7718366e452.output	17	18:48:26	84208	200	Bash:git diff package.json
+ab926d7718366e452.output	18	18:48:34	84551	650	Bash:cat README.md
+ab926d7718366e452.output	19	18:49:54	84897	7128	Bash:ls /tmp/claude-1000/-home-exedev-shipshape-shakedown/17bd0731-8f5d-443
+ab926d7718366e452.output	20	18:50:02	85695	56	Write:shipshape-conformance.feature
+ab926d7718366e452.output	21	18:50:09	92844	2	Bash:npx cucumber-js --dry-run 2>&1 | tail -20
+ab926d7718366e452.output	22	18:50:14	93509	315	Bash:npx cucumber-js --dry-run --tags "not @captain and not @shipwright" 2>
+ab926d7718366e452.output	23	18:50:19	94003	203	Bash:git status && git diff --stat
+SUMMARY	ab926d7718366e452.output	invocations=23	cache_read=1710000	out=20355	wall=18:45:43 to 18:50:19
