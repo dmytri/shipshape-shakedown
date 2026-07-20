@@ -1,5 +1,78 @@
 # Captain notes - shipshape-shakedown workstream
 
+## 2026-07-20 (opus session): 0.13.40 SHIPPED (dependencies -> fitting out) then a PRE-WAVE-7 DOCTRINE AUDIT that found the ship's own sprawl
+
+Entry: `/shakedown` with dk's "see ~/jolly upstream note, I think we should strip crew of
+dependency duty and make it fitting out", then mid-turn redirect: "full run to check bloat,
+sprawl, efficiency... before we go to wave 7, I want to know that our doctrine is tight prior
+to a full pre-wave-7 pilot run."
+
+**0.13.40 SHIPPED (`5c131ec`) on dk's "proceed"**, tests 231/231 green, pushed, installed
+15:17:55Z. Six sites, one change: installation is fitting out; every install and upgrade is
+Shipwright's (or Captain's on the greenfield fast path); Crew MUST NOT install or upgrade any
+dependency. Verified jolly's mechanism against doctrine text before editing - the gap is a
+NON-TERMINATING ROUTE, the same shape as the 0.13.38 strike ladder: a `latest-stable` policy
+makes a held version a defect, but a policy-ordered upgrade has NO failing target and Crew is
+dispatched only for a failing target, so no legal route existed. jolly's Captain hit it live
+and did it as Captain. Footing: TEXTUAL. **NOTE: this session's process (15:13:45Z) PREDATES
+the 15:17:55Z install, so 0.13.40 is NOT in this session's plugin snapshot** - it rides the
+next restart for installed-channel validation, same as 0.13.36-39 before it.
+
+**The 12-leg routing probe for 0.13.40 is BUILT AND PARKED, not run** (dk's redirect landed
+first): states scaffolded, control worktrees at 0.13.33 and 0.13.39, rubric fixed before any
+leg at `designs/depfitout/rubric.md` with the decision rule and null-result handling stated in
+advance.
+
+**THE AUDIT: four parallel read audits + static cost accounting, every load-bearing claim
+re-verified by the operator against the quoted line.** Full account
+`designs/doctrine-audit-0.13.40/results.md`. Headline: **doctrine is NOT bloating much (+3.1%
+corpus since pilot #5's 0.13.33) but 56% of the growth landed in the shared Articles**, the
+one file all five roles read in full on every invocation.
+
+**Two operator errors caught by the audit, both owned:**
+1. The run-time framing said "seven versions". It is EIGHT commits - 0.13.34 (`99c6002`) was
+   dropped by a bad grep, and it carries ~882 of the +887 Planking growth attributed to the
+   seven.
+2. **The single longest line in the shared Articles is now MY OWN 0.13.40 paragraph** -
+   `shipshape:384`, 2,101 chars, 42% longer than the next - about half of it rationale prose
+   addressed to roles that must obey either way, asserting its conclusion three times in three
+   consecutive sentences. I shipped a coherence fix and paid for it in sprawl. The same ship
+   also broke the file's own write-scope pattern (finding 7) and left 0.13.33 scar tissue
+   stranded in the paragraph it rewrote (finding 8).
+
+**CONFIRMED, routed, NOTHING SHIPPED:** (1) `qm:75`/`boatswain:60`/`shipwright:72` all cite
+"per the Wake policy" - **no such heading exists**, latent since 0.13.8, 32 versions; the
+corpus's own terms of art says the Transient output policy carries those rules. (2)
+`shipshape:125` lists "unreachable code" as removable "when safe" while the same line and
+`:141` defer it to Shipwright at harbour - a Crew mate has textual licence for a forbidden
+act. (3) `shipwright:110` is 4,368 bytes in ONE paragraph, 9.7% of its file, read ~26x/leg -
+the largest cost concentration in the corpus. (4) `captain:54` is 4,781 bytes, 20.1% of its
+file.
+
+**ONE claim DOWNGRADED on re-verification** (the discipline earning its keep again): the
+proposal to move the Outbound verification policy to Captain as single-role content is WRONG -
+`shipwright:74,109,158` derive and report outbound targets and `boatswain:32` carries the
+Captain-only prohibition. Not movable. **And a false commit claim corrected for the record:**
+0.13.37 called itself "Subtractive"; the diff is **net +69 chars**.
+
+**Positive findings, stated so they count as evidence:** no dead rules; no introduced
+contradictions in any passage the eight commits touched; the "fix silently duplicated by the
+next version" pattern did NOT recur; no near-duplication-with-drift between shared and role
+files; no section is a dumping ground. **0.13.35 and 0.13.36 are net ZERO chars and 0.13.39 is
+net NEGATIVE** - the fold-into-an-existing-pass discipline those commits claimed is real and
+verified.
+
+**WAVE 7 GATING - dk's decision owed.** Findings 1, 2, 7, 8 are TEXTUAL and ship on a close
+read plus green tests. Findings 3, 4, 5, 6 are SUBTRACTIVE EDITS TO LIVE RULES: the defect is
+visible in the artifact but the edit aims at what roles do with the text, so by AGENTS.md's
+sharpened probe-first rule they owe a probe with a control. The paired-battery rig is built.
+The deliberate recommendation made to dk: do NOT spend the battery until the tightening fixes
+land, or it measures doctrine wave 7 will not run on.
+
+Still open and unchanged: the Step 2 deadlock finding (1/3 of legs crossing the ~120s
+auto-background boundary deadlock), and 0.13.36-0.13.40 all unvalidated on the installed
+channel.
+
 ## 2026-07-20 (sonnet session): STEP 1 of the primed order DONE - 0.13.36 VALIDATED 8/8, plus a real plugin-agent registry gap found and fixed by dk's `/doctor`
 
 Bootstrap confirmed: both repos clean/level with origin, doctrine 0.13.38 installed (`f86dd31`,
