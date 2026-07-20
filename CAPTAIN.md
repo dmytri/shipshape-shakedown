@@ -98,113 +98,109 @@ on wall-clock chance around the ~150s sleep vs the ~120s cap), so a trustworthy 
 probe redesign, not more reruns of this one.
 
 <!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
-## >>> PRIMED ORDER for a CLEAN RESTART (written 2026-07-20 at dk's "prime shakedown for clean restart") <<<
+## >>> PRIMED ORDER for a CLEAN RESTART (written 2026-07-20 at dk's "prime for new session and pilot") <<<
 
-**dk's instruction, verbatim: "ok prime shakedown for clean restart." That is authorization to
-PROCEED AUTONOMOUSLY through the order below. Do NOT ask the usual one focus question - it is
-pre-answered here. Report the deck in two lines, then run.**
+**Supersedes the prior primed order below (archived, not deleted, starting "PRIMED ORDER for
+a CLEAN RESTART (written ... clean restart)") — its Steps 1-3 are DONE this session (0.13.36
+validated 8/8; 0.13.37/38 found NOT clean, live deadlock finding routed and sharpened to a
+1/3 rate; 0.13.39 shipped with the bare-hand-off fixes). Its Step 4 (wave 7) is NOT what runs
+next. dk's call this session, on being asked "so just need to do pilot before 7?": run a full
+TodoMVC pilot on the current doctrine state FIRST, because four versions (0.13.36-39) have
+shipped since the last pilot (#5, on 0.13.33) and validation so far is narrow probes, not an
+integration-scale run - and wave 7's own baseline arm (A) inherits whatever's untested in
+current doctrine, so an unvalidated baseline weakens that whole measurement anyway.**
+
+**dk's instruction, verbatim: "prime for new session and pilot".** Report the deck in two
+lines, get dk's ONE-line pilot cost confirmation (the pilot's own standing rule, `scenarios/
+pilot.md`'s runner architecture section - do not skip this even though the shakedown-level
+question was answered above), then run the pilot to completion per that file.
 
 ### PRECONDITIONS - verify before spending anything, in this order
 
-1. **SESSION MODEL MUST BE SONNET.** Not a pin - the session itself. Step 3 has nested spawns by
-   design, and the async-resumption leak sends even a pinned leg to the SESSION model at its
-   first nested-child resumption, so an opus session VOIDS the work. If this session is not
-   sonnet, STOP and say so.
+1. **SESSION MODEL MUST BE SONNET.** Not a pin - the session itself. The pilot's runner
+   architecture has nested spawns by design, and the async-resumption leak sends even a pinned
+   leg to the SESSION model at its first nested-child resumption, so an opus session VOIDS the
+   work. If this session is not sonnet, STOP and say so.
 2. **CHANNEL MUST BE INSTALLED-PLUGIN, CONFIRMED EMPIRICALLY, NEVER FROM TIMESTAMPS.** Installed
-   is 0.13.37 (`b761b64`). Dispatch the first leg, then grep its transcript for
-   `holding work that cannot resume it` (unique to 0.13.37) and
-   `An unmoved HEAD is not an empty diff` (unique to 0.13.36). Zero hits on either = stale
-   snapshot = STOP and report; this exact check failed on 2026-07-19 evening and correctly
-   blocked the work. Both validations below are installed-channel-only: the faults do not appear
-   in HEAD-text (0/8 there vs 2/8 installed), so HEAD-text mode CANNOT substitute.
+   is 0.13.39 (`ad245ce`). Dispatch the first leg, then grep its transcript for `If a role sees
+   no blocker, the deck is clean, not lost` (0.13.39-unique generalization; the pre-0.13.39 text
+   read "If QM sees no blocker") or `absent a marker, treat the dispatch as solo` (also
+   0.13.39-unique, Crew's skill). Zero hits on either = stale snapshot = STOP and report - this
+   exact check has failed and correctly blocked work before (2026-07-19 evening; also earlier
+   this session, when the plugin's agents were not registered in the Agent tool's subagent
+   registry at all until dk ran `/doctor` - see the 2026-07-20 entry above. If `shipshape:qm`
+   etc. fail to resolve as a `subagent_type` again, that is the SAME class of failure, not a new
+   one: route it to dk rather than falling back to HEAD-text mode, which cannot substitute for
+   an installed-channel pilot).
 3. **Both repos clean and level with origin.** `git fetch` this repo FIRST, before reading
-   anything - a stale clone mis-bases the whole session.
+   anything - a stale clone mis-bases the whole session. Also `git fetch` in `~/shipshape` and
+   confirm `~/shipshape` HEAD is `ad245ce` (0.13.39) before starting; the plugin install and the
+   doctrine repo HEAD should agree.
 
-### STEP 1 - validate 0.13.36 (QM opening retrieval). ~90 inv / ~4M.
+### GET DK'S ONE-LINE COST CONFIRMATION BEFORE SPENDING
 
-Shipped `49a1597`, UNVALIDATED. Fault: a QM concluded "HEAD equals base commit; no role has
-edited yet" while `git status` carried `M src/tide.js`, deferred in-diff Crew work to harbour and
-declared the watch spent. Fix gives QM's opening pass `git status --porcelain` plus one clause.
+The pilot is the acceptance-scale shakedown and is expensive (past runs: 440-720+ invocations,
+13-56M cache-read, 30 minutes to 90+ minutes wall, iterated to a full oracle pass). State the
+expected cost band from the last comparable run (pilot #5: 720 inv / 55.79M cache / full pass in
+3 iterations) and get a one-line go-ahead before scaffolding anything, per `scenarios/
+pilot.md`'s own runner-architecture rule ("runs 100% autonomously after a ONE-line cost
+confirmation"). This is a SEPARATE confirmation from whatever got this order written - do not
+treat "prime for new session and pilot" itself as that confirmation.
 
-Reproduce arm D exactly, it is written up in `designs/plankroute/results.md` and `rubric.md`:
-build the tw4 probe state (`bin/probe-states.sh <dir>`, use `tidewatch4`), clone it 8x, dispatch
-8 `shipshape:qm` legs, sonnet, **WITH the base commit named** (`0a557ee...` for a fresh build,
-whatever `probe-states.sh` prints otherwise), `Job`/role + project root + base only, plus
-"Stop before dispatching any subagent. In your Final report, name the next role and the exact
-targets and evidence you would carry to it."
+### RUN THE PILOT
 
-**BAR: 0/8 route the in-diff unplanked `tideRange` to harbour.** Baseline to beat is 2/8.
-Also score, as before: no over-correction (`nextHighTide`, beyond-diff and malformed, must still
-defer to harbour), and count working-tree commands per leg - the pre-fix discriminator was 5/5
-correct when a leg ran one, 1/3 when it ran none.
-**If the bar misses: DO NOT PATCH FURTHER. Route back to dk.** The line is then not the fix.
+Follow `scenarios/pilot.md` exactly - do not redesign it. Key points, restated because they have
+been gotten wrong before:
+- **Project naming**: this is Pilot #6, scaffold `todopilot7` (fresh directory in the session
+  scratchpad, never inside a real repo).
+- **Runner architecture is binding**: the operator seat is the MAIN SESSION LOOP, never a
+  delegated background fork/agent - a nested agent that ends its turn on a live background Bash
+  task is not resumed when that task completes, the exact class this session's own Step 2
+  finding (below) reproduced live. Long commands the runner itself owns run
+  `run_in_background:true`, waited on by output file, never process name. Every role leg carries
+  the harness's background-task lines from `prompts/preamble.md` (the pilot is NOT a doctrine-
+  alone probe - unlike this session's tw13 legs, which deliberately omitted those lines to test
+  doctrine in isolation, the pilot's own procedure is supposed to be the belt-and-braces that
+  prevents exactly what tw13-3 hit).
+- **Play-by-play narration** to dk in real time: every leg dispatch, every mined result
+  (inv/cache/out/wall + verdict) the moment it's mined, every oracle grade the moment the run
+  finishes. Timer wakes every ~2 minutes while a leg runs (main-session-loop only).
+- **Oracle quarantine is absolute** - reread `scenarios/pilot.md`'s "Oracle quarantine" section
+  before Phase 2 of the first iteration; verify by transcript grep on every leg that no role saw
+  oracle terms.
+- **Zero questions between the cost confirm and the final report**, except a genuine stop-worthy
+  blocker, recorded fully in CAPTAIN.md first.
+- Mine every leg per METRICS.md, bank same-session (`bin/bank.sh`) - raw transcripts die with the
+  VM, proven repeatedly in this file's history.
 
-### STEP 2 - validate 0.13.37 (turn-ending text + background-custody hook) AND 0.13.38. ~70 inv / ~3.5M.
+### WATCH FOR, SPECIFICALLY - this session's two live findings, unresolved
 
-**0.13.38 additionally owes a COST CHECK on change B** (the strike's new third rung can order a
-focused run the old text forbade): compare custody-leg invocations against the 0.13.35 battery
-baselines in METRICS.md. Marker for 0.13.38: `Captain never writes production code`.
+1. **The Step 2 deadlock finding** (this session, see entries above and METRICS.md's
+   "0.13.37/0.13.38 validation" + its n=8 rerun): on a doctrine-alone probe, 1/3 of legs that
+   actually crossed the runtime's ~120s auto-background boundary deadlocked completely (no
+   Final report, backgrounded output never consumed, no hook visibly blocked the stop). The
+   pilot's own background-task-line discipline should prevent this class by construction, per
+   the runner-architecture note above - but if it happens anyway during the pilot, that IS
+   direct evidence bearing on whether 0.13.37/38's fix holds under real conditions, not just
+   probe conditions, and is worth recording immediately and in detail, not just working around.
+2. **0.13.39 unvalidated on the installed channel** (shipped this session, see above) - this
+   pilot doubles as its first real-scale exercise. Watch specifically for the four hand-off
+   fixes actually mattering: any bare/minimal dispatch across a role transition, any point where
+   a role would previously have stalled on a missing hand-off fact (base commit on non-fresh
+   entry, blocker visibility across Boatswain/Shipwright/Captain, Crew's solo/parallel default,
+   Boatswain's self-selected commit subject).
 
-Shipped `b761b64`, UNVALIDATED. Two changes on one seam: `:354` no longer contradicts `:360`
-(a role never ends its turn holding work that CANNOT RESUME IT; a dispatched agent is not that
-case), and `hooks/scripts/background-custody.sh` blocks a SubagentStop that holds unconsumed
-backgrounded output.
+### AFTER THE PILOT - wave 7 gating
 
-Run the **tw13 slow-census** probe from `scenarios/probes.md` - it is the state that produces
-auto-backgrounded work - dispatched WITHOUT the harness background-task lines, so doctrine and
-hook are the only things holding. 2-3 legs is enough.
+Wave 7 (`scenarios/wave7.md`) remains queued behind this pilot, not instead of it. Report the
+pilot's outcome to dk explicitly against wave 7's own precondition ("0.13.36 and 0.13.37
+validations both GREEN") before proposing to start it - if the pilot surfaces new regressions or
+reproduces the Step 2 deadlock at pilot scale, that is new information dk should weigh before
+wave 7 opens, not something to route around. Wave 7 is ALSO pilot-class cost (~400-700 inv /
+~25-40M) and needs its own separate one-line cost confirmation regardless of this pilot's
+outcome, per the standing pilot cost rule.
 
-**WATCH FOR, all three:**
-- the hook stays SILENT on a well-behaved leg (it should never fire when output is consumed
-  in-turn, as 0.13.35's tw13 did via `Read:bpczcw513.output`);
-- NO legitimate command is denied anywhere - the hook blocks stops, never commands, and any
-  command denial is a regression;
-- the multi-agent FILLER pattern is gone: 0.13.35's tw13 burned 5 invocations
-  (`echo waiting`/`sleep 1`/`true` x3) caught between `:354` and `:360`. Its absence is the text
-  fix working.
-
-### STEP 3 - BARE-HAND-OFF AUDIT AND ITS FIX. dk: "we need to resolve this before wave 7."
-
-**This GATES wave 7 and outranks it.** dk's rule, ruled 2026-07-20: **no property may depend
-SOLELY on hand-off content** - hand-offs can be bare (fresh session, context clear, skill-only
-consumer with no guard, a human relaying by hand), so carried content is an optimization and a
-durable route must always exist. Doctrine already honours this in five places and broke it in
-one; see the 2026-07-20 yoink entry below for the table and the dating.
-
-Why it gates wave 7 specifically, beyond dk's word: **wave 7's arm C IS carried orientation
-material.** Measuring the economy of carried content across a role chain whose carried-content
-contract is itself defective would confound the wave's central measurement. Fix the contract,
-then measure carrying things over it.
-
-Work owed here, in order:
-1. **Read the audit findings** recorded in the 2026-07-20 entry below (four parallel role audits:
-   QM, Boatswain, Crew, Shipwright+Captain, each asked where its routine dead-ends on a bare
-   dispatch). VERIFY every HANDOFF-ONLY claim against the quoted line yourself before acting -
-   the audit was delegated, and delegated reads have been wrong here before.
-2. **Fix the known one**: the watchbill strike (`boatswain:99`) gets a terminating precedence
-   ladder - hand-off if given, else run record at the current deck-state hash, else verify the
-   entries by running them, the rerun fallback custody already has elsewhere. Do NOT widen the
-   Dispatch contract's Boatswain row; that was proposed and RETIRED, since it makes hand-off
-   content more load-bearing, the opposite of the rule.
-3. **Fix, or consciously accept with a written reason, every other HANDOFF-ONLY finding.**
-4. These are TEXTUAL defects by the probe-first rule, so they ship on a close read plus green
-   `tests/*.sh` - but they are doctrine, so they still need dk's word before shipping.
-
-### STEP 4 - WAVE 7, only once steps 1-3 are green.
-
-Full design, arms, measures and PASS bars are ALREADY FIXED in `scenarios/wave7.md` - read it,
-do not redesign it, and do not soften a bar after seeing a number. Arms A and B can run
-regardless. **Arm C additionally needs yoink pushed**: as of 2026-07-20 yoink has green @eval
-(exit 0, 64s, 3.5MB session.jsonl), custody committed over 7 commits, and a remote now exists
-(`git@github.com:dmytri/yoink.git`), with 2 commits unpushed and one uncommitted
-`D watchbill.json`. **That push is outbound, Captain-only, dk's own repo - NEVER do it from this
-harness.** If it has not landed, run A and B, and say plainly that C is deferred.
-
-COST: steps 1+2 ~140 inv / ~6.5M. Step 3 is analysis plus a small textual ship, cheap. Step 4
-(wave 7) is pilot-class, budget ~400-700 inv / ~25-40M; confirm THAT cost with dk before starting
-it, per the pilot cost rule. Steps 1-3 need no further confirmation.
-
-### STANDING RULES THAT NOW BIND THIS WORK
+### STANDING RULES THAT BIND THIS WORK
 
 - **Probe-first, in the sharpened form** (AGENTS.md, new section, dk-ruled 2026-07-19):
   BEHAVIOURAL findings owe a probe with a control and a rubric fixed BEFORE the legs report;
@@ -214,9 +210,36 @@ it, per the pilot cost rule. Steps 1-3 need no further confirmation.
 - **Bank every leg same-session** (`bin/bank.sh`); raw transcripts die with the VM.
 
 ALSO CARRY, unresolved and dk's to read: the META-FINDING further below - probe fixtures may be
-systematically too clean to reproduce pilot-scale faults. `scenarios/wave7.md` addresses the
-fixture-realism half by construction; the general question is still open.
+systematically too clean to reproduce pilot-scale faults. This pilot is itself the test of that
+question at real scale; `scenarios/wave7.md` addresses the fixture-realism half by construction
+for its own narrower measurement, but the general question is still open until this pilot runs.
 <!-- =================== END PRIMED ORDER =================== -->
+
+<!-- ============== ARCHIVED PRIOR PRIMED ORDER (Steps 1-3 DONE, Step 4 superseded by the pilot order above) ============== -->
+## [ARCHIVED] PRIMED ORDER for a CLEAN RESTART (written 2026-07-20 at dk's "prime shakedown for clean restart")
+
+Steps 1-3 of this order are DONE (see the 2026-07-20 entries at the top of this file). Its Step
+4 does not run next - see the new primed order above. Kept for the historical detail on Steps
+1-3's exact reproduction recipes, in case either needs rerunning.
+
+### STEP 1 - validate 0.13.36 (QM opening retrieval). DONE, 8/8, see above.
+
+Reproduce arm D exactly, written up in `designs/plankroute/results.md` and `rubric.md`: build
+the tw4 probe state (`bin/probe-states.sh <dir>`, use `tidewatch4`), clone it 8x, dispatch 8
+`shipshape:qm` legs, sonnet, WITH the base commit named, `Job`/role + project root + base only,
+plus "Stop before dispatching any subagent. In your Final report, name the next role and the
+exact targets and evidence you would carry to it." Bar: 0/8 pre-fix, cleared 8/8 this session.
+
+### STEP 2 - validate 0.13.37/38 (turn-ending text + background-custody hook). DONE, MIXED, see above.
+
+Run the tw13 slow-census probe from `scenarios/probes.md`, dispatched WITHOUT the harness
+background-task lines. This session's n=8 result: 1/3 deadlock rate among legs that actually
+crossed the runtime's auto-background boundary. NOT closed - see the new primed order's
+"WATCH FOR" section above for how this feeds the pilot.
+
+### STEP 3 - bare-hand-off audit and its fix. DONE, shipped as 0.13.39, see above.
+
+<!-- ============== END ARCHIVED PRIOR PRIMED ORDER ============== -->
 
 ## 2026-07-20: 0.13.38 SHIPPED (f86dd31) on dk's word - three layers of the deadlock - and yoink RE-VENDORED to it
 
