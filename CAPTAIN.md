@@ -82,6 +82,21 @@ and unresolved — it is a BEHAVIOURAL finding on 0.13.37/38, which 0.13.39 does
 it still stands as the reason wave 7 (pilot-class, real background-task exposure) should not
 start on a bare "proceed" without dk weighing it first.
 
+## 2026-07-20 (sonnet session, continued): Step 2 finding SHARPENED, n=8 rerun - the real rate is 1/3, not 1/8, and it's worse than the headline
+
+Reran the tw13 slow-census probe 5 more times (n=8 total) to move off the original n=3. Naive
+read: 7/8 clean (12.5% fail) — looks like a low-frequency compliance gap. **Checked against
+the runtime's own "moved to the background" line in each transcript (not inferred) and the
+naive read is wrong in the way that matters.** Only 3 of the 8 legs actually crossed the
+runtime's ~120s auto-background boundary at all; the other 5 legs' sweeps finished inside the
+foreground budget and never tested the fix. **Of the 3 legs that DID hit the boundary, 1
+deadlocked (tw13-3) and 2 recovered (tw13-6, tw13-8).** Real rate when the condition the fix
+targets actually fires: **1/3, not 1/8** — n=8 mostly added legs that never exercised the
+fault path. Full account in METRICS.md. Still not shipped, still routed. The concrete gap
+this leaves: no probe here forces the auto-background boundary reliably (it currently depends
+on wall-clock chance around the ~150s sleep vs the ~120s cap), so a trustworthy rate needs a
+probe redesign, not more reruns of this one.
+
 <!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
 ## >>> PRIMED ORDER for a CLEAN RESTART (written 2026-07-20 at dk's "prime shakedown for clean restart") <<<
 
