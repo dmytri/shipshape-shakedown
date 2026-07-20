@@ -1,5 +1,55 @@
 # Captain notes - shipshape-shakedown workstream
 
+## 2026-07-20 (opus session, continued): 0.13.41 SHIPPED, PAIRED BATTERY RUN - doctrine cost is FLAT, and the PROBE FIXTURES have been stale since 0.13.34
+
+**0.13.41 SHIPPED (`6e46a72`) on dk's "proceed"**, tests 231/231 green, installed 15:32:19Z. The
+four TEXTUAL fixes from the audit: the `per the Wake policy` citation that never resolved (3
+files, latent since 0.13.8) now cites the Transient output policy; `shipshape:125` no longer
+licenses at-sea removal of unreachable code; Article 8 gains the manifest/lockfile write scope my
+0.13.40 put in the role file only; and 0.13.33's stranded recording sentence folds to sit with
+the installation rule. **Honest note: fix 4 was net +8 chars, NOT a byte saving** - a coherence
+fix, said so in the commit rather than letting it read as a win. **0.13.41 also postdates this
+session's process, so the installed-channel debt is now FIVE versions deep (0.13.36-0.13.41).**
+
+**PAIRED BATTERY, 8 legs, dk's "full run to check bloat, sprawl, efficiency".** Design: same
+channel, same fixtures, same model, only the doctrine text differs - 0.13.41 against 0.13.33
+(pilot #5's baseline) from a git worktree. Full account in METRICS.md; banked
+`data/paired-battery-0.13.41/`.
+
+**HEADLINE, and it answers dk's question: eight versions of growth (+3.1% corpus) cost NOTHING
+measurable.** tw4 QM -1 inv / -9% cache, tw1 QM flat. Mean context per invocation is LOWER on
+0.13.41 for three of four legs. Doctrine is not buying rounds.
+
+**tw5 Shipwright is the run's most informative leg and is NOT a regression.** +17 inv in-leg on
+0.13.41, which bought away FOUR Captain blocker round-trips: the control installed only jsdoc and
+left `coverage: none` / `lint: none` with four blockers raised; 0.13.41 installed five deps,
+populated real coverage and lint commands, proved each runnable, zero blockers. **55s FASTER in
+wall despite 17 more invocations.** First live exercise anywhere of 0.13.40's install authority
+and 0.13.41's Article 8 write scope.
+
+**FINDING, HIGH, HARNESS-SIDE, gates wave 7: the probe fixtures have been stale since 0.13.34 and
+it corrupted a recorded result.** `fixtures/probe-states/` carries 8 planks in the pre-0.13.34
+keyword form, and `scenarios/probes.md:230` teaches it too, so on any 0.13.34+ run the fixture's
+own planks are malformed BY CONSTRUCTION. Tree-verified that this is the fixture and not the
+roles: in BOTH arms Crew wrote the correct plank for its own doctrine while the fixture's line-2
+plank stayed old. **Consequence: tw3 silently stopped testing its subject at 0.13.34.** It is a
+CLEAN-CUSTODY probe for the content-blind CAPTAIN.md bulkhead and should end in a commit - which
+is what the 0.13.33 control did (`f52037e`) - but on current doctrine it fouls on the scaffolding
+and never reaches the bulkhead. **The 0.13.35 battery recorded exactly this foul as a positive
+marker ("FOUL-CATCH ... correctly refused"), at a matching invocation count, which is why nothing
+looked wrong. That entry is corrected in METRICS.md.** Both Boatswain legs here were correct for
+their own doctrine.
+
+This is the fixture-realism meta-finding, now with a mechanism, a tree-verified proof and one
+corrupted datum. **ROUTED, NOT FIXED** - repairing it changes what every future probe measures,
+and wave 7's baseline arm runs these same fixtures. Fix scope known and small: 8 planks in 4
+fixture files + `scenarios/probes.md:230`.
+
+**Still routed from the audit, NOT shipped** (subtractive edits to live rules, each owes a probe
+with a control): `shipwright:110` at 4,368 bytes read ~26x/leg, `captain:54` at 20.1% of its file,
+the four-site restatement of the 0.13.40 dependency rule, and `shipshape:384`'s rationale prose -
+still the longest line in the shared Articles.
+
 ## 2026-07-20 (opus session): 0.13.40 SHIPPED (dependencies -> fitting out) then a PRE-WAVE-7 DOCTRINE AUDIT that found the ship's own sprawl
 
 Entry: `/shakedown` with dk's "see ~/jolly upstream note, I think we should strip crew of

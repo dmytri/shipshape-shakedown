@@ -1,5 +1,94 @@
 # Metrics: how to read a shakedown
 
+## Paired battery, 0.13.41 vs 0.13.33 (2026-07-20, opus session, sonnet legs, HEAD-text BOTH arms, 8 legs)
+
+dk's ask: is doctrine tight before wave 7 and its pilot. Design: **paired arms, same channel,
+same fixtures, same model, only the doctrine text differs** - 0.13.41 (`6e46a72`, HEAD) against
+0.13.33 (`bc731e4`, pilot #5's baseline, before all eight intervening versions), the control
+served from a git worktree. HEAD-text both arms because this session's plugin snapshot predates
+0.13.40/41; that makes the comparison CLEAN (the usual channel confound is absent) but means it
+measures DOCTRINE TEXT, not the plugin channel. Banked `data/paired-battery-0.13.41/`.
+
+| Leg | 0.13.41 | 0.13.33 | Delta | Comparable? |
+|---|---|---|---|---|
+| tw4 QM plank-gap | 13 inv / 660k / 4.2k | 14 inv / 727k / 3.8k | **-1 inv, -9% cache** | yes |
+| tw1 QM crew-batching | 17 inv / 891k / 7.3k | 17 inv / 860k / 3.8k | **0 inv, +3.6% cache** | yes |
+| tw3 Boatswain notes-arms | 9 inv / 435k / 1.8k | 13 inv / 687k / 1.7k | n/a | **NO - different outcomes** |
+| tw5 Shipwright fit-out | 49 inv / 3.95M / 16.2k | 32 inv / 2.64M / 10.9k | +17 inv | **NO - different work** |
+| **Arm total** | **88 inv / 5.94M / 29.5k** | **76 inv / 4.92M / 20.3k** | | |
+
+**HEADLINE: eight versions of doctrine growth (+3.1% corpus bytes) cost NOTHING measurable on
+like-for-like legs.** tw4 -1 inv, tw1 flat. Mean context per invocation is LOWER on 0.13.41 for
+three of four legs (tw4 50.8k vs 51.9k; tw5 80.6k vs 82.6k; tw3 48.3k vs 52.9k; tw1 52.4k vs
+50.6k is the one exception). The doctrine is not buying rounds.
+
+**tw5 is the run's most informative leg and it is NOT a regression.** 0.13.41 spent +17 inv and
++1.31M IN-LEG, and bought away FOUR Captain blocker round-trips: the control raised coverage,
+lint, typecheck and feature-lint as blockers and left `coverage: none` / `lint: none` in the
+rigging, installing only jsdoc. 0.13.41 installed five dependencies (c8, eslint, @eslint/js,
+globals, jsdoc), populated real `coverage` and `lint` commands, proved each runnable, and raised
+ZERO blockers. Doctrine's own words for the control's behaviour: "A blocker raised to have
+another role run that install spends a cycle and discovers nothing." **And it was 55s FASTER in
+wall-clock despite 17 more invocations** (7m06s vs 8m01s) - the retired-shorthand lesson below,
+re-measured: more small fast invocations beat fewer large ones on both wall and tokens.
+
+This leg is also the first live exercise anywhere of **0.13.40's install authority** and
+**0.13.41's Article 8 write-scope entry** - Shipwright installed and wrote `package.json` /
+`package-lock.json` and recorded every dependency under `## Dependencies` in the same pass.
+
+### FINDING, HIGH, harness-side not doctrine-side: THE PROBE FIXTURES HAVE BEEN STALE SINCE 0.13.34, AND IT CORRUPTED A RECORDED RESULT
+
+`fixtures/probe-states/` carries **8 planks in the pre-0.13.34 keyword-bearing form**
+(`station.js`, `tide-range-planked.js`, `tide-range-unplanked.js`, `tide-fitted.js`), and
+`scenarios/probes.md:230` teaches that form too. 0.13.34 dropped the keyword from the plank
+string, so on ANY 0.13.34+ run the fixture's own pre-existing planks are malformed BY
+CONSTRUCTION, before a role touches the tree.
+
+**Tree-verified proof that this is the fixture and not the roles** - `tidewatch1/src/tide.js`
+after each arm ran, line 2 is the fixture's plank and line 11 is Crew's own, written this voyage:
+
+| | line 2 (fixture) | line 11 (Crew-written) |
+|---|---|---|
+| 0.13.41 arm | `"When I ask for the next high tide after {string}"` | `"I ask for the next low tide after {string}"` |
+| 0.13.33 arm | `"When I ask for the next high tide after {string}"` | `"When I ask for the next low tide after {string}"` |
+
+Each arm's Crew wrote the CORRECT form for its own doctrine. Only the fixture is frozen.
+
+**The corrupted datum: tw3 silently stopped testing its own subject at 0.13.34.** tw3 is designed
+as a CLEAN-CUSTODY probe - `bin/probe-states.sh` describes it as "green role-advanced diff +
+CAPTAIN.md edit + record @ hash + watchbill", and it exists to exercise the content-blind
+`CAPTAIN.md` staging bulkhead, so its designed outcome is a successful commit. That is exactly
+what the 0.13.33 control did (commit `f52037e`). On 0.13.41 it fouls on the stale fixture plank
+at line 2, refuses to commit, and **never reaches the bulkhead arm it exists to test**.
+
+**And the 0.13.35 battery recorded that foul as a doctrine SUCCESS** - see the "Efficiency
+battery, 0.13.35" section below, which files tw3 as "(FOUL-CATCH) ... malformed plank on touched
+seam correctly refused, no commit" among its positive markers, at 9 inv / 403k. This run
+reproduces it at 9 inv / 435k. The invocation count matched the baseline, which is why nothing
+looked wrong. **That entry is hereby corrected: it was fixture drift scored as doctrine working,
+not a foul-catch.** Both Boatswain legs in this battery were CORRECT for their own doctrine; the
+divergence is entirely the fixture.
+
+This is the fixture-realism META-FINDING already carried in CAPTAIN.md ("probe states are
+systematically too clean to reproduce pilot-scale faults"), now with a concrete mechanism, a
+tree-verified proof, and one corrupted METRICS entry behind it. **It gates wave 7**: wave 7's
+baseline arm runs these same fixtures, and a probe that fouls on its own scaffolding measures the
+scaffolding. Fix scope is small and known: 8 planks in 4 fixture files + `scenarios/probes.md:230`.
+Routed to dk, NOT fixed - it changes what every future probe measures.
+
+### Doctrine cost inventory at 0.13.41
+
+Corpus 183,311 -> 189,000 bytes since 0.13.33, **+3.1%**, of which **+3,182 (56%) landed in the
+shared Articles**, the file all five roles read in full every invocation. Per-commit net delta in
+that file: 0.13.33 +345, 0.13.34 +882, 0.13.35 **+0**, 0.13.36 **+0**, 0.13.37 +69, 0.13.38
++1502, 0.13.39 **-13**, 0.13.40 +742, 0.13.41 (this session's textual fixes) small net positive.
+Three commits carry 90% of growth. 0.13.35/0.13.36 at net ZERO and 0.13.39 at net NEGATIVE
+confirm the fold-into-an-existing-pass discipline those commits claimed.
+
+Section shares (`bin/doctrine-sections.py`): Project policies 23.1%, Role flow 15.4%,
+Verification agreement 11.2%, Planking 9.9%. Full sprawl audit and its routed findings:
+`designs/doctrine-audit-0.13.40/results.md`.
+
 ## 0.13.37/0.13.38 validation, tw13 slow-census (2026-07-20, sonnet, installed-plugin channel, 4 legs, primed-order Step 2)
 
 3 `shipshape:qm` legs on fresh tw13 clones (base `7934c4a`), dispatched thin (project root +
