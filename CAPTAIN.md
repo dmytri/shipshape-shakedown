@@ -6,6 +6,47 @@
 > validation this restart exists to enable. The pilot order that preceded it is ARCHIVED, marked
 > DO NOT RUN. The entries above this line are the record of how that order was reached.**
 
+## 2026-07-20 (opus session, RESTART, continued): QUEUE CLEARED - 0.13.45 and 0.13.46 ship the rest; NOTHING is left routed
+
+dk: "please don't leave anything for me... I just want a great release now so we can eventually
+move on." Everything previously routed is now resolved. **The routed queue is EMPTY.**
+
+**0.13.45 (`7247f8d`)** - the four remaining sweep findings. Three had an act available from work
+the role had already done; the fourth had none and was BOUNDED rather than given a mechanism.
+- `qm:72` - "behaviour exceeds its planked steps" sits beside three faults the plank join answers
+  by string, and no string answers this one. Named as a READ with both inputs already in hand (the
+  seam from the diff, the definitions from `step-usage`), and reported as a read per check
+  precedence rather than dressed as a check it is not.
+- `shipwright:136` - the spec-bearing lens rides a weather record carrying duration and nothing
+  about redundancy. `step-usage` already reports which scenarios bind each pattern, so scenarios
+  binding the same pattern set are the restatement candidates.
+- `shipwright:137` - explicitly the branch where NO comment states the constraint, so nothing can
+  surface it. The stack's dead-code analyser already resolved a module graph for the
+  unreachable-code check; group its edges by directory or layer. No new tool.
+- `shipshape:217` - required every later report to name a deferred plant "unproven" while nothing
+  durable records whether it was ever red and a green run looks identical either way: an obligation
+  no role could discharge honestly. **No marker was invented to track it.** The deferring report,
+  which can see the deferral, names it and carries it as a harbour item; the next harbour plants it.
+
+**0.13.46 (`8933214`) - the slash-path asymmetry, CLOSED.** This was the one item flagged
+"architectural, dk's call"; it is resolved without needing one. `shipshape:327` already preferred
+the isolated subagent for context reasons; it now also carries the reason the preference is not
+aesthetic - **it is the only route that carries the role's identity, so every mechanical guard
+exists on one route and not the other while both announce the same role and read the same skill.**
+jolly's framing is adopted verbatim in substance: a rule enforced on one route and not the other is
+worse than one enforced on neither. **The fresh-session fallback STANDS unchanged** - it is what
+the skills channel runs on and removing it would strand them - but is now named as the place where
+doctrine alone carries the bulkhead. This is exactly the conclusion jolly's own note reached
+("DISPATCH QM AS A SUBAGENT, never as `/shipshape:qm` in the main loop").
+
+**RELEASE STATE: 0.13.46, tests 241/241, doctrine HEAD == plugin == install.** Five versions shipped
+this session (0.13.42-0.13.46), one of them behaviourally validated same-session at 0/4 -> 4/4.
+
+**HONEST CAVEAT, carried forward: 0.13.43-0.13.46 have NO behavioural validation.** They ship on
+textual footing plus green tests, which the probe-first rule permits for artifact-visible defects,
+and 0.13.42's result is the standing evidence that this fix SHAPE works. But the installed-channel
+battery still wants a sonnet session, and so does the pilot. That is the whole remaining queue.
+
 ## 2026-07-20 (opus session, RESTART, continued): 0.13.43 + 0.13.44 SHIPPED - jolly's git-diff leak closed, and the "obligation with no act" sweep dk ordered
 
 **0.13.43 (`144a0b6`) - jolly's git-diff leak, BOTH LAYERS.** Tests 241/241 (10 new hook cases).
