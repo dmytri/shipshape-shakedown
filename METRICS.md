@@ -1,5 +1,75 @@
 # Metrics: how to read a shakedown
 
+## 0.13.40 DEPENDENCY-ROUTING PROBE (2026-07-20, opus session, sonnet legs, HEAD-text both arms, 23 legs)
+
+Primed-order Step 3, run on dk's "probe way" + "probe deeply". Rubric fixed in advance
+(`designs/depfitout/rubric.md`), full account `designs/depfitout/results.md`, banked
+`data/depfitout-0.13.41/`. Treatment 0.13.41 (HEAD), control 0.13.39 (`ad245ce`) from a worktree.
+Channel verified per arm by version-specific Crew text, zero cross-contamination. 111/111 sonnet.
+
+**Two deviations, both declared BEFORE any leg ran:** treatment is 0.13.41 not 0.13.40 (HEAD
+advanced; 0.13.41's Article 8 entry touches this seam; the live question is whether CURRENT
+doctrine routes correctly), and depth was raised on "probe deeply" - n=5/arm seam 1, n=4/arm seam 2,
+plus two rider seams the rubric did not carry.
+
+| Seam | 0.13.41 | 0.13.39 | Verdict |
+|---|---|---|---|
+| 1 Crew, recorded-but-uninstalled dep: INSTALLED it? | **0/5** | **5/5** | **DISCRIMINATES** |
+| 1b (rider) Shipwright on the same state: installed? | **2/2 at stable, suite GREEN** | n/a | route TERMINATES |
+| 2 Shipwright, `latest-stable`, held below stable: upgraded? | **0/4** | **0/4** | **NULL** |
+| 2b (rider) same under `locked`: upgraded? | 0/3 | n/a | inconclusive by construction |
+
+**SPLIT result per the rubric's own decision rule. The 0.13.40 ship STANDS on seam 1** - 5/5 vs
+0/5, tree-verified both directions (no install, no `package.json`/lockfile change, clean tree, and
+a blocker to QM naming the dependency). Every treatment leg cited `crew:27`; every control leg
+installed and went green, three quoting 0.13.39's "mechanical part of a spec-ordered change" - the
+old text really did order what the new text forbids.
+
+**Economy, unexpected: REFUSING IS CHEAPER THAN INSTALLING** - 4.2 inv / 134k mean vs 6.8 inv /
+263k, **-38% inv, -49% cache**. The refusal short-circuits before the install and the verify run.
+
+**Seam 1b is the rider that mattered** (standing rule: probe the role that does NOT fail). 0.13.40
+removed a duty from Crew; the risk was a new dead end. There is none - Shipwright installs at
+**3.34.0, current stable**, suite goes GREEN, and one leg names the condition exactly as *"recorded
+under `## Dependencies` in RIGGING.md but never installed"*, filing it as **rigging drift**. The
+hand-off is coherent end to end.
+
+**FINDING, MEDIUM, BEHAVIOURAL, ROUTED NOT SHIPPED: the policy-ordered upgrade route has NO
+TRIGGER.** Seam 2 is null both ways, but the mechanism is sharper than a bare null: **3 of 4
+treatment legs WROTE TO `## Dependencies`** (adding `c8`) while never comparing the installed
+3.33.2 against the `latest-stable` policy two lines above, and all eight reported "no policy
+violations" with the drift sitting in the tree. The section is read as a place to RECORD
+dependencies, not a rule to CHECK versions against. **Not a capability gap** - seam 1b proves the
+same role installs at current stable when installing fresh; what never fires is UPGRADING an
+already-installed held dependency. Same shape as the defect 0.13.40 was written to fix, one level
+up: the authority was supplied, the obligation left unstated. Candidate fix (owes its own probe):
+a harbour work-loop step that reads the Dependencies policy and compares it to installed versions.
+
+**Seam 2b does NOT establish absence of over-correction, and is reported as such.** Since no leg
+checks versions at all, "correctly declined under `locked`" is indistinguishable from "never
+looked". It becomes testable only once the seam-2 trigger exists.
+
+**Bearing on wave 7 / the pilot: the half of 0.13.40 a pilot leans on hardest is the half with no
+behavioural evidence.** A pilot upgrades dependencies far more often than it refuses them.
+
+### Harness findings - the 4th, 5th and 6th fixture-realism instances of this session
+
+1. **Seam 2's first state was DEFECTIVE and its 8 legs are VOID.** The dependency was installed but
+   consumed by nothing, so it read as a DEAD dependency (invites removal) not a HELD one (invites
+   upgrade). Caught only because **three legs across BOTH arms** independently reported "referenced
+   nowhere in src or features, candidate for removal". Rebuilt with the dependency genuinely
+   consumed; all numbers above are the rebuilt run. **The operator wrote up the fixture-realism
+   meta-finding one hour before building this state and reproduced the failure anyway** - the
+   clearest evidence yet that this is structural, not carelessness.
+2. **`ms`, the first probe dependency, is HOISTED** via `cucumber -> debug -> ms@2.1.3`, silently
+   making seam 1 green. Caught by the state script's own assertion; replaced with
+   `humanize-duration` (zero deps, unhoistable).
+3. **The probe's `watchbill.json` is malformed** against the Watchbill policy shape - found by a
+   seam-1b leg, not by the harness.
+
+Every one was caught by a role agent or a state assertion, never by the harness. Strongest argument
+yet for the fixture-conformance check now owed dk's ruling.
+
 ## FIXTURE REPAIR + tw3 revalidation (2026-07-20, opus session, sonnet leg, INSTALLED CHANNEL, primed-order Step 1)
 
 Discharges Step 1 of the primed order. Harness-side only: **no doctrine was touched.**

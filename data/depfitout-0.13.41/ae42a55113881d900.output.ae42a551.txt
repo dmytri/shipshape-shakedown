@@ -1,0 +1,26 @@
+# source: /tmp/claude-1000/-home-exedev-shipshape-shakedown/17bd0731-8f5d-443b-a8fa-0171c42b398a/tasks/ae42a55113881d900.output
+# banked: 2026-07-20T16:55:55Z
+ae42a55113881d900.output	1	16:51:50	15523	412	Read:SKILL.md ||| Read:SKILL.md ||| Read:templates.md
+ae42a55113881d900.output	2	16:51:58	20011	5	Read:SKILL.md
+ae42a55113881d900.output	3	16:52:02	59717	163	Bash:git status && echo --- && git log --oneline -5 && echo --- && ls -la
+ae42a55113881d900.output	4	16:52:07	66136	444	Read:RIGGING.md ||| Read:AGENTS.md ||| Bash:find src features data logs -type f | sort && echo --- && cat package.
+ae42a55113881d900.output	5	16:52:13	66919	247	Read:tide.js
+ae42a55113881d900.output	6	16:52:17	68749	532	Read:tide.js ||| Read:wait.js ||| Read:tides.feature ||| Read:tide-wait.feature
+ae42a55113881d900.output	7	16:52:23	69039	509	Read:steps.js ||| Read:wait_steps.js ||| Read:runlog.js ||| Read:tides.json
+ae42a55113881d900.output	8	16:52:30	70326	4	Bash:ls logs && git log --all --oneline | head -20 && echo --- && node -v &
+ae42a55113881d900.output	9	16:52:52	71886	1565	Bash:ls node_modules | grep -i c8; ls node_modules/.bin 2>/dev/null | head 
+ae42a55113881d900.output	10	16:52:56	72300	2	Bash:timeout 90 npm install --save-dev c8 2>&1 | tail -20
+ae42a55113881d900.output	11	16:53:05	73929	548	Bash:timeout 60 npx c8 --reporter=json-summary --reporter=text --src src --
+ae42a55113881d900.output	12	16:53:14	74162	322	Bash:timeout 60 npx c8 --reporter=json-summary --reporter=text --src src --
+ae42a55113881d900.output	13	16:53:21	75200	251	Bash:timeout 30 npx cucumber-js --dry-run --format usage-json --tags "not @
+ae42a55113881d900.output	14	16:53:39	75939	1029	Read:README.md
+ae42a55113881d900.output	15	16:53:47	76721	494	Bash:git show --stat baa7f7b && echo --- && git show baa7f7b -- src/
+ae42a55113881d900.output	16	16:54:20	77918	3	Bash:rg -n "@shipwright|@captain|@conformance|@contract" features/ src/ 2>&
+ae42a55113881d900.output	17	16:54:25	79293	228	Bash:rg --version | head -1; rg -n "@shipwright" . -g '!node_modules' ; ech
+ae42a55113881d900.output	18	16:54:28	81737	252	Bash:node -e "console.log(require('c8/package.json').version)"
+ae42a55113881d900.output	19	16:54:32	82205	429	Edit:RIGGING.md
+ae42a55113881d900.output	20	16:54:38	82467	235	Edit:RIGGING.md
+ae42a55113881d900.output	21	16:54:40	83033	3	Bash:timeout 30 npx cucumber-js --dry-run --tags "not @captain and not @shi
+ae42a55113881d900.output	22	16:54:45	83405	269	Bash:git status --short && git diff --stat
+ae42a55113881d900.output	23	16:55:04	83859	1281	
+SUMMARY	ae42a55113881d900.output	invocations=23	cache_read=1610474	out=9227	wall=16:51:50 to 16:55:04

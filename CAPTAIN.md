@@ -6,6 +6,65 @@
 > validation this restart exists to enable. The pilot order that preceded it is ARCHIVED, marked
 > DO NOT RUN. The entries above this line are the record of how that order was reached.**
 
+## 2026-07-20 (opus session, RESTART, continued): STEP 3 RUN - 0.13.40 SHIP STANDS on seam 1, and the UPGRADE half has NO TRIGGER
+
+dk: "probe way", then "probe deeply". Ran the parked 0.13.40 routing probe, 23 legs, rubric
+unchanged. Full account `designs/depfitout/results.md` + METRICS.md; banked
+`data/depfitout-0.13.41/`. 111/111 sonnet under pins. **Answers dk's actual question - is there a
+solid release to pilot - in a more useful way than a yes.**
+
+**Two deviations, both declared BEFORE any leg ran:** treatment arm is 0.13.41 (HEAD) not 0.13.40,
+because HEAD advanced and 0.13.41's Article 8 entry touches this seam - the live question is
+whether CURRENT doctrine routes correctly, which is what a pilot runs. And depth was raised on
+"probe deeply": n=5/arm seam 1, n=4/arm seam 2, plus TWO RIDER SEAMS the rubric did not carry.
+
+**SEAM 1 DISCRIMINATES AT MAXIMUM SEPARATION: 0/5 install on 0.13.41 vs 5/5 on 0.13.39**,
+tree-verified both directions (no install, no package.json/lockfile change, clean tree, blocker to
+QM naming the dep). **Per the rubric's own pre-stated decision rule, the 0.13.40 ship STANDS on
+behavioural evidence.** The control installed and went green 5/5, three legs quoting 0.13.39's
+"mechanical part of a spec-ordered change" - the old text really did order what the new forbids.
+**Refusing is also CHEAPER: -38% inv, -49% cache.**
+
+**SEAM 1b, the rider that mattered (standing rule: probe the role that does NOT fail): NO DEAD
+END.** 2/2 Shipwright legs on the same state installed at **3.34.0, current stable**, suite GREEN -
+the target Crew could not reach now passes. Both named the condition as **rigging drift**:
+"recorded under `## Dependencies` but never installed". The hand-off is coherent end to end. This
+was the real risk in removing a duty from Crew, and it is closed.
+
+**FINDING, MEDIUM, BEHAVIOURAL, ROUTED NOT SHIPPED - and it is the one that bears on the pilot:
+the policy-ordered upgrade route has NO TRIGGER.** Seam 2 is NULL both ways (0/4 vs 0/4, held at
+3.33.2 under `latest-stable` with 3.34.0 published). Per the decision rule a null seam is not
+evidence for the ship, and no claim is retro-fitted onto it. But the mechanism is sharper than a
+bare null: **3 of 4 treatment legs WROTE TO `## Dependencies`** (adding `c8`) while never comparing
+the installed version against the policy two lines above, and all eight reported "no policy
+violations" with the drift in the tree. The section reads as a place to RECORD, not a rule to
+CHECK. **Not a capability gap** - seam 1b proves the same role installs at current stable when
+installing fresh; what never fires is UPGRADING an already-installed held dependency. Same shape as
+the defect 0.13.40 was written to fix, one level up: authority supplied, obligation unstated.
+
+**SEAM 2b does NOT establish absence of over-correction**, and is reported as such rather than
+banked as a pass: with no leg checking versions at all, "correctly declined under `locked`" is
+indistinguishable from "never looked".
+
+**BEARING ON THE PILOT, stated plainly for dk's call: the half of 0.13.40 a pilot leans on hardest
+is the half with no behavioural evidence.** A pilot upgrades dependencies far more often than it
+refuses them. Crew-refusal is proven and cheap; policy-ordered upgrade is text with no trigger.
+
+**HARNESS: three MORE fixture-realism instances, taking the session total to six.**
+1. **Seam 2's first state was defective; its 8 legs are VOID.** The dependency was installed but
+   consumed by nothing, so it read as a DEAD dependency (invites removal) not a HELD one (invites
+   upgrade). Caught ONLY because three legs across BOTH arms independently said "referenced nowhere
+   in src or features". **I wrote up the fixture-realism meta-finding one hour before building that
+   state and reproduced the failure anyway** - this is structural, not carelessness.
+2. **`ms`, the first probe dependency, is HOISTED** (`cucumber -> debug -> ms@2.1.3`), silently
+   making seam 1 green. Caught by the state script's own assertion; replaced with
+   `humanize-duration` (zero deps).
+3. **The probe's `watchbill.json` is malformed** against the Watchbill policy shape - found
+   independently by BOTH seam-1b legs, not by the harness.
+
+Every one caught by a role agent or a state assertion, never by the harness itself. **The
+fixture-conformance check is now the clearest open recommendation on the board.**
+
 ## 2026-07-20 (opus session, RESTART): STEP 1 DISCHARGED - probe fixtures repaired, tw3 revalidated on the INSTALLED CHANNEL, and the fixture-drift finding is now systemic
 
 Entry: bare `/shakedown`, dk answered "proceed as proposed". Bootstrap: both repos clean and level

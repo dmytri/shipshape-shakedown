@@ -1,0 +1,19 @@
+# source: /tmp/claude-1000/-home-exedev-shipshape-shakedown/17bd0731-8f5d-443b-a8fa-0171c42b398a/tasks/ac012c96cf3e804b6.output
+# banked: 2026-07-20T16:55:55Z
+ac012c96cf3e804b6.output	1	16:51:45	15523	5	Read:SKILL.md ||| Read:SKILL.md ||| Read:templates.md
+ac012c96cf3e804b6.output	2	16:51:53	20011	5	Read:SKILL.md
+ac012c96cf3e804b6.output	3	16:51:58	59715	177	Bash:git status && echo --- && git log --oneline -5 && echo --- && ls -la
+ac012c96cf3e804b6.output	4	16:52:03	66164	311	Bash:cat RIGGING.md && echo ===AGENTS=== && cat AGENTS.md && echo ===PKG===
+ac012c96cf3e804b6.output	5	16:52:09	66961	275	Bash:find src features data logs -type f | sort
+ac012c96cf3e804b6.output	6	16:52:14	68356	50	Read:tide.js ||| Read:wait.js ||| Read:tides.feature ||| Read:tide-wait.feature
+ac012c96cf3e804b6.output	7	16:52:19	68706	509	Read:steps.js ||| Read:wait_steps.js ||| Read:runlog.js ||| Read:tides.json
+ac012c96cf3e804b6.output	8	16:52:25	69965	314	Bash:ls logs && find . -maxdepth 1 -name "*.js" -o -maxdepth 1 -name "cucum
+ac012c96cf3e804b6.output	9	16:52:49	71525	1688	Bash:npx cucumber-js --tags "not @captain and not @shipwright" 2>&1 | tail 
+ac012c96cf3e804b6.output	10	16:52:54	71987	1	Bash:npx cucumber-js --dry-run --format usage-json --tags "not @captain and
+ac012c96cf3e804b6.output	11	16:53:23	73788	1803	Bash:grep -rn "@captain\|@shipwright" features/ src/ 2>/dev/null; echo "non
+ac012c96cf3e804b6.output	12	16:53:33	75756	542	Bash:ref="features/tides.feature:Next high tide after a given time"; npx cu
+ac012c96cf3e804b6.output	13	16:54:34	77706	2	Bash:npm view jsdoc version 2>&1 | tail -5; echo "---"; timeout 20 npx --ye
+ac012c96cf3e804b6.output	14	16:55:10	78381	2	Bash:npm install --save-dev jsdoc 2>&1 | tail -15 && cat package.json
+ac012c96cf3e804b6.output	15	16:55:17	83945	265	Bash:npx jsdoc -X -r src 2>&1 | head -5 && echo OK
+ac012c96cf3e804b6.output	16	16:55:23	86515	189	Bash:mkdir -p /tmp/claude-1000/-home-exedev-shipshape-shakedown/17bd0731-8f
+SUMMARY	ac012c96cf3e804b6.output	invocations=16	cache_read=1055004	out=6138	wall=16:51:45 to 16:55:23
