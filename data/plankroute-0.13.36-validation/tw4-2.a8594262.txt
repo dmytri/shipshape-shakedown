@@ -1,0 +1,19 @@
+# meta: {"agentType":"shipshape:qm","description":"tw4 QM leg 2","toolUseId":"toolu_013DYCWJ5r6Yv4rQTWnoPqBW","spawnDepth":1,"model":"sonnet"}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/f074af86-92ab-42c4-8691-5958b58b6fcc/subagents/agent-a8594262d51130ca5.jsonl
+# banked: 2026-07-20T13:03:57Z
+tw4-2	1	13:01:02	15203	5	Skill:
+tw4-2	2	13:01:08	19270	231	Skill:
+tw4-2	3	13:01:12	26736	307	Bash:cat RIGGING.md && echo "---WATCHBILL---" && cat watchbill.json && echo
+tw4-2	4	13:01:17	53253	505	Read:tide-range.feature ||| Read:range_steps.js ||| Read:tide.js
+tw4-2	5	13:01:21	54275	242	Bash:ls features/support/ && echo --- && grep -rn "Fundy Cove\|tide table\|
+tw4-2	6	13:01:25	55350	174	Bash:ls features/support/ && echo --- && rg -n "Fundy Cove|tide table|this.
+tw4-2	7	13:01:28	55763	266	Read:steps.js ||| Bash:cat data/tides.json 2>/dev/null; echo "---"; ls features/
+tw4-2	8	13:01:32	56128	3	Read:tides.feature
+tw4-2	9	13:01:37	56996	245	Bash:ref="features/tide-range.feature:Daily tide range is computed"; npx cu
+tw4-2	10	13:01:41	57407	2	Bash:grep -rn "@planks" src && echo "---STEP-USAGE---" && npx cucumber-js -
+tw4-2	11	13:01:51	57787	2	Bash:rg -n "@planks" src && echo "---STEP-USAGE---" && npx cucumber-js --dr
+tw4-2	12	13:02:00	58172	622	Bash:git diff HEAD -- src/tide.js
+tw4-2	13	13:02:36	59810	2	Bash:cat features/support/runlog.js 2>/dev/null; echo "---runrecord---"; ca
+tw4-2	14	13:02:40	60666	246	Bash:GIT_INDEX_FILE="$(mktemp)" bash -c 'git read-tree HEAD && git add -A .
+tw4-2	15	13:02:49	63405	2087	
+SUMMARY	tw4-2	invocations=15	cache_read=750221	out=4939	wall=13:01:02 to 13:02:49

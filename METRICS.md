@@ -1,5 +1,32 @@
 # Metrics: how to read a shakedown
 
+## 0.13.36 validation, arm D repeat (2026-07-20, sonnet, installed-plugin channel, 8 legs, primed-order Step 1)
+
+Reproduces arm D exactly (`designs/plankroute/results.md`/`rubric.md`): tw4 probe state
+(`bin/probe-states.sh`), cloned 8x, 8 `shipshape:qm` legs dispatched via the installed
+`shipshape:qm` subagent type (blocked earlier this session by a plugin-agent registry gap;
+`/doctor` repaired it — see CAPTAIN.md), sonnet, **base commit named** (`44f52d2`), thin
+dispatch (`Project root + Base commit`, "work only inside the project root", stop before
+subagent dispatch, name next role + evidence in Final report). Channel confirmed empirically:
+the 0.13.36-unique marker `An unmoved HEAD is not an empty diff` hit in all 8 raw transcripts
+(`grep -c` on `agent-*.jsonl`, 1 hit each). Model: 8/8 `claude-sonnet-5`, zero leak.
+
+**BAR CLEARED: 8/8 route the in-diff unplanked `tideRange` to Crew** (pre-fix baseline was
+0/8; the bar to beat was 2/8). Every leg independently: read `git status --porcelain` before
+concluding anything about the tree, correctly joined `plank-inventory` x `step-usage`,
+identified `tideRange` (added this voyage, `git diff` confirmed) as touched-seam-missing-plank
+routing to Crew, and correctly DEFERRED `nextHighTide` (malformed, pre-existing per `git show
+<base>:src/tide.js`) to harbour — zero over-correction. Every leg named the exact
+`@planks("I ask for the tide range on {string}")` string to carry, sourced from `step-usage`'s
+reported pattern, not invented. Working-tree commands run per leg: 8/8 ran at least one
+(`git status`/`git diff`) before concluding — contrast the pre-fix arm-C/D mechanism (failures
+clustered on zero-working-tree-command legs). Zero commits, zero over-commits, tree state
+identical across all 8 clones post-run (verified `git log --oneline` + `git status --porcelain`).
+
+Invocations: 11, 15, 13, 14, 9, 14, 15, 12 (mean 12.9) — **103 total / 4.97M cache / ~24.4k out**.
+Banked `data/plankroute-0.13.36-validation/`. **0.13.36 SHIPPED VALIDATED** — this closes the
+"third consecutive ship whose plugin-channel validation rides a restart" item.
+
 ## plank-routing A/B/C probe (2026-07-19, sonnet, 12 legs, dk's "proceed and probe in detail")
 
 Probes the battery's finding 1 and its candidate fix. Rubric fixed BEFORE results

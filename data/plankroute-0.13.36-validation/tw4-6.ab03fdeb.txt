@@ -1,0 +1,19 @@
+# meta: {"agentType":"shipshape:qm","description":"tw4 QM leg 6","toolUseId":"toolu_01UR7bHtYfGkTKVKj6rmJDAQ","spawnDepth":1,"model":"sonnet"}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/f074af86-92ab-42c4-8691-5958b58b6fcc/subagents/agent-ab03fdebc0f51d13c.jsonl
+# banked: 2026-07-20T13:03:57Z
+tw4-6	1	13:01:11	15203	5	Skill:
+tw4-6	2	13:01:15	19270	5	Skill:
+tw4-6	3	13:01:20	26723	2	Bash:cat RIGGING.md && echo ---WATCHBILL--- && cat watchbill.json && echo -
+tw4-6	4	13:01:25	53216	2	Read:tide-range.feature ||| Read:range_steps.js ||| Read:tide.js
+tw4-6	5	13:01:31	54224	334	Bash:find features -type f && echo ---SRC--- && find src -type f && echo --
+tw4-6	6	13:01:36	55217	366	Read:tides.feature ||| Read:steps.js ||| Read:runlog.js
+tw4-6	7	13:01:41	55685	301	Bash:cat data/tides.json 2>/dev/null; find . -name "tides.json"
+tw4-6	8	13:01:45	56959	278	Bash:ref="features/tide-range.feature:Daily tide range is computed"; npx cu
+tw4-6	9	13:01:50	57424	314	Bash:echo ---PLANK-INVENTORY--- && grep -rn "@planks" src && echo ---STEP-U
+tw4-6	10	13:01:54	57837	265	Bash:echo ---PLANK-INVENTORY--- && rg -n "@planks" src && echo ---STEP-USAG
+tw4-6	11	13:02:06	58322	822	Bash:git diff -- src/tide.js && echo ---LOG--- && git show 44f52d2:src/tide
+tw4-6	12	13:02:43	59980	2832	Bash:GIT_INDEX_FILE="$(mktemp)" bash -c 'git read-tree HEAD && git add -A .
+tw4-6	13	13:02:47	61166	277	Bash:cat >> runrecord.jsonl <<'EOF' {"targets":["features/tide-range.featur
+tw4-6	14	13:02:56	64029	3	Bash:awk '!seen[$0]++' runrecord.jsonl > runrecord.jsonl.tmp && mv runrecor
+tw4-6	15	13:03:17	64556	2	
+SUMMARY	tw4-6	invocations=15	cache_read=759811	out=5808	wall=13:01:11 to 13:03:17

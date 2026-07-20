@@ -1,0 +1,17 @@
+# meta: {"agentType":"shipshape:qm","description":"tw4 QM leg 3","toolUseId":"toolu_011mga5E69sznY1jF6QaQnHC","spawnDepth":1,"model":"sonnet"}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/f074af86-92ab-42c4-8691-5958b58b6fcc/subagents/agent-a74313cdbe296c2b0.jsonl
+# banked: 2026-07-20T13:03:57Z
+tw4-3	1	13:01:05	15203	76	Skill:
+tw4-3	2	13:01:09	19270	5	Skill:
+tw4-3	3	13:01:14	26722	308	Bash:cat RIGGING.md && echo ---WATCHBILL--- && cat watchbill.json && echo -
+tw4-3	4	13:01:21	53171	332	Bash:echo ---FEATURE--- && cat features/tide-range.feature && echo ---STEPS
+tw4-3	5	13:01:24	54194	2	Bash:cat features/support/steps.js && echo ---RUNLOG--- && cat features/sup
+tw4-3	6	13:01:28	55001	186	Bash:cat features/tides.feature && echo ---DATA--- && cat data/tides.json
+tw4-3	7	13:01:36	55850	400	Bash:git diff src/tide.js
+tw4-3	8	13:01:42	56391	3	Bash:ref="features/tide-range.feature:Daily tide range is computed"; npx cu
+tw4-3	9	13:01:48	57025	230	Bash:echo ---PLANK-INVENTORY--- && grep -rn "@planks" src && echo ---STEP-U
+tw4-3	10	13:01:52	57618	269	Bash:echo ---PLANK-INVENTORY--- && rg -n "@planks" src && echo ---STEP-USAG
+tw4-3	11	13:02:04	58019	3	Bash:GIT_INDEX_FILE="$(mktemp)" bash -c 'git read-tree HEAD && git add -A .
+tw4-3	12	13:02:12	59681	273	Bash:printf '%s\n' '{"targets":["features/tide-range.feature:Daily tide ran
+tw4-3	13	13:02:28	60297	5	
+SUMMARY	tw4-3	invocations=13	cache_read=628442	out=2092	wall=13:01:05 to 13:02:28

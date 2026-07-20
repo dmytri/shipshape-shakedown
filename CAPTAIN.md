@@ -1,5 +1,35 @@
 # Captain notes - shipshape-shakedown workstream
 
+## 2026-07-20 (sonnet session): STEP 1 of the primed order DONE - 0.13.36 VALIDATED 8/8, plus a real plugin-agent registry gap found and fixed by dk's `/doctor`
+
+Bootstrap confirmed: both repos clean/level with origin, doctrine 0.13.38 installed (`f86dd31`,
+08:56:01Z), this session sonnet (`--model sonnet`), process started 10:33Z (postdates install).
+
+**BLOCKING FINDING, now resolved:** dispatching the first tw4 leg as `subagent_type:
+shipshape:qm` failed outright — `Agent type 'shipshape:qm' not found`, and neither `qm` nor any
+other bare role name resolved either. This is NOT the stale-snapshot case AGENTS.md's channel
+check anticipates (where the type resolves but serves old text) — the plugin's five role agents
+were not registered in the Agent-tool's subagent registry at all, despite `claude doctor` (CLI)
+reporting no installation issues and the plugin being correctly enrolled/enabled. Routed to dk
+rather than falling back to HEAD-text mode, since HEAD-text mode cannot substitute for an
+installed-channel-only validation. dk ran `/doctor` (the interactive full-checkup command, not
+available to me as a tool) and it repaired the registry — `shipshape:qm/boatswain/crew/captain/
+shipwright` all resolved afterward. **Not yet root-caused why the registry gap existed or
+exactly what `/doctor` fixed** — worth a look if it recurs, since every prior session's
+"channel confirmed" check assumed a resolving type was the only failure mode.
+
+**STEP 1 result: 0.13.36 validated, bar cleared clean.** Arm D repeat, 8 `shipshape:qm` legs on
+fresh tw4 clones, base commit named, thin dispatch, stop-before-subagent-dispatch. **8/8 route
+`tideRange` to Crew, 8/8 correctly defer `nextHighTide` to harbour, zero over-correction, zero
+commits.** Pre-fix baseline was 0/8 (bar to beat: 2/8) — the two-line fix (opening pass gains
+`git status --porcelain`; step 3 gains the "unmoved HEAD is not an empty diff" clause) holds
+completely on its designed reproduction. Channel confirmed empirically (0.13.36 marker hit
+8/8), 8/8 sonnet. 103 inv / 4.97M cache / ~24.4k out, banked `data/plankroute-0.13.36-validation/`,
+full account in METRICS.md. **0.13.36 is no longer riding the restart as unvalidated.**
+
+Next: Step 2 (validate 0.13.37 + 0.13.38, tw13 slow-census, ~70 inv), then Step 3 (bare-hand-off
+audit fix), per the primed order below, still in force.
+
 <!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
 ## >>> PRIMED ORDER for a CLEAN RESTART (written 2026-07-20 at dk's "prime shakedown for clean restart") <<<
 

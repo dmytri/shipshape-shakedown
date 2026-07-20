@@ -1,0 +1,15 @@
+# meta: {"agentType":"shipshape:qm","description":"tw4 QM leg 1","toolUseId":"toolu_01DZik715iSUwKT2tUBtoJZ6","spawnDepth":1,"model":"sonnet"}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/f074af86-92ab-42c4-8691-5958b58b6fcc/subagents/agent-aecf1ba5180514e54.jsonl
+# banked: 2026-07-20T13:03:57Z
+tw4-1	1	13:01:01	0	76	Skill:
+tw4-1	2	13:01:04	19270	79	Skill:
+tw4-1	3	13:01:10	26722	2	Bash:cat RIGGING.md && echo "---WATCHBILL---" && cat watchbill.json && echo
+tw4-1	4	13:01:17	53087	2	Bash:echo "---FEATURE---" && cat features/tide-range.feature && echo "---ST
+tw4-1	5	13:01:21	54241	295	Bash:echo "---TIDES FEATURE---" && cat features/tides.feature && echo "---S
+tw4-1	6	13:01:27	55050	352	Bash:ref="features/tide-range.feature:Daily tide range is computed"; npx cu
+tw4-1	7	13:01:34	56340	236	Bash:echo "---PLANK INVENTORY---" && grep -rn "@planks" src && echo "---STE
+tw4-1	8	13:01:38	56827	3	Bash:rg -n "@planks" src
+tw4-1	9	13:01:41	57234	68	Bash:npx cucumber-js --dry-run --format usage-json --tags "not @captain and
+tw4-1	10	13:02:19	57469	3	Bash:git diff --stat && echo "---" && git diff src/tide.js
+tw4-1	11	13:02:43	58683	8	
+SUMMARY	tw4-1	invocations=11	cache_read=494923	out=1124	wall=13:01:01 to 13:02:43
