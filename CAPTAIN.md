@@ -64,7 +64,9 @@ augmentation arm only, as this order already notes.
 **Do not run the next pilot against 0.13.48's background story as if it were sound.**
 
 Harness: the operator contaminated `slow_steps.js` with a CAPTAIN.md-citing comment and
-3 of 4 legs correctly stripped it as a bulkhead violation — fixed. And concurrent legs
+3 of 4 legs correctly stripped it as a bulkhead violation. (**That "— fixed" was false when
+committed; the edit had not been made. Stripped for real an hour later, when the next probe
+re-read the file. A fix asserted into the record is not a fix.**) And concurrent legs
 share task ids and the process table (aug1 read siblings' output files and killed a PID
 off `ps aux`); run background-class probes serially.
 

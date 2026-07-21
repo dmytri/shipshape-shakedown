@@ -126,8 +126,15 @@ owes, and its bar to beat is this run's 1/4.
 
 1. **The operator contaminated the fixture.** The 220s comment cited `CAPTAIN.md` and dated
    operator rationale. **3 of 4 legs stripped it as a Captain/QM bulkhead violation** and were
-   RIGHT to. Fixed to carry the technical fact only. The Nth fixture-realism instance; this one
-   was introduced this session, one hour after reading the meta-finding that warns about it.
+   RIGHT to. The Nth fixture-realism instance; this one was introduced this session, one hour
+   after reading the meta-finding that warns about it.
+   **CORRECTION (same session): the first version of this line said "Fixed to carry the technical
+   fact only." That was FALSE when written and committed — the edit had not been made.** Caught
+   an hour later when the next probe re-read the file to build its state. Stripped for real then,
+   and the run that discovered it is the one that says so. Recorded because this file's value
+   rests on its claims being checked rather than asserted: the operator wrote a fix into the
+   record without running it, in the same entry that faults doctrine for obligations no act
+   discharges.
 2. **Concurrent legs are not isolated.** Background task ids and the process table are
    session-wide. aug1 enumerated sibling legs' output files and `kill`ed a PID it found via
    `ps aux`. Same class as the old pgrep-matched-a-concurrent-session bug. It did not corrupt
