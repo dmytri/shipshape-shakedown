@@ -1,0 +1,30 @@
+# meta: {"agentType":"shipshape:qm","description":"Dispatch QM to carry plank-hoist custody foul","toolUseId":"toolu_01E9rLHsSPJkXyHyaNDM2MDT","spawnDepth":1}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/7e704381-3fdc-4e8f-bd28-d596f3b8688b/subagents/agent-a81e8024a3270ce68.jsonl
+# banked: 2026-07-21T11:39:48Z
+qm-iter2-plankfoul-carry	1	11:25:26	15223	73	Skill:
+qm-iter2-plankfoul-carry	2	11:25:31	19501	310	Skill:
+qm-iter2-plankfoul-carry	3	11:25:34	27024	295	Bash:cat RIGGING.md && echo ---WATCHBILL--- && cat watchbill.json && echo -
+qm-iter2-plankfoul-carry	4	11:25:41	54457	2	Bash:git diff cdc88bd2f5c295c5ab8eb5a7d9e9e5220660799a -- . ':!CAPTAIN.md' 
+qm-iter2-plankfoul-carry	5	11:25:44	55568	183	Bash:grep -n "planks\|function render\|function updateFooter\|function hand
+qm-iter2-plankfoul-carry	6	11:25:49	58401	270	Read:app.js
+qm-iter2-plankfoul-carry	7	11:25:57	59284	649	Bash:grep -n "section is hidden\|section is visible\|is checked\|is uncheck
+qm-iter2-plankfoul-carry	8	11:26:02	61139	167	Read:steps.js
+qm-iter2-plankfoul-carry	9	11:26:12	62011	859	Bash:grep -n "toggleAllEl\|toggle-all" js/app.js
+qm-iter2-plankfoul-carry	10	11:26:16	63122	213	Read:app.js
+qm-iter2-plankfoul-carry	11	11:26:42	64090	2343	Bash:grep -rn "every todo is marked completed" features/*.feature
+qm-iter2-plankfoul-carry	12	11:26:44	64803	133	Bash:rg -n "every todo is marked completed" features/
+qm-iter2-plankfoul-carry	13	11:26:47	67317	168	Read:todo-list.feature
+qm-iter2-plankfoul-carry	14	11:27:15	67505	2386	Bash:npx cucumber-js --dry-run --format usage 2>&1 | tail -60
+qm-iter2-plankfoul-carry	15	11:27:19	68024	322	Bash:npx cucumber-js features/todo-webpage.feature features/todo-item.featu
+qm-iter2-plankfoul-carry	16	11:27:31	72915	6	Bash:npx cucumber-js --dry-run --format usage 2>&1 | grep -A3 "section is h
+qm-iter2-plankfoul-carry	17	11:27:43	73465	787	Read:todo-list.feature
+qm-iter2-plankfoul-carry	18	11:28:05	75131	3284	Agent:
+qm-iter2-plankfoul-carry	19	11:28:23	77256	26	
+qm-iter2-plankfoul-carry	20	11:29:06	15223	5	Bash:sed -n '25,120p' js/app.js && echo ---RUN--- && npx cucumber-js featur
+qm-iter2-plankfoul-carry	21	11:29:11	79535	211	Bash:ls /tmp/claude-1000/-home-exedev-shipshape-shakedown/7e704381-3fdc-4e8
+qm-iter2-plankfoul-carry	22	11:29:16	81368	162	Bash:find /tmp/claude-1000 -maxdepth 4 -type d 2>&1 | head -50
+qm-iter2-plankfoul-carry	23	11:29:19	81665	192	Bash:find / -maxdepth 6 -iname "todopilot7*" 2>/dev/null; find / -maxdepth 
+qm-iter2-plankfoul-carry	24	11:29:41	81986	1262	Bash:pwd; ls -la /tmp/claude-1000/-home-exedev-shipshape-shakedown/7e704381
+qm-iter2-plankfoul-carry	25	11:29:52	82193	576	Bash:mount | grep -i tmp; ls -la /tmp/claude-1000/ ; find /tmp -maxdepth 2 
+qm-iter2-plankfoul-carry	26	11:29:58	83631	1738	
+SUMMARY	qm-iter2-plankfoul-carry	invocations=26	cache_read=1611837	out=16622	wall=11:25:26 to 11:29:58

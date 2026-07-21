@@ -1,0 +1,15 @@
+# source: /tmp/claude-1000/-home-exedev-shipshape-shakedown/7e704381-3fdc-4e8f-bd28-d596f3b8688b/tasks/a75d7ac056a89c54a.output
+# banked: 2026-07-21T11:25:16Z
+boatswain-iter2-plankfoul	1	11:23:34	13977	71	Skill:
+boatswain-iter2-plankfoul	2	11:23:37	19372	78	Skill:
+boatswain-iter2-plankfoul	3	11:23:39	27875	272	Bash:cat RIGGING.md AGENTS.md && echo "---STATUS---" && git status && echo 
+boatswain-iter2-plankfoul	4	11:23:47	55076	378	Bash:npx cucumber-js --dry-run --format usage 2>&1 | tail -100
+boatswain-iter2-plankfoul	5	11:23:53	58910	253	Bash:npx cucumber-js --dry-run --format usage 2>&1 > /tmp/usage.txt; grep -
+boatswain-iter2-plankfoul	6	11:24:03	63274	516	Bash:grep -n "@planks" js/app.js
+boatswain-iter2-plankfoul	7	11:24:07	63934	208	Bash:sed -n '1,180p' js/app.js | grep -n "function\|@planks" 
+boatswain-iter2-plankfoul	8	11:24:13	65110	491	Read:app.js
+boatswain-iter2-plankfoul	9	11:24:36	66024	8	Bash:grep -rn "PERTURBATION" js/ features/ 2>/dev/null; echo "---"; grep -n
+boatswain-iter2-plankfoul	10	11:24:41	68185	57	Bash:rg -n "PERTURBATION" js/ features/ 2>/dev/null; echo "---"; rg -n "cap
+boatswain-iter2-plankfoul	11	11:24:44	70241	188	Bash:git status --short
+boatswain-iter2-plankfoul	12	11:24:50	70858	1543	
+SUMMARY	boatswain-iter2-plankfoul	invocations=12	cache_read=642836	out=4063	wall=11:23:34 to 11:24:50

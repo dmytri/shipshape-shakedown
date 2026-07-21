@@ -1,5 +1,83 @@
 # Metrics: how to read a shakedown
 
+## Pilot #6, 0.13.46, sonnet, installed channel - INCOMPLETE, stopped mid-run by dk's word after repeated environment data loss
+
+Full narrative in CAPTAIN.md's stop record. Numbers here for the economy record.
+
+**20 legs banked, `data/pilot-6/`, 375 invocations / 24,679,288 cache-read / 253,607 out.**
+
+| Phase | Legs | Inv | Cache | Out |
+|---|---|---|---|---|
+| Voyage 1 (build) | Captain, QM, 4x Crew, 2x Boatswain, 1x QM-carry, 1x Crew-fix (10 legs) | 211 | 15,159,902 | 153,052 |
+| Webpage-servability cycle | Captain, QM, Crew, Boatswain (4 legs) | 74 | 4,265,911 | 38,982 |
+| Iteration 2 (oracle-feedback voyage) | Captain, QM, Crew, Boatswain, QM-carry, Crew-hoist (6 legs) | 90 | 5,253,375 | 61,573 |
+
+(Voyage 1 + webpage cycle = Phase 1 build, 285 inv / 19,425,813 cache / 192,034 out, matches the
+figure reported to dk mid-run.)
+
+**Notable single-leg cost: `crew-watch5-routing` (a50bbc7a) — 51 invocations / 4.83M cache**, by far
+the most expensive leg of the whole pilot. Root cause was NOT wasted debugging: Crew correctly
+isolated a genuine jsdom spec-compliance fact (hash-navigation's `hashchange` is hardcoded
+`nonBlockingEvents: true`, always a real macrotask, confirmed by reading jsdom's own source down to
+`SessionHistory.js`), tried and correctly abandoned two in-scope fixes (a `setInterval` poll; a
+`currentRoute()` read of `location.hash` at render time - which fixed 1 of 4 scenarios but not the
+other 3), then correctly recognized the remaining fix required touching `features/support/steps.js`
+(QM's file, not Crew's), and STOPPED, reporting a clean Crew->QM boundary finding rather than
+overstepping scope. This is exactly the doctrine-compliant behaviour the corpus wants from a
+seam-cluster investigation that turns out to be cross-role - the cost is the honest price of a role
+staying in its lane on a genuinely hard bug, not a compliance gap.
+
+**Custody discipline: 2/2 real plank-conformance fouls caught, 0 false positives, in one pilot.**
+Boatswain refused to commit three separate times across the run (once in voyage 1, twice in
+iteration 2), and every refusal named a real, verifiable defect (a missing `@planks` docblock; two
+instances of planks left on a seam whose behaviour had moved to a new helper function). Each time,
+QM correctly re-derived the fault from `step-usage` rather than trusting Boatswain's prose verbatim,
+dispatched Crew with the evidence, and Crew's fix was re-verified green before the next custody pass.
+This is the cleanest concentrated evidence this harness has for "the plank-join custody gate works as
+designed," precisely because it fired repeatedly against different production edits in one run.
+
+**Compliance data, incidental but consistent: 3 separate `bash-custody.sh` hook catches this pilot**
+(recursive `grep` denied for Crew twice, once for QM), every one correctly redirected the role to
+`rg` and every role recovered in the very next invocation. Zero cross-contamination anywhere in 20
+legs (no role read CAPTAIN.md content; the one near-miss - an unscoped `rg` briefly matching a
+CAPTAIN.md line during Boatswain's opening retrieval - was self-caught, disclosed in the role's own
+report, and never acted on).
+
+**Oracle grading, run for real, twice was targeted but only once landed:** first grade 22/29 passing
+against the pinned upstream `tastejs/todomvc` (`ff43b02`) Cypress spec, served live, not simulated.
+5 failures: 2 read as an oracle-side Sinon-version incompatibility (`spy.reset()` removed in newer
+Cypress bundles - not investigated further mid-run per the pilot's own no-side-investigation rule,
+routed to dk as a methodology question instead), 3 were real (DOM-detachment from a full-teardown
+`render()`). One iteration of the feedback loop (translate real failures to user-language intent,
+never raw test output) ran to a verified-green fix, but the tree was lost before a second oracle
+grade could confirm it closed the gap end-to-end - so this pilot's oracle number is NOT its final
+answer, only its first-iteration snapshot.
+
+**Process-compliance finding, self-corrected: the operator (main-loop session) broke the "zero
+questions between cost-confirm and final report" runner-architecture rule twice** (asking whether to
+iterate, and re-litigating what "pilot done" means) before dk pointed out both answers already
+existed in standing rules. Both were legitimate but avoidable - the pilot's own text answers each
+question directly. Corrected in-session, no further violations after the correction. Worth watching
+for in the next pilot: the zero-questions discipline needs to hold even when a question feels
+reasonable in the moment, precisely because the standing rules exist to answer exactly those
+moments.
+
+**Harness/infrastructure findings, NOT doctrine, both routed to dk:**
+1. Scratchpad accumulation across past sessions (~5.6GB of old, apparently-never-cleaned sim trees)
+   combined with an unscoped oracle clone (full upstream repo including every framework example +
+   `bower_components`) drove the VM's root filesystem to 100% mid-run. A sparse/shallow clone (just
+   `cypress/`, `tests/`, `cypress.config.js`, `package.json`) is ~22M and avoids this entirely -
+   should be the STANDARD oracle-clone recipe for any future pilot, not an improvised recovery.
+2. A second, unexplained full wipe of the session scratchpad (disk healthy, no cleanup command run
+   this session) took the entire project tree AND the oracle clone mid-iteration-2. Cause not
+   established. If this recurs, it points at something in the VM's lifecycle outside session
+   control, worth a dedicated look before the next pilot-scale run.
+3. **A working recovery path is now proven**: reconstructing a lost project tree byte-exact from
+   mined subagent transcripts (full-file `Write`/`Read` tool-result contents, plus
+   `structuredPatch` diffs applied for files edited after their last full capture) - verified
+   identical scenario/step counts to the pre-loss state. Worth formalizing as `bin/reconstruct.sh`
+   or similar if data loss recurs, rather than re-deriving the jq incantations from scratch each time.
+
 ## 0.13.42 SHIPPED AND VALIDATED SAME SESSION: 0/4 -> 4/4 on the seam it targets
 
 dk: "I want the deps finding in doctrine before wave 7... the best possible pre wave 7 shipshape

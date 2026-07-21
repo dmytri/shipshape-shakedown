@@ -1,0 +1,22 @@
+# source: /tmp/claude-1000/-home-exedev-shipshape-shakedown/7e704381-3fdc-4e8f-bd28-d596f3b8688b/tasks/a8e674f01add66306.output
+# banked: 2026-07-21T10:45:23Z
+boatswain-custody-commit	1	10:42:52	15190	71	Skill:
+boatswain-custody-commit	2	10:42:54	19358	78	Skill:
+boatswain-custody-commit	3	10:43:01	27861	2	Bash:cat RIGGING.md AGENTS.md && echo "---STATUS---" && git status && echo 
+boatswain-custody-commit	4	10:43:06	55062	340	Bash:git show --stat 174b9e48c2a0cad39b6ae217799fdbeb6cc0b3b2 | head -30 &&
+boatswain-custody-commit	5	10:43:13	56534	353	Bash:echo "--watchbill--" && cat watchbill.json && echo "--features--" && f
+boatswain-custody-commit	6	10:43:20	57091	3	Bash:npx cucumber-js --dry-run --format usage 2>&1 | tail -100
+boatswain-custody-commit	7	10:43:27	58412	498	Bash:npx cucumber-js --dry-run --format usage 2>&1 > /tmp/claude-1000/-home
+boatswain-custody-commit	8	10:43:36	62712	194	Read:usage.txt
+boatswain-custody-commit	9	10:43:39	63932	216	Read:app.js
+boatswain-custody-commit	10	10:43:53	67337	2	Bash:grep -nE "^(Given|When|Then)\(" features/support/steps.js | wc -l grep
+boatswain-custody-commit	11	10:44:01	71253	3	Bash:grep -n "^│ " /tmp/claude-1000/-home-exedev-shipshape-shakedown/7e7043
+boatswain-custody-commit	12	10:44:05	72337	663	Bash:python3 - <<'EOF' import re patterns = set() with open('/tmp/claude-10
+boatswain-custody-commit	13	10:44:24	74037	1075	Bash:timeout 100 npx cucumber-js --tags "not @captain and not @shipwright" 
+boatswain-custody-commit	14	10:44:32	74726	415	Bash:grep -rn "PERTURBATION" --include="*.js" --include="*.feature" . ; gre
+boatswain-custody-commit	15	10:44:36	75896	378	Bash:rg -n "PERTURBATION" js features assets 2>&1; echo "---"; rg -ln "@cap
+boatswain-custody-commit	16	10:44:39	76484	203	Bash:find assets -type f && echo --- && cat package.json && echo --- && ls 
+boatswain-custody-commit	17	10:44:54	76870	1210	Bash:rm watchbill.json && git add -- .gitignore AGENTS.md CAPTAIN.md RIGGIN
+boatswain-custody-commit	18	10:44:58	77755	323	Bash:git commit -m "$(cat <<'EOF' Fit out TodoMVC voyage: plank foul fixed,
+boatswain-custody-commit	19	10:45:17	79225	1290	
+SUMMARY	boatswain-custody-commit	invocations=19	cache_read=1162072	out=7317	wall=10:42:52 to 10:45:17

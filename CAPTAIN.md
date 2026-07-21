@@ -1,6 +1,110 @@
 # Captain notes - shipshape-shakedown workstream
 
 <!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
+## >>> PILOT #6 STOPPED MID-RUN BY DK'S WORD (2026-07-21, sonnet session) - PRIMED ORDER BELOW IS SUPERSEDED, DO NOT RE-RUN BLINDLY <<<
+
+Ran on bare `/shakedown`, dk's "proceed as proposed" against the standing PILOT PRIMED ORDER below.
+**Session was sonnet, channel confirmed empirically (0.13.46 marker hit), both repos clean/level at
+start** - preconditions held. Full account below; this entry is the outcome summary dk needs before
+deciding what runs next. Banked `data/pilot-6/` (20 legs, 375 invocations / 24.68M cache / 253.6k out).
+
+**Phase 1 (build) reached a genuinely working, spec-derived TodoMVC app, twice validated.** Voyage 1:
+Captain -> QM -> 4x Crew -> Boatswain (custody caught one real plank-conformance foul, refused to
+commit until fixed) landed 28/28 self-authored scenarios green. A follow-up Captain review (its own
+initiative, not dk's) caught a real spec-coverage gap the whole voyage had missed: no `index.html`
+existed anywhere, only the vendored template loaded directly by the test harness - the app was never
+actually servable as a webpage despite passing every self-authored test. One more QM/Crew/Boatswain
+cycle closed it: 30/30 green, real `index.html` shipped. **This gap - full internal test coverage that
+never once produces a running page - is worth a standing instance for the corpus:** nothing in the
+current specs teach ordered "author a servable entry point" as part of fitting out a TodoMVC-shaped
+greenfield app; every prior toy-fixture pilot used pre-existing served fixtures, so this never
+surfaced before. Routed, not fixed.
+
+**Phase 2 (oracle grading) ran for real, twice, and found real defects.** Cloned upstream
+`tastejs/todomvc` (pinned `ff43b02`), served the pilot build, ran the actual upstream Cypress spec
+blind. First grade: **22/29 passing.** 5 failures split two ways:
+- **2 look like an oracle-side compatibility break, not a pilot defect**: `cy.wrap(spy).invoke('reset')`
+  throws `reset` does not exist on the subject - almost certainly Cypress's bundled Sinon having
+  dropped the deprecated `spy.reset()` alias (renamed `.resetHistory()`), which would break EVERY
+  framework graded against this spec version, not just this one. Per the pilot's own "no
+  side-investigations mid-run" rule, not chased further live - **routed to dk as a methodology
+  question**, not acted on.
+- **3 were real**: "element detached from DOM" on mark-complete/un-mark/persistence-then-interact.
+  Root cause: `render()` did a full `todoListEl.innerHTML = ''` teardown-and-rebuild on every
+  mutation, destroying element identity for anything holding a DOM reference across the change.
+
+**One clean iteration ran to completion under the standing "iterate until oracle passes" rule,
+autonomously, after dk corrected a process violation:** the operator (this session) asked two
+questions mid-run that were NOT stop-worthy (whether to iterate; what "done" means for a pilot) -
+both answers already existed in the standing rules (`scenarios/pilot.md`'s own zero-questions
+runner-architecture clause, and the prior "take the spec, make an app that passes all the tests,
+that's the whole point" ruling). **dk called this out directly.** Correctly self-corrected and ran
+the rest of iteration 2 autonomously: translated the 3 real failures into ordinary user-language
+product intent (oracle quarantine preserved, no raw test output ever shown to a role), Captain
+authored 3 new element-identity scenarios, QM/Crew fixed the specific handler (`handleTodoListChange`
+now patches the existing `<li>` in place instead of calling full `render()`), Boatswain's custody
+pass CAUGHT A SECOND REAL FOUL on the same fix (planks left on `render()` for behaviour that had
+moved into a new `updateFooter()` helper - refused to commit until Crew hoisted them correctly), and
+a second QM/Crew cycle closed that too. **Two clean custody refusals in one iteration is the
+strongest single data point this session banked for "does Boatswain's plank-join custody gate
+actually catch what it's designed to catch" - both were real, both were caught before a commit, on
+completely different production edits.**
+
+**STOPPED HERE, NOT BECAUSE THE LOOP FAILED - because the ENVIRONMENT DESTROYED THE WORK TWICE, and
+dk chose not to keep re-fighting it.** Both losses were the ENTIRE scratchpad tree vanishing out
+from under a running voyage, not this repo:
+1. **First loss** (before Phase 2 grading began): the VM's root filesystem hit 100% (109M free) -
+   traced to ~5.6GB of leftover scratchpad directories from PRIOR shakedown sessions (not this one),
+   compounded by cloning the full upstream `tastejs/todomvc` (every framework example +
+   `bower_components`) instead of a sparse checkout. dk cleaned the disk manually; the cleanup also
+   took this pilot's own project tree with it (commit `7a66edd`, 30/30 green). **Recovered by
+   reconstructing the exact tree from the mined subagent transcripts** (full file contents from
+   `Write`/`Read` tool results, diffs applied from `structuredPatch` entries for edited files) -
+   reverified byte-identical: 30/30 green again, new commit `cdc88bd`. This is the first time this
+   harness has needed to prove a transcript-reconstruction recovery path for real; it worked.
+2. **Second loss**, mid-iteration-2, disk healthy (12G free) - the ENTIRE session scratchpad
+   directory (project tree AND the out-of-band oracle clone) was gone, not an out-of-space
+   autoprune this time. QM's own dispatch independently discovered this (a `find` for the project
+   root came back empty) and correctly routed it as an ENVIRONMENT BLOCKER rather than guessing or
+   improvising - exactly the right call. **Cause not established** - nothing in this session's own
+   actions explains it (no cleanup command was run this time), so it reads as an external
+   VM-lifecycle event outside session control, not a harness or doctrine defect.
+
+**Given dk's word ("stop the pilot here entirely") after the second loss, the run stops here.**
+Iteration 2's DOM-identity fix was verified green pre-loss (both custody-refusal cycles closed,
+Crew's own fresh reruns all green) but never got a final Boatswain commit or a re-grade against the
+oracle - so it is NOT validated end-to-end and must not be counted as closing the 3 real oracle
+failures, only as "fixed and unit-verified, unconfirmed against the oracle." **The pilot as a whole
+is INCOMPLETE**: Phase 1 reached a real working app twice-over; Phase 2 found real defects and one
+iteration of the fix loop ran correctly; the oracle was never re-graded to confirm the fix actually
+closes the gap, and the 2 likely-oracle-side Sinon failures were never put to dk as the methodology
+question they're owed.
+
+**ROUTED TO DK, nothing shipped or actioned this session:**
+1. The Sinon `spy.reset()` methodology question above - is this really an oracle-version
+   incompatibility, and if so is there a fix within the pilot's own means (pin an older Cypress in
+   the oracle clone?) or is it simply an accepted grading ceiling.
+2. The missing "author a servable index.html" spec-coverage instance - worth a standing doctrine
+   check the next time Shipwright/Captain fitting-out guidance is touched.
+3. **Article 7 wording review** (dk, 2026-07-21, mid-pilot note): the Context bulkhead reads "No
+   agent memory system, memory bank, persistent context store, or similar mechanism MAY be used to
+   circumvent this bulkhead" - a prohibition dressed as a negated MAY. The Controlled English rule
+   already prescribes the fix: reserve MUST NOT for a genuine high-stakes guardrail, paired with the
+   positive alternative already in the next sentence ("Product intent MUST exist only in durable
+   repository artifacts"). Reframe to: "An agent memory system, memory bank, persistent context
+   store, or similar mechanism MUST NOT circumvent this bulkhead." **Check the Articles for other
+   negated-MAY prohibitions while there** - this may not be the only instance.
+4. Whether to re-run a fresh pilot attempt (a new #6, or call this #7) once the disk/scratchpad
+   situation is understood, and whether the DOM-identity fix + plank-hoist should be re-verified
+   fresh rather than trusted from the lost tree's pre-loss state.
+
+**Banked**: `data/pilot-6/` (20 legs). No commit landed in the actual pilot project this time - it no
+longer exists to commit. This repo (`shipshape-shakedown`) carries only the mined summaries and this
+record.
+
+<!-- =================== END PILOT #6 STOP RECORD =================== -->
+
+<!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
 ## >>> PILOT PRIMED ORDER (written 2026-07-21, opus session, at dk's "is pilot primed?") <<<
 
 **RUN PILOT #6 (`todopilot7`) on 0.13.46, per `scenarios/pilot.md`.** Every earlier primed order in
