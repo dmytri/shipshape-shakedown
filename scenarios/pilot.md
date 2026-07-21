@@ -15,6 +15,13 @@ toggle-all coupling, persistence keys, counter pluralization.
 
 ## Procedure
 
+0. **`bin/preflight.sh`. Run it. It exits non-zero when the pilot must not start.**
+   Checks free disk (pilot #6 died at 0.1G, twice, losing the whole tree), stale
+   scratchpad accumulation (what actually filled it), deck cleanliness, plugin
+   version parity, whether this session's plugin snapshot predates the install
+   (stale snapshot = restart before dispatching), and it prints the oracle
+   contract below. Two pilots died to conditions this script checks in one
+   second; both were obligations no step named an act for.
 1. Scaffold an EMPTY project dir (git init + one operator commit of a README only;
    fitting out must derive everything, including a Captain blocker for the missing
    test runner - a dependency decision).
@@ -104,6 +111,23 @@ Rules for the runner:
   `npx cypress run --env framework=<pilot>`. Every failure is an objective conformance
   finding nobody in the loop authored - the external-verifier gold standard. Pin the
   upstream commit used and record it with the pilot results so grades stay comparable.
+- **The oracle is PATCHED and the framework name is FIXED. Both are mandatory, both
+  precede the first grading run, and skipping either voids every grade taken.**
+
+      git -C <oracle-clone> apply fixtures/oracle/spy-reset.patch
+      git -C <oracle-clone> apply fixtures/oracle/shakedown-localstorage-exempt.patch
+
+  Serve the build at `examples/shakedown/` and grade with
+  `--env framework=shakedown` - a fixed name, never `pilot3`/`todopilot8`/the
+  framework the app happens to be written in, because the localStorage exemption
+  keys off that exact name. Full evidence chain and dk's ruling in
+  `fixtures/oracle/README.md`; read it before arguing with a failure.
+
+  Pilot #7 skipped this whole step. It manufactured three phantom failures,
+  reported a passing build as 24/29, chased one of the phantoms through an entire
+  extra fix voyage, and pushed two false findings. The same tree graded 28/29
+  clean once patched. **A residual failure is a reason to check this step first,
+  not a finding.**
 
 ## Oracle quarantine (100% pop quiz, 0% shadow spec)
 

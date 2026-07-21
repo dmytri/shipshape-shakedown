@@ -104,24 +104,53 @@ plainly and existed since 2026-07-18. Consequences:
   The DOM-identity fix it produced is genuinely good and independently verified, but the trigger for
   running it was partly a phantom.
 
-**Root cause is a harness gap, not just carelessness — and it is this corpus's own tracked defect
-class.** `scenarios/pilot.md`'s Grading section describes clone/serve/run in detail and **never
-references `fixtures/oracle/README.md`, the two patches, or the mandatory `framework=shakedown`
-name**. The obligation exists; the pilot procedure that should carry it names no act. That is exactly
-the "obligation with no act" shape 0.13.42/0.13.44/0.13.45 shipped fixes for in doctrine — now found
-biting the operator procedure itself. **Candidate fix, routed: fold the patch-apply and fixed-name
-steps into `scenarios/pilot.md`'s Grading section as ordered acts.**
+**Root cause is a harness gap, not just carelessness — and this is the THIRD occurrence of one
+solved problem.** `scenarios/pilot.md`'s Grading section described clone/serve/run in detail and
+**never referenced `fixtures/oracle/README.md`, the two patches, or the mandatory
+`framework=shakedown` name**. The obligation existed; the procedure that should carry it named no
+act. Exactly the "obligation with no act" shape 0.13.42/0.13.44/0.13.45 shipped doctrine fixes for,
+found here in the operator procedure.
+
+The recurrence is the real finding. Pilot #2's close-out (2026-07-14) hit this exact failure, read
+the pinned oracle source, wrote the patch, vendored it, and re-graded the same app bytes **24/29 ->
+28/29, zero skips** — the identical numbers pilot #7 produced seven days later. Pilot #6 repeated
+the omission. Pilot #7 repeated it again and pushed the same false finding a second time. A solved
+problem recurred twice because its solution lived in a README no step required reading.
+
+**FIXED, not routed:** `bin/preflight.sh` is now ordered step 0 of `scenarios/pilot.md` — it checks
+disk, scratchpad accumulation, deck state, plugin parity, stale session snapshot, and prints the
+oracle contract. The Grading section now carries the patch commands, the fixed framework name, and
+the standing rule that **a residual failure is a reason to check that step first, not a finding.**
+
+**Shipped after the pilot closed (same session, both textual, both with live evidence):**
+
+- **0.13.47** — DOM tier candidates named (happy-dom, then jsdom, then a real browser) behind the
+  stack gate the toolchain offer already uses. Doctrine told Captain to verify at the cheapest
+  sufficient tier and named no candidates, while naming candidates for every other tool category.
+  Pilots #6 and #7, same build/spec/model, chose opposite tiers; the expensive arm cost 2.5x wall
+  for no outcome gain and justified itself on a forecast it never tested.
+- **0.13.48** — `background-custody.sh` tested consumption as any later line containing the task id,
+  so a role ending its turn on *"waiting for background task <id>"* had its stop cleared by the guard
+  built to block exactly that. The more explicitly a role announced the deadlock, the more certainly
+  it passed. Now matches the output path, which is what every real consumption names. Proven against
+  pilot #7's transcript in four states: the stall blocks, genuine consumption passes, main-loop stops
+  stay out of reach, re-entrancy holds.
+- **Harness:** `bin/preflight.sh`, ordered step 0 of `scenarios/pilot.md`; Grading now carries the
+  patch commands, the fixed framework name, and the rule that a residual failure is a reason to check
+  that step first, not a finding.
 
 **Findings routed to dk, nothing shipped as doctrine this session:**
 1. **`scenarios/pilot.md` Grading names no patch-apply act** (above). Highest-value item here — it cost
    this pilot a wrong score, an extra iteration, and two false findings.
-2. The DOM-identity-destroying full-rebuild defect class — confirmed across two independent pilots
-   with different codebases (#6 and #7), both greenfield builds making the identical mistake with no
-   doctrine steering either way. Candidate for standing fitting-out guidance (prefer keyed
-   reconciliation over full teardown-rebuild). **Note: with the oracle correctly patched this defect
-   does NOT fail the oracle** — it was found via grades that were themselves void. Still real (the
-   flaky-scenario evidence and the identity scenarios stand on their own), but its severity is lower
-   than the void grades implied.
+2. The DOM-identity-destroying full-rebuild defect class — **DOWNGRADED TWICE, and the second
+   downgrade retires it as a doctrine candidate.** First written as "cross-confirmed across two
+   independent pilots (#6 and #7)": that leaned on pilot #6, which is void (see below), so it is
+   single-source. Then: **with the oracle correctly patched, this defect does not fail the oracle at
+   all.** It was found only through grades that were themselves void. What survives is narrow and
+   real — a full teardown-rebuild does destroy element identity, the flaky-scenario evidence stands,
+   and the identity scenarios Captain wrote are sound — but nothing in the corpus now shows it costing
+   a pilot anything. **Not a doctrine candidate on this evidence.** Anyone reviving it owes fresh
+   grounds, not this entry.
 3. The Captain->QM dispatch-contract sharpening from the two contamination refusals: role+base-commit
    is the WHOLE legal dispatch surface; any directed scope — even a bare scenario name — routes through
    `watchbill.json`. Worth checking `prompts/pilot-dispatches.md` reflects that as strictly as QM

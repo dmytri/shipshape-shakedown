@@ -1,6 +1,66 @@
 # Captain notes - shipshape-shakedown workstream
 
 <!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
+## >>> PRIMED ORDER FOR THE NEXT PILOT (set 2026-07-21, after #7 passed) <<<
+
+**Run `bin/preflight.sh` first. It is ordered step 0 and it exits non-zero when the
+pilot must not start.** As of this writing it BLOCKS on a stale plugin snapshot in
+the session that shipped 0.13.47/0.13.48 — **the next pilot needs a fresh session**,
+or subagents get served the old doctrine text.
+
+**Deck:** doctrine at **0.13.48**, installed, tests 5/5 green, both repos clean and
+level. Two ships since pilot #7, both textual, both with live evidence:
+
+- **0.13.47** — the DOM tier candidates are named (happy-dom, then jsdom, then a
+  real browser) behind the stack gate the toolchain offer already uses. Fixes what
+  #7 exposed: doctrine told Captain to pick the cheapest sufficient tier and named
+  no candidates, so two pilots on the same build chose opposite tiers and the
+  expensive one cost 2.5x wall for no outcome gain.
+- **0.13.48** — `background-custody.sh` matched the bare task id, so a role ending
+  its turn on *"waiting for background task <id>"* had its stop cleared by the guard
+  built to block exactly that. Now matches the output path. Proven against #7's real
+  transcript in four states.
+
+**What the next pilot is FOR — one question, already designed:**
+
+> Does naming the DOM tier candidates (0.13.47) change what Captain picks?
+
+Marker, fix it before the leg reports: which tier does Captain open Voyage 1 on, and
+is the choice recorded as a decision in `RIGGING.md`. Baseline to beat is #7's
+Captain, which chose Playwright/Chromium on a forecast, never stood a cheaper tier
+up, and was wrong — prior pilots built this same spec below a real browser and
+reached the same grade. **A jsdom or happy-dom choice is the pass.** This is a
+Captain-only question; it is answered by the bootstrap leg, before a voyage sails.
+
+Expect ~28/29 on the oracle. That is the clean pass with the localStorage exemption,
+matching pilots #5 and #7. **Do not chase the 29th** — it is `should persist its
+data`, exempted by dk's 2026-07-14 ruling, and it will show as `1 pending`.
+
+**Two behavioural candidates that owe probes and MUST NOT ship on a read:**
+
+1. **Tier escalation on attempt, not forecast.** 0.13.47 named the candidates but
+   left the escalation trigger as *"cannot be observed below it"* — a prediction
+   nothing tests. Candidate: *"a cheaper tier has been attempted and the behaviour
+   observed to be unobservable there."* Probe it, or let the next pilot's Captain
+   answer whether the catalog alone was enough.
+2. **The background-task rule as an act.** Doctrine states a prohibition — *never
+   end your turn waiting* — and roles keep violating it under pressure (4 live
+   occurrences now, including #7's QM, which needed a hand resume). 0.13.48 hardens
+   the hook, but **hooks only augment; the skills-only baseline carries this in text
+   alone.** The proven pattern is naming the act, not restating the prohibition
+   (0.13.42 went 0/4 -> 4/4 that way): *"before ending a turn, read to its summary
+   line the output file of every command this turn backgrounded."* Behavioural,
+   owes a probe. Probe design: primary arm skills-only with no hook and no harness
+   background-task lines, augmentation arm plugin-installed, and force the ~120s cap
+   with a >200s sweep so every leg tests the condition — last probe's denominator
+   was wrong because only 3 of 8 legs crossed it.
+
+**Still open, untouched:** Article 7's negated-MAY wording (from #6); the
+flaky-watch-strike gap — a directed watch struck on one lucky green while the defect
+stayed real, reproduced live in #7, individually correct at every step.
+
+<!-- =================== END PRIMED ORDER =================== -->
+
 ## >>> PILOT #7 PASSED (2026-07-21, sonnet session) - 28/29, 0 failing, "All specs passed!" <<<
 
 Ran on bare `/shakedown`, dk's "proceed as proposed". Full account in METRICS.md's "Pilot #7" entry.
@@ -46,9 +106,10 @@ the same violation pilot #6's operator made and was corrected on. dk called it o
 keep stopping now?"). Corrected; ran the rest autonomously.
 
 **Routed to dk:** (1) the `scenarios/pilot.md` patch-apply gap above — highest value, it cost a wrong
-score and two false findings; (2) the DOM-identity full-rebuild defect class, cross-confirmed across
-two pilots, candidate for fitting-out guidance — but note it does NOT fail a correctly-patched oracle,
-so its severity is lower than the void grades implied; (3) the sharpened Captain->QM dispatch-contract
+score and two false findings; (2) the DOM-identity full-rebuild defect class — **retired, not routed**:
+it was written up as cross-confirmed across two pilots, but that leaned on void pilot #6, and against a
+correctly-patched oracle it fails nothing. Real as a code smell, but nothing shows it costing a pilot;
+(3) the sharpened Captain->QM dispatch-contract
 lesson (role+base-commit only; any scope through `watchbill.json`) from two correct QM contamination
 refusals; (4) the flaky-watch-strike gap — a directed watch struck on one lucky green while the defect
 stayed real, reproduced live; (5) Article 7's negated-MAY wording review, still open from pilot #6.
@@ -59,6 +120,30 @@ problem) — confirmed as standing recipe.
 <!-- =================== END PILOT #7 RECORD =================== -->
 
 <!-- ===================== PILOT #6 RECORD (PRECEDES #7) ===================== -->
+
+> **PILOT #6 IS VOID (dk's word, 2026-07-21). Do not cite it as a baseline, a
+> comparison, or evidence for anything.** It died to a full root filesystem —
+> twice, losing the whole tree — which is an environment failure, not a doctrine
+> or app result. `bin/preflight.sh` now checks that condition as ordered step 0
+> of `scenarios/pilot.md`.
+>
+> **Its Sinon `spy.reset()` finding is FALSE and is retracted.** #6 reported it
+> as a probable oracle-version incompatibility and routed it to dk as an open
+> methodology question. It is neither: `fixtures/oracle/spy-reset.patch` has
+> existed since 2026-07-18, vendored by pilot #2's own close-out which hit the
+> identical failure and re-graded the same app bytes 24/29 -> 28/29. #6 never
+> applied it. Pilot #7 then repeated the same omission and reported the same
+> false finding — **third occurrence of one solved problem**, which is what put
+> the patch-apply step into preflight as an act instead of a paragraph.
+>
+> **One datum survives and is load-bearing:** #6's Captain chose a jsdom tier
+> while #7's chose real Chromium, on the same doctrine build, same spec, same
+> model. The tier is picked at bootstrap, long before the disk filled, so how the
+> run ended does not touch it. That pair is the evidence that tier choice was
+> unsteered, and it is what 0.13.47 fixes.
+>
+> Text below kept verbatim as the run-time record, per this file's convention.
+
 ## >>> PILOT #6 STOPPED MID-RUN BY DK'S WORD (2026-07-21, sonnet session) - PRIMED ORDER BELOW IS SUPERSEDED, DO NOT RE-RUN BLINDLY <<<
 
 Ran on bare `/shakedown`, dk's "proceed as proposed" against the standing PILOT PRIMED ORDER below.
