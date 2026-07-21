@@ -43,6 +43,12 @@ count has stopped moving. At 17:28Z the standing tally is **4 recovered (t3, t6,
 and 3 not (t5, c6, and c5, which holds a production edit with no run record)**, measured
 19 minutes after the last leg stopped and with no reason to call it final.
 
+**FINAL, at a horizon fixed in advance and stated: 17:45:00Z, ~36 minutes after the last
+leg stopped and well past any orphaned sweep's runtime. 4 recovered (t3, t6, c2, c4),
+3 not (t5, c6, c5). Unchanged from the 17:28Z reading across 17 minutes, so the count is
+settled — but it is settled BECAUSE a horizon was declared and waited out, not because a
+snapshot happened to be right.**
+
 **The methodological lesson outranks the number: a stalled leg's outcome is a function of
 when you look, so "did it deadlock" is not a property that can be read off a snapshot.**
 Every prior figure in this corpus for this class — pilot #2's, 0.13.33's, the n=8 rerun's

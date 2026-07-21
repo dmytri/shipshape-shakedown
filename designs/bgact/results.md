@@ -65,11 +65,20 @@ The operator called this wrong twice:
 2. At write-up: *"3 recovered, 4 stayed dead."*
 3. **t6 then recovered while that second correction was being committed.**
 
-Standing tally at **17:28Z, 19 minutes after the last leg stopped**, with no basis for
-calling it final:
+**Horizon then declared in advance and waited out: 17:45:00Z, ~36 minutes after the last
+leg stopped. Final reading, unchanged from 17:28Z across 17 minutes:**
 
 - **Recovered** (resumed, completed, run record written): t3, t6, c2, c4 — **4/7**
 - **Not** : t5, c6, and c5 (holds a production edit, no run record) — **3/7**
+
+The count is settled because a horizon was declared and waited out, not because a
+snapshot happened to land right. That is the only reason this figure is quotable and the
+corpus's earlier ones are not.
+
+**Harness note:** orphaned cucumber processes from the stalled legs were still running at
+the horizon (8 at 17:45Z, up from 6 at 17:30Z). A stalled leg leaks its suite process, so
+a probe of this class accumulates load on the box as it runs — worth killing between
+batches, and a confound to watch for in any timing-sensitive arm.
 
 **The methodological point outranks the number: a stalled leg's outcome is a function of
 when you look.** "Did it deadlock" cannot be read off a snapshot. Every prior figure in
