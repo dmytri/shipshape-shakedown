@@ -1,10 +1,79 @@
 # Captain notes - shipshape-shakedown workstream
 
-> **START HERE: the standing PRIMED ORDER is at the `>>> PRIMED ORDER for a CLEAN RESTART <<<`
-> heading below (written 2026-07-20, opus session). Read it before acting on anything above it.
-> It says: DO NOT run Pilot #6 next. Fix the stale probe fixtures, then run the installed-channel
-> validation this restart exists to enable. The pilot order that preceded it is ARCHIVED, marked
-> DO NOT RUN. The entries above this line are the record of how that order was reached.**
+<!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
+## >>> PILOT PRIMED ORDER (written 2026-07-21, opus session, at dk's "is pilot primed?") <<<
+
+**RUN PILOT #6 (`todopilot7`) on 0.13.46, per `scenarios/pilot.md`.** Every earlier primed order in
+this file is DISCHARGED and archival: the fixtures are repaired AND guarded by a conformance check,
+the 0.13.40 routing probe ran, and the entire routed queue is empty (see the "QUEUE CLEARED" entry
+just below, and the two opus-session entries beneath it). This session shipped 0.13.42-0.13.46;
+0.13.42 was behaviourally validated same-session at 0/4 -> 4/4.
+
+### PRECONDITIONS - verify before spending anything, in this order
+
+1. **SESSION MODEL MUST BE SONNET.** Not a pin - the session itself. The pilot's runner architecture
+   nests spawns by design, and the async-resumption leak sends even a pinned leg to the SESSION
+   model at its first nested-child resumption, so an opus session VOIDS the numbers. If this session
+   is not sonnet, STOP and say so.
+2. **`git fetch` BOTH repos FIRST**, before reading anything. Confirm `~/shipshape-shakedown` and
+   `~/shipshape` clean and level with origin. `~/shipshape` HEAD MUST be `8933214` (0.13.46).
+3. **CHANNEL INSTALLED-PLUGIN, CONFIRMED EMPIRICALLY, NEVER FROM TIMESTAMPS.** Installed is 0.13.46
+   (`8933214`). Dispatch the first leg, then grep its raw transcript for the 0.13.46-unique string
+   `the guarded route teaches the operator to trust a guard the other route does not have` (shared
+   Articles) or `A version judged current by eye is unchecked` (shipwright, 0.13.42+). Zero hits =
+   stale snapshot = STOP and report. If `shipshape:qm` etc. fail to resolve as a `subagent_type`,
+   that is the plugin-agent-registry gap this file records (2026-07-20) - route it to dk, do NOT
+   fall back to HEAD-text; a HEAD-text pilot cannot validate the installed channel.
+
+### GET DK'S ONE-LINE COST CONFIRMATION BEFORE SPENDING
+
+The pilot is acceptance-scale and expensive. State the band from the last comparable run (pilot #5:
+720 inv / 55.79M cache / full pass in 3 iterations) and get a one-line go-ahead before scaffolding,
+per `scenarios/pilot.md`'s runner-architecture rule. This is SEPARATE from "is pilot primed?" - do
+not treat that question as the cost confirmation.
+
+### RUN THE PILOT - follow `scenarios/pilot.md` exactly, do not redesign it
+
+- **Naming:** Pilot #6, scaffold `todopilot7` (fresh scratchpad dir, never inside a real repo).
+  Pilot #5 was `todopilot6`.
+- **Runner architecture is binding:** the operator seat is the MAIN SESSION LOOP, never a delegated
+  fork. Long commands the runner owns run `run_in_background:true`, waited on by OUTPUT FILE, never
+  process name. Every role leg carries the harness background-task lines from `prompts/preamble.md`.
+- **Oracle quarantine is ABSOLUTE.** Reread `scenarios/pilot.md`'s "Oracle quarantine" section
+  before Phase 2 of iteration 1; verify by transcript grep on every leg that no role saw oracle
+  terms.
+- **Play-by-play to dk in real time**, timer every ~2 minutes while a leg runs (main-loop only).
+  Zero questions between the cost confirm and the final report except a genuine stop-worthy blocker.
+- **Mine every leg per METRICS.md, BANK same-session** (`bin/bank.sh`) - raw transcripts die with
+  the VM.
+
+### THE ONE THING TO WATCH - the Step 4 deadlock finding, still open
+
+When a verification run crosses the runtime's ~120s auto-background cap, the runtime finishes it in
+the background but cannot resume a nested chain that already ended its turn: 1/3 of boundary-crossing
+legs deadlocked on the doctrine-alone probe. The pilot's own background-task-line discipline is the
+mitigation BY CONSTRUCTION, so it should not fire - but if it does, that is direct pilot-scale
+evidence the fix does not hold under real conditions, and it must be RECORDED IN DETAIL immediately,
+not worked around. The probe redesign this finding needs (force the boundary deterministically;
+instrument whether the SubagentStop hook fires on a QM-ends-own-turn shape) is deliberately AFTER the
+pilot, because the pilot tests exactly this condition at scale for free.
+
+### AFTER THE PILOT
+
+Report the outcome against wave 7's precondition before proposing to start it; wave 7 is separately
+pilot-class cost and needs its own one-line confirmation. Still owed and unrun: the installed-channel
+validation battery (0.13.42-0.13.46 have NO installed-channel behavioural validation; they ship on
+textual footing + green tests). Far-side note, not a blocker: the session-growth / dispatching-seat
+observation (dk, 2026-07-21) - the operator seat never clears and a QM-boundary nudge has no clean
+mechanical home (the detectable event is the subagent dispatch, the channel where reset is WRONG);
+the real shape is "consume the report, not the context", a discipline no nudge enforces.
+
+<!-- =================== END PILOT PRIMED ORDER =================== -->
+
+<!-- ARCHIVED pointer, superseded 2026-07-21. Its Steps 1 and 3 are DONE; Steps 2 and 4 fold into the
+     pilot order above. Kept only for the reproduction detail in the entries below. -->
+> **[ARCHIVED] the standing PRIMED ORDER is at the `>>> PRIMED ORDER for a CLEAN RESTART <<<`
+> heading below (written 2026-07-20, opus session). SUPERSEDED by the PILOT PRIMED ORDER above.**
 
 ## 2026-07-20 (opus session, RESTART, continued): QUEUE CLEARED - 0.13.45 and 0.13.46 ship the rest; NOTHING is left routed
 
