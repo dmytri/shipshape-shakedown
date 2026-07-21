@@ -1,0 +1,100 @@
+npm notice run todomvc@2.0.0 npx
+npm notice run 'cypress' run --env framework=shakedown --config baseUrl=http://localhost:8000/examples/,video=false
+Warning: The allowCypressEnv configuration option is enabled. This allows any browser code to read values from Cypress.env(). This is insecure and will be removed in a future major version.
+
+1. Replace Cypress.env() calls with cy.env() (for sensitive values) or Cypress.expose() (for public configuration)
+2. Set allowCypressEnv: false in your Cypress configuration to disable Cypress.env()
+
+Learn more: https://on.cypress.io/cypress-env-migration
+
+
+================================================================================
+
+  (Run Starting)
+
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Cypress:        15.18.1                                                                        │
+  │ Browser:        Electron 138 (headless)                                                        │
+  │ Node Version:   v24.18.0 (/usr/bin/node)                                                       │
+  │ Specs:          1 found (spec.cy.js)                                                           │
+  │ Searched:       cypress/e2e/**/*.cy.js                                                         │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+                                                                                                    
+  Running:  spec.cy.js                                                                      (1 of 1)
+
+
+  TodoMVC - shakedown
+    When page is initially opened
+      ✓ should focus on the todo input field (480ms)
+    No Todos
+      ✓ starts with nothing (187ms)
+      ✓ should hide #main and #footer (153ms)
+    New Todo
+      ✓ should allow me to add todo items (660ms)
+      ✓ should clear text input field when an item is added (476ms)
+      ✓ should append new items to the bottom of the list (1052ms)
+      ✓ should trim text input (552ms)
+      ✓ should show #main and #footer when items added (592ms)
+    Mark all as completed
+      ✓ should allow me to mark all items as completed (1568ms)
+      ✓ should allow me to clear the complete state of all items (1454ms)
+      ✓ complete all checkbox should update state when items are completed / cleared (1497ms)
+    Item
+      ✓ should allow me to mark items as complete (812ms)
+      ✓ should allow me to un-mark items as complete (939ms)
+      ✓ should allow me to edit an item (1896ms)
+    Editing
+      ✓ should hide other controls when editing (1418ms)
+      ✓ should save edits on blur (1952ms)
+      ✓ should trim entered text (2158ms)
+      ✓ should remove the item if an empty text string was entered (1661ms)
+      ✓ should cancel edits on escape (1341ms)
+    Counter
+      ✓ should display the current number of todo items (740ms)
+    Clear completed button
+      ✓ should display the correct text (1362ms)
+      ✓ should remove completed items when clicked (1451ms)
+      ✓ should be hidden when there are no items that are completed (1478ms)
+    Persistence
+      - should persist its data
+    Routing
+      ✓ should allow me to display active items (1421ms)
+      ✓ should respect the back button (1685ms)
+      ✓ should allow me to display completed items (1418ms)
+      ✓ should allow me to display all items (1548ms)
+      ✓ should highlight the currently applied filter (1516ms)
+
+
+  28 passing (36s)
+  1 pending
+
+
+  (Results)
+
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Tests:        29                                                                               │
+  │ Passing:      28                                                                               │
+  │ Failing:      0                                                                                │
+  │ Pending:      1                                                                                │
+  │ Skipped:      0                                                                                │
+  │ Screenshots:  0                                                                                │
+  │ Video:        false                                                                            │
+  │ Duration:     35 seconds                                                                       │
+  │ Spec Ran:     spec.cy.js                                                                       │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+================================================================================
+
+  (Run Finished)
+
+
+       Spec                                              Tests  Passing  Failing  Pending  Skipped  
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ ✔  spec.cy.js                               00:35       29       28        -        1        - │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+    ✔  All specs passed!                        00:35       29       28        -        1        -  
+

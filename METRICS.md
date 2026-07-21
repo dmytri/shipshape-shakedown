@@ -1,10 +1,16 @@
 # Metrics: how to read a shakedown
 
-## Pilot #7, 0.13.46, sonnet, installed channel - build complete, oracle 22/29 -> 24/29 over 3 grades, ONE residual failure open
+## Pilot #7, 0.13.46, sonnet, installed channel - PASSED. 28/29, 0 failing, 1 pending, "All specs passed!"
 
 Full narrative in CAPTAIN.md. **22 legs banked, `data/pilot-7/`, 653 invocations / 50,584,353
-cache-read / 182,833 out.** Same TodoMVC spec as pilot #6, independent build (vanilla JS, framework
-name `vanilla-pilot`), fresh scaffold `todopilot8`.
+cache-read / 182,833 out.** Same TodoMVC spec as pilot #6, independent build (vanilla JS), fresh
+scaffold `todopilot8`. Matches pilot #5, the previous cleanest run.
+
+> **CORRECTION (same session).** Grades 1-3 below (22/29, 22/29, 24/29) were run WITHOUT the mandatory
+> `fixtures/oracle/` patches and under a non-mandated framework name. They are void as scores. The
+> operator error and its two false findings are recorded at the end of this section. The true final
+> grade is **28/29, 0 failing** (`data/pilot-7/oracle-grade4-CORRECT-run.log`). Grades 1-3 remain
+> written up because the two production defects they exposed were REAL and the fixes stand.
 
 **Phase 1 build clean and fast: Captain->QM->Crew->Boatswain landed 33/33 green on the first voyage**
 (commit `13bcd53`), custody catching and fixing two real defects (missing `autofocus`/`type=button`
@@ -50,12 +56,13 @@ render had already replaced), fixed its own code, reverified 34/35 green on a fu
 redispatched Crew to reapply the production fix — 3x clean. Committed `9c63020`, confirmed 3x green
 independently by the operator (35/35 each run).
 
-**Oracle grade 1 (pre-fix): 22/29.** 2 failures are oracle-side (Cypress's bundled Sinon dropped
-`spy.reset()` — SAME class pilot #6 hit independently, second confirmation it's a spec-tooling version
-issue, not a pilot defect). 3 are real: all "element detached from DOM" on mark-complete/un-mark/
-persistence — traced (wrongly, as it turned out) to the timing race just fixed.
+**Oracle grade 1 (pre-fix, UNPATCHED ORACLE — score void): 22/29.** 2 failures were the unpatched
+Sinon `spy.reset()` call (see correction below; a patch for this exists and the operator failed to
+apply it). 3 were "element detached from DOM" on mark-complete/un-mark/persistence — of these, the
+two Item ones were REAL and traced (wrongly at first) to the timing race just fixed.
 
-**Oracle grade 2 (after the timing-race fix): still 22/29, IDENTICAL failures.** Confirmed the timing
+**Oracle grade 2 (after the timing-race fix, still unpatched — score void): still 22/29, IDENTICAL
+failures.** Confirmed the timing
 race was real (the operator's own reruns proved it) but was not the oracle's actual failure cause.
 Investigation of the error detail revealed the true root: `TodosController.prototype.render` always
 did a full `this.$todoList.innerHTML = ''` teardown-and-rebuild on every mutation, destroying DOM
@@ -68,51 +75,70 @@ reusing existing `<li>` nodes instead of destroying and rebuilding). Committed `
 mid-voyage custody foul (missing `@planks` on the reworked `render`) was caught and corrected in the
 same voyage. Confirmed 3x green independently (40/40 each run).
 
-**Oracle grade 3 (after the DOM-identity fix): 24/29, up from 22/29.** Both "Item" failures
-(mark-complete, un-mark) are gone — confirms the keyed-reconciliation fix closed the exact defect
-class pilot #6 found and never got to re-grade (its tree was lost before a second oracle pass).
-Remaining 3 failures: the 2 known Sinon `spy.reset()` failures (unchanged, oracle-side), plus ONE
-new-shape failure — `Persistence should persist its data` fails on `cy.reload().then(testState)`,
-"element detached from DOM" on a `cy.get('@alias').should(...)` chain spanning a full page
-**reload** (not a mutation-triggered rerender) — a different mechanism than the two defects already
-fixed (Cypress element aliases do not survive a hard navigation the way they survive an in-page
-rerender; whether this is a residual app defect or an oracle-test-authoring assumption about
-alias-across-reload behavior is not yet established). NOT investigated further this session; routed
-to dk as the pilot's remaining open item rather than chased into a fourth iteration.
+**Oracle grade 3 (after the DOM-identity fix, still unpatched — score void): 24/29, up from 22/29.**
+Both "Item" failures (mark-complete, un-mark) gone — the keyed-reconciliation fix closed the exact
+defect class pilot #6 found and never got to re-grade. This delta is REAL evidence the fix worked;
+only the absolute score is void.
 
-**Session stopped here** at 24/29 (26/27 excluding the 2 documented Sinon failures), not because of
-an environment failure this time (contrast pilot #6) but because this is a natural, substantial
-checkpoint after three full build-fix-grade cycles: two real, distinct, correctly-diagnosed production
-defects fixed and independently reverified, one oracle-side compatibility issue documented and
-cross-confirmed against a second pilot, and one newly-surfaced residual failure with a precise
-description but no root-cause investigation yet.
+**Oracle grade 4, THE ONLY VALID GRADE: 28/29, 0 failing, 1 pending, "All specs passed!"**
+Patches applied, served at `examples/shakedown/`, graded `--env framework=shakedown`. Same app tree
+as grade 3, unchanged. `data/pilot-7/oracle-grade4-CORRECT-run.log`. **Pilot #7 PASSED**, matching
+pilot #5's clean run.
+
+### OPERATOR ERROR: three phantom failures and two false findings, manufactured by skipping a documented step
+
+The operator never applied `fixtures/oracle/spy-reset.patch` or
+`fixtures/oracle/shakedown-localstorage-exempt.patch`, and graded under `--env framework=vanilla-pilot`
+instead of the mandated fixed name `shakedown`. `fixtures/oracle/README.md` states both requirements
+plainly and existed since 2026-07-18. Consequences:
+
+- The 2 "Sinon `spy.reset()`" failures + their 2 collateral skips: entirely the unapplied
+  `spy-reset.patch`.
+- The "Persistence-after-reload" failure: entirely the unapplied localStorage exemption, which would
+  not have matched anyway under the wrong framework name.
+- **Two findings were written up and PUSHED to dk that were false** (commit `fe3b6fb`): the Sinon
+  issue as an unfixable cross-pilot grading ceiling, and the Persistence failure as an open
+  uninvestigated defect. Both are documented, already-solved, patched conditions. Retracted here.
+- Wasted work: iteration 3 (Captain+QM+Crew+Boatswain, ~5 legs) chased grade 2's unchanged score.
+  The DOM-identity fix it produced is genuinely good and independently verified, but the trigger for
+  running it was partly a phantom.
+
+**Root cause is a harness gap, not just carelessness — and it is this corpus's own tracked defect
+class.** `scenarios/pilot.md`'s Grading section describes clone/serve/run in detail and **never
+references `fixtures/oracle/README.md`, the two patches, or the mandatory `framework=shakedown`
+name**. The obligation exists; the pilot procedure that should carry it names no act. That is exactly
+the "obligation with no act" shape 0.13.42/0.13.44/0.13.45 shipped fixes for in doctrine — now found
+biting the operator procedure itself. **Candidate fix, routed: fold the patch-apply and fixed-name
+steps into `scenarios/pilot.md`'s Grading section as ordered acts.**
 
 **Findings routed to dk, nothing shipped as doctrine this session:**
-1. Sinon `spy.reset()` oracle-version-compatibility question — now confirmed across TWO independent
-   pilots (#6 and #7). Worth resolving as a standing methodology answer rather than re-discovering
-   every pilot: pin an older Cypress in the oracle clone, or accept it as a permanent grading ceiling.
-2. The DOM-identity-destroying full-rebuild defect class — also now confirmed across two independent
-   pilots with different codebases. Worth a standing instance in the corpus (fitting-out guidance for
-   list-rendering: prefer keyed reconciliation over full teardown-rebuild) since two greenfield builds
-   made the identical mistake independently with no doctrine steering either way.
+1. **`scenarios/pilot.md` Grading names no patch-apply act** (above). Highest-value item here — it cost
+   this pilot a wrong score, an extra iteration, and two false findings.
+2. The DOM-identity-destroying full-rebuild defect class — confirmed across two independent pilots
+   with different codebases (#6 and #7), both greenfield builds making the identical mistake with no
+   doctrine steering either way. Candidate for standing fitting-out guidance (prefer keyed
+   reconciliation over full teardown-rebuild). **Note: with the oracle correctly patched this defect
+   does NOT fail the oracle** — it was found via grades that were themselves void. Still real (the
+   flaky-scenario evidence and the identity scenarios stand on their own), but its severity is lower
+   than the void grades implied.
 3. The Captain->QM dispatch-contract sharpening from the two contamination refusals: role+base-commit
-   is the WHOLE legal dispatch surface, full stop; any directed scope — even a bare scenario name —
-   must route through `watchbill.json`. Worth checking whether `prompts/pilot-dispatches.md` and this
-   harness's own operator habits already reflect that as strictly as QM enforced it live.
+   is the WHOLE legal dispatch surface; any directed scope — even a bare scenario name — routes through
+   `watchbill.json`. Worth checking `prompts/pilot-dispatches.md` reflects that as strictly as QM
+   enforced it live.
 4. The flaky-watch-strike gap: a directed watch can be struck on a single lucky green while the
-   underlying defect remains real and intermittent. No structural fix proposed here (the QM/Boatswain
-   behavior was individually correct at each step — the gap is systemic, not a rule violation) but
-   worth naming as a known blind spot in the custody chain.
+   underlying defect remains real and intermittent. Reproduced live. QM/Boatswain behavior was
+   individually correct at each step — the gap is systemic, not a rule violation.
 5. Article 7 wording review (dk, pilot #6, still open): the Context bulkhead's negated-MAY phrasing.
    Not touched this session.
-6. The Persistence-after-reload oracle failure — needs its own investigation before it's known whether
-   this is a genuine residual app defect or an alias-across-navigation assumption in the oracle spec
-   itself. Not yet a finding, just an open question.
+
+**RETRACTED from the first version of this entry:** the Sinon `spy.reset()` "cross-pilot grading
+ceiling" finding and the "Persistence-after-reload open defect" finding. Both were artifacts of the
+operator error above. Pilot #6's own record makes the same Sinon claim; it is likely the same mistake
+and worth re-checking that entry too.
 
 **Harness note, not doctrine:** the sparse-clone oracle recipe from pilot #6's routed finding worked
-exactly as intended this run (fetched the full upstream tree once, then `rm -rf` down to
-`tests/`+`cypress/`+config+package files, 408K total vs the ~5.6GB pilot #6 problem) — confirms it as
-the standing recipe, no further action needed.
+exactly as intended (fetched upstream once, stripped to `tests/`+`cypress/`+config, 408K vs pilot #6's
+~5.6GB problem) — confirmed as the standing recipe.
 
 ## Pilot #6, 0.13.46, sonnet, installed channel - INCOMPLETE, stopped mid-run by dk's word after repeated environment data loss
 
