@@ -1,0 +1,34 @@
+# source: /tmp/claude-1000/-home-exedev-shipshape-shakedown/12639675-daae-4fc1-b896-b7b1c57b7451/tasks/a288125de6d435200.output
+# banked: 2026-07-21T13:49:22Z
+boatswain-reliability-commit	1	13:45:49	13977	70	Skill:
+boatswain-reliability-commit	2	13:45:53	20325	5	Skill:
+boatswain-reliability-commit	3	13:45:56	28826	202	Bash:cat RIGGING.md AGENTS.md && git status && git diff b20c0e0 -- . ':!CAP
+boatswain-reliability-commit	4	13:46:01	56027	315	Bash:echo "--- state-mutation-rendering.feature ---" && cat features/state-
+boatswain-reliability-commit	5	13:46:13	59179	8	Bash:npx jsdoc -X -r js > /tmp/plank_inventory.json 2> /tmp/plank_err.log; 
+boatswain-reliability-commit	6	13:46:22	60617	63	Bash:cat /tmp/biome.txt | tail -60
+boatswain-reliability-commit	7	13:46:25	61138	3	Bash:grep -n "toggleTodo" -A 5 -B 5 /tmp/plank_inventory.json 2>/dev/null |
+boatswain-reliability-commit	8	13:46:28	61694	7	Bash:python3 -c " import json data = json.load(open('/tmp/plank_inventory.j
+boatswain-reliability-commit	9	13:46:31	63488	105	Bash:grep -n "the user checks the todo titled\|the user unchecks the todo t
+boatswain-reliability-commit	10	13:46:38	63690	642	Bash:grep -n "PERTURBATION" -r . --include="*.js" --include="*.feature" 2>/
+boatswain-reliability-commit	11	13:46:44	64120	305	Bash:rg -n "PERTURBATION" --glob '*.js' --glob '*.feature' . ; echo "exit:$
+boatswain-reliability-commit	12	13:46:47	64935	128	Bash:rg -n "PERTURBATION" .
+boatswain-reliability-commit	13	13:46:49	65416	112	Bash:cat /tmp/step_usage.txt | head -100
+boatswain-reliability-commit	14	13:46:55	65633	1	Read:scantling.steps.js
+boatswain-reliability-commit	15	13:47:01	70130	232	Bash:npx biome check --write features/step_definitions/scantling.steps.js &
+boatswain-reliability-commit	16	13:47:05	70976	184	Bash:git diff -- features/step_definitions/scantling.steps.js 2>&1 | head -
+boatswain-reliability-commit	17	13:47:08	71470	163	Bash:git diff b20c0e0 -- . ':!CAPTAIN.md' -- features/step_definitions/scan
+boatswain-reliability-commit	18	13:47:31	71868	3	Bash:npx cucumber-js --tags "not @captain and not @shipwright" > /tmp/broad
+boatswain-reliability-commit	19	13:47:50	73154	305	Bash:GIT_INDEX_FILE="$(mktemp)" bash -c 'git read-tree HEAD && git add -A .
+boatswain-reliability-commit	20	13:47:56	75540	477	Bash:ls -la .wake 2>&1; cat .gitignore 2>&1 | grep -i wake
+boatswain-reliability-commit	21	13:47:59	75873	68	Bash:tail -5 .wake/runrecord.jsonl
+boatswain-reliability-commit	22	13:48:06	76627	3	Bash:cat features/*.feature | grep -c "Scenario:" ; grep "^  Scenario" feat
+boatswain-reliability-commit	23	13:48:12	78002	248	Bash:rg -n "^\s*Scenario:" features --glob '*.feature' -g '!CAPTAIN.md'
+boatswain-reliability-commit	24	13:48:16	78450	173	Bash:rg -n "Scenario:" features/
+boatswain-reliability-commit	25	13:48:20	78874	319	Bash:ls features/*.feature 2>&1 | wc -l; rg -n "Scenario:" features/counter
+boatswain-reliability-commit	26	13:48:25	80110	181	Bash:find features -maxdepth 1 -name "*.feature"
+boatswain-reliability-commit	27	13:48:33	80435	187	Read:counter.feature
+boatswain-reliability-commit	28	13:48:41	80725	1690	Bash:python3 - <<'EOF' import json targets = [ "features/routing.feature:Th
+boatswain-reliability-commit	29	13:48:56	81127	3	Bash:git rm -f watchbill.json && git add -- CAPTAIN.md RIGGING.md features/
+boatswain-reliability-commit	30	13:49:03	82823	294	Bash:rm -f watchbill.json && git add -- CAPTAIN.md RIGGING.md features/rout
+boatswain-reliability-commit	31	13:49:06	83460	647	Bash:git commit -m "$(cat <<'EOF' Boatswain custody: format fix, fresh @log
+SUMMARY	boatswain-reliability-commit	invocations=31	cache_read=2058709	out=7143	wall=13:45:49 to 13:49:06

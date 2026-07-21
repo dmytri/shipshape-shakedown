@@ -1,0 +1,312 @@
+npm notice run todomvc@2.0.0 npx
+npm notice run 'cypress' run --env framework=vanilla-pilot --config baseUrl=http://localhost:8000/examples/,video=false
+It looks like this is your first time using Cypress: 15.18.1
+
+❯  Verifying Cypress can run /home/exedev/.cache/Cypress/15.18.1/Cypress
+✔  Verified Cypress!       /home/exedev/.cache/Cypress/15.18.1/Cypress
+
+Opening Cypress...
+Warning: The allowCypressEnv configuration option is enabled. This allows any browser code to read values from Cypress.env(). This is insecure and will be removed in a future major version.
+
+1. Replace Cypress.env() calls with cy.env() (for sensitive values) or Cypress.expose() (for public configuration)
+2. Set allowCypressEnv: false in your Cypress configuration to disable Cypress.env()
+
+Learn more: https://on.cypress.io/cypress-env-migration
+
+
+================================================================================
+
+  (Run Starting)
+
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Cypress:        15.18.1                                                                        │
+  │ Browser:        Electron 138 (headless)                                                        │
+  │ Node Version:   v24.18.0 (/usr/bin/node)                                                       │
+  │ Specs:          1 found (spec.cy.js)                                                           │
+  │ Searched:       cypress/e2e/**/*.cy.js                                                         │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+                                                                                                    
+  Running:  spec.cy.js                                                                      (1 of 1)
+
+
+  TodoMVC - vanilla-pilot
+    When page is initially opened
+      ✓ should focus on the todo input field (343ms)
+    No Todos
+      ✓ starts with nothing (182ms)
+      ✓ should hide #main and #footer (132ms)
+    New Todo
+      1) should allow me to add todo items
+      ✓ should clear text input field when an item is added (324ms)
+      ✓ should append new items to the bottom of the list (992ms)
+      ✓ should trim text input (427ms)
+      ✓ should show #main and #footer when items added (359ms)
+    Mark all as completed
+      2) "before each" hook for "should allow me to mark all items as completed"
+    Item
+      3) should allow me to mark items as complete
+      4) should allow me to un-mark items as complete
+      ✓ should allow me to edit an item (1473ms)
+    Editing
+      ✓ should hide other controls when editing (1037ms)
+      ✓ should save edits on blur (1411ms)
+      ✓ should trim entered text (1522ms)
+      ✓ should remove the item if an empty text string was entered (1148ms)
+      ✓ should cancel edits on escape (1203ms)
+    Counter
+      ✓ should display the current number of todo items (541ms)
+    Clear completed button
+      ✓ should display the correct text (1022ms)
+      ✓ should remove completed items when clicked (1110ms)
+      ✓ should be hidden when there are no items that are completed (1120ms)
+    Persistence
+      5) should persist its data
+    Routing
+      ✓ should allow me to display active items (1131ms)
+      ✓ should respect the back button (1341ms)
+      ✓ should allow me to display completed items (1133ms)
+      ✓ should allow me to display all items (1320ms)
+      ✓ should highlight the currently applied filter (1128ms)
+
+
+  22 passing (46s)
+  5 failing
+
+  1) TodoMVC - vanilla-pilot
+       New Todo
+         should allow me to add todo items:
+     CypressError: Timed out retrying after 4000ms: `cy.invoke()` errored because the property: `reset` does not exist on your subject.
+
+`cy.invoke()` waited for the specified property `reset` to exist, but it never did.
+
+If you do not expect the property `reset` to exist, then add an assertion such as:
+
+`cy.wrap({ foo: 'bar' }).its('quux').should('not.exist')`
+
+https://on.cypress.io/invoke
+      at <unknown> (http://localhost:8000/__cypress/runner/cypress_runner.js:120558:72)
+      at <unknown> (http://localhost:8000/__cypress/runner/cypress_runner.js:120621:7)
+      at Object.subjectFn (http://localhost:8000/__cypress/runner/cypress_runner.js:154730:16)
+      at $Cy.verifyUpcomingAssertions (http://localhost:8000/__cypress/runner/cypress_runner.js:153961:31)
+      at onRetry (http://localhost:8000/__cypress/runner/cypress_runner.js:154721:15)
+      at tryCatcher (http://localhost:8000/__cypress/runner/cypress_runner.js:1777:23)
+      at Promise.attempt.Promise.try (http://localhost:8000/__cypress/runner/cypress_runner.js:4285:29)
+      at whenStable (http://localhost:8000/__cypress/runner/cypress_runner.js:154603:70)
+      at <unknown> (http://localhost:8000/__cypress/runner/cypress_runner.js:154503:14)
+      at tryCatcher (http://localhost:8000/__cypress/runner/cypress_runner.js:1777:23)
+      at Promise._settlePromiseFromHandler (http://localhost:8000/__cypress/runner/cypress_runner.js:1489:31)
+      at Promise._settlePromise (http://localhost:8000/__cypress/runner/cypress_runner.js:1546:18)
+      at Promise._settlePromise0 (http://localhost:8000/__cypress/runner/cypress_runner.js:1591:10)
+      at Promise._settlePromises (http://localhost:8000/__cypress/runner/cypress_runner.js:1671:18)
+      at Promise._fulfill (http://localhost:8000/__cypress/runner/cypress_runner.js:1615:18)
+      at <unknown> (http://localhost:8000/__cypress/runner/cypress_runner.js:5420:46)
+  From Your Spec Code:
+      at checkItemSaved (webpack://todomvc/./cypress/e2e/spec.cy.js:388:49)
+      at Context.eval (webpack://todomvc/./cypress/e2e/spec.cy.js:564:8)
+
+  2) TodoMVC - vanilla-pilot
+       Mark all as completed
+         "before each" hook for "should allow me to mark all items as completed":
+     CypressError: Timed out retrying after 4000ms: `cy.invoke()` errored because the property: `reset` does not exist on your subject.
+
+`cy.invoke()` waited for the specified property `reset` to exist, but it never did.
+
+If you do not expect the property `reset` to exist, then add an assertion such as:
+
+`cy.wrap({ foo: 'bar' }).its('quux').should('not.exist')`
+
+https://on.cypress.io/invoke
+
+Because this error occurred during a `before each` hook we are skipping the remaining tests in the current suite: `Mark all as completed`
+      at <unknown> (http://localhost:8000/__cypress/runner/cypress_runner.js:120558:72)
+      at <unknown> (http://localhost:8000/__cypress/runner/cypress_runner.js:120621:7)
+      at Object.subjectFn (http://localhost:8000/__cypress/runner/cypress_runner.js:154730:16)
+      at $Cy.verifyUpcomingAssertions (http://localhost:8000/__cypress/runner/cypress_runner.js:153961:31)
+      at onRetry (http://localhost:8000/__cypress/runner/cypress_runner.js:154721:15)
+      at tryCatcher (http://localhost:8000/__cypress/runner/cypress_runner.js:1777:23)
+      at Promise.attempt.Promise.try (http://localhost:8000/__cypress/runner/cypress_runner.js:4285:29)
+      at whenStable (http://localhost:8000/__cypress/runner/cypress_runner.js:154603:70)
+      at <unknown> (http://localhost:8000/__cypress/runner/cypress_runner.js:154503:14)
+      at tryCatcher (http://localhost:8000/__cypress/runner/cypress_runner.js:1777:23)
+      at Promise._settlePromiseFromHandler (http://localhost:8000/__cypress/runner/cypress_runner.js:1489:31)
+      at Promise._settlePromise (http://localhost:8000/__cypress/runner/cypress_runner.js:1546:18)
+      at Promise._settlePromise0 (http://localhost:8000/__cypress/runner/cypress_runner.js:1591:10)
+      at Promise._settlePromises (http://localhost:8000/__cypress/runner/cypress_runner.js:1671:18)
+      at Promise._fulfill (http://localhost:8000/__cypress/runner/cypress_runner.js:1615:18)
+      at <unknown> (http://localhost:8000/__cypress/runner/cypress_runner.js:5420:46)
+  From Your Spec Code:
+      at checkItemSaved (webpack://todomvc/./cypress/e2e/spec.cy.js:388:49)
+      at Context.eval (webpack://todomvc/./cypress/e2e/spec.cy.js:653:8)
+
+  3) TodoMVC - vanilla-pilot
+       Item
+         should allow me to mark items as complete:
+     CypressError: Timed out retrying after 4000ms: `cy.find()` failed because the page updated as a result of this command, but you tried to continue the command chain. The subject is no longer attached to the DOM, and Cypress cannot requery the page after commands such as `cy.find()`.
+
+Common situations why this happens:
+  - Your JS framework re-rendered asynchronously
+  - Your app code reacted to an event firing and removed the element
+
+You can typically solve this by breaking up a chain. For example, rewrite:
+
+> `cy.get('button').click().should('have.class', 'active')`
+
+to
+
+> `cy.get('button').as('btn').click()`
+> `cy.get('@btn').should('have.class', 'active')`
+
+https://on.cypress.io/element-has-detached-from-dom
+      at isAttached (http://localhost:8000/__cypress/runner/cypress_runner.js:155919:58)
+      at validateType (http://localhost:8000/__cypress/runner/cypress_runner.js:155788:9)
+      at Object.isType (http://localhost:8000/__cypress/runner/cypress_runner.js:155823:7)
+      at <unknown> (http://localhost:8000/__cypress/runner/cypress_runner.js:139862:24)
+      at Object.subjectFn (http://localhost:8000/__cypress/runner/cypress_runner.js:154730:16)
+      at $Cy.verifyUpcomingAssertions (http://localhost:8000/__cypress/runner/cypress_runner.js:153961:31)
+      at onRetry (http://localhost:8000/__cypress/runner/cypress_runner.js:154721:15)
+      at tryCatcher (http://localhost:8000/__cypress/runner/cypress_runner.js:1777:23)
+      at Promise.attempt.Promise.try (http://localhost:8000/__cypress/runner/cypress_runner.js:4285:29)
+      at whenStable (http://localhost:8000/__cypress/runner/cypress_runner.js:154603:70)
+      at <unknown> (http://localhost:8000/__cypress/runner/cypress_runner.js:154503:14)
+      at tryCatcher (http://localhost:8000/__cypress/runner/cypress_runner.js:1777:23)
+      at Promise._settlePromiseFromHandler (http://localhost:8000/__cypress/runner/cypress_runner.js:1489:31)
+      at Promise._settlePromise (http://localhost:8000/__cypress/runner/cypress_runner.js:1546:18)
+      at Promise._settlePromise0 (http://localhost:8000/__cypress/runner/cypress_runner.js:1591:10)
+      at Promise._settlePromises (http://localhost:8000/__cypress/runner/cypress_runner.js:1671:18)
+      at Promise._fulfill (http://localhost:8000/__cypress/runner/cypress_runner.js:1615:18)
+      at <unknown> (http://localhost:8000/__cypress/runner/cypress_runner.js:5420:46)
+  From Your Spec Code:
+      at Context.eval (webpack://todomvc/./cypress/e2e/spec.cy.js:736:29)
+
+  4) TodoMVC - vanilla-pilot
+       Item
+         should allow me to un-mark items as complete:
+     CypressError: Timed out retrying after 4000ms: `cy.find()` failed because the page updated as a result of this command, but you tried to continue the command chain. The subject is no longer attached to the DOM, and Cypress cannot requery the page after commands such as `cy.find()`.
+
+Common situations why this happens:
+  - Your JS framework re-rendered asynchronously
+  - Your app code reacted to an event firing and removed the element
+
+You can typically solve this by breaking up a chain. For example, rewrite:
+
+> `cy.get('button').click().should('have.class', 'active')`
+
+to
+
+> `cy.get('button').as('btn').click()`
+> `cy.get('@btn').should('have.class', 'active')`
+
+https://on.cypress.io/element-has-detached-from-dom
+      at isAttached (http://localhost:8000/__cypress/runner/cypress_runner.js:155919:58)
+      at validateType (http://localhost:8000/__cypress/runner/cypress_runner.js:155788:9)
+      at Object.isType (http://localhost:8000/__cypress/runner/cypress_runner.js:155823:7)
+      at <unknown> (http://localhost:8000/__cypress/runner/cypress_runner.js:139862:24)
+      at Object.subjectFn (http://localhost:8000/__cypress/runner/cypress_runner.js:154730:16)
+      at $Cy.verifyUpcomingAssertions (http://localhost:8000/__cypress/runner/cypress_runner.js:153961:31)
+      at onRetry (http://localhost:8000/__cypress/runner/cypress_runner.js:154721:15)
+      at tryCatcher (http://localhost:8000/__cypress/runner/cypress_runner.js:1777:23)
+      at Promise.attempt.Promise.try (http://localhost:8000/__cypress/runner/cypress_runner.js:4285:29)
+      at whenStable (http://localhost:8000/__cypress/runner/cypress_runner.js:154603:70)
+      at <unknown> (http://localhost:8000/__cypress/runner/cypress_runner.js:154503:14)
+      at tryCatcher (http://localhost:8000/__cypress/runner/cypress_runner.js:1777:23)
+      at Promise._settlePromiseFromHandler (http://localhost:8000/__cypress/runner/cypress_runner.js:1489:31)
+      at Promise._settlePromise (http://localhost:8000/__cypress/runner/cypress_runner.js:1546:18)
+      at Promise._settlePromise0 (http://localhost:8000/__cypress/runner/cypress_runner.js:1591:10)
+      at Promise._settlePromises (http://localhost:8000/__cypress/runner/cypress_runner.js:1671:18)
+      at Promise._fulfill (http://localhost:8000/__cypress/runner/cypress_runner.js:1615:18)
+      at <unknown> (http://localhost:8000/__cypress/runner/cypress_runner.js:5420:46)
+  From Your Spec Code:
+      at Context.eval (webpack://todomvc/./cypress/e2e/spec.cy.js:751:29)
+
+  5) TodoMVC - vanilla-pilot
+       Persistence
+         should persist its data:
+     CypressError: Timed out retrying after 4000ms: `cy.find()` failed because the page updated as a result of this command, but you tried to continue the command chain. The subject is no longer attached to the DOM, and Cypress cannot requery the page after commands such as `cy.find()`.
+
+Common situations why this happens:
+  - Your JS framework re-rendered asynchronously
+  - Your app code reacted to an event firing and removed the element
+
+You can typically solve this by breaking up a chain. For example, rewrite:
+
+> `cy.get('button').click().should('have.class', 'active')`
+
+to
+
+> `cy.get('button').as('btn').click()`
+> `cy.get('@btn').should('have.class', 'active')`
+
+https://on.cypress.io/element-has-detached-from-dom
+      at isAttached (http://localhost:8000/__cypress/runner/cypress_runner.js:155919:58)
+      at validateType (http://localhost:8000/__cypress/runner/cypress_runner.js:155788:9)
+      at Object.isType (http://localhost:8000/__cypress/runner/cypress_runner.js:155823:7)
+      at <unknown> (http://localhost:8000/__cypress/runner/cypress_runner.js:139862:24)
+      at Object.subjectFn (http://localhost:8000/__cypress/runner/cypress_runner.js:154730:16)
+      at $Cy.verifyUpcomingAssertions (http://localhost:8000/__cypress/runner/cypress_runner.js:153961:31)
+      at onRetry (http://localhost:8000/__cypress/runner/cypress_runner.js:154721:15)
+      at tryCatcher (http://localhost:8000/__cypress/runner/cypress_runner.js:1777:23)
+      at Promise.attempt.Promise.try (http://localhost:8000/__cypress/runner/cypress_runner.js:4285:29)
+      at whenStable (http://localhost:8000/__cypress/runner/cypress_runner.js:154603:70)
+      at <unknown> (http://localhost:8000/__cypress/runner/cypress_runner.js:154503:14)
+      at tryCatcher (http://localhost:8000/__cypress/runner/cypress_runner.js:1777:23)
+      at Promise._settlePromiseFromHandler (http://localhost:8000/__cypress/runner/cypress_runner.js:1489:31)
+      at Promise._settlePromise (http://localhost:8000/__cypress/runner/cypress_runner.js:1546:18)
+      at Promise._settlePromise0 (http://localhost:8000/__cypress/runner/cypress_runner.js:1591:10)
+      at Promise._settlePromises (http://localhost:8000/__cypress/runner/cypress_runner.js:1671:18)
+      at Promise._fulfill (http://localhost:8000/__cypress/runner/cypress_runner.js:1615:18)
+      at <unknown> (http://localhost:8000/__cypress/runner/cypress_runner.js:5420:46)
+  From Your Spec Code:
+      at Context.eval (webpack://todomvc/./cypress/e2e/spec.cy.js:946:29)
+
+
+
+
+  (Results)
+
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Tests:        29                                                                               │
+  │ Passing:      22                                                                               │
+  │ Failing:      5                                                                                │
+  │ Pending:      0                                                                                │
+  │ Skipped:      2                                                                                │
+  │ Screenshots:  5                                                                                │
+  │ Video:        false                                                                            │
+  │ Duration:     45 seconds                                                                       │
+  │ Spec Ran:     spec.cy.js                                                                       │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+  (Screenshots)
+
+  -  /tmp/claude-1000/-home-exedev-shipshape-shakedown/12639675-daae-4fc1-b896-b7b1c5     (1280x720)
+     7b7451/scratchpad/oracle-clone/cypress/screenshots/spec.cy.js/TodoMVC - vanilla-               
+     pilot -- New Todo -- should allow me to add todo items (failed).png                            
+  -  /tmp/claude-1000/-home-exedev-shipshape-shakedown/12639675-daae-4fc1-b896-b7b1c5     (1280x720)
+     7b7451/scratchpad/oracle-clone/cypress/screenshots/spec.cy.js/TodoMVC - vanilla-               
+     pilot -- Mark all as completed -- should allow me to mark all items as completed               
+      -- before each hook (failed).png                                                              
+  -  /tmp/claude-1000/-home-exedev-shipshape-shakedown/12639675-daae-4fc1-b896-b7b1c5     (1280x720)
+     7b7451/scratchpad/oracle-clone/cypress/screenshots/spec.cy.js/TodoMVC - vanilla-               
+     pilot -- Item -- should allow me to mark items as complete (failed).png                        
+  -  /tmp/claude-1000/-home-exedev-shipshape-shakedown/12639675-daae-4fc1-b896-b7b1c5     (1280x720)
+     7b7451/scratchpad/oracle-clone/cypress/screenshots/spec.cy.js/TodoMVC - vanilla-               
+     pilot -- Item -- should allow me to un-mark items as complete (failed).png                     
+  -  /tmp/claude-1000/-home-exedev-shipshape-shakedown/12639675-daae-4fc1-b896-b7b1c5     (1280x720)
+     7b7451/scratchpad/oracle-clone/cypress/screenshots/spec.cy.js/TodoMVC - vanilla-               
+     pilot -- Persistence -- should persist its data (failed).png                                   
+
+
+================================================================================
+
+  (Run Finished)
+
+
+       Spec                                              Tests  Passing  Failing  Pending  Skipped  
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ ✖  spec.cy.js                               00:45       29       22        5        -        2 │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+    ✖  1 of 1 failed (100%)                     00:45       29       22        5        -        2  
+

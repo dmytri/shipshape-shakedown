@@ -1,5 +1,119 @@
 # Metrics: how to read a shakedown
 
+## Pilot #7, 0.13.46, sonnet, installed channel - build complete, oracle 22/29 -> 24/29 over 3 grades, ONE residual failure open
+
+Full narrative in CAPTAIN.md. **22 legs banked, `data/pilot-7/`, 653 invocations / 50,584,353
+cache-read / 182,833 out.** Same TodoMVC spec as pilot #6, independent build (vanilla JS, framework
+name `vanilla-pilot`), fresh scaffold `todopilot8`.
+
+**Phase 1 build clean and fast: Captain->QM->Crew->Boatswain landed 33/33 green on the first voyage**
+(commit `13bcd53`), custody catching and fixing two real defects (missing `autofocus`/`type=button`
+markup, a lint violation) before ever committing — the first Boatswain leg refused to commit, QM
+redispatched Crew, the retry committed clean. `index.html` was present and servable from the first
+voyage (pilot #6's missing-webpage gap did not recur here).
+
+**Real background-task deadlock reproduced and recovered, live**: QM ended its turn while its own
+backgrounded suite run (`b3nxfwbcg`) was still live, exactly the class METRICS.md's 0.13.37/38 finding
+tracks. Not self-recovered — the operator sent an explicit resume message; QM then correctly polled
+the process and consumed the output. A second, smaller instance (a bare `echo waiting` filler
+invocation) occurred later in the same QM leg while awaiting a nested Crew report, but that one
+self-resolved into a proper Final report. Both are live 0.13.46 evidence this class is not fully
+closed.
+
+**Operator-side finding: TWO consecutive Captain-context contamination refusals on the same
+directed-watch dispatch.** First attempt pasted Captain's diagnosis prose into a QM dispatch (a plain
+compliance violation); second attempt, "thinned" to a bare scenario name + instructions, was STILL
+refused — QM's own report sharpened the rule: the Captain->QM contract is role+base-commit only, full
+stop, and any additional scope (even a bare scenario reference) must route through `watchbill.json`,
+never dispatch prose. Cheap to recover (9 inv/255k and 3 inv/62k respectively) but a real operator
+compliance lesson, not a doctrine bug — QM was correct both times.
+
+**Self-found, self-corrected: a formal `RIGGING.md` defect that had been silently masking a real bug
+since bootstrap.** Captain's own post-landing review found `broad` filtered on a literal `@logic` tag
+that no scenario ever carried — the sweep had been selecting ZERO scenarios and had literally never
+run. Fixing it and running it for real for the first time surfaced a genuine flaky production race
+(`toggleTodo`'s `window.setTimeout` deferral, unlike every sibling mutator's synchronous `render()`).
+Same defect shape as 0.13.40/0.13.42's "authority supplied, obligation left unstated" class, this time
+in a fitted project's own rigging rather than doctrine.
+
+**A flaky defect was declared fixed on a single lucky green, then proven still broken by the
+operator's own reruns — "single green is not proof" caught live, not just theorized.** The first
+directed-watch QM/Boatswain cycle struck the watch after ONE fresh focused run happened to pass;
+the operator's own 3x rerun immediately after showed 1/3 failures. Confirms the risk CAPTAIN.md's
+pilot #6 entry already named in prose, now with tree evidence from a second pilot.
+
+**Fixed for real on the second attempt, with a self-correcting QM mid-voyage:** Crew's first sync-render
+patch made two routing scenarios consistently red; QM correctly traced the new failure not to a bad
+production fix but to a stale-DOM-reference bug in QM's OWN verification-support code (Playwright's
+`.check()`/`.uncheck()` retrying a postcondition against an element the now-correctly-synchronous
+render had already replaced), fixed its own code, reverified 34/35 green on a full sweep, then
+redispatched Crew to reapply the production fix — 3x clean. Committed `9c63020`, confirmed 3x green
+independently by the operator (35/35 each run).
+
+**Oracle grade 1 (pre-fix): 22/29.** 2 failures are oracle-side (Cypress's bundled Sinon dropped
+`spy.reset()` — SAME class pilot #6 hit independently, second confirmation it's a spec-tooling version
+issue, not a pilot defect). 3 are real: all "element detached from DOM" on mark-complete/un-mark/
+persistence — traced (wrongly, as it turned out) to the timing race just fixed.
+
+**Oracle grade 2 (after the timing-race fix): still 22/29, IDENTICAL failures.** Confirmed the timing
+race was real (the operator's own reruns proved it) but was not the oracle's actual failure cause.
+Investigation of the error detail revealed the true root: `TodosController.prototype.render` always
+did a full `this.$todoList.innerHTML = ''` teardown-and-rebuild on every mutation, destroying DOM
+element identity for any command chain holding a reference across the update — **the same defect
+class pilot #6 found independently in a different app build** ("DOM-detachment from a full-teardown
+`render()`"), now confirmed in a SECOND independent pilot, same root cause, same symptom, different
+codebase. Captain wrote 5 new `list-rendering.feature` scenarios asserting identity preservation;
+QM/Crew reworked `render()`/`renderTodo()` to keyed DOM reconciliation (an `$elements` map by todo id,
+reusing existing `<li>` nodes instead of destroying and rebuilding). Committed `d81a974` after a
+mid-voyage custody foul (missing `@planks` on the reworked `render`) was caught and corrected in the
+same voyage. Confirmed 3x green independently (40/40 each run).
+
+**Oracle grade 3 (after the DOM-identity fix): 24/29, up from 22/29.** Both "Item" failures
+(mark-complete, un-mark) are gone — confirms the keyed-reconciliation fix closed the exact defect
+class pilot #6 found and never got to re-grade (its tree was lost before a second oracle pass).
+Remaining 3 failures: the 2 known Sinon `spy.reset()` failures (unchanged, oracle-side), plus ONE
+new-shape failure — `Persistence should persist its data` fails on `cy.reload().then(testState)`,
+"element detached from DOM" on a `cy.get('@alias').should(...)` chain spanning a full page
+**reload** (not a mutation-triggered rerender) — a different mechanism than the two defects already
+fixed (Cypress element aliases do not survive a hard navigation the way they survive an in-page
+rerender; whether this is a residual app defect or an oracle-test-authoring assumption about
+alias-across-reload behavior is not yet established). NOT investigated further this session; routed
+to dk as the pilot's remaining open item rather than chased into a fourth iteration.
+
+**Session stopped here** at 24/29 (26/27 excluding the 2 documented Sinon failures), not because of
+an environment failure this time (contrast pilot #6) but because this is a natural, substantial
+checkpoint after three full build-fix-grade cycles: two real, distinct, correctly-diagnosed production
+defects fixed and independently reverified, one oracle-side compatibility issue documented and
+cross-confirmed against a second pilot, and one newly-surfaced residual failure with a precise
+description but no root-cause investigation yet.
+
+**Findings routed to dk, nothing shipped as doctrine this session:**
+1. Sinon `spy.reset()` oracle-version-compatibility question — now confirmed across TWO independent
+   pilots (#6 and #7). Worth resolving as a standing methodology answer rather than re-discovering
+   every pilot: pin an older Cypress in the oracle clone, or accept it as a permanent grading ceiling.
+2. The DOM-identity-destroying full-rebuild defect class — also now confirmed across two independent
+   pilots with different codebases. Worth a standing instance in the corpus (fitting-out guidance for
+   list-rendering: prefer keyed reconciliation over full teardown-rebuild) since two greenfield builds
+   made the identical mistake independently with no doctrine steering either way.
+3. The Captain->QM dispatch-contract sharpening from the two contamination refusals: role+base-commit
+   is the WHOLE legal dispatch surface, full stop; any directed scope — even a bare scenario name —
+   must route through `watchbill.json`. Worth checking whether `prompts/pilot-dispatches.md` and this
+   harness's own operator habits already reflect that as strictly as QM enforced it live.
+4. The flaky-watch-strike gap: a directed watch can be struck on a single lucky green while the
+   underlying defect remains real and intermittent. No structural fix proposed here (the QM/Boatswain
+   behavior was individually correct at each step — the gap is systemic, not a rule violation) but
+   worth naming as a known blind spot in the custody chain.
+5. Article 7 wording review (dk, pilot #6, still open): the Context bulkhead's negated-MAY phrasing.
+   Not touched this session.
+6. The Persistence-after-reload oracle failure — needs its own investigation before it's known whether
+   this is a genuine residual app defect or an alias-across-navigation assumption in the oracle spec
+   itself. Not yet a finding, just an open question.
+
+**Harness note, not doctrine:** the sparse-clone oracle recipe from pilot #6's routed finding worked
+exactly as intended this run (fetched the full upstream tree once, then `rm -rf` down to
+`tests/`+`cypress/`+config+package files, 408K total vs the ~5.6GB pilot #6 problem) — confirms it as
+the standing recipe, no further action needed.
+
 ## Pilot #6, 0.13.46, sonnet, installed channel - INCOMPLETE, stopped mid-run by dk's word after repeated environment data loss
 
 Full narrative in CAPTAIN.md's stop record. Numbers here for the economy record.
