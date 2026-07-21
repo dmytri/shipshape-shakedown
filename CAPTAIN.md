@@ -35,6 +35,32 @@ baseline it was supposed to rescue.
    plus green tests, per the probe-first rule.** The missing branch is primary1's: do not
    let the run outlast the budget. Deepest finding of the run.
 
+**FIXED SAME SESSION on dk's word ("fix"). Deck is now 0.13.50, installed, pushed,
+tests 5/5 green, both repos clean.** One version per disjoint seam:
+
+- **0.13.49, the hook.** Reads `agent_transcript_path` (the finishing subagent's own)
+  instead of `transcript_path` (the parent session file), and treats a task the
+  runtime still reports `running` as unconsumed even where its output was read
+  part-way. Field set established by capturing a real SubagentStop payload, not
+  inferred. **Verified against all four real transcripts from the probe: 3/3 stalls
+  block, each naming its own task, clean leg passes — was 0/3.**
+- **0.13.50, the doctrine text.** Wait policy inverted to name the act first: raise
+  the foreground budget with a covering timeout and keep the run in the foreground;
+  detaching is the fallback, and a role that detaches consumes in-turn or reports a
+  blocker.
+
+**Correction to finding 1 above, made while building the fix:** the phantom task
+reached the session transcript because THE OPERATOR mined a sibling's transcript and
+the `jq` output quoted its launch announcement. Not a sibling writing to a shared
+file. The defect is therefore broader — any text quoting a launch line manufactures
+a phantom launch, including a role `cat`-ing a log.
+
+**WHAT IS STILL OWED, and it is the next thing this workstream does:** 0.13.50 is a
+textual ship. **Nothing has yet shown it changes behaviour.** It owes a probe with
+0.13.48 as control, same forced >200s sweep, same skills-only primary arm. **Bar to
+beat: 1/4 clean.** Do not let the next pilot stand in for it — a pilot yields the
+augmentation arm only, as this order already notes.
+
 **Do not run the next pilot against 0.13.48's background story as if it were sound.**
 
 Harness: the operator contaminated `slow_steps.js` with a CAPTAIN.md-citing comment and

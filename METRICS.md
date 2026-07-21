@@ -32,6 +32,15 @@ leg is skills-only. **0.13.48 does not clear validation on this evidence.**
 Both plugin legs DID fire the guard — and both got a message naming task **`bz3ts01v0`, which
 neither of them launched.** It was `primary2`'s task, a sibling agent's.
 
+**CORRECTED after the fix was built (same session): the pollution vector was THE OPERATOR, not
+a sibling agent writing to a shared file.** `bz3ts01v0` reached the session transcript because
+the operator ran `jq` to mine primary2's transcript, and that command's tool_result — quoting
+primary2's launch announcement verbatim — landed in the session file as ordinary output. The
+guard then read the quotation as an event. So the defect is sharper than "the file is shared":
+**any text that quotes a launch announcement manufactures a phantom launch**, including a role
+`cat`-ing a log. Mining a transcript mid-run is a normal harness act and it armed the guard
+against two innocent legs.
+
 Reproduced by running the hook's own awk against two files at aug2's stop time:
 
 | Transcript the algorithm reads | Unconsumed set it computes |
@@ -85,6 +94,33 @@ outlast the budget, which is the branch the sentence does not name.
 Note the harness's own `prompts/preamble.md` background-task lines push the same way (*"Any
 command that may exceed 90 seconds must run with run_in_background:true"*). These legs did NOT
 carry those lines, by design — and 3/4 still backgrounded. The pull is doctrinal, not operator.
+
+### FIXED SAME SESSION on dk's word ("fix"), two versions, disjoint seams
+
+**0.13.49 — the hook.** Payload capture (a throwaway SubagentStop hook, run against a trivial
+subagent) established the field set empirically rather than by inference: the payload carries
+BOTH `transcript_path` (the parent session file) and **`agent_transcript_path`** (the finishing
+subagent's own), plus a **`background_tasks`** array with per-task `id`/`type`/`status`. Two
+changes: read the agent's own transcript, and treat a task the runtime still reports `running`
+as unconsumed even where its output file was read, because a part-way read names the path and
+says nothing about how the run ended. `background_tasks` is **session-wide** — it listed the
+operator's own shell task alongside the subagent's — so it never attributes alone and is
+intersected with what the agent's own transcript shows it launched.
+
+**Verified against all four real transcripts from this probe: 3/3 stalls now block, each naming
+its OWN task, and the clean leg passes. It was 0/3 before** (2 blocked on a foreign task, 1 —
+aug2 — not caught at all). This is the regression test the previous fix could not have had,
+because it was validated against a hand-mined subagent transcript rather than the runtime's
+actual input. `tests/hooks.sh` 158 assertions green, +5 new covering both directions of the
+transcript choice, the mid-flight read, and a running Agent child still not being the fault.
+
+**0.13.50 — the doctrine text.** The Wait policy's clause is inverted to name the act first:
+raise the foreground budget with a timeout that covers the run and keep it in the foreground,
+where its exit is the role's own next line; detaching is the fallback for a run no budget
+covers, and a role that detaches consumes the output in the same turn or names it as a blocker.
+Ships on textual footing. **The behavioural claim that this raises compliance is NOT made and
+owes its own probe against 0.13.48 as control** — that probe is the next thing this workstream
+owes, and its bar to beat is this run's 1/4.
 
 ### Harness findings
 
