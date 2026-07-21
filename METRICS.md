@@ -1,5 +1,71 @@
 # Metrics: how to read a shakedown
 
+## 0.13.50 validation probe, 12 legs, sonnet, HEAD-text both arms (2026-07-21) — NULL
+
+Rubric fixed and committed BEFORE any leg ran (`52e758f`); full account
+`designs/bgact/results.md`; banked `data/bgact-0.13.50/`. **273 inv / 16,129,878 cache.
+12/12 sonnet.** Treatment 0.13.50 (HEAD), control 0.13.48 from a worktree at `e384db1`,
+both arms skills-only so no hook fires in either. Forced 220s sweep against a ~120s
+default budget, so every leg met the condition — the denominator problem the n=8 rerun
+flagged is closed.
+
+**Treatment 3/6 clean, control 2/6 clean. NULL by the rubric's own pre-fixed rule
+("a difference of one leg is not a result" at n=6). 0.13.50's behavioural claim is NOT
+earned; it keeps its textual footing and nothing more.**
+
+**The mechanism is confirmed perfectly, 12/12, and that is what makes the null
+informative:**
+
+| | Clean | Stalled |
+|---|---|---|
+| Set a covering timeout | **5** | **0** |
+| Did not | **0** | **7** |
+
+Not one leg that raised the foreground budget stalled; not one that left it default
+survived. **0.13.50 names the right act and does not cause roles to take it.** Two
+CONTROL legs took it spontaneously under the old text (c1 `330000`, c3 `300000`); three
+treatment legs skipped it with the new sentence in context, markers confirmed per
+transcript.
+
+**Standing lesson, and it corrects how the corpus reads 0.13.42:** naming an act works
+where the obligation is UNOBSERVABLE (a held dependency produces no failure — 0/4 → 4/4),
+not where it is merely unperformed. Here the act is a tool parameter a role either
+reasons about or does not, and prose about it moved nothing. **Two versions of wording
+have now failed on this class. The next candidate is machinery, not text** — the hook
+(0.13.49, still untested live), or the runtime resumption doctrine already asks for in
+the same paragraph.
+
+**THE RECOVERY COUNT IS NOT A STABLE STATISTIC, and the operator got it wrong twice before
+admitting that.** First call, mid-run: "zero permanent deadlocks", on seeing c2, c4 and t3
+resume. Second call, at write-up: "3 recovered, 4 stayed dead". **Then t6 recovered while
+that very sentence was being committed**, making it 4/7 — and nothing establishes the
+count has stopped moving. At 17:28Z the standing tally is **4 recovered (t3, t6, c2, c4)
+and 3 not (t5, c6, and c5, which holds a production edit with no run record)**, measured
+19 minutes after the last leg stopped and with no reason to call it final.
+
+**The methodological lesson outranks the number: a stalled leg's outcome is a function of
+when you look, so "did it deadlock" is not a property that can be read off a snapshot.**
+Every prior figure in this corpus for this class — pilot #2's, 0.13.33's, the n=8 rerun's
+1/3, this session's earlier 3/3 — was taken as a snapshot and none recorded an observation
+time. Those rates measure the operator's patience as much as the runtime's behaviour.
+**Any future probe on this class must fix an observation horizon in advance and state it.**
+
+What survives regardless: a background completion SOMETIMES resumes a finished subagent
+turn, which contradicts the absolute wording in both `SKILL.md` and
+`background-custody.sh`'s header. And it plainly does not always — 3 legs have produced
+nothing 19 minutes on. **The deciding mechanism is unexplained** (4/7 here against 0/3 in
+the previous probe, itself a snapshot). Open question, not a finding.
+
+**Economy:** mean cost is flat (23.0 clean vs 22.6 stalled inv) but the distribution is
+not — a stall that stays dead is cheap and worthless (c6 12 inv, produced nothing), a
+stall that recovers is the most expensive outcome on the board (c2 39 inv / 2.63M). The
+clean path is the only one both cheap and complete.
+
+**Cross-role rider answered without being dispatched:** t1's nested Boatswain hit the same
+fault under treatment text and disclosed it in its own report, rescued by its parent QM.
+Not QM-specific; belongs to any role running the slow sweep. The dedicated Boatswain/Crew
+arm is no longer owed.
+
 ## background-task probe, 0.13.48, sonnet, 4 legs (2026-07-21) — 0.13.48 DOES NOT CLEAR VALIDATION
 
 Discharges the primed order's item 1, the workstream priority. Design fixed in advance in

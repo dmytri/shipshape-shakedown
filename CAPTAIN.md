@@ -1,6 +1,41 @@
 # Captain notes - shipshape-shakedown workstream
 
 <!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
+## >>> 2026-07-21, LATEST: 0.13.50's PROBE RAN. NULL. STOP WRITING TEXT FOR THIS. <<<
+
+12 legs, n=6/arm, rubric fixed and committed before any leg ran (`52e758f`). Full account
+`designs/bgact/results.md`, banked `data/bgact-0.13.50/`. 273 inv / 16.1M cache, 12/12 sonnet.
+
+**Treatment 3/6 clean, control 2/6. NULL by the rubric's own pre-fixed rule.** 0.13.50 keeps
+its textual footing and **must not be recorded as a validated behavioural fix.** No revert
+indicated — the text it replaced was worse, it ordered the failing branch — but the hope
+attached to it is gone.
+
+**The mechanism is confirmed 12/12 and that is what makes the null useful:** every leg that
+set a covering timeout passed (5/5); every leg that did not, stalled (7/7). 0.13.50 names the
+right act. It does not cause roles to take it — **two CONTROL legs took it spontaneously under
+the old text**, three treatment legs skipped it with the new sentence in context.
+
+**Corrects how the corpus reads 0.13.42:** naming an act works where the obligation is
+UNOBSERVABLE (a held dependency produces no failure). It does nothing where the act is a tool
+parameter a role either reasons about or does not. **Two versions of wording have now failed
+on this class. The next candidate is machinery, not prose** — the hook (0.13.49, still untested
+live; needs a fresh session) or the runtime resumption doctrine already asks for in the same
+paragraph. Do not ship a third wording.
+
+**Rider answered without being dispatched:** t1's nested Boatswain hit the same fault under
+treatment text and disclosed it itself. Not QM-specific. The Boatswain/Crew arm is no longer owed.
+
+**METHOD DEBT, and it taints every rate this corpus holds for this class:** a stalled leg
+sometimes resumes from its background completion and finishes clean. The operator called the
+recovery count wrong twice, and a leg recovered again while the second correction was being
+committed. **"Did it deadlock" is a function of when you look.** Pilot #2's, 0.13.33's, the
+n=8 rerun's 1/3, this session's earlier 3/3 — all snapshots, none with an observation time.
+**Any future probe here fixes an observation horizon in advance and states it.**
+
+<!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
+
+<!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
 ## >>> 2026-07-21, LATER: THE PRIMED ITEM 1 PROBE RAN. 0.13.48 IS NOT GOOD. <<<
 
 Item 1 below is DISCHARGED as a probe and its conclusion is not the one the order
