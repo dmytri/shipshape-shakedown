@@ -2,8 +2,9 @@
 
 ## Pilot #7, 0.13.46, sonnet, installed channel - PASSED. 28/29, 0 failing, 1 pending, "All specs passed!"
 
-Full narrative in CAPTAIN.md. **22 legs banked, `data/pilot-7/`, 653 invocations / 50,584,353
-cache-read / 182,833 out.** Same TodoMVC spec as pilot #6, independent build (vanilla JS), fresh
+Full narrative in CAPTAIN.md. **21 legs banked, `data/pilot-7/`, 597 invocations / 46,015,443
+cache-read / 170,813 out.** (An earlier draft said 653/50.58M/182.8k — that double-counted the QM
+reliability leg, banked once mid-run at 56 inv and again at completion at 60. Corrected.) Same TodoMVC spec as pilot #6, independent build (vanilla JS), fresh
 scaffold `todopilot8`. Matches pilot #5, the previous cleanest run.
 
 > **CORRECTION (same session).** Grades 1-3 below (22/29, 22/29, 24/29) were run WITHOUT the mandatory
