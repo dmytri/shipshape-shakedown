@@ -1,5 +1,104 @@
 # Metrics: how to read a shakedown
 
+## background-task probe, 0.13.48, sonnet, 4 legs (2026-07-21) — 0.13.48 DOES NOT CLEAR VALIDATION
+
+Discharges the primed order's item 1, the workstream priority. Design fixed in advance in
+CAPTAIN.md: primary arm skills-only (no hook, no harness background-task lines), augmentation
+arm plugin-installed with 0.13.48 live, forced >200s sweep, marker binary. Banked
+`data/bgact-0.13.48/`. Model 4/4 `claude-sonnet-5`, zero escalation (checked per invocation,
+including primary1's nested Crew, which was dispatched `model` unset and still ran sonnet).
+
+Fixture change: `slow_steps.js` settling window 150s -> **220s**, because the prior probe's
+denominator was wrong — only 3 of 8 legs crossed the boundary at 150s. Verified 221s wall
+before any leg ran.
+
+| Leg | Arm | Inv | Cache | Out | Outcome |
+|---|---|---|---|---|---|
+| primary1 | skills-only | 27 | 1,669,254 | 14,939 | **PASS** — full voyage, 2 runrecords, Crew dispatched, clean report |
+| primary2 | skills-only | 11 | 581,215 | 9,753 | **FAIL** — ended turn "waiting for its completion signal", sweep `bz3ts01v0` unconsumed |
+| aug1 | plugin, hook live | 24 | 1,472,832 | 7,003 | **FAIL** — relaunched detached, ended turn on "waiting for exit signal" |
+| aug2 | plugin, hook live | 22 | 1,335,683 | 15,294 | **FAIL** — read its output file mid-flight, not to the summary line, then stopped |
+| **total** | | **84** | **5,058,984** | **46,989** | **3/4 FAIL** |
+
+Tree-verified on every failing leg: no commit, no runrecord, sweep never consumed. Executing
+runs (`bin/runs.sh`): primary1 5, aug1 2, primary2 1, aug2 1.
+
+**The augmentation arm did not beat the baseline — it was WORSE.** The design predicted
+skills-only as the weak arm and the hook as the catch. Both plugin legs failed; the one clean
+leg is skills-only. **0.13.48 does not clear validation on this evidence.**
+
+### ROOT CAUSE, tree-evidenced by reproduction: `background-custody.sh` reads the WRONG TRANSCRIPT
+
+Both plugin legs DID fire the guard — and both got a message naming task **`bz3ts01v0`, which
+neither of them launched.** It was `primary2`'s task, a sibling agent's.
+
+Reproduced by running the hook's own awk against two files at aug2's stop time:
+
+| Transcript the algorithm reads | Unconsumed set it computes |
+|---|---|
+| aug2's own subagent jsonl | **empty** — its real stall is invisible |
+| the MAIN SESSION jsonl | **`bz3ts01v0`** — exactly what the hook's message named |
+
+So `transcript_path` in the SubagentStop payload resolves to the **parent session transcript**,
+which aggregates every agent's launches, not the finishing subagent's own. Three consequences,
+all observed live:
+
+1. **False positive** — fires on a sibling's or the main loop's unconsumed task.
+2. **False negative** — cannot see the finishing subagent's own unconsumed work at all. aug2's
+   partial read of its own output file also cleared its token under the path test, since
+   consumption is "any later line naming the path", and a mid-flight read names the path
+   without reaching the summary line.
+3. **Re-entrancy then guarantees the real deadlock passes** — the role investigates the foreign
+   task, correctly concludes it is not its own, stops again, and `stop_hook_active` lets the
+   second stop through by design.
+
+This is why 0.13.48 validated: it was proven against pilot #7's **subagent** transcript, mined
+by hand, in four states. That file is not the file the hook receives at runtime. The fix is
+correct in its logic and pointed at the wrong input.
+
+### THE CANDIDATE FIX TEXT IS WRONG, and the role that does not fail is why
+
+CAPTAIN.md's candidate act was *"before ending a turn, read to its summary line the output file
+of every command this turn backgrounded."* **primary1, the only clean leg, never backgrounded
+anything.** It passed `timeout: 330000` on a plain foreground Bash call — three times, at
+3m46s, 3m51s and 3m44s — and the runtime's ~120s auto-background never fired, because the
+runtime's default is a *parameter*, not a wall. The candidate text would not have applied to
+primary1 at all, and aug2 arguably satisfied it while still deadlocking.
+
+**The probe changed the finding, exactly as the probe-first rule predicts.** Sharper candidate,
+owed its own probe: *a command whose expected duration exceeds the default foreground budget
+carries an explicit timeout that covers it* — the run then never backgrounds and no deadlock is
+reachable. This is an act with a transcript trace, like `npm outdated` in 0.13.42.
+
+### AND DOCTRINE ITSELF ORDERS THE FAILING BEHAVIOUR
+
+`skills/shipshape/SKILL.md:357`: *"Where a run outlasts the runtime's foreground command budget,
+the role runs it detached and resumes on its exit signal, rather than polling."* A subagent that
+ends its turn is **not resumed** by a background completion — the same sentence's next clause
+concedes it: *"A runtime that spawns roles SHOULD carry this rule as machinery... A skill-only
+agent holds it by discipline, and discipline alone has been observed to fail here."* Doctrine
+assumes a runtime capability that does not exist for subagents, then routes roles into it. All
+three failing legs followed this sentence correctly. **This is the deepest finding of the run
+and it is textual — it is visible in the artifact.** primary1 succeeded by making the run not
+outlast the budget, which is the branch the sentence does not name.
+
+Note the harness's own `prompts/preamble.md` background-task lines push the same way (*"Any
+command that may exceed 90 seconds must run with run_in_background:true"*). These legs did NOT
+carry those lines, by design — and 3/4 still backgrounded. The pull is doctrinal, not operator.
+
+### Harness findings
+
+1. **The operator contaminated the fixture.** The 220s comment cited `CAPTAIN.md` and dated
+   operator rationale. **3 of 4 legs stripped it as a Captain/QM bulkhead violation** and were
+   RIGHT to. Fixed to carry the technical fact only. The Nth fixture-realism instance; this one
+   was introduced this session, one hour after reading the meta-finding that warns about it.
+2. **Concurrent legs are not isolated.** Background task ids and the process table are
+   session-wide. aug1 enumerated sibling legs' output files and `kill`ed a PID it found via
+   `ps aux`. Same class as the old pgrep-matched-a-concurrent-session bug. It did not corrupt
+   these verdicts (every failure is independently tree-evidenced) but parallel legs on one
+   state can cross-contaminate. Run future background-class probes serially, or accept it
+   knowingly.
+
 ## Pilot #7, 0.13.46, sonnet, installed channel - PASSED. 28/29, 0 failing, 1 pending, "All specs passed!"
 
 Full narrative in CAPTAIN.md. **21 legs banked, `data/pilot-7/`, 597 invocations / 46,015,443

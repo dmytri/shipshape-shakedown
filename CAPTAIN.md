@@ -1,6 +1,48 @@
 # Captain notes - shipshape-shakedown workstream
 
 <!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
+## >>> 2026-07-21, LATER: THE PRIMED ITEM 1 PROBE RAN. 0.13.48 IS NOT GOOD. <<<
+
+Item 1 below is DISCHARGED as a probe and its conclusion is not the one the order
+expected. Full numbers in METRICS.md, banked `data/bgact-0.13.48/`. 4 legs, sonnet,
+84 inv / 5.06M cache. Forced 220s sweep, so every leg met the condition.
+
+**3 of 4 legs deadlocked, and both plugin-arm legs were among them. The one clean leg
+was skills-only.** The hook made things no better; the augmentation arm lost to the
+baseline it was supposed to rescue.
+
+**Three findings, all routed to dk, nothing shipped:**
+
+1. **`background-custody.sh` reads the parent session transcript, not the finishing
+   subagent's.** BEHAVIOURAL BUT PROVEN BY REPRODUCTION, not inference: both plugin
+   legs' guard messages named a task `bz3ts01v0` that *a sibling leg* launched. Running
+   the hook's own awk at aug2's stop time gives an empty set against aug2's own
+   transcript and exactly `bz3ts01v0` against the main session file. So it false-positives
+   on siblings, false-negatives on the actual stall, and re-entrancy then passes the real
+   deadlock. 0.13.48 validated against pilot #7's hand-mined *subagent* transcript — not
+   the file the hook is handed at runtime. **The logic is right and the input is wrong.**
+2. **The candidate act text in item 1 is WRONG.** primary1, the only clean leg, never
+   backgrounded anything: it set `timeout: 330000` on a foreground Bash call and the
+   ~120s auto-background never fired, three times over. The budget is a parameter, not a
+   wall. Replacement candidate, owes its own probe: *a command whose expected duration
+   exceeds the default foreground budget carries an explicit timeout that covers it.*
+   Probing changed the finding again — that is now the rule's Nth consecutive instance.
+3. **Doctrine orders the failing behaviour.** `skills/shipshape/SKILL.md:357` says a run
+   that outlasts the foreground budget is *"run detached and resumes on its exit signal"* —
+   but a subagent that ends its turn is never resumed, which the very next clause concedes
+   while asking a runtime to supply machinery that does not exist here. All three failing
+   legs obeyed this sentence. **TEXTUAL — visible in the artifact, ships on a close read
+   plus green tests, per the probe-first rule.** The missing branch is primary1's: do not
+   let the run outlast the budget. Deepest finding of the run.
+
+**Do not run the next pilot against 0.13.48's background story as if it were sound.**
+
+Harness: the operator contaminated `slow_steps.js` with a CAPTAIN.md-citing comment and
+3 of 4 legs correctly stripped it as a bulkhead violation — fixed. And concurrent legs
+share task ids and the process table (aug1 read siblings' output files and killed a PID
+off `ps aux`); run background-class probes serially.
+
+<!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
 ## >>> PRIMED ORDER FOR THE NEXT PILOT (set 2026-07-21, after #7 passed) <<<
 
 **Run `bin/preflight.sh` first. It is ordered step 0 and it exits non-zero when the
