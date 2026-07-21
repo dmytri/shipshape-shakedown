@@ -21,39 +21,74 @@ level. Two ships since pilot #7, both textual, both with live evidence:
   built to block exactly that. Now matches the output path. Proven against #7's real
   transcript in four states.
 
-**What the next pilot is FOR — one question, already designed:**
+**THE MAIN THING IS THE DEADLOCK, not the tier.** (Corrected 2026-07-21 on dk's
+challenge — the first draft of this order ranked by what a pilot answers cheaply
+rather than by severity.)
 
-> Does naming the DOM tier candidates (0.13.47) change what Captain picks?
+A tier mistake gives a slow correct answer. A stall gives **no** answer and no signal
+that you are waiting for one — it is silent, it needs a human to notice, and it has
+now fired four times (pilot #2 attempt 1; attempt 2's fork, 8.5h; 0.13.33 tw13,
+8m26s dead; #7's QM, hand-resumed). **A stall is not a separate concern from latency;
+it is latency's worst case — unbounded, plus a human rescue.**
 
-Marker, fix it before the leg reports: which tier does Captain open Voyage 1 on, and
-is the choice recorded as a decision in `RIGGING.md`. Baseline to beat is #7's
-Captain, which chose Playwright/Chromium on a forecast, never stood a cheaper tier
-up, and was wrong — prior pilots built this same spec below a real browser and
-reached the same grade. **A jsdom or happy-dom choice is the pass.** This is a
-Captain-only question; it is answered by the bootstrap leg, before a voyage sails.
+The sharp edge: **the skills-only baseline has no hook.** 0.13.48 hardened the plugin
+layer, but skills are canonical and sufficient alone, and text alone measured 1/3
+when the condition actually fires. Jolly has a slow suite. That is the profile.
+
+*Free datum, no fixture needed:* a greenfield pilot crosses the ~120s boundary
+naturally — #7's stall hit on QM's FIRST sweep, 7m38s, because every scenario timed
+out at 15s before any app existed. So the next pilot yields the **augmentation arm**
+(does the 0.13.48 fix now catch it) for nothing. Watch for it and mine it.
+
+*What it does NOT yield:* the baseline arm. Does doctrine text hold with no hook at
+all? That needs its own skills-only probe and it is the one that matters. Design in
+the behavioural-candidates section below; run it before the tier question.
+
+**Free rider, same pilot, zero extra cost:** does naming the DOM tier candidates
+(0.13.47) change what Captain picks? Marker fixed before the leg reports: which tier
+does Captain open Voyage 1 on, and is the choice recorded in `RIGGING.md`. Baseline
+to beat is #7's Captain, which chose Playwright/Chromium on a forecast, never stood a
+cheaper tier up, and was wrong. **jsdom or happy-dom is the pass.** Answered by the
+bootstrap leg before a voyage sails — worth having, not worth prioritising over the
+stall.
 
 Expect ~28/29 on the oracle. That is the clean pass with the localStorage exemption,
 matching pilots #5 and #7. **Do not chase the 29th** — it is `should persist its
 data`, exempted by dk's 2026-07-14 ruling, and it will show as `1 pending`.
 
-**Two behavioural candidates that owe probes and MUST NOT ship on a read:**
+**Two behavioural candidates that owe probes and MUST NOT ship on a read. Run 1 first
+— it is the priority of this whole workstream, above the pilot itself.**
 
-1. **Tier escalation on attempt, not forecast.** 0.13.47 named the candidates but
-   left the escalation trigger as *"cannot be observed below it"* — a prediction
-   nothing tests. Candidate: *"a cheaper tier has been attempted and the behaviour
-   observed to be unobservable there."* Probe it, or let the next pilot's Captain
-   answer whether the catalog alone was enough.
-2. **The background-task rule as an act.** Doctrine states a prohibition — *never
-   end your turn waiting* — and roles keep violating it under pressure (4 live
-   occurrences now, including #7's QM, which needed a hand resume). 0.13.48 hardens
-   the hook, but **hooks only augment; the skills-only baseline carries this in text
-   alone.** The proven pattern is naming the act, not restating the prohibition
-   (0.13.42 went 0/4 -> 4/4 that way): *"before ending a turn, read to its summary
-   line the output file of every command this turn backgrounded."* Behavioural,
-   owes a probe. Probe design: primary arm skills-only with no hook and no harness
-   background-task lines, augmentation arm plugin-installed, and force the ~120s cap
-   with a >200s sweep so every leg tests the condition — last probe's denominator
-   was wrong because only 3 of 8 legs crossed it.
+1. **THE BACKGROUND-TASK RULE AS AN ACT.** Doctrine states a prohibition — *never end
+   your turn waiting* — and roles keep violating it under pressure. Prohibitions are
+   the weak instrument; the corpus's own proven pattern is **naming the act**
+   (0.13.42 went 0/4 -> 4/4 that way, by naming `npm outdated` instead of restating
+   an obligation). Candidate text:
+
+   > Before ending a turn, read to its summary line the output file of every command
+   > this turn backgrounded.
+
+   An act with an observable trace in the transcript, checkable where *"don't wait"*
+   is not. **This must land in skill text: hooks only augment, and a consuming
+   project on the skills channel has no hook at all.**
+
+   Probe design, fixed in advance:
+   - **Primary arm: skills-only.** No hook, no harness background-task lines. This is
+     the baseline being tested and the only arm that answers the real question.
+   - **Augmentation arm:** plugin-installed, 0.13.48's hook live.
+   - **Force the condition.** Last probe's denominator was wrong — only 3 of 8 legs
+     crossed the ~120s cap, so the rate was 1/3 not 1/8. Use a >200s sweep so every
+     leg tests it. (A greenfield pilot's first sweep crosses naturally; a probe
+     should not rely on that accident.)
+   - **Marker:** does the turn end with a backgrounded output never read, yes/no.
+   - **Probe the role that does not fail**, per the standing rider — Boatswain and
+     Crew on the same state, not only QM.
+
+2. **Tier escalation on attempt, not forecast.** 0.13.47 named the candidates but
+   left the trigger as *"cannot be observed below it"* — a prediction nothing tests.
+   Candidate: *"a cheaper tier has been attempted and the behaviour observed to be
+   unobservable there."* Lower priority: the catalog alone may suffice, and the next
+   pilot's Captain answers that for free.
 
 **Still open, untouched:** Article 7's negated-MAY wording (from #6); the
 flaky-watch-strike gap — a directed watch struck on one lucky green while the defect
