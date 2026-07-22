@@ -39,6 +39,20 @@ previous probe established that background task ids and the process table are
 session-wide and parallel legs cross-contaminate (aug1 killed a PID it found via
 `ps aux`). Any leg that escalates above sonnet is void.
 
+## Dispatch form — and why the harness's own safety lines are OMITTED
+
+Installed-plugin mode per `prompts/preamble.md`: `subagent_type: shipshape:qm`, minimal
+prompt, carrying "Work only inside the project root." (the thin plugin dispatch has
+leaked without it once).
+
+**The background-task lines are deliberately NOT carried.** They are the operator's
+belt-and-braces and they instruct the role to do precisely what the hook exists to
+enforce. Carrying them would suppress the fault and leave the guard's blocking path
+untested — the run would report a pass it never earned. This also keeps these legs
+comparable to the declared prior, whose legs carried no such lines either. Stated here
+because omitting a safety line is the kind of choice that must be on the record before
+the legs run, not explained afterwards.
+
 ## Channel verification
 
 Empirical, never by timestamp, and never by plugin parity — parity passed while the
