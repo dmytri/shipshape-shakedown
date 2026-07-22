@@ -67,6 +67,7 @@ evidence about background custody.
 central mechanism doctrine ORDERS roles to destroy.** `bin/fixture-check.sh`, shipped the
 same session, would not catch it — it validates fixture sources, not whether doctrine tells a
 role to dismantle them. **A forcing mechanism no role is authorised to delete is owed before
+the next attempt at this class.**
 
 **BUILT SAME DAY: `tidewatch14`.** The suite is slow because the PRODUCT is — an annual
 tide table for each of 120 stations, a harmonic sum over 37 constituents walked across the
@@ -75,8 +76,6 @@ against no failing target. Verified **6/6 green by construction at 168s**, clear
 ~120s budget by real work; `bin/fixture-check.sh` clears it. The flaky-strike gap likewise
 got its fixture (`tidewatch15`, a real I/O race, 10 green / 15 red over 25 runs) and a
 rubric fixed in advance.
-
-the next attempt at this class.**
 
 ### FINDING 3: the 12/12 mechanism table is NOT deterministic
 
