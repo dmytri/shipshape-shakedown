@@ -1,6 +1,34 @@
 # Captain notes - shipshape-shakedown workstream
 
 <!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
+## >>> 2026-07-21 late: A PLUGIN INSTALL LEFT A DANGLING PATH AND KILLED THE WHOLE PLUGIN SILENTLY <<<
+
+The restart taken to exercise 0.13.49's hook live produced a session with **no shipshape
+skills, no agents and no hooks at all.** Cause: the 18:07:55 install wrote
+`installPath: .../shipshape/0.13.50`, **a directory that did not exist** — the content
+was at `.../shipshape/daf0443ae342`.
+
+**Everything else read correct**: version 0.13.50, commit `daf0443`, fresh timestamp,
+and `bin/preflight.sh`'s plugin-parity check PASSED. The only defect was a path, and the
+only visible symptom was `shipshape:*` agent types and skills missing from a registry
+nobody reads. **A wave could have run "on the installed channel" while serving nothing.**
+This is the same hazard class as the stale-snapshot rule, but invisible to every check the
+harness had.
+
+**FIXED, harness-side:** `bin/preflight.sh` now resolves `installPath` and requires
+`skills/` and `hooks/` under it. Both failure branches tested (missing dir; dir present
+but incomplete), and it passes on the repaired install. Reinstalling repaired the registry
+(now `daf0443ae342`) and also materialised the `0.13.50` directory, so the original
+dangling state is no longer reproducible from the cache — the mechanism that produced it
+is NOT established, only its signature.
+
+**Still owed and still blocked: 0.13.49's hook has never run live.** The repair postdates
+this session, so preflight correctly FAILs on a stale snapshot. It needs one more restart,
+then channel verification by marker-grep on a dispatched leg — never by timestamp.
+
+<!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
+
+<!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
 ## >>> 2026-07-21, LATEST: 0.13.50's PROBE RAN. NULL. STOP WRITING TEXT FOR THIS. <<<
 
 12 legs, n=6/arm, rubric fixed and committed before any leg ran (`52e758f`). Full account

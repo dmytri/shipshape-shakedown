@@ -52,6 +52,24 @@ if [ -d "$HOME/shipshape" ]; then
   if [ "$repo_v" = "$inst_v" ]; then say OK "plugin $inst_v == repo $repo_v"
   else say FAIL "installed $inst_v != repo $repo_v - reinstall"; fail=1; fi
 
+  # The registry can name a directory that was never created, and everything
+  # else still reads correct: right version, right commit, right timestamp,
+  # parity passes. Only the path is missing, so the plugin loads NOTHING - no
+  # skills, no agents, no hooks - while the session looks installed. Live
+  # 2026-07-21: an install wrote installPath .../shipshape/0.13.50 when the
+  # content sat at .../shipshape/daf0443ae342; every shipshape:* agent type
+  # and skill silently vanished, and the only visible symptom was their
+  # absence from a registry nobody reads. A wave could run "on the installed
+  # channel" serving nothing. Check the path, not just the manifest.
+  inst_path=$(grep -A6 '"shipshape@dmytri-shipshape"' "$HOME/.claude/plugins/installed_plugins.json" 2>/dev/null | sed -n 's/.*"installPath": "\([^"]*\)".*/\1/p' | head -1)
+  if [ -z "$inst_path" ]; then
+    say FAIL "no installPath in the plugin registry - reinstall"; fail=1
+  elif [ -d "$inst_path/skills" ] && [ -d "$inst_path/hooks" ]; then
+    say OK "installPath resolves ($(basename "$inst_path"))"
+  else
+    say FAIL "installPath $inst_path is MISSING skills/ or hooks/ - the plugin loads nothing despite a correct-looking manifest. Reinstall: yes | npx plugins add dmytri/shipshape"; fail=1
+  fi
+
   # session snapshot: plugin resolution pins at PROCESS start, not conversation
   inst_epoch=$(date -d "$(grep -A6 '"shipshape@dmytri-shipshape"' "$HOME/.claude/plugins/installed_plugins.json" 2>/dev/null | sed -n 's/.*"installedAt": "\([^"]*\)".*/\1/p' | head -1)" +%s 2>/dev/null || echo 0)
   # Walk up to the owning `claude` process - $PPID is this shell, whose start
