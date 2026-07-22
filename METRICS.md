@@ -1,5 +1,38 @@
 # Metrics: how to read a shakedown
 
+## 0.13.57 VALIDATED LIVE, and it exposed 0.13.59 (2026-07-22, post-restart, installed channel)
+
+**The first fix shipped this session with live behavioural evidence, and it arrived by
+breaking a voyage.** One dispatched `shipshape:qm` leg on `tidewatch13`, 0.13.58 installed.
+
+**0.13.57 works.** The leg met a production failure, had no spawn tool, tried to assume Crew,
+and custody denied it: *"qm MUST NOT write src/tide.js. Production code belongs to Crew"*.
+**Tree-verified, not report prose: the edit did not land, `git diff --stat` on the seam is
+empty.** Before 0.13.57 that same write sailed through in four legs.
+
+**And the deny was correct while the voyage still could not continue** - the contradiction:
+
+- Role transitions said a role that cannot spawn *assumes* the next role.
+- Write custody keys the acting role off the dispatch, so an assumed role's writes arrive
+  under the ASSUMING role's identity and are denied.
+
+**Not a regression.** In any project whose `cwd` is the project root the deny would always
+have fired; the fail-open hid it in every sim this corpus has ever run.
+
+**The leg found the fix unprompted:** it ended in a blocker carrying the Crew dispatch
+payload for its caller - which is doctrine's own flat hand-off, the shape QM already uses
+for Boatswain. 0.13.59 makes the fallback stop at the write scope: a role that cannot spawn
+is not thereby licensed to write what it could not write anyway. The fallback keys on *the
+agent* being unable to spawn, true of a subagent and false of the session that spawned it,
+so the hand-back always has somewhere to go.
+
+**Operator note, kept visible:** the first draft of 0.13.59 put the live evidence INTO the
+doctrine text. `tests/style.sh` caught a numeric Article citation and non-ASCII punctuation;
+the dated narration it did not catch was caught on re-read, and the Current design only
+Article forbids exactly that. Evidence belongs in the commit message and here, never in the
+artifact.
+
+
 ## 0.13.57: WRITE CUSTODY WAS FAILING OPEN (2026-07-22, post-restart, live-proven)
 
 **The most consequential defect this harness has found, and it was invisible to every
