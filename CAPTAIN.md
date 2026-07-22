@@ -1,7 +1,82 @@
 # Captain notes - shipshape-shakedown workstream
 
 <!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
-## >>> PICKUP STATE, 2026-07-22 late. THIS IS THE ONLY LIVE ORDER. <<<
+## >>> PICKUP STATE, 2026-07-22 close. THIS IS THE ONLY LIVE ORDER. <<<
+
+**0.13.61 is the FINAL 0.13.x candidate.** Eleven versions shipped this day. Installed
+and registry-verified (`5fe3611`). Both repos clean and level with origin.
+
+### The evidence ledger, honestly
+
+| Version | Change | Footing |
+|---|---|---|
+| 0.13.57 | write custody resolves from the file, not cwd | **LIVE-VALIDATED** - deny fired, write prevented, tree-verified |
+| 0.13.59 | assuming stops at the write scope | **LIVE-VALIDATED** - clean pass, wall never hit |
+| 0.13.61 | command custody covers Monitor | machinery, 174 assertions, live-evidenced fault |
+| 0.13.60 | busy-wait loop denied | machinery, 7 assertions; the fault it targets had already moved to Monitor, so 0.13.61 is what makes it reach |
+| 0.13.51-56, 58 | textual: dispatch-not-load, Article 7 MUST NOT, discarded skeleton, two Article-coherence defects, outbound verify, golden-capture refresh, refit value drift | quoted contradictions, **no behavioural evidence** |
+
+**A full voyage ran end to end on this release**: QM -> hand-back -> Crew -> Boatswain ->
+commit `e4fe725`, clean tree, 6/6 green, every role inside its own write scope, zero
+custody denials. That is the pilot's shape already rehearsed.
+
+### Step 0, in this order
+
+1. `bash bin/preflight.sh` - must show 0.13.61 and a snapshot postdating the install.
+2. **Verify the channel empirically** on the first dispatched leg. Markers:
+   `0.13.59` -> `is not thereby licensed to write what it could not write anyway`;
+   `0.13.58` -> `weaker than the stack now supports`. Never trust timestamps or parity.
+3. `bash bin/probe-states.sh <target>` then `bash bin/fixture-check.sh <target>`.
+
+### The one next action: THE FINAL PILOT
+
+Per `scenarios/pilot.md`, `bin/preflight.sh` as ordered step 0, and the oracle contract it
+prints - apply BOTH patches, serve at `examples/shakedown/`, grade `--env
+framework=shakedown`. **A residual failure is a reason to check that step first, not a
+finding.** Pilot #7 skipped it and manufactured three phantom failures.
+
+**This runtime gives subagents NO SPAWN TOOL.** Capability-probed, not inferred: the tool
+list is `Artifact, Bash, Edit, Read, Skill, ToolSearch, Write`. So every role transition
+routes through the operator as caller, which is what 0.13.59 now codifies. Dispatch each
+leg yourself from the hand-back payload the previous role returns. Do NOT read a role
+loading another role's skill as non-compliance; that was retracted today.
+
+### Standing conclusions, do not relitigate
+
+- **Text is the wrong instrument for the background-stall class.** Three wordings have
+  failed. 0.13.59 worked because it revealed a route the role could not see, which is the
+  0.13.42 shape, not the 0.13.50 shape.
+- **Doctrine is robust against flaky verification by construction.** Two fixtures built to
+  force intermittency were dismantled by compliant roles from opposite sides. The Signals
+  rule and the harness-defect rule are load-bearing.
+- **The 12/12 "no covering timeout -> stall" table is NOT deterministic.**
+- **A dirty working tree is a moment in another session's turn, not a verdict.**
+- **Enumerate the tools that can run a command, not the one you had in mind.** Any guard
+  scoped to a tool name is only as complete as that enumeration.
+- Custody claims from any sim run BEFORE 0.13.57 are retrospectively unsupported: write
+  custody was failing open in exactly the tree shape sims use.
+
+### Owed, and named rather than carried silently
+
+1. **The unexplained resumption.** Dropped this morning as unfixable; that was wrong. A
+   blocked leg stopped, then completed twenty minutes later, and "the guard rescued it"
+   versus "it would have resumed anyway" are indistinguishable without this. It now sits
+   under a claim we want to make about 0.13.49.
+2. **0.13.55 and 0.13.56 have no fixture.** 0.13.55 needs an outbound target whose `ship`
+   succeeds while `verify` fails; 0.13.56 needs a golden capture drifted from its
+   dependency. Neither exists.
+3. **M5 for the hook** - does the block rescue the leg - is open at n=1.
+
+### Operator errors today, kept visible
+
+- Finding 1 retracted: inferred a runtime capability from banked transcripts of a previous VM.
+- 0.13.53's commit message claimed a write-scope violation; it was harbour custody. Retracted.
+- Scored a stalled leg at a snapshot as "rescued nothing"; it completed 20 minutes later.
+  **The rule against exactly this was already in this file.**
+- Retuned a probe fixture by putting a guessed literal delay in QM's own file, which is the
+  construct doctrine forbids; a control leg correctly removed it and the probe died.
+- Ran `git stash push` in a repo another session was live in. Left no trace, by luck.
+- Wrote dated narration into doctrine text; `tests/style.sh` and a re-read caught it.
 
 **0.13.56 is the candidate FINAL 0.13.x release.** Six versions shipped today, all
 textual, all pushed and installed, `tests/*.sh` green on each. **None carries behavioural
