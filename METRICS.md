@@ -26,6 +26,27 @@ is not thereby licensed to write what it could not write anyway. The fallback ke
 agent* being unable to spawn, true of a subagent and false of the session that spawned it,
 so the hand-back always has somewhere to go.
 
+**A ROLE left a process-name busy-wait spinning against a CONCURRENT SESSION, and it
+outlived the leg.** The validation leg backgrounded its sweep and waited with
+`while pgrep -f "cucumber-js" >/dev/null 2>&1; do sleep 3; done`. That loop cannot
+terminate here: `~/jolly` runs `cucumber-js` in another session, so the predicate stays
+true forever. It was still spinning after the leg had reported and was found only because
+dk noticed a shell still running. Killed by PID; jolly untouched.
+
+Three things this pins down:
+
+1. **Doctrine forbids exactly this shape** and the leg did it anyway, reading 0.13.59-era
+   text: *"A sleep loop that re-checks a process, a file, or a clock is a busy-wait, not a
+   signal... it is what a stalled role reaches for."* More evidence that the
+   background-stall class does not yield to wording, consistent with 0.13.50's NULL.
+2. **The pgrep-matches-a-sibling hazard is now demonstrated for ROLES, not just the
+   operator.** Every prior instance in this corpus was operator-side. A role's busy-wait
+   is worse: it is invisible to the operator, survives the leg, and burns CPU against work
+   it has no relationship to.
+3. **It is a second, independent path to the same silent-deadlock class the hook targets** -
+   the leg completed, so no SubagentStop guard could help, and nothing in the tree recorded
+   the leak.
+
 **Operator note, kept visible:** the first draft of 0.13.59 put the live evidence INTO the
 doctrine text. `tests/style.sh` caught a numeric Article citation and non-ASCII punctuation;
 the dated narration it did not catch was caught on re-read, and the Current design only
