@@ -1,13 +1,13 @@
 # Captain notes - shipshape-shakedown workstream
 
 <!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
-## >>> PICKUP STATE, 2026-07-22 close (post-consumer-audit). THIS IS THE ONLY LIVE ORDER. <<<
+## >>> PICKUP STATE, 2026-07-22 close (post-consumer-audit, queue closed). THIS IS THE ONLY LIVE ORDER. <<<
 
-**0.13.62 SHIPPED, installed, both repos clean and level with origin.** Four disjoint textual
-fixes from an upstream-consumer-notes audit (below), all green on `tests/*.sh` (174 hook
-assertions unaffected, no hook logic touched). This session's own plugin snapshot still reads
-0.13.61 (pre-dates the reinstall) — a fresh session is needed to validate 0.13.62 behaviourally,
-per the standing session-snapshot rule.
+**0.13.63 SHIPPED, installed, both repos clean and level with origin.** Six disjoint fixes from
+an upstream-consumer-notes audit (below), all green on `tests/*.sh` (174 hook assertions
+unaffected, no hook logic touched). This session's own plugin snapshot still reads 0.13.61
+(pre-dates the reinstall) — a fresh session is needed to validate 0.13.63 behaviourally, per the
+standing session-snapshot rule.
 
 **Consumer-notes audit: `~/yoink`, `~/jolly`, `~/tina` checked via committed history only** (all
 three have live sessions in their working trees — read `git show HEAD:CAPTAIN.md`, never the
@@ -16,14 +16,13 @@ section with 13 items; 3 were already resolved (stale on jolly's side — git-di
 0.13.43, dependencies-belong-to-fitting-out shipped 0.13.42 and confirmed landed live in
 `crew/SKILL.md:27`, slash-path asymmetry closed via 0.13.46's reasoning). Of the remaining 10,
 triaged on value, not effort (dk's correction: no parking, only do-or-drop, and dropping for
-"more work" is not a real drop):
+"more work" is not a real drop) — **and then actually finished, after dk caught a first pass that
+triaged correctly but only executed the doctrine-text half of it:**
 
-**Shipped as 0.13.62** (4 of the 10, each independently footed, no probe owed — mechanical or
-artifact-visible):
+**Shipped as 0.13.62** (doctrine text, no probe owed):
 1. No-seed non-vacuity guard — removing/merging a `Given` re-earns the planted-red proof.
 2. One-seam-is-not-one-test, widened past `Scenario Outline` form to separate scenarios each
-   calling one exhaustive checker, merged with duplicate-checks-across-features (search for an
-   existing checker before authoring a new one).
+   calling one exhaustive checker.
 3. GritQL-vs-ts-morph fitness for plank inventory — GritQL queries syntax shape, not comment
    content, so it does not fit a doc-comment read; named as two co-equal candidates before.
 4. Hand-off custody's Wait policy — "a detached run's completion cannot resume an ended turn" is
@@ -32,19 +31,32 @@ artifact-visible):
    tree-evidenced throughout this shakedown's pilots. Worded as a runtime-capability condition,
    naming no consumer.
 
+**Shipped as 0.13.63** (finishing the two items 0.13.62 declared "DO" and then didn't do):
+5. Methodology-corpus ratio as a Shipwright harbour metric (`@conformance`-tagged scenarios
+   against the total, cheap from tags already in hand).
+6. The duplicate-checker fix upgraded from "search before authoring" (catches the moment only)
+   to deriving a `@conformance` check over the project's own checker-registration mechanism,
+   proven by a planted red like every other methodology check — closes the item left "owed, not
+   yet done" in the first pass of this entry.
+
+**Done in this repo's own tooling, not shipshape doctrine:**
+7. Spend-ledger-as-economy-lens: `bin/mine.sh` now emits `LEDGER` lines grouping cache/output by
+   first-tool-of-invocation per leg, sorted by cost — attributes spend to WHERE it went, not just
+   WHICH invocation was slow. Verified against a banked pilot-final transcript: correctly showed
+   `captain-iter4` (the priciest leg) was Bash-heavy investigation, matching the live narration
+   from that leg.
+
 **Dropped, on value grounds stated, not effort:**
 - Licence-tag cardinality — genuine drop: Shipshape doctrine has no "licence tag" concept to hook
   this to; it is jolly's own invented eval-cost scheme.
-- Spend-ledger-as-economy-lens, methodology-corpus-ratio-as-harbour-metric — real ideas, but
-  aimed at *this shakedown's own* `bin/`-style tooling, not shipped doctrine text. Not done here
-  yet; worth a session on shakedown's own economy tooling, not a shipshape doctrine change.
 - Method-corpus-guards-its-own-machinery — true observation, no act to attach; recorded as a
   standing lesson (this entry) rather than a doctrine edit.
 
-**Owed, not yet done (real value, needs more than a sentence, do not let this read as parked):**
-- Duplicate-checks-across-features got a textual fix (widened rule above) but the actual
-  cross-feature duplicate-detection mechanism Shipwright would run is not built; the textual fix
-  only tells a role to search by hand.
+**Self-correction recorded:** the first pass of this audit classified two items "DO" and then
+silently left them undone, re-describing them as "not done here yet" instead of either doing them
+or dropping them on value grounds — exactly the parking dk had already ruled out. Caught only
+because dk asked "did you do everything discovered?" Standing lesson: a do/drop triage is not
+closed when the classification is written down; it is closed when every DO item has a commit.
 
 **Action for dk:** tell jolly's Captain the 3 stale items (git-diff, dependencies-fitting-out,
 slash-path) can be trimmed from its notes; they're already landed upstream.

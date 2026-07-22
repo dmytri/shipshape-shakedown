@@ -3,6 +3,12 @@
 # Usage: mine.sh <transcript.output> [legname]
 # Columns: leg, invocation#, time, cache_read, output_tokens, tools(commands truncated)
 # Summary line: invocations, total cache_read, total output, wall.
+# LEDGER lines: cache_read+output summed by first-tool-of-invocation, so a leg's
+# cost reads by WHERE it went (which tool category), not only by WHICH invocation
+# was slow - duration/per-invocation cost says what's expensive, the ledger says why
+# (jolly consumer finding, routed 2026-07-22: "the spend ledger outperformed
+# per-scenario duration as an economy lens... duration says which scenario is slow,
+# the ledger says WHY by attributing each spend").
 set -euo pipefail
 F="${1:?usage: mine.sh <transcript.jsonl> [legname]}"
 LEG="${2:-$(basename "$F" .output)}"
@@ -13,11 +19,14 @@ jq -rs --arg leg "$LEG" '
       t: $e.value[0].timestamp[11:19],
       cr: ($e.value[0].message.usage.cache_read_input_tokens//0),
       out: ([$e.value[].message.usage.output_tokens//0]|max),
+      firsttool: ([$e.value[].message.content[]? | select(.type=="tool_use") | .name][0] // "FINAL"),
       tools: ([$e.value[].message.content[]? | select(.type=="tool_use")
                | if .name=="Bash" then "Bash:" + (.input.command | gsub("cd /[^ ]+ +&& +";"") | gsub("\n";" ") | .[0:70])
                  else .name + ":" + ((.input.file_path // "" | tostring) | split("/")[-1]) end]
               | join(" ||| "))
     })
   | (.[] | "\($leg)\t\(.n)\t\(.t)\t\(.cr)\t\(.out)\t\(.tools // "FINAL")"),
-    "SUMMARY\t\($leg)\tinvocations=\(length)\tcache_read=\(map(.cr)|add)\tout=\(map(.out)|add)\twall=\(.[0].t) to \(.[-1].t)"
+    "SUMMARY\t\($leg)\tinvocations=\(length)\tcache_read=\(map(.cr)|add)\tout=\(map(.out)|add)\twall=\(.[0].t) to \(.[-1].t)",
+    (group_by(.firsttool) | sort_by(-(map(.cr)|add)) | .[]
+      | "LEDGER\t\($leg)\t\(.[0].firsttool)\tinvocations=\(length)\tcache_read=\(map(.cr)|add)\tout=\(map(.out)|add)")
 ' "$F"
