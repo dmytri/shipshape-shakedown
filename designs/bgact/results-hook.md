@@ -148,9 +148,26 @@ one both cheap and complete.
 ## Observation horizon
 
 **Declared in advance: last leg's stop + 36 minutes.** Last leg stopped 11:16:11Z, so the
-horizon is **11:52:11Z**. All four legs ended in Final reports with no live work, so no
-recovery question arises — but the horizon was waited out rather than assumed, because the
-binding method debt says a stalled leg's outcome is a function of when you look.
+horizon was **11:52:11Z**.
+
+**READING TAKEN AT 11:52:12Z, and it is the final one.** No leg changed state after its
+report; no cucumber process of this probe's remained alive; no late resumption occurred.
+
+| Tree | Runrecords | Production edit | State at horizon |
+|---|---|---|---|
+| tidewatch13 (h1) | 0 | none | h1 handed off; tree reset before h2, so its records are banked, not here |
+| tw13h2 | 1 | `src/tide.js` | unchanged since report |
+| tw13h3 | 1 | `src/tide.js` | unchanged since report |
+| tw13h4 | 1 | `src/tide.js` + `slow_steps.js` | unchanged since report |
+
+All four legs ended in Final reports holding no live work, so the recovery question this
+horizon exists to answer does not arise for any of them. **The horizon was still declared
+and waited out rather than skipped**, because the binding method debt is that a stalled
+leg's outcome is a function of when you look — and a run that takes no reading cannot
+claim the question did not arise. It is recorded as a zero, not as an absence.
+
+The h4 row also re-evidences Finding 2 in the tree: `slow_steps.js` is modified at the
+horizon, which is the fixture's forcing mechanism removed and still removed.
 
 ## Operator errors this run, kept visible
 
