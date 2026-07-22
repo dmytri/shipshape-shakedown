@@ -52,9 +52,20 @@ Watchbill names the one scenario as a directed watch.
 
 ## Arms
 
-- **Control: 0.13.52**, current doctrine, installed channel.
-- **Treatment: 0.13.52 + one candidate sentence** in the QM work loop, served from a
-  worktree, naming the act:
+**DEVIATION DECLARED 2026-07-22 BEFORE ANY LEG RAN.** Both arms are **HEAD-text /
+skills-only**, not the installed channel. The rubric originally put control on the
+installed plugin and treatment in a worktree, which would have confounded the doctrine
+difference with a channel difference — the exact confound the 0.13.50 probe avoided by
+running both arms from the same channel. Base is now **0.13.57**, not 0.13.52, because
+six versions shipped between the rubric being written and the probe running; the live
+question is whether CURRENT doctrine strikes on a lucky green.
+
+Per-arm text verified before dispatch: treatment carries the candidate sentence 1 time,
+control 0, and both carry the 0.13.57 base marker.
+
+- **Control: 0.13.57**, `~/shipshape` at HEAD.
+- **Treatment: 0.13.57 + one candidate sentence** in the QM work loop, served from a
+  detached worktree, naming the act:
 
   > A target this voyage has seen fail is struck only on a green it has repeated: run it
   > again, and a target that passes once and fails once has not been proven.
