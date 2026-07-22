@@ -104,5 +104,24 @@ else
   say FAIL "fixtures/oracle missing"; fail=1
 fi
 
+# --- fixture conformance (static half) ---------------------------------------
+# Fixtures are pinned to the doctrine version they were written against and
+# nothing re-checked them when doctrine moved - three confirmed cases of a
+# fixture rotting under a probe while the probe reported success. The static
+# checks run here; the plank join needs built trees, so it runs after
+# bin/probe-states.sh:
+#     bash bin/fixture-check.sh <target-dir>
+if [ -x "$HERE/bin/fixture-check.sh" ]; then
+  if fxout=$(bash "$HERE/bin/fixture-check.sh" 2>&1); then
+    say OK "fixture conformance (static)"
+  else
+    say FAIL "fixture conformance"; fail=1
+    printf '%s\n' "$fxout" | grep '^FAIL' | sed 's/^/               /'
+  fi
+  echo "               plank join runs post-scaffold: bin/fixture-check.sh <target-dir>"
+else
+  say WARN "bin/fixture-check.sh missing - fixture drift is unchecked"; warn=1
+fi
+
 echo "=== $( [ $fail -ne 0 ] && echo "BLOCKED - fix the FAILs above" || { [ $warn -ne 0 ] && echo "clear, with warnings" || echo "clear"; } ) ==="
 exit $fail
