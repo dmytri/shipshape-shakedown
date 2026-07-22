@@ -8,7 +8,7 @@ Given("the tide table for Fundy Cove is loaded", function () {
 
 When("I look up the next high tide after {string}", async function (after) {
   // Readers run on the next turn of the loop, as a request handler would.
-  await new Promise((resolve) => setTimeout(resolve, 0));
+  await new Promise((resolve) => setTimeout(resolve, 2));
   this.result = tide.lookupNextHigh(after);
 });
 

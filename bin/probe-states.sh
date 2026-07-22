@@ -136,7 +136,7 @@ git -C "$TARGET/tidewatch15" commit -qm "Fit out for Shipshape: rigging, agent i
 jq -cn '{"watch1":{"scenarios":["features/gauge-index.feature:The next high tide after a given time"]}}' > "$TARGET/tidewatch15/watchbill.json"
 cd "$TARGET/tidewatch15"
 P=0; for i in $(seq 10); do npx cucumber-js features/gauge-index.feature --tags "not @captain and not @shipwright" >/dev/null 2>&1 && P=$((P+1)); done
-echo "tw15 flakiness this session: $P/10 green (probe assumes ~4/10; re-measure, it is load dependent)"
+echo "tw15 flakiness this session: $P/10 green (probe assumes ~8/10; re-measure, it is load dependent)"
 [ "$P" -gt 0 ] && [ "$P" -lt 10 ] || echo "WARNING: tw15 is NOT flaky here ($P/10) - the probe cannot run until it is"
 
 echo "=== dispatch bases (skip runs.log prefix per tree when mining: tw3=2 tw4=2) ==="

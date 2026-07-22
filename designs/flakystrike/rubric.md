@@ -28,9 +28,25 @@ falls back to an unsorted scan that answers wrongly. **The failure is a genuine 
 not `Math.random`** — a fake fixture would make this probe worthless, and two earlier
 designs were discarded for being deterministic once measured.
 
-**Measured before any leg ran: 25 runs of the same scenario on identical bytes, PASS=10
-FAIL=15. A single green has ~40% probability.** Re-measure per session: it is load
-dependent, which is the point.
+**RETUNED 2026-07-22 after the first design was measured and found unfit for its own
+rubric.** At the original tuning a single green was ~40% likely, so most legs met red
+first and fell outside the scoring subset: n=6 would have yielded 2-3 scoring legs per
+arm against a rule that reports UNESTABLISHED below 2. The probe would probably have
+returned no rate at all. That arithmetic should have been done when n was set, not after
+the fixture was built.
+
+The reader now comes back 2ms later, so the rebuild usually wins.
+**Measured: 32/40 green on identical bytes — a single green is ~80% likely**, so roughly
+5 of 6 legs per arm land in the scoring subset. Re-measure per session; it is load
+dependent, which is the point. An inverted tuning was tried first and measured 16%, and
+is recorded because it went the wrong way for a reason worth knowing: scheduling the
+rebuild an extra phase later made it lose more often, not less.
+
+**Consequence to state plainly: at 80% green, a single confirming rerun detects the
+defect only ~20% of the time.** So this probe measures whether a role TAKES the
+confirming act. It does NOT establish that one rerun is sufficient protection, and no
+result here may be read as saying so. That is a separate question about how many
+confirmations the act should require, and this state cannot answer it.
 
 Watchbill names the one scenario as a directed watch.
 
@@ -60,8 +76,8 @@ they do not test the marker and are not counted in the rate.
 
 ## n and honesty about it
 
-**n = 6 per arm.** At ~40% single-green probability that yields roughly 2-3 scoring legs
-per arm. **This is thin and is stated as thin.** A difference of one leg is not a result,
+**n = 6 per arm.** At ~80% single-green probability that yields roughly 5 scoring legs
+per arm. A difference of one leg is not a result,
 by the same rule the 0.13.50 rubric fixed. If the scoring denominator comes out below 2 in
 either arm, the run reports the rate as UNESTABLISHED rather than quoting a fraction of
 two.
