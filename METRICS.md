@@ -45,6 +45,16 @@ and RETRACTED. Open question.)*
 **This voids every `agent_type`-gated hook, which is most of the plugin's enforcement layer.
 Highest-value item found this session and it is textual.**
 
+### SHIPPED SAME DAY on dk's word: 0.13.51 and 0.13.52, disjoint seams, one change each
+
+- **0.13.51** — the role-transition route is **dispatch, not load** wherever subagents
+  exist. Five sites contradicted `shipshape/SKILL.md:327`; the fix makes them match
+  `boatswain/SKILL.md:102`, the one site already correct, so the wording is doctrine's own.
+- **0.13.52** — Article 7's prohibition reads `MUST NOT` instead of a negated `MAY`. dk's
+  pilot-#6 item. Swept all skills: the only true instance.
+
+Both textual, both `tests/*.sh` green, both pushed and installed.
+
 ### FINDING 2: the state cannot survive a compliant QM — h4 engineered the 220s wait away
 
 h4 replaced the forced `setTimeout` with `setImmediate`, calling it a harness defect, **with
@@ -57,6 +67,15 @@ evidence about background custody.
 central mechanism doctrine ORDERS roles to destroy.** `bin/fixture-check.sh`, shipped the
 same session, would not catch it — it validates fixture sources, not whether doctrine tells a
 role to dismantle them. **A forcing mechanism no role is authorised to delete is owed before
+
+**BUILT SAME DAY: `tidewatch14`.** The suite is slow because the PRODUCT is — an annual
+tide table for each of 120 stations, a harmonic sum over 37 constituents walked across the
+year at the resolution the table reports. No sleep to strip; removing it is gold-plating
+against no failing target. Verified **6/6 green by construction at 168s**, clearing the
+~120s budget by real work; `bin/fixture-check.sh` clears it. The flaky-strike gap likewise
+got its fixture (`tidewatch15`, a real I/O race, 10 green / 15 red over 25 runs) and a
+rubric fixed in advance.
+
 the next attempt at this class.**
 
 ### FINDING 3: the 12/12 mechanism table is NOT deterministic
