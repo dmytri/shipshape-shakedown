@@ -1,0 +1,23 @@
+# meta: {"agentType":"shipshape:qm","description":"hook probe leg h2","toolUseId":"toolu_01NPU6dDngYavtJEjp7Ap54d","spawnDepth":1,"model":"sonnet"}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/8b70fd90-b1b6-4b1b-8cc7-dad49cc68122/subagents/agent-a6208e37850ddc8f6.jsonl
+# banked: 2026-07-22T11:02:00Z
+hook-probe-leg-h2	1	10:55:45	12319	76	Skill:
+hook-probe-leg-h2	2	10:55:46	16353	78	Skill:
+hook-probe-leg-h2	3	10:55:49	21246	325	Bash:cat RIGGING.md && echo ---WATCHBILL--- && cat watchbill.json && echo -
+hook-probe-leg-h2	4	10:55:56	48597	462	Bash:echo ---FEATURE--- && cat features/low-tides.feature && echo ---LS-SUP
+hook-probe-leg-h2	5	10:55:59	49596	310	Bash:echo ---TIDES--- && cat features/tides.feature && echo ---SLOW--- && c
+hook-probe-leg-h2	6	10:56:14	50622	895	Bash:cat data/tides.json 2>/dev/null; echo ---; rg -n "@planks" src; echo -
+hook-probe-leg-h2	7	10:56:22	52118	326	Bash:npx cucumber-js --dry-run --tags "not @captain and not @shipwright" 2>
+hook-probe-leg-h2	8	10:56:39	54289	1131	Read:steps.js
+hook-probe-leg-h2	9	10:56:42	55314	221	Edit:steps.js
+hook-probe-leg-h2	10	10:56:45	56828	445	Edit:steps.js
+hook-probe-leg-h2	11	10:56:51	57189	3	Bash:npx cucumber-js --tags "not @captain and not @shipwright" 2>&1 | tail 
+hook-probe-leg-h2	12	11:00:46	57774	1031	Skill:
+hook-probe-leg-h2	13	11:00:53	58991	898	Edit:tide.js
+hook-probe-leg-h2	14	11:00:59	62536	3	Bash:npx cucumber-js features/low-tides.feature --tags "not @captain and no
+hook-probe-leg-h2	15	11:01:07	63571	678	Bash:HASH=$(GIT_INDEX_FILE="$(mktemp)" bash -c 'git read-tree HEAD && git a
+hook-probe-leg-h2	16	11:01:12	63881	566	Bash:sed -i '$ d' runrecord.jsonl && HASH=e328da81bf5d54721bc497fde586ae0e0
+hook-probe-leg-h2	17	11:01:20	64740	464	Bash:rg -n "@planks" src && echo --- && git status --porcelain
+hook-probe-leg-h2	18	11:01:24	65468	228	Bash:git rev-parse HEAD
+hook-probe-leg-h2	19	11:01:37	66037	1	
+SUMMARY	hook-probe-leg-h2	invocations=19	cache_read=977469	out=8141	wall=10:55:45 to 11:01:37

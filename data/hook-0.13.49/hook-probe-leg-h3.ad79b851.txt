@@ -1,0 +1,25 @@
+# meta: {"agentType":"shipshape:qm","description":"hook probe leg h3","toolUseId":"toolu_011Nuh9ovm8n5D4qxA6ZVzhQ","spawnDepth":1,"model":"sonnet"}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/8b70fd90-b1b6-4b1b-8cc7-dad49cc68122/subagents/agent-ad79b8518c43efa68.jsonl
+# banked: 2026-07-22T11:08:05Z
+hook-probe-leg-h3	1	11:02:14	12319	76	Skill:
+hook-probe-leg-h3	2	11:02:17	16353	171	Skill:
+hook-probe-leg-h3	3	11:02:26	21246	580	Bash:cat RIGGING.md && echo "---WATCHBILL---" && cat watchbill.json && echo
+hook-probe-leg-h3	4	11:02:31	48688	351	Bash:echo "---FEATURES---" && find features -type f | sort && echo "---SRC-
+hook-probe-leg-h3	5	11:02:34	49942	774	Read:tides.feature ||| Read:slow-tide.feature ||| Read:tide.js ||| Read:steps.js ||| Read:slow_steps.js ||| Read:runlog.js
+hook-probe-leg-h3	6	11:02:49	50657	1006	Bash:cat package.json 2>/dev/null && echo "---cucumber config---" && find .
+hook-probe-leg-h3	7	11:02:57	52890	386	Bash:npm install --no-audit --no-fund 2>&1 | tail -20
+hook-probe-leg-h3	8	11:03:00	54230	165	Bash:npx cucumber-js --dry-run --tags "not @captain and not @shipwright" 2>
+hook-probe-leg-h3	9	11:03:06	54629	613	Edit:steps.js
+hook-probe-leg-h3	10	11:03:11	55493	445	Edit:steps.js
+hook-probe-leg-h3	11	11:03:14	56246	195	Bash:npx cucumber-js features/low-tides.feature --tags "not @captain and no
+hook-probe-leg-h3	12	11:03:24	56831	676	Bash:npx cucumber-js --tags "not @captain and not @shipwright" 2>&1 | tail 
+hook-probe-leg-h3	13	11:07:09	57787	318	Bash:rg -n "@planks" src && echo "---step-usage---" && npx cucumber-js --dr
+hook-probe-leg-h3	14	11:07:17	59223	569	Bash:rg -n "PERTURBATION" src features --include-dir='!node_modules' 2>/dev
+hook-probe-leg-h3	15	11:07:22	61847	683	Skill:
+hook-probe-leg-h3	16	11:07:30	62431	385	Edit:tide.js
+hook-probe-leg-h3	17	11:07:34	66219	169	Bash:npx cucumber-js features/low-tides.feature --tags "not @captain and no
+hook-probe-leg-h3	18	11:07:38	66742	434	Bash:rg -n "@planks" src
+hook-probe-leg-h3	19	11:07:42	67033	297	Bash:cd /tmp/claude-1000/-home-exedev-shipshake-shakedown 2>/dev/null; GIT_
+hook-probe-leg-h3	20	11:07:46	67529	307	Bash:cat >> runrecord.jsonl <<'EOF' {"targets":["features/low-tides.feature
+hook-probe-leg-h3	21	11:07:50	67856	1145	
+SUMMARY	hook-probe-leg-h3	invocations=21	cache_read=1106191	out=9745	wall=11:02:14 to 11:07:50

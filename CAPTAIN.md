@@ -1,13 +1,90 @@
 # Captain notes - shipshape-shakedown workstream
 
 <!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
-## >>> PICKUP STATE, end of 2026-07-21. THIS IS THE ONLY LIVE ORDER. <<<
+## >>> PICKUP STATE, end of 2026-07-22. THIS IS THE ONLY LIVE ORDER. <<<
 
-Everything below this block is a dated record — **history, not a queue.** This is the
-only `READ THIS FIRST` block in the file and the only heading still marked `>>> <<<`;
-if you find another, someone added it without reading this. In particular the "PRIMED
-ORDER FOR THE NEXT PILOT" further down has had its item 1 discharged (result: NULL) —
-do not run it as written.
+Everything below this block is a dated record — **history, not a queue.** The
+2026-07-21 pickup block that used to sit here is superseded: its one action (exercise
+0.13.49's hook live) HAS BEEN RUN. Result below.
+
+**Deck:** doctrine **0.13.50**, installed and registry-verified (`daf0443`), both repos
+clean and level with origin. `bin/preflight.sh` clear, now including a fixture-conformance
+step. **Step 0, always: `bash bin/preflight.sh`** (`bash`, not `sh`).
+
+### What ran, 2026-07-22
+
+**0.13.49's hook was exercised live for the first time.** 4 QM legs, installed channel,
+sonnet, serial, fresh tree per leg. Full account `designs/bgact/results-hook.md`, banked
+`data/hook-0.13.49/`. 122 inv / 6.88M cache.
+
+**Its foundation is CONFIRMED and its blocking path is UNTESTED.** Zero legs stalled, so
+M1/M3 have a denominator of zero. **0.13.49 is not validated as machinery and must not be
+recorded as the thing that moved this class.** What holds: the hook executes (proved by
+capturing 13 real payloads, not inferred); `agent_transcript_path` exists and differs from
+`transcript_path` 4/4, so the fix aims at a real field; M2 holds against the exact
+poisoning vector that broke 0.13.48; M4 holds 4/4, no false positives; and the algorithm is
+replay-correct on all 5 states using real runtime transcripts.
+
+**dk's fixture-conformance ruling was executed:** `bin/fixture-check.sh` shipped, wired into
+preflight, driven by `expected-defects.json` (which already specified its contract and had
+never been implemented). Both drift directions verified by reinjecting historical faults.
+
+### The one next action
+
+**Route Finding 1 to dk. It is the highest-value item on the board and it is textual.**
+
+**QM does not dispatch Crew — it loads Crew and writes production code itself.** 3 of 4
+legs; not one leg used a `Task`/`Agent` tool at all. Two doctrine lines are in tension:
+`shipshape/SKILL.md:327` says an isolated subagent *"is the route an internal role takes,
+not merely the better of two"*, while `qm/SKILL.md:72` — the step the role is executing —
+says *"load/dispatch Crew."* Roles take the branch their own step offers.
+
+**Consequence, measured: 11 of 13 captured `SubagentStop` payloads carried an EMPTY
+`agent_type`, and every `agent_type`-gated hook exits immediately on that.** That is most of
+the plugin's enforcement layer, silently inert on the route three of four legs took. Line
+327 predicts precisely this in prose; this run is the first measurement of it.
+
+Do NOT ship a fix unrouted. It is textual, so it ships on a close read plus green
+`tests/*.sh` once dk rules — but the corpus's own rule is that a behavioural observation
+motivating a textual fix does not license skipping the routing.
+
+### Standing conclusions, do not relitigate
+
+- **Text is the wrong instrument for the background-stall class.** Two wordings have failed.
+  Do not ship a third. Unchanged by this run.
+- **The 12/12 "no timeout → stall" table is NOT deterministic.** h1 crossed the boundary with
+  no timeout and did not stall, surviving by a busy-wait doctrine forbids. The act is
+  sufficient, not necessary. **This corrects how the corpus reads the 0.13.50 probe.**
+- **The tw13 state is RETIRED as a forcing mechanism for this class.** h4 removed the 220s
+  wait as a harness defect and doctrine backed it. A state whose mechanism doctrine orders
+  roles to destroy cannot force the condition. The next attempt owes a new forcing mechanism
+  before it owes anything else.
+- Taking the named act is ~half price (20 inv vs 38) and gets further.
+
+### Operator errors from this session, kept visible on purpose
+
+- **h2 was dispatched onto the tree h1 had already mutated.** Caught in a minute, killed,
+  nothing scored on it; fresh tree per leg thereafter. Same class as the fixture-realism
+  finding shipped an hour earlier.
+- **A replay state was malformed and briefly read as a hook defect** — it set the task
+  `running`, which blocks by design, so it merely re-ran M3. The hook was right, the test
+  was wrong.
+- **An attribution hypothesis was formed, tested, and retracted** (that the empty-`agent_type`
+  payloads were the `Skill` calls; h4's counts refuted it). Recorded because this file's
+  worth rests on which claims were checked rather than asserted.
+
+<!-- ===================== end of live order ===================== -->
+
+## 2026-07-21 pickup state (SUPERSEDED — its one action has been run, see above)
+
+*(Record. Its "only live order" claim below was true when written on 07-21 and is no
+longer — the 07-22 block at the top of this file supersedes it. Its one action has been
+run; the result is up there. Left otherwise unedited, because the point of this file is
+that superseded orders stay readable rather than being quietly rewritten.)*
+
+Everything below this block is a dated record — **history, not a queue.** In particular
+the "PRIMED ORDER FOR THE NEXT PILOT" further down has had its item 1 discharged
+(result: NULL) — do not run it as written.
 
 **Deck:** doctrine **0.13.50**, installed and registry-verified, both repos clean and
 level with origin (`shipshape` `daf0443`, `shakedown` at this commit). `tests/*.sh` 5/5

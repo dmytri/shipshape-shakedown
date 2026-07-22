@@ -1,5 +1,82 @@
 # Metrics: how to read a shakedown
 
+## 0.13.49 hook, FIRST LIVE EXERCISE, 4 legs, sonnet, installed channel (2026-07-22) — FOUNDATION CONFIRMED, BLOCKING PATH UNTESTED
+
+Rubric fixed and committed BEFORE any leg ran (`93e3fb3`); full account
+`designs/bgact/results-hook.md`; banked `data/hook-0.13.49/` including the 13 captured
+`SubagentStop` payloads. **122 inv / 6,882,412 cache / 51,396 out. 4/4 sonnet.** Channel
+verified empirically per leg (0.13.50 marker 1 hit each, 0.13.48 string 0).
+
+**Zero legs stalled, so M1/M3 have a denominator of ZERO and are reported UNTESTED.**
+0.13.49 must NOT be recorded as the thing that moved this class. What is established:
+
+- **The hook executes and its payload assumptions are real.** This was the run's
+  foundational risk — guard-silence is equally consistent with "ran and passed" and "never
+  ran", the dangling-installPath shape. A throwaway capture hook took 13 real payloads:
+  `agent_transcript_path` exists and **differs from `transcript_path` 4/4**, and
+  `background_tasks` is real. 0.13.49's fix points at a field that genuinely differs.
+- **M2 holds live** — h1's task id was deliberately poisoned into the session transcript
+  twice between legs (the exact vector that broke 0.13.48) and fired nothing.
+- **M4 holds 4/4** — no false positives, the most serious failure available here.
+- **Replay on REAL transcripts: all 5 states correct**, including both blocking states.
+  First exercise of the algorithm on files the runtime actually wrote. Not live firing.
+
+### FINDING 1: QM does not dispatch Crew — it LOADS Crew and writes production itself, 3/4
+
+**Not one leg used a `Task`/`Agent` tool.** h2/h3/h4 each ran `Skill(shipshape:crew)` in
+their own QM context and edited `src/tide.js` themselves, then reported it as a dispatch
+(h3: *"Crew dispatched solo... Crew added `nextLowTide`"* — no dispatch occurred). **h1 is
+the role that does not fail**: it stopped at the hand-off, correctly.
+
+**Cause is textual, two lines in tension, checked against the artifact before being called
+a defect:** `shipshape/SKILL.md:327` — *"where that mechanism exists it is the route an
+internal role takes, **not merely the better of two**"* — against `qm/SKILL.md:72`, the step
+the role is executing: *"If production fails, **load/dispatch** Crew."* The role's own
+work-loop re-offers the branch the shared Article forbids.
+
+**327 predicts the consequence this run measured:** *"the same act by the same skill loaded
+in the human-facing session is unguarded... a rule enforced on one route and not the other is
+worse than one enforced on neither."* `background-custody.sh:33` exits where `agent_type`
+names no role, and **11 of 13 captured payloads carried an EMPTY `agent_type`**. The guard is
+not protecting the route 3 of 4 legs took. *(Attribution of those 11 is NOT established: the
+"they are the Skill calls" reading was tested against h4 — 3 Skill calls, 8 empty payloads —
+and RETRACTED. Open question.)*
+
+**This voids every `agent_type`-gated hook, which is most of the plugin's enforcement layer.
+Highest-value item found this session and it is textual.**
+
+### FINDING 2: the state cannot survive a compliant QM — h4 engineered the 220s wait away
+
+h4 replaced the forced `setTimeout` with `setImmediate`, calling it a harness defect, **with
+doctrine behind it**: the Verification agreement makes harness defects QM's own to engineer
+out, and a fixed real-time sleep guarding assertions over pure functions is legible as
+exactly that. It crossed no boundary because it deleted the boundary; its PASS is not
+evidence about background custody.
+
+**The fixture-realism class at its sharpest: not a fixture that rotted, but a fixture whose
+central mechanism doctrine ORDERS roles to destroy.** `bin/fixture-check.sh`, shipped the
+same session, would not catch it — it validates fixture sources, not whether doctrine tells a
+role to dismantle them. **A forcing mechanism no role is authorised to delete is owed before
+the next attempt at this class.**
+
+### FINDING 3: the 12/12 mechanism table is NOT deterministic
+
+**h1 set no covering timeout, crossed the boundary, and did not stall** — it backgrounded and
+then busy-waited on process names, the shape doctrine names in the very paragraph under test.
+**The act is sufficient, not necessary**, and 4 legs producing 0 stalls against a prior of
+3-in-6 on this same state is unexplained. Near miss: h1's poll pattern ran while an unrelated
+concurrent session (`~/jolly`) was running cucumber; the patterns did not match, but that is
+luck of quoting — third appearance of this hazard class.
+
+**Economy:** taking the named act is ~half price — h2/h3 mean **20 inv / 1.04M** against h1's
+**38 inv / 2.32M**, and h1 got LESS far. Confirms the prior run's economy finding from the
+other side.
+
+**Operator errors, kept visible:** h2 was first dispatched onto the tree h1 had already
+mutated (caught in a minute, killed, nothing scored, fresh tree per leg thereafter); a replay
+state was malformed and briefly read as a hook defect (it set the task `running`, which blocks
+by design, so it re-ran M3 — the hook was right and the test was wrong).
+
 ## 0.13.50 validation probe, 12 legs, sonnet, HEAD-text both arms (2026-07-21) — NULL
 
 Rubric fixed and committed BEFORE any leg ran (`52e758f`); full account

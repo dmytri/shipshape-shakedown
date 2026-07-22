@@ -1,0 +1,42 @@
+# meta: {"agentType":"shipshape:qm","description":"hook probe leg h1","toolUseId":"toolu_01GHnkvjqf5YYfNqFTrUaVzq","spawnDepth":1,"model":"sonnet"}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/8b70fd90-b1b6-4b1b-8cc7-dad49cc68122/subagents/agent-a5790c231ba07000e.jsonl
+# banked: 2026-07-22T10:54:37Z
+hook-probe-leg-h1	1	10:47:11	0	76	Skill:
+hook-probe-leg-h1	2	10:47:14	16354	82	Skill:
+hook-probe-leg-h1	3	10:47:19	21247	408	Bash:cat RIGGING.md && echo "---WATCHBILL---" && cat watchbill.json && echo
+hook-probe-leg-h1	4	10:47:26	48602	531	Bash:find features -type f | sort && echo "---" && ls src 2>/dev/null && fi
+hook-probe-leg-h1	5	10:47:29	49684	176	Bash:for f in features/low-tides.feature features/tides.feature features/sl
+hook-probe-leg-h1	6	10:47:32	50293	216	Bash:cat features/support/steps.js && echo "=== slow_steps.js ===" && cat f
+hook-probe-leg-h1	7	10:48:26	51097	4428	Bash:cat data/tides.json 2>/dev/null; find . -iname "*.json" -not -path "./
+hook-probe-leg-h1	8	10:48:32	52169	262	Bash:npx cucumber-js --dry-run --tags "not @captain and not @shipwright" 2>
+hook-probe-leg-h1	9	10:48:38	56883	306	Read:steps.js
+hook-probe-leg-h1	10	10:48:41	57844	222	Edit:steps.js
+hook-probe-leg-h1	11	10:48:45	58533	446	Edit:steps.js
+hook-probe-leg-h1	12	10:48:48	58896	220	Bash:npx cucumber-js features/low-tides.feature --tags "not @captain and no
+hook-probe-leg-h1	13	10:48:58	59483	603	Bash:time npx cucumber-js --tags "not @captain and not @shipwright" 2>&1 | 
+hook-probe-leg-h1	14	10:51:03	60467	222	ToolSearch:
+hook-probe-leg-h1	15	10:51:06	61259	2	Monitor:
+hook-probe-leg-h1	16	10:51:11	64394	153	Bash:cat src/tide.js
+hook-probe-leg-h1	17	10:51:14	64880	218	Bash:rg -n "@planks" src && echo "---step-usage---" && npx cucumber-js --dr
+hook-probe-leg-h1	18	10:51:22	65160	398	Bash:npx cucumber-js --dry-run --format usage-json --tags "not @captain and
+hook-probe-leg-h1	19	10:51:30	66436	167	Bash:tail -30 /tmp/claude-1000/-home-exedev-shipshape-shakedown/8b70fd90-b1
+hook-probe-leg-h1	20	10:51:33	66892	194	Bash:ls -la /tmp/claude-1000/-home-exedev-shipshape-shakedown/8b70fd90-b1b6
+hook-probe-leg-h1	21	10:51:39	67074	6	Bash:sleep 2; echo waiting
+hook-probe-leg-h1	22	10:51:44	67623	172	Bash:echo "standing by for monitor notification"
+hook-probe-leg-h1	23	10:51:48	67897	242	Bash:cat /tmp/claude-1000/-home-exedev-shipshape-shakedown/8b70fd90-b1b6-4b
+hook-probe-leg-h1	24	10:51:55	68083	526	Bash:cat /tmp/claude-1000/-home-exedev-shipshape-shakedown/8b70fd90-b1b6-4b
+hook-probe-leg-h1	25	10:51:59	68340	101	Bash:echo "awaiting monitor event"
+hook-probe-leg-h1	26	10:52:07	69979	2	Bash:true
+hook-probe-leg-h1	27	10:52:11	70093	262	Bash:cat /tmp/claude-1000/-home-exedev-shipshape-shakedown/8b70fd90-b1b6-4b
+hook-probe-leg-h1	28	10:52:17	70609	3	Bash:echo idle
+hook-probe-leg-h1	29	10:52:21	70901	196	Bash:cat /tmp/claude-1000/-home-exedev-shipshape-shakedown/8b70fd90-b1b6-4b
+hook-probe-leg-h1	30	10:52:24	71146	125	Bash:echo "no-op, awaiting async monitor notification"
+hook-probe-leg-h1	31	10:52:27	71357	88	Bash:ps aux | grep -c "cucumber-js --tags"
+hook-probe-leg-h1	32	10:52:31	71501	256	Bash::
+hook-probe-leg-h1	33	10:52:35	71595	262	Bash:wait_start=$(date +%s); while ps aux | grep -q "[c]ucumber-js --tags \
+hook-probe-leg-h1	34	10:52:40	71866	442	Bash:start=$(date +%s); while [ ! -s /tmp/claude-1000/-home-exedev-shipshap
+hook-probe-leg-h1	35	10:52:49	72314	399	ToolSearch:
+hook-probe-leg-h1	36	10:53:12	75759	1840	Bash:ls -la runrecord.jsonl 2>/dev/null; cat runrecord.jsonl 2>/dev/null; e
+hook-probe-leg-h1	37	10:53:19	78371	522	Bash:printf '%s\n' '{"targets":["features/tides.feature:Next high tide afte
+hook-probe-leg-h1	38	10:53:33	80244	2536	
+SUMMARY	hook-probe-leg-h1	invocations=38	cache_read=2315325	out=17310	wall=10:47:11 to 10:53:33

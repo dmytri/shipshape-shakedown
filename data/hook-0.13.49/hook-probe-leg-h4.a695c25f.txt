@@ -1,0 +1,48 @@
+# meta: {"agentType":"shipshape:qm","description":"hook probe leg h4","toolUseId":"toolu_017gPciLr8NFNPYoUocTazb3","spawnDepth":1,"model":"sonnet"}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/8b70fd90-b1b6-4b1b-8cc7-dad49cc68122/subagents/agent-a695c25fa7f12f0be.jsonl
+# banked: 2026-07-22T11:16:26Z
+hook-probe-leg-h4	1	11:09:46	12319	4	Skill:
+hook-probe-leg-h4	2	11:09:49	16353	305	Bash:cat RIGGING.md && echo ---WATCHBILL--- && cat watchbill.json && echo -
+hook-probe-leg-h4	3	11:09:57	21248	576	Bash:find features -type f | sort && echo --- && cat features/low-tides.fea
+hook-probe-leg-h4	4	11:10:20	22227	2	Bash:cat features/tides.feature && echo ---SLOW--- && cat features/slow-tid
+hook-probe-leg-h4	5	11:10:23	23137	218	Bash:grep -rn "^\s*@" features/*.feature
+hook-probe-leg-h4	6	11:10:26	23665	142	Bash:rg -n "^\s*@" features/*.feature
+hook-probe-leg-h4	7	11:10:28	24054	138	Bash:rg -n "^\s*@" features/
+hook-probe-leg-h4	8	11:10:30	24382	207	Bash:rg -n "^\s*@" features
+hook-probe-leg-h4	9	11:10:33	24706	5	Bash:rg -n "^\s*@"
+hook-probe-leg-h4	10	11:10:36	25099	201	Bash:rg -n "@logic" features/tides.feature features/low-tides.feature featu
+hook-probe-leg-h4	11	11:10:40	25481	256	Bash:for f in features/tides.feature features/low-tides.feature features/sl
+hook-probe-leg-h4	12	11:10:45	25697	370	Bash:ls -la && cat package.json 2>/dev/null; find . -maxdepth 1 -name "cucu
+hook-probe-leg-h4	13	11:10:52	26008	609	Bash:npx cucumber-js --dry-run --tags "not @captain and not @shipwright" 2>
+hook-probe-leg-h4	14	11:11:00	27051	218	Bash:npx cucumber-js --dry-run --tags "not @captain and not @shipwright" 2>
+hook-probe-leg-h4	15	11:11:10	28282	649	Bash:find /home/exedev/.claude/plugins/cache/dmytri-shipshape -iname "*.md"
+hook-probe-leg-h4	16	11:11:13	29199	172	Bash:grep -n -i "tier\|watchbill" /home/exedev/.claude/plugins/cache/dmytri
+hook-probe-leg-h4	17	11:11:17	42598	299	Bash:grep -n -i -A5 -B5 "Watchbill policy\|## Tiers\|Tier" /home/exedev/.cl
+hook-probe-leg-h4	18	11:11:24	42918	634	Bash:npx cucumber-js --tags "not @captain and not @shipwright" 2>&1 | tail 
+hook-probe-leg-h4	19	11:13:32	47173	310	Bash:cat features/support/slow_steps.js && echo ---STEPS--- && cat features
+hook-probe-leg-h4	20	11:13:38	48002	396	Bash:cat src/tide.js 2>/dev/null; ls src; echo ---; cat data/tides.json 2>/
+hook-probe-leg-h4	21	11:13:45	49028	630	Bash:ls node_modules | grep -i sinon; ls node_modules | grep -i clock; ls n
+hook-probe-leg-h4	22	11:14:03	49710	2	Bash:grep -n -i -B3 -A15 "Verification agreement\b" /home/exedev/.claude/pl
+hook-probe-leg-h4	23	11:14:06	50438	103	Bash:grep -n -i "verification" /home/exedev/.claude/plugins/cache/dmytri-sh
+hook-probe-leg-h4	24	11:14:08	51637	209	Bash:wc -l /home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/da
+hook-probe-leg-h4	25	11:14:11	51764	189	Bash:cat /home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/daf0
+hook-probe-leg-h4	26	11:14:15	52027	2	Skill:
+hook-probe-leg-h4	27	11:14:30	55800	1128	Bash:pkill -f "cucumber-js" 2>&1; echo done
+hook-probe-leg-h4	28	11:14:33	83274	188	Bash:cat /tmp/claude-1000/-home-exedev-shipshape-shakedown/8b70fd90-b1b6-4b
+hook-probe-leg-h4	29	11:14:38	84905	829	Edit:slow_steps.js
+hook-probe-leg-h4	30	11:14:44	85158	188	Bash:npx cucumber-js --tags "not @captain and not @shipwright" 2>&1 | tail 
+hook-probe-leg-h4	31	11:14:52	86130	638	Read:steps.js
+hook-probe-leg-h4	32	11:14:59	86928	906	Edit:steps.js
+hook-probe-leg-h4	33	11:15:01	87949	196	Bash:npx cucumber-js features/low-tides.feature --tags "not @captain and no
+hook-probe-leg-h4	34	11:15:06	88995	310	Bash:echo "--PLANK--" && rg -n "@planks" src && echo "--STEP-USAGE--" && np
+hook-probe-leg-h4	35	11:15:14	89952	1079	Skill:
+hook-probe-leg-h4	36	11:15:24	91556	283	Read:tide.js
+hook-probe-leg-h4	37	11:15:28	95781	316	Edit:tide.js
+hook-probe-leg-h4	38	11:15:30	96214	169	Bash:npx cucumber-js features/low-tides.feature --tags "not @captain and no
+hook-probe-leg-h4	39	11:15:35	96668	416	Bash:echo "--PLANK--" && rg -n "@planks" src && echo "--full sweep--" && np
+hook-probe-leg-h4	40	11:15:40	96959	393	Bash:npx cucumber-js --dry-run --format usage-json --tags "not @captain and
+hook-probe-leg-h4	41	11:15:44	97560	256	Bash:git status --porcelain && echo ---HASH--- && GIT_INDEX_FILE="$(mktemp)
+hook-probe-leg-h4	42	11:15:50	98094	412	Bash:cat -- runrecord.jsonl 2>/dev/null; echo "---exists check above---"
+hook-probe-leg-h4	43	11:15:54	98439	235	Bash:printf '%s\n' '{"targets":["@logic"],"command":"npx cucumber-js --tags
+hook-probe-leg-h4	44	11:16:11	98862	1412	
+SUMMARY	hook-probe-leg-h4	invocations=44	cache_read=2483427	out=16200	wall=11:09:46 to 11:16:11
