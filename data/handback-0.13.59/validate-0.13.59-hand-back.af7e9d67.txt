@@ -1,0 +1,26 @@
+# meta: {"agentType":"shipshape:qm","description":"validate 0.13.59 hand-back","toolUseId":"toolu_014hNfmMcFQi9R8qCuzinKJz","spawnDepth":1,"model":"sonnet"}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/8b70fd90-b1b6-4b1b-8cc7-dad49cc68122/subagents/agent-af7e9d67edad10c06.jsonl
+# banked: 2026-07-22T14:11:17Z
+validate-0.13.59-hand-back	1	14:05:02	0	54	Skill:
+validate-0.13.59-hand-back	2	14:05:04	16370	76	Skill:
+validate-0.13.59-hand-back	3	14:05:08	21484	300	Bash:cat RIGGING.md && echo "---WATCHBILL---" && cat watchbill.json && echo
+validate-0.13.59-hand-back	4	14:05:13	49443	275	Bash:find features -type f | sort && echo "---SRC---" && find src -type f |
+validate-0.13.59-hand-back	5	14:05:17	50406	503	Read:low-tides.feature ||| Read:tides.feature ||| Read:slow-tide.feature ||| Read:tide.js
+validate-0.13.59-hand-back	6	14:05:22	50758	462	Read:steps.js ||| Read:slow_steps.js ||| Read:runlog.js
+validate-0.13.59-hand-back	7	14:05:32	52172	589	Bash:git log --oneline -5 -- . && echo "---" && git show HEAD --stat && ech
+validate-0.13.59-hand-back	8	14:05:40	53517	582	Bash:cat package.json && echo "---" && ls node_modules 2>/dev/null | head -
+validate-0.13.59-hand-back	9	14:05:49	54585	560	Bash:npx cucumber-js --dry-run --tags "not @captain and not @shipwright" 2>
+validate-0.13.59-hand-back	10	14:05:58	55445	316	Edit:steps.js
+validate-0.13.59-hand-back	11	14:06:04	56704	442	Edit:steps.js
+validate-0.13.59-hand-back	12	14:06:07	57157	3	Bash:npx cucumber-js features/low-tides.feature --tags "not @captain and no
+validate-0.13.59-hand-back	13	14:06:14	57736	350	Bash:npx cucumber-js features/tides.feature --tags "not @captain and not @s
+validate-0.13.59-hand-back	14	14:06:17	58709	235	Bash:npx cucumber-js features/slow-tide.feature --tags "not @captain and no
+validate-0.13.59-hand-back	15	14:10:01	59179	230	Bash:rg -n "@planks" src && echo "---step-usage---" && npx cucumber-js --dr
+validate-0.13.59-hand-back	16	14:10:07	59536	355	Bash:rg -n "@planks-provisional|@captain|@shipwright" src features 2>&1
+validate-0.13.59-hand-back	17	14:10:12	60824	6	Bash:rg -n "PERTURBATION" src features 2>&1; echo "---runrecord---"; cat ru
+validate-0.13.59-hand-back	18	14:10:17	61194	379	Bash:HASH=$(GIT_INDEX_FILE="$(mktemp)" bash -c 'git read-tree HEAD && git a
+validate-0.13.59-hand-back	19	14:10:22	61449	378	Bash:HASH=3aaf21c29b68d09ae9159dc51a1b51b7143d761d cat >> runrecord.jsonl <
+validate-0.13.59-hand-back	20	14:10:29	61861	3	ToolSearch:
+validate-0.13.59-hand-back	21	14:10:41	62480	2	Bash:git status --porcelain
+validate-0.13.59-hand-back	22	14:10:58	65068	1536	
+SUMMARY	validate-0.13.59-hand-back	invocations=22	cache_read=1126077	out=7636	wall=14:05:02 to 14:10:58

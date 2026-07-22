@@ -1,5 +1,58 @@
 # Metrics: how to read a shakedown
 
+## 0.13.61: COMMAND CUSTODY WAS BYPASSABLE, and one stalled leg proved four things
+
+**A full voyage ran end to end on 0.13.59+ and every role stayed in its own write scope:**
+QM -> hand-back -> Crew -> Boatswain -> commit `e4fe725`, clean tree, watchbill struck,
+6/6 green, planks joined. **Zero custody denials across the voyage** - which is the proof
+that 0.13.59 fixed the right thing: the earlier leg was denied because it was doing
+something illegal, these were never denied because doctrine now routes them to something
+legal. QM 22 inv, Crew 11 inv / 35s, Boatswain 21 tool uses.
+
+### 1. 0.13.49's blocking path is LIVE-VALIDATED on M1, after seven legs of zero denominator
+
+The Boatswain leg ended its turn holding a live background run. **The guard fired and named
+`b86uuu6yp`, the leg's OWN task**, verified against its own launch line. That is 0.13.49's
+central claim, and it is no longer replay-only.
+
+### 2. M5 is OPEN, and the operator scored it wrong at a snapshot
+
+The block bought one intervention; re-entrancy let the second stop through by design, and
+the leg stopped again on a wait. **The operator wrote "the block rescued nothing" at that
+moment. Twenty minutes later the leg resumed and committed.** That is the standing method
+debt, violated with the rule in front of the operator: *a stalled leg's outcome is a
+function of when you look*, and the 2026-07-21 entry already records the operator making
+this error twice. **Whether the block CAUSED the completion is unestablished.**
+
+**This is also the argument that dropping the unexplained-resumption question was wrong.**
+It was dropped earlier the same day as unfixable and not worth knowing; it now sits directly
+under a claim we want to make about the hook, because "the guard rescued the leg" and "the
+leg would have resumed anyway" are indistinguishable without it.
+
+### 3. COMMAND CUSTODY WAS FULLY BYPASSABLE through the Monitor tool
+
+`bash-custody.sh` was matched on `Bash` alone. **The Monitor tool takes the same `command`
+field**, so outbound (Captain-only), the Captain-notes bulkhead, Boatswain's commit custody,
+the recursive-grep and git-content readers, and 0.13.60's busy-wait guard were all reachable
+around it by running the command through Monitor.
+
+Verified, not assumed: fed a Monitor-shaped payload the script already denies `git push`,
+`cat CAPTAIN.md`, `git commit` and a `pgrep` wait loop, all exit 2. **The logic was never
+the gap. It never received the call.** Found because the live Boatswain leg ran its wait
+loop through Monitor.
+
+**0.13.60 would not have caught the fault it was written for**: that guard is a PreToolUse
+`Bash` hook and the busy-wait had already moved to another tool. Shipped an hour apart, the
+second fix exposed the first as incomplete.
+
+**A test can pass while the hole is open.** The first two new assertions fed Monitor payloads
+directly to the script and would have passed throughout. A third now asserts `hooks.json`'s
+MATCHER covers Monitor, because the config was the defect, not the script. 174 green.
+
+**Standing lesson: enumerate the tools that can run a command, not the one you had in mind.**
+Any guard scoped to a tool name is only as complete as that enumeration.
+
+
 ## 0.13.57 VALIDATED LIVE, and it exposed 0.13.59 (2026-07-22, post-restart, installed channel)
 
 **The first fix shipped this session with live behavioural evidence, and it arrived by
