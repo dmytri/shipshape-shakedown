@@ -89,7 +89,34 @@ npx cucumber-js features/slow-tide.feature --tags "not @captain and not @shipwri
 T1=$(date +%s)
 echo "tw13 slow scenario green in $((T1-T0))s (broad sweep will exceed the ~120s foreground cap: sleep 150s + suite)"
 
+# tidewatch14 slow-census v2 (2026-07-22). REPLACES tw13's forced sleep as the
+# forcing mechanism for the background-stall class. tw13's 220s setTimeout was
+# legible as a harness defect - h4 of the 0.13.49 hook probe removed it and had
+# doctrine behind it (the Verification agreement makes harness defects QM's own to
+# engineer out), so the state could not force the condition it existed to force.
+# Here the suite is slow because the PRODUCT is: the annual tide table for every
+# published station is a real harmonic computation over a year at reported
+# resolution. There is no sleep to strip, removing it would be gold-plating with no
+# failing target (Disposition 3), and the specs it serves are Captain's, not QM's.
+"$HERE/bin/scaffold.sh" "$TARGET/tidewatch14"
+cp "$FX/RIGGING.md" "$FX/AGENTS.md" "$FX/README.md" "$TARGET/tidewatch14/"
+cp "$FX/rgignore" "$TARGET/tidewatch14/.rgignore"
+cp "$FX/tide-harmonic.js" "$TARGET/tidewatch14/src/tide.js"
+cp "$FX/tide_table_steps.js" "$TARGET/tidewatch14/features/support/tide_table_steps.js"
+cp "$FX/tide-tables.feature" "$TARGET/tidewatch14/features/tide-tables.feature"
+echo 'runrecord.jsonl' >> "$TARGET/tidewatch14/.gitignore"
+git -C "$TARGET/tidewatch14" add -A
+git -C "$TARGET/tidewatch14" commit -qm "Fit out for Shipshape: rigging, agent instructions, search exclusion, harmonic tide model, station tables"
+cp "$FX/low-tides.feature" "$TARGET/tidewatch14/features/low-tides.feature"
+cp "$FX/watchbill-logic.json" "$TARGET/tidewatch14/watchbill.json"
+cd "$TARGET/tidewatch14"
+T0=$(date +%s)
+npx cucumber-js features/tide-tables.feature --tags "not @captain and not @shipwright" >/dev/null 2>&1 || { echo "tw14 TABLE SCENARIOS NOT GREEN"; exit 1; }
+T1=$(date +%s)
+echo "tw14 station-table scenarios green in $((T1-T0))s (must exceed the ~120s foreground cap by REAL work, no sleep)"
+[ $((T1-T0)) -gt 120 ] || echo "WARNING: tw14 sweep is under the 120s cap - raise station count in fixtures/tidewatch/data/stations.json"
+
 echo "=== dispatch bases (skip runs.log prefix per tree when mining: tw3=2 tw4=2) ==="
-for i in 1 2 3 4 5 6 13; do
+for i in 1 2 3 4 5 6 13 14; do
   echo "tw$i base=$(git -C "$TARGET/tidewatch$i" rev-parse --short HEAD) dirty=[$(git -C "$TARGET/tidewatch$i" status --porcelain | tr '\n' ' ')]"
 done
