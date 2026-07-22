@@ -1,7 +1,91 @@
 # Captain notes - shipshape-shakedown workstream
 
 <!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
-## >>> PICKUP STATE, end of 2026-07-22. THIS IS THE ONLY LIVE ORDER. <<<
+## >>> PICKUP STATE, 2026-07-22 late. THIS IS THE ONLY LIVE ORDER. <<<
+
+**0.13.56 is the candidate FINAL 0.13.x release.** Six versions shipped today, all
+textual, all pushed and installed, `tests/*.sh` green on each. **None carries behavioural
+evidence.** Earning that is this order's whole content.
+
+| Version | Change | Marker string, for channel verification |
+|---|---|---|
+| 0.13.51 | role transitions are dispatch, not load | `loading Crew in place only when operating without subagents` |
+| 0.13.52 | Article 7 says MUST NOT, not a negated MAY | `mechanism MUST NOT be used to circumvent` |
+| 0.13.53 | a discarded skeleton liquidates its provisional plank | `the skeleton having been discarded` |
+| 0.13.54 | two Article-coherence defects | `MAY set a tier's ` + backtick-budget |
+| 0.13.55 | outbound verifies the artifact users consume | `shipping reports that the command exited` |
+| 0.13.56 | harbour refreshes golden captures | `Refresh the golden captures` |
+
+All six verified present in the installed text at `6a33257aff87`, 1 file each.
+
+### Step 0, in this order, no improvising
+
+1. `bash bin/preflight.sh` — it FAILED all afternoon on a stale snapshot and must pass now.
+2. **Verify the channel empirically before spending anything**: dispatch one throwaway
+   leg and marker-grep its raw transcript for `Refresh the golden captures`. Zero hits =
+   stale snapshot = stop. Never trust timestamps, and note that plugin parity passing does
+   NOT prove the plugin loaded — that is the dangling-installPath finding.
+3. `bash bin/fixture-check.sh <target>` after `bin/probe-states.sh`.
+
+### The probes owed, in priority order. Everything is built; nothing is unknown.
+
+**A. 0.13.49's hook, blocking path — on `tidewatch14`, NOT tw13.** The hook has still
+never blocked a live stop. tw13 is RETIRED for this class: h4 removed its 220s sleep as a
+harness defect and had doctrine behind it. tw14 forces the condition through real product
+work (120 stations x 37 harmonic constituents, 168s verified, 6/6 green by construction)
+and there is nothing in it a role is authorised to delete. Markers are fixed in
+`designs/bgact/rubric-hook.md`. **Omit the background-task lines from dispatches** — they
+instruct the role to do exactly what the hook exists to catch.
+
+**B. The flaky-strike probe** — `designs/flakystrike/rubric.md`, state `tidewatch15`,
+retuned to ~80% single-green (32/40 measured) so ~5 of 6 legs per arm score. 12 legs,
+n=6/arm, treatment from a worktree with the one candidate sentence. Re-measure flakiness
+per build; it is load dependent.
+
+**C. 0.13.51's behavioural claim, and it is the one most worth earning.** Today's evidence
+is that 3 of 4 QM legs LOADED Crew instead of dispatching, with no `Task`/`Agent` tool used
+in the whole run. 0.13.51 removed the looser branch. **Does that change the route roles
+take?** Control `daf0443` (0.13.50) from a worktree, treatment 0.13.56. Marker is binary and
+cheap to mine: did the leg use a `Task`/`Agent` tool, or `Skill(shipshape:crew)` plus its own
+edit to production code? Any state with a failing production target works; `tidewatch13` at
+its scaffolded base is the cheapest.
+
+**D. 0.13.55 and 0.13.56 are the 0.13.42 class** — an obligation whose condition is silent,
+now carrying a named act. That class has the corpus's only 0/4 -> 4/4 result. Both are
+worth a probe and neither has one. 0.13.55 needs a fixture with an outbound target whose
+`ship` succeeds while `verify` fails; 0.13.56 needs a golden capture that has drifted from
+its real dependency. **Neither fixture exists yet.**
+
+### Then, and only then, the final pilot on this minor release
+
+Per `scenarios/pilot.md`, `bin/preflight.sh` as ordered step 0, and the oracle contract it
+prints — apply BOTH patches, serve at `examples/shakedown/`, grade `--env
+framework=shakedown`. **A residual failure is a reason to check that step first, not a
+finding.** Pilot #7 skipped it and manufactured three phantom failures and two false
+findings pushed to dk.
+
+### Standing conclusions, do not relitigate
+
+- **Text is the wrong instrument for the background-stall class.** Two wordings failed. Do
+  not ship a third. The next candidate is machinery.
+- **The 12/12 "no covering timeout -> stall" table is NOT deterministic** — h1 crossed the
+  boundary without one and survived on a busy-wait doctrine forbids.
+- **A dirty working tree is not a verdict.** It is a moment in someone else's turn. Read
+  `~/yoink` only through committed history; a session is live in it.
+- Taking the named act is ~half price (20 inv vs 38) and gets further.
+
+### Operator errors today, kept visible
+
+- h2 was dispatched onto the tree h1 had already mutated. Killed, nothing scored.
+- 0.13.51's sweep regex was case-sensitive and missed `Load Boatswain` at `captain:105`;
+  an audit caught it and 0.13.54 fixed it.
+- The flaky fixture was built at a tuning unfit for its own rubric; the denominator
+  arithmetic belonged in the rubric when n was set.
+- 0.13.53's commit message claimed yoink resolved the deadlock by crossing a write scope.
+  **False** — it went through harbour custody (`d9c5a7b`). Retracted in
+  `designs/bgact/results-hook.md`.
+- A `git stash push` ran in `~/yoink` while another session was live in it. It created
+  nothing, by luck of timing. Third cross-session hazard instance.
 
 Everything below this block is a dated record — **history, not a queue.** The
 2026-07-21 pickup block that used to sit here is superseded: its one action (exercise
