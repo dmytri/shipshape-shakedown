@@ -194,3 +194,31 @@ horizon, which is the fixture's forcing mechanism removed and still removed.
 3. **The load-vs-dispatch tension is the highest-value item found here** and it is textual.
    It costs context isolation, it costs role identity, and it silently voids every
    `agent_type`-gated hook — which is most of the plugin's enforcement layer.
+
+## CORRECTION to 0.13.53's stated failure mode (same day, from live evidence)
+
+0.13.53 shipped on a reading of `~/yoink`'s tree that said the provisional-plank deadlock
+had been resolved by an edit crossing a write scope: the working tree showed the scenario
+deleted AND `@planks-provisional` stripped from `src/cli.ts`, and production code is out of
+Captain's reach under Article 8.
+
+**That reading was WRONG.** Forty minutes later the same repo committed `d9c5a7b`,
+*"harbour custody: superseded @captain scenario removed, plank-provisional cleaned"*. The
+edits were harbour-scoped work, which Shipwright may legally do. No write scope was crossed.
+
+**What the live evidence actually shows is better than the guess, and it does not retire the
+finding:** the state drains into harbour, so it is not a permanent deadlock — it is a
+**full harbour cycle spent to strike one orphaned annotation**, triggered by a Captain act
+doctrine explicitly authorises, with no in-voyage route. 0.13.53's fix stands on that: Crew
+strikes it while the seam is in hand. But the commit message's claim that yoink "resolved it
+only by an edit that crossed a write scope" is false and is retracted here.
+
+**Method note, and it is the same lesson this file already carries twice:** the wrong reading
+came from a snapshot of a working tree belonging to a session still running. A dirty tree is
+not a verdict; it is a moment in someone else's turn. The corpus's rule about observation
+horizons applies to other agents' trees, not only to stalled legs.
+
+**Operator near-miss, recorded:** the concurrent session was discovered only because a
+`git stash push` in `~/yoink` returned "No local changes to save" — the files had moved
+under the read. It created no stash and left no trace, but a minute earlier it would have
+taken another session's in-flight work. Third instance of the cross-session hazard class.
