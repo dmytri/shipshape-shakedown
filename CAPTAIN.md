@@ -29,9 +29,42 @@ replay-correct on all 5 states using real runtime transcripts.
 preflight, driven by `expected-defects.json` (which already specified its contract and had
 never been implemented). Both drift directions verified by reinjecting historical faults.
 
+### Shipped later the same day, on dk's "do all, don't park"
+
+- **0.13.51** — the role-transition route is **dispatch, not load**, wherever subagents
+  exist. Five sites offered an unconditional in-place load against `SKILL.md:327`'s rule;
+  `qm:72` offered both as equals (*"load/dispatch Crew"*). Made to match
+  `boatswain:102`, the one site that was already right. Textual. Pushed, installed.
+- **0.13.52** — Article 7 states its prohibition as **MUST NOT**, not a negated MAY.
+  dk's pilot-#6 item, open since. Swept all skills; it was the only true instance.
+- **`bin/fixture-check.sh`** — dk's fixture-conformance ruling, wired into preflight.
+- **`tidewatch14`** — the replacement forcing mechanism (below).
+- **`tidewatch15` + `designs/flakystrike/rubric.md`** — the flaky-strike probe, staged.
+- **`prompts/pilot-dispatches.md`** — was stale at 0.13.14 and carried an operational
+  instruction inside a QM dispatch; struck. Background-task block now marked optional,
+  with the rule that probes of this class MUST omit it.
+
+**DROPPED, with reason, so it does not come back:** the unexplained resumption mechanism
+(4/7 vs 0/3). It is runtime behaviour neither doctrine nor this harness can change, and
+knowing it would alter nothing we ship — doctrine already assumes a detached run may never
+resume, which is the safe reading at any rate. It needs a runtime investigation, not a
+shakedown.
+
 ### The one next action
 
-**Route Finding 1 to dk. It is the highest-value item on the board and it is textual.**
+**Run the flaky-strike probe. Everything it needs is built and nothing is unknown.**
+
+State `tidewatch15`, rubric fixed and committed (`872bb64`). The blocker was never the
+design — it was that no honest flaky fixture existed. There is one now: a real I/O race,
+measured 10 green / 15 red over 25 runs on identical bytes, ~40% single-green. Two earlier
+designs were discarded after measurement showed them deterministic. `probe-states.sh`
+re-measures per build and warns if the state is not flaky on that machine.
+
+Cost: 12 legs, n=6/arm, treatment served from a worktree with one candidate sentence. The
+rubric's scoring denominator is legs whose FIRST run was green — 2-3 per arm — and it
+reports UNESTABLISHED below 2 rather than quoting a fraction of two.
+
+**Route Finding 1 to dk — DONE, dk ruled "do all", shipped as 0.13.51.**
 
 **QM does not dispatch Crew — it loads Crew and writes production code itself.** 3 of 4
 legs; not one leg used a `Task`/`Agent` tool at all. Two doctrine lines are in tension:
