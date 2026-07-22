@@ -1,6 +1,73 @@
 # Captain notes - shipshape-shakedown workstream
 
 <!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
+## >>> PICKUP STATE, 2026-07-22 close (post-sprawl-audit). THIS IS THE ONLY LIVE ORDER. <<<
+
+**0.13.64 SHIPPED, installed, both repos clean and level with origin.** A full sprawl/bloat/
+redundancy audit of the doctrine corpus (dk's ask, before the next pilot), discussed in full
+before anything was touched (dk: "don't do anything without discussing"), then executed
+completely once approved (dk: "do everything! (except for things we should not do)"). This
+session's own plugin snapshot still reads 0.13.63 (pre-dates the reinstall) - a fresh session is
+needed to validate 0.13.64 behaviourally.
+
+**Method:** three parallel read audits (redundancy, contradiction/dead-rule/broken-citation,
+sprawl/verbosity concentration) plus static cost accounting (`bin/doctrine-sections.py`,
+per-commit char deltas since the 0.13.40 baseline audit). Every load-bearing claim re-verified
+by the operator against the actual quoted line before treating it as real, per this corpus's own
+standing discipline - this caught nothing false this round, but the discipline held.
+
+**Cost accounting:** corpus grew 189,000 -> 202,066 bytes (+6.9%) since 0.13.40's audit, over
+half of it in `shipshape/SKILL.md` (the file every role reads every leg) - same concentration
+pattern as before. My own `0.13.62` commit was the single largest delta (+2,121 bytes), matching
+the prior audit's own self-critique precedent (it too caught its own author's fix as the worst
+offender).
+
+**Shipped in 0.13.64:**
+1. Two broken citations - "the Working tree policy" and "the Transient output policy" were cited
+   7 times across 4 files; the actual headings lacked "policy". Headings renamed to match.
+2. Three confirmed contradictions, each resolved: "Captain never writes production code"
+   (absolute) vs. the Perturbation policy's licensed exception (now names the exception); the
+   "full regression" term-of-art allowing a voyage pivot vs. the operative rule saying harbour is
+   its only trigger (term-of-art corrected, 2 of 3 sites already agreed); Shipwright's "never asks
+   the user" (absolute) vs. licensed harbour conversation elsewhere (now scoped to derivable
+   values).
+3. **The same bug class as 0.13.59, swept.** 0.13.59 fixed one "loading Crew in place only when
+   operating without subagents" site after a live QM leg proved the assumed role's write was
+   denied under its own real `agent_type`. It fixed only that one site. I directly verified
+   `bash-custody.sh` (not just read it) and found 4 more identical-shape sites still broken -
+   `captain:46`, `captain:105`, `shipwright:144` (loading Boatswain for custody - `git commit` is
+   denied for every `agent_type` except `boatswain`), `boatswain:102` (loading Captain for
+   outbound - `git push`/`tag` denied unconditionally). A 5th site, `qm:77` (loading Captain for a
+   blocker conversation), implies no gated git action and was correctly left alone. All 4 broken
+   sites fixed with the same "ends in report, caller dispatches" shape 0.13.59 established.
+4. **Concurrency conflation, evidenced by a live consumer failure.** "Concurrency is safe by
+   construction" conflated correctness-safety (isolation - genuinely safe by construction) with
+   resource-safety (memory/CPU headroom - NOT safe by construction). `~/jolly`'s own
+   dmesg-confirmed OOM, twice, killed three lanes' worth of work for a theoretical speedup "never
+   once achieved" - exactly what this conflation invites. Split into two named properties;
+   resource sizing changed from reactive to conservative-first. (Noted and discounted: a separate
+   jolly status update citing a similar fix on their side might be against an older doctrine
+   snapshot, so it was not treated as independent confirmation of our current text.)
+5. Redundancy removed at 6 sites (plank-pattern-form rule x4, dependency-routing rule x2), each
+   now citing the canonical site instead of restating it.
+6. Three paragraphs over 3,000 chars restructured into lists, no binding content lost:
+   shipwright's Methodology-checks bullet (4,368 chars), captain's Greenfield-fast-path bullet
+   (4,090 chars), and the separable trailing rules of qm's Crew-dispatch step (its reasoning core
+   stayed prose).
+
+**Net size: 202,066 -> 202,677 bytes (+611).** Byte count was never the goal - redundant
+restatement and a run-on paragraph both cost bytes, and this sweep traded restated-content bytes
+for list-structure bytes while fixing 5 confirmed contradictions/broken-citations and one
+conflated safety property. 174 hook assertions unaffected (skills-only, no hook logic touched).
+
+**Findings surveyed but not shipped, on stated grounds:** several partially-redundant sites
+(clean-context handoff, perturbation-plant mechanics, check-precedence restatement in Boatswain,
+condemned-scenario table restatement) were judged not worth the edit - each carries real
+non-redundant content alongside the restated portion, and the recoverable bytes were marginal
+(~150-400 each). The identical 4-way final-report closing sentence was judged an intentional
+shared template, not drift risk, and left alone.
+
+<!-- =================== PRIOR PICKUP STATE, superseded below =================== -->
 ## >>> PICKUP STATE, 2026-07-22 close (post-consumer-audit, queue closed). THIS IS THE ONLY LIVE ORDER. <<<
 
 **0.13.63 SHIPPED, installed, both repos clean and level with origin.** Six disjoint fixes from
