@@ -1,5 +1,34 @@
 # Metrics: how to read a shakedown
 
+## 0.13.57: WRITE CUSTODY WAS FAILING OPEN (2026-07-22, post-restart, live-proven)
+
+**The most consequential defect this harness has found, and it was invisible to every
+check the corpus had.** `write-custody.sh` resolved `RIGGING.md` from the payload's `cwd`.
+A dispatched role's `cwd` is the SESSION directory, not the project root — true for any
+scaffolded tree, a second checkout, or a monorepo package. The lookup failed, every
+`## Directories` value came back empty, no directory check could match, and **the guard
+passed every write.**
+
+**Live evidence, not inference: four QM legs across two sessions edited production code
+with ZERO denials.** Fed the identical edit with `cwd` set to the project root, the hook
+denies correctly — so the rules were right and the input was wrong the whole time.
+
+**Why it hid:** `bash-custody.sh` fired normally in the very same legs (*"qm MUST NOT run
+this command"*), because its rules are path-blind and need no `RIGGING.md`. **Custody
+looked alive while Article 8's write scopes — the enforcement the plugin exists to
+mechanize — were inert.** Any corpus claim that write custody held in a sim run is
+retrospectively unsupported: the sim trees are exactly the case that failed open.
+
+Fixed by walking UP FROM THE TARGET FILE. `feature-quality.sh` carried the identical
+assumption and is fixed with it. `planks-check.sh` has no file in its payload to walk up
+from and keeps the cwd form — the last remaining member of this class, recorded rather
+than left implicit. 164 assertions green, +6 covering cwd-independence both ways.
+
+**Standing lesson: a guard that cannot find the project must not conclude the write is
+legal.** Fail-open is the default failure mode of every check that derives its scope from
+configuration it might not find.
+
+
 ## 0.13.49 hook, FIRST LIVE EXERCISE, 4 legs, sonnet, installed channel (2026-07-22) — FOUNDATION CONFIRMED, BLOCKING PATH UNTESTED
 
 Rubric fixed and committed BEFORE any leg ran (`93e3fb3`); full account
@@ -21,7 +50,35 @@ verified empirically per leg (0.13.50 marker 1 hit each, 0.13.48 string 0).
 - **Replay on REAL transcripts: all 5 states correct**, including both blocking states.
   First exercise of the algorithm on files the runtime actually wrote. Not live firing.
 
-### FINDING 1: QM does not dispatch Crew — it LOADS Crew and writes production itself, 3/4
+### FINDING 1 — **RETRACTED 2026-07-22 post-restart. The roles were COMPLYING.**
+
+**The runtime gives subagents NO SPAWN TOOL.** Capability-probed directly rather than
+inferred: a subagent's tool list is `Artifact, Bash, Edit, Read, Skill, ToolSearch, Write`
+— no `Task`, no `Agent`. 0.13.51 says load in place *"only when operating without
+subagents"*, so loading Crew in place is exactly what doctrine prescribes here. There was
+never a looser branch on offer.
+
+The original reading below inferred the capability from pilot #6's banked nested-Crew
+transcripts. **Those ran on a previous VM.** Inferring a live runtime capability from
+banked history is the error, and it is the second time in one day that probing overturned
+a finding this file had already written up. A leg said so in its own report — *"no
+subagent spawn tool available this session"* — and the operator was inclined to read that
+as a role rationalising until the capability probe settled it.
+
+**Consequence: a proposed hook to deny `Skill(shipshape:crew)` would have been
+DESTRUCTIVE**, denying the only available route and deadlocking every voyage at its first
+production failure. It was not built.
+
+**What survives:** the two doctrine lines really were in tension and 0.13.51's textual fix
+stands on that. Its behavioural claim was never earned and **cannot be tested in this
+runtime**, because the branch it forbids is unreachable. Also surviving, and now the
+sharper point: with no spawn tool, role transitions in this runtime are operator-driven by
+construction — a role cannot chain to the next one, which is what this harness's own
+dispatch practice already assumed.
+
+<details><summary>Original finding as written, superseded</summary>
+
+### (superseded) QM does not dispatch Crew — it LOADS Crew and writes production itself, 3/4
 
 **Not one leg used a `Task`/`Agent` tool.** h2/h3/h4 each ran `Skill(shipshape:crew)` in
 their own QM context and edited `src/tide.js` themselves, then reported it as a dispatch
@@ -54,6 +111,8 @@ Highest-value item found this session and it is textual.**
   pilot-#6 item. Swept all skills: the only true instance.
 
 Both textual, both `tests/*.sh` green, both pushed and installed.
+
+</details>
 
 ### FINDING 2: the state cannot survive a compliant QM — h4 engineered the 220s wait away
 
