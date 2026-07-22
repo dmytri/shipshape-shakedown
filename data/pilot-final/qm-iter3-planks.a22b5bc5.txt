@@ -1,0 +1,17 @@
+# meta: {"agentType":"shipshape:qm","description":"QM leg, clean redispatch","toolUseId":"toolu_01XgubexRvkT1pgnofwPn73y","spawnDepth":1,"model":"sonnet"}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/a30ce8eb-4046-4c76-bd0c-82626846e880/subagents/agent-a22b5bc5630986feb.jsonl
+# banked: 2026-07-22T16:35:27Z
+qm-iter3-planks	1	15:42:01	12350	76	Skill:
+qm-iter3-planks	2	15:42:03	16486	78	Skill:
+qm-iter3-planks	3	15:42:05	21617	2	Bash:cat RIGGING.md && echo "---WATCHBILL---" && cat watchbill.json && echo
+qm-iter3-planks	4	15:42:12	49573	363	Bash:for f in features/todo-item-interactions.feature features/mark-all-com
+qm-iter3-planks	5	15:42:18	50801	187	Bash:ls features/support features/step_definitions && echo "===when_actions
+qm-iter3-planks	6	15:42:22	53971	227	Bash:echo "===given_setup.js===" && cat features/step_definitions/given_set
+qm-iter3-planks	7	15:42:29	55476	183	Bash:wc -l js/app.js && cat js/app.js
+qm-iter3-planks	8	15:42:38	59079	963	Bash:npx cucumber-js \   "features/todo-item-interactions.feature" \   "fea
+qm-iter3-planks	9	15:42:54	62539	405	Bash:git diff HEAD -- . ':!CAPTAIN.md' -- js/app.js features/step_definitio
+qm-iter3-planks	10	15:43:25	63913	2718	Bash:grep -n "the user checks\|the user unchecks\|the user marks" features/
+qm-iter3-planks	11	15:43:31	67777	177	Bash:rg -n "the user checks|the user unchecks|the user marks|the user click
+qm-iter3-planks	12	15:43:35	70681	2	Bash:sed -n '155,170p;245,270p' js/app.js
+qm-iter3-planks	13	15:43:48	71076	1898	
+SUMMARY	qm-iter3-planks	invocations=13	cache_read=655339	out=7279	wall=15:42:01 to 15:43:48

@@ -1,0 +1,25 @@
+# meta: {"agentType":"shipshape:boatswain","description":"Boatswain leg for voyage 1 commit custody","toolUseId":"toolu_01NQ9o9BiHMd4npw8ZrLQ2xa","spawnDepth":1,"model":"sonnet"}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/a30ce8eb-4046-4c76-bd0c-82626846e880/subagents/agent-af4f97596530cbf1a.jsonl
+# banked: 2026-07-22T16:35:27Z
+boatswain-voyage1	1	15:03:00	11118	78	Skill:
+boatswain-voyage1	2	15:03:02	16617	82	Skill:
+boatswain-voyage1	3	15:03:06	22493	5	Bash:ls -la && cat RIGGING.md AGENTS.md 2>&1 | head -300
+boatswain-voyage1	4	15:03:11	50453	221	Bash:git status && echo "---DIFF---" && git diff 6657ddf5008736179d7f7d4914
+boatswain-voyage1	5	15:03:17	51691	299	Bash:find . -path ./node_modules -prune -o -path ./.git -prune -o -type f -
+boatswain-voyage1	6	15:03:19	52226	142	Bash:cat .gitignore && echo --- && cat watchbill.json
+boatswain-voyage1	7	15:03:25	52785	536	Bash:wc -l js/app.js features/step_definitions/*.js features/support/world.
+boatswain-voyage1	8	15:03:30	53959	125	Read:app.js
+boatswain-voyage1	9	15:03:38	54707	608	Read:given_setup.js
+boatswain-voyage1	10	15:03:43	58362	266	Read:when_actions.js
+boatswain-voyage1	11	15:03:50	60086	314	Read:then_assertions.js
+boatswain-voyage1	12	15:04:03	62023	1355	Bash:cat features/*.feature
+boatswain-voyage1	13	15:04:18	64873	1214	Read:world.js
+boatswain-voyage1	14	15:04:23	69672	263	Bash:grep -rn "PERTURBATION" --include='*.js' --include='*.feature' . 2>/de
+boatswain-voyage1	15	15:04:28	72390	166	Bash:rg -n "PERTURBATION" . ; echo "---pkg---"; cat package.json; echo "---
+boatswain-voyage1	16	15:04:30	72826	192	Bash:npx cucumber-js --dry-run --tags "not @captain and not @shipwright" 2>
+boatswain-voyage1	17	15:04:41	73751	529	Bash:npx cucumber-js --tags "not @captain and not @shipwright" 2>&1 | tail 
+boatswain-voyage1	18	15:04:48	74042	218	Bash:rg -n "@captain|@shipwright" features/ ; echo "---node_modules ignored
+boatswain-voyage1	19	15:04:54	74681	460	Bash:git add -- .gitignore CAPTAIN.md RIGGING.md features/ index.html js/ p
+boatswain-voyage1	20	15:04:57	74990	1	Bash:git commit -m "$(cat <<'EOF' CUSTODY: TodoMVC vanilla-JS implementatio
+boatswain-voyage1	21	15:05:20	75717	1547	
+SUMMARY	boatswain-voyage1	invocations=21	cache_read=1199462	out=8621	wall=15:03:00 to 15:05:20

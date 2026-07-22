@@ -1,0 +1,17 @@
+# meta: {"agentType":"shipshape:crew","description":"Crew leg to fix edit-mode toggle hiding","toolUseId":"toolu_01JKEV3jfv8sZYk5q6uiEUz1","spawnDepth":1,"model":"sonnet"}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/a30ce8eb-4046-4c76-bd0c-82626846e880/subagents/agent-aa80ba8e123420dbb.jsonl
+# banked: 2026-07-22T16:35:27Z
+crew-iter2	1	15:19:07	11118	3	Skill:
+crew-iter2	2	15:19:10	16810	107	Skill:
+crew-iter2	3	15:19:14	19448	267	Bash:cat RIGGING.md && echo ---- && find features -iname "*editing-todo*"
+crew-iter2	4	15:19:17	47433	130	Read:editing-todo.feature
+crew-iter2	5	15:19:20	48116	165	Bash:sed -n '1,200p' features/step_definitions/then_assertions.js | grep -n
+crew-iter2	6	15:19:22	49117	173	Bash:grep -n "buildTodoItem\|editingId\|toggle\|@planks" js/app.js
+crew-iter2	7	15:19:27	49830	169	Read:app.js
+crew-iter2	8	15:19:29	51381	2	Edit:app.js
+crew-iter2	9	15:19:33	52400	307	Edit:app.js
+crew-iter2	10	15:19:36	52827	2	Bash:sed -n '145,158p' features/step_definitions/then_assertions.js
+crew-iter2	11	15:19:38	53268	235	Bash:ref="features/editing-todo.feature:The todo's own checkbox is hidden w
+crew-iter2	12	15:19:44	53656	227	Bash:ref="features/editing-todo.feature:The todo's own checkbox reappears o
+crew-iter2	13	15:19:50	54023	182	
+SUMMARY	crew-iter2	invocations=13	cache_read=559427	out=1969	wall=15:19:07 to 15:19:50

@@ -1,0 +1,29 @@
+# meta: {"agentType":"shipshape:qm","description":"QM leg for iteration 3 voyage","toolUseId":"toolu_018Qwfbucm4UM9LCQ7jMjaDT","spawnDepth":1,"model":"sonnet"}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/a30ce8eb-4046-4c76-bd0c-82626846e880/subagents/agent-a2dad35b665822752.jsonl
+# banked: 2026-07-22T16:35:26Z
+qm-iter3	1	15:33:42	11118	76	Skill:
+qm-iter3	2	15:33:44	16486	2	Skill:
+qm-iter3	3	15:33:49	21617	366	Bash:cat RIGGING.md && echo "---WATCHBILL---" && cat watchbill.json && echo
+qm-iter3	4	15:33:54	49573	286	Bash:git diff HEAD -- . ':!CAPTAIN.md' | head -400
+qm-iter3	5	15:34:02	50873	3	Bash:ls features/support && echo --- && ls js
+qm-iter3	6	15:34:06	53408	177	Bash:find . -path ./node_modules -prune -o -type f -print | grep -v node_mo
+qm-iter3	7	15:34:11	53631	40	Read:when_actions.js
+qm-iter3	8	15:34:14	56113	266	Read:then_assertions.js
+qm-iter3	9	15:34:22	58194	585	Bash:grep -n "toggle-all\|toggle\b\|addEventListener" js/app.js | head -60
+qm-iter3	10	15:34:27	61231	203	Read:app.js
+qm-iter3	11	15:34:32	62312	371	Read:world.js
+qm-iter3	12	15:34:49	66134	1393	Bash:cat package.json && ls node_modules | head -3 && cat features/mark-all
+qm-iter3	13	15:34:54	68009	185	Bash:cat features/todo-item-interactions.feature && echo --- && cat feature
+qm-iter3	14	15:35:24	71676	2388	Bash:node -e " const { Window } = require('happy-dom'); const w = new Windo
+qm-iter3	15	15:35:33	73486	694	Bash:node -e " const { Window } = require('happy-dom'); const w = new Windo
+qm-iter3	16	15:35:49	75898	1338	Bash:grep -rn "checks\|unchecks" features/*.feature
+qm-iter3	17	15:35:52	76615	53	Bash:rg -n "checks|unchecks" features/*.feature
+qm-iter3	18	15:35:54	78124	142	Bash:rg -n "checks|unchecks" -g '*.feature'
+qm-iter3	19	15:35:57	78450	148	Bash:rg -n "checks|unchecks"
+qm-iter3	20	15:36:13	78766	1265	Bash:rg -n "individually"
+qm-iter3	21	15:36:16	79416	1259	Edit:when_actions.js
+qm-iter3	22	15:36:25	80962	3	Bash:npx cucumber-js \   features/todo-item-interactions.feature --name "^C
+qm-iter3	23	15:36:43	82364	1398	Bash:npx cucumber-js \   features/todo-item-interactions.feature --name "^C
+qm-iter3	24	15:37:02	85196	1223	Bash:git status --porcelain -- . ':!CAPTAIN.md'
+qm-iter3	25	15:37:25	88169	1887	
+SUMMARY	qm-iter3	invocations=25	cache_read=1577821	out=15751	wall=15:33:42 to 15:37:25

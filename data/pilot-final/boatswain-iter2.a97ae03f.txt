@@ -1,0 +1,24 @@
+# meta: {"agentType":"shipshape:boatswain","description":"Boatswain leg for voyage 2 commit custody","toolUseId":"toolu_015kQw6d9hFNte7tThJt8Zx4","spawnDepth":1,"model":"sonnet"}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/a30ce8eb-4046-4c76-bd0c-82626846e880/subagents/agent-a97ae03f24b325393.jsonl
+# banked: 2026-07-22T16:35:27Z
+boatswain-iter2	1	15:20:08	11118	71	Skill:
+boatswain-iter2	2	15:20:10	16662	83	Skill:
+boatswain-iter2	3	15:20:12	22531	328	Bash:cat RIGGING.md AGENTS.md 2>&1 | head -200 && echo "---STATUS---" && gi
+boatswain-iter2	4	15:20:26	50492	913	Bash:cat watchbill.json && echo "---" && ls features && echo "---diff CAPTA
+boatswain-iter2	5	15:20:31	54671	3	Bash:cat watchbill.json && echo "---" && ls features
+boatswain-iter2	6	15:20:34	55712	198	Bash:npx cucumber-js --dry-run --tags "not @captain and not @shipwright" 2>
+boatswain-iter2	7	15:20:40	56222	382	Bash:echo "=== plank strings in touched seam ===" && grep -n "@planks" js/a
+boatswain-iter2	8	15:20:45	56558	350	Bash:echo "=== plank strings in touched seam ===" && grep -n "@planks" js/a
+boatswain-iter2	9	15:20:50	57128	327	Bash:rg -n "active todo\(s\)|completed todo\(s\)|marks.*completed individua
+boatswain-iter2	10	15:20:55	59825	277	Bash:rg -n "active todo|completed todo|marks .* completed individually|todo
+boatswain-iter2	11	15:21:01	60340	472	Bash:rg -n --glob '!CAPTAIN.md' "active todo|completed todo|completed indiv
+boatswain-iter2	12	15:21:04	60805	190	Bash:rg -n "active todo\(s\)|completed todo\(s\)|completed individually|tod
+boatswain-iter2	13	15:21:08	61453	4	Bash:rg -n "active todo" features/step_definitions/given_setup.js
+boatswain-iter2	14	15:21:12	62767	242	Bash:npx cucumber-js features/mark-all-complete.feature features/editing-to
+boatswain-iter2	15	15:21:24	63025	668	Bash:npx cucumber-js --tags "not @captain and not @shipwright" 2>&1 | tail 
+boatswain-iter2	16	15:21:40	63414	742	Bash:ls js features/step_definitions features/support
+boatswain-iter2	17	15:21:43	64194	1	Bash:rm watchbill.json && git add -- CAPTAIN.md features/clear-completed.fe
+boatswain-iter2	18	15:21:49	64987	303	Bash:git add -- CAPTAIN.md features/clear-completed.feature features/editin
+boatswain-iter2	19	15:21:52	65297	1	Bash:git commit -m "$(cat <<'EOF' CUSTODY: watch1 advanced target set verif
+boatswain-iter2	20	15:22:11	65769	1256	
+SUMMARY	boatswain-iter2	invocations=20	cache_read=1072970	out=6811	wall=15:20:08 to 15:22:11

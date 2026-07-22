@@ -1,5 +1,133 @@
 # Metrics: how to read a shakedown
 
+## THE FINAL PILOT, 0.13.61, sonnet, installed channel (2026-07-22) — PASSED, 28/29, and a new hook defect found live
+
+**Full TodoMVC pilot per scenarios/pilot.md, operator-driven, main-session-loop runner. 25 legs
+banked, `data/pilot-final/`, 532 invocations / 32,110,532 cache-read / 355,206 out.** Same
+vendored spec/template as pilots #6/#7, independent build (vanilla JS), fresh scaffold
+`todopilot-final`. Oracle patched per `fixtures/oracle/README.md`, served at
+`examples/shakedown/`, graded `--env framework=shakedown` throughout — every grade below is
+valid on first try, no operator error this run.
+
+**Oracle grade trajectory across 5 build voyages, all iteration intent re-phrased in product
+language, oracle never named to any role:** 17/29 → 17/29 (unchanged — the "fix" only
+satisfied the project's own happy-dom scenarios, not the real bug) → 23/29 → 24/29 → **28/29,
+1 pending, "All specs passed!"** Matches pilot #5/#7's cleanest result.
+
+**Voyage 1 (build):** Captain → QM → Crew → Boatswain landed 34/34 green on the first try,
+commit `1b6e930`. QM correctly refused to write production code itself and handed off Crew
+solo per 0.13.59 — the whole app is one seam cluster, zero custody denials.
+
+**Voyage 2:** oracle-derived intent (5 residual issues, re-phrased) → Captain wrote 6 new
+scenarios → QM found 5/6 already green (two of QM's own step-definition/harness-race fixes,
+not production bugs) and dispatched Crew solo on the one real gap (edit-mode not hiding the
+toggle checkbox) → green, committed `480847d`. **Oracle regrade: still 17/29, identical
+failures** — proof the fixes so far were harness-side, not product-side; the pilot's own
+"probe changed nothing" pattern, this time inside a single pilot rather than across pilots.
+
+**Voyage 3: the real root cause, found by INVESTIGATION, not by re-reading test output.**
+Captain read the actual production code and reasoned from real DOM semantics: a checkbox's
+`.checked` property is already updated to its new value by the time a dispatched click
+handler runs (true in happy-dom AND real browsers), so `todo.completed = !checkbox.checked`
+always computes the logical inverse of what was clicked — not "sometimes," always. The prior
+voyage's step definitions had manually pre-set `.checked` then dispatched a synthetic click,
+which happened to cancel the inversion for isolated actions and hid the bug from the project's
+own suite. Crew's two-line fix (`!checkbox.checked` → `checkbox.checked` in both the per-item
+and mark-all handlers) went 43/43 green.
+
+**A genuine custody foul, self-healing exactly as doctrine predicts.** Boatswain refused to
+commit: two touched seams in `js/app.js` carried `@planks(...)` strings from the OLD step
+names (`the user checks/unchecks ...`), stale after the step rename earlier in the same
+voyage — a real, tree-verified plank-join failure, invisible to the green suite (the scenarios
+these planks trace to were themselves green). **Operator error in the same beat, cheaply
+caught:** the first QM redispatch to route this to Crew carried a narrated custody-foul report
+— contamination beyond role+base-commit — and QM correctly refused it (2 invocations). Clean
+redispatch let a fresh QM **independently re-derive the identical foul from the diff alone**,
+with no narration owed — exactly the "a touched seam's malformed plank is observed evidence
+that needs no report channel" clause doctrine states. Crew's plank-only fix, Boatswain's
+custody pass, clean commit `592e1c3`. **Oracle regrade: 23/29**, real jump.
+
+**Voyage 4:** two more real defects, again found by Captain's own investigation rather than
+guessed from symptoms: a re-entrant `render()`/edit-commit race (clicking another todo's
+checkbox, or "Mark all as complete," while an edit was left emptied-but-uncommitted didn't
+commit/discard it first) and the edit-mode label not hiding alongside the checkbox. Captain
+flagged, correctly, that stock happy-dom does not fire `blur` on disconnection the way a real
+browser does — a fixture-realism risk named BEFORE QM could chase a false green from it. Fixed,
+47/47 green, clean commit `c4007d1`. **Oracle regrade: 24/29** — every edit-mode-adjacent
+failure now gone.
+
+**Voyage 5: the DOM-identity/full-teardown-render defect, the same class pilots #6/#7 found
+independently, now confirmed a THIRD time and actually fixed under a valid grade** (the first
+two instances were discovered under void, unpatched grades and downgraded to "not a doctrine
+candidate on this evidence" in the 0.13.46 pilot-#7 entry — this is the first time it is seen,
+fixed, and reconfirmed removed under a correctly-patched oracle). `render()` did
+`todoListEl.innerHTML = ''` and rebuilt every `<li>` from scratch on every state change,
+invalidating any held DOM reference. Crew reworked it to keyed reconciliation (an id-keyed
+`todoElements` map, `buildTodoItem` split from a new `updateTodoItem` that mutates in place),
+51/51 green with zero regressions across the full 47-scenario prior surface. **QM independently
+engineered out a harness defect in the same leg**: a naive `assert.strictEqual` on two DOM
+element objects drove node to 1.6GB RSS and got OOM-killed on failure (`dmesg`-confirmed);
+replaced with a boolean `assert.ok` comparison, no serialization, sub-second.
+
+**NEW HOOK DEFECT, found live and reproduced directly (not just role-reported):**
+`bash-custody.sh`'s CAPTAIN.md content-blind `git add` exemption — the one doctrine explicitly
+mandates (`boatswain/SKILL.md`: "the path MAY ride among the other staged paths of one `git
+add` pathspec list") — silently breaks whenever the command spans multiple lines, which is how
+every role in this pilot issued it (`PR=...` / `cd "$PR"` / `git add -- CAPTAIN.md ...`).
+Root cause, confirmed by feeding the hook script crafted payloads directly: the command is
+extracted from JSON with `sed`, which does not unescape `\n` to a real newline or a space,
+so the literal 2-character `\n` sequence sits between statements. The guard's `git add`
+detection regex requires a preceding space or `/` (`[ \/]`) or start-of-string — a literal
+backslash-n satisfies neither, so the CAPTAIN.md-stripping exemption never fires and the
+plain notecheck denies the doctrine-legal commit. Single-line test payloads (the only kind
+any existing `tests/hooks.sh` assertion feeds it) pass; the real multi-line runtime form does
+not — the exact "guard proven only against synthetic single-line input, breaks on real
+multi-line input" shape as 0.13.48's transcript-choice bug. Mechanical, artifact-visible, no
+behavioural probe owed — **routed to dk, not shipped**. Worked around live: Captain (outside
+this hook's restricted-role case list) committed `CAPTAIN.md` directly, `72a9966`.
+
+**Final oracle grade: 28/29, 0 failing, 1 pending, "All specs passed!"** Matches pilot #5/#7.
+Spec coverage: every `app-spec.md` functionality section maps to a scenario across the final
+51-scenario watchbill history; no gaps found. Zero phantom findings this run (contrast pilot
+#7's three, caused by a skipped patch step) — `bin/preflight.sh`'s step-0 oracle-contract print
+was followed exactly, every grade valid on the first try.
+
+**Economy, per voyage (Captain / QM / Crew / Boatswain, invocations):**
+
+| Voyage | Captain | QM | Crew | Boatswain | Oracle grade after |
+|---|---|---|---|---|---|
+| 1 (build) | 26 | 36 | 25 | 21 | 17/29 |
+| 2 | 24 | 26 | 13 | 20 | 17/29 (unchanged) |
+| 3 | 33 | 25+3(contam)+13 | 9+17(planks) | 13(foul)+24(fixed) | 23/29 |
+| 4 | 45 | 16 | 20 | 21 | 24/29 |
+| 5 | 21+4(notes) | 32 | 24 | 21 | 28/29 |
+
+Voyage 3 is the most expensive relative to its output (custody foul + one operator
+contamination error), and voyage 4 is the single priciest Captain leg (45 inv, 3.66M cache) —
+both from genuine investigation depth (Captain running live probes against real happy-dom/DOM
+semantics to root-cause rather than guessing), not waste. Total pilot: **532 inv / 32.1M cache
+/ 355k out** across 25 legs, zero lost/orphaned legs, zero silent stalls.
+
+**Doctrine conformance, incidental but consistent across the whole pilot:** 0.13.59's
+write-scope-stop held (QM never wrote production, every red target flat-handed to Crew); zero
+Captain/discovery contamination reached QM except the one operator-caused instance, self-caught
+cheaply; the plank-join custody gate fired on a real fault and self-healed on redispatch;
+Boatswain's CAPTAIN.md content-blind staging discipline held even while blocked by the hook
+defect above (no role read or diffed the file to work around it).
+
+**Findings routed to dk, nothing shipped this run:**
+1. **`bash-custody.sh`'s multi-line `git add -- CAPTAIN.md ...` exemption is broken** (above).
+   Highest-value item this pilot — silently denies doctrine's own mandated Boatswain custody
+   action in the ordinary multi-statement shell form, and no existing test would have caught
+   it (every `tests/hooks.sh` assertion for this path is single-line).
+2. Rigging gap, not a diff fault: this project's `RIGGING.md` never got `plank-inventory`,
+   `step-usage`, `typecheck`, `lint`, or `conformance` filled in past the greenfield defaults,
+   so every Boatswain/QM pass this whole pilot fell back to `rg`-grep verification of plank
+   joins rather than a derived command. Never blocked anything, but it is the same
+   "obligation with no act" shape 0.13.42/44/45 targeted, this time in the harness's own
+   scaffolded rigging rather than doctrine text. Worth a `bin/scaffold`-equivalent for pilots
+   filling these in beyond `none` at bootstrap.
+
 ## 0.13.61: COMMAND CUSTODY WAS BYPASSABLE, and one stalled leg proved four things
 
 **A full voyage ran end to end on 0.13.59+ and every role stayed in its own write scope:**

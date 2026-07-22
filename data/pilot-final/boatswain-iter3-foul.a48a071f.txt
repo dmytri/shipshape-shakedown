@@ -1,0 +1,17 @@
+# meta: {"agentType":"shipshape:boatswain","description":"Boatswain leg for voyage 3 commit custody","toolUseId":"toolu_01PLFsJ9XVPfSRAKicbJWypu","spawnDepth":1,"model":"sonnet"}
+# source: /home/exedev/.claude/projects/-home-exedev-shipshape-shakedown/a30ce8eb-4046-4c76-bd0c-82626846e880/subagents/agent-a48a071fd842a7366.jsonl
+# banked: 2026-07-22T16:35:27Z
+boatswain-iter3-foul	1	15:38:55	11118	78	Skill:
+boatswain-iter3-foul	2	15:38:56	16821	170	Bash:cat RIGGING.md AGENTS.md 2>&1 | head -300
+boatswain-iter3-foul	3	15:39:01	22697	322	Bash:git status && echo "---DIFF---" && git diff 480847d07e8388bd8e7cdc7d99
+boatswain-iter3-foul	4	15:39:08	23288	383	Read:watchbill.json
+boatswain-iter3-foul	5	15:39:12	28074	209	Bash:grep -n "@planks" -B5 js/app.js
+boatswain-iter3-foul	6	15:39:23	28899	836	Bash:cat features/step_definitions/when_actions.js
+boatswain-iter3-foul	7	15:39:28	30512	339	Read:app.js
+boatswain-iter3-foul	8	15:39:37	32617	477	Bash:echo "--checks--" && grep -rn "user checks\|user unchecks" features/*.
+boatswain-iter3-foul	9	15:39:43	34995	2	Bash:rg -n "user checks|user unchecks" features/*.feature; echo "rc=$?"
+boatswain-iter3-foul	10	15:39:46	35645	137	Bash:rg -n "user checks|user unchecks" features
+boatswain-iter3-foul	11	15:40:01	36066	1263	Bash:rg -n "PERTURBATION" .; echo "---"; rg -n "@captain|@shipwright" featu
+boatswain-iter3-foul	12	15:40:18	36218	3	Bash:timeout 90 npx cucumber-js --tags "not @captain and not @shipwright" 2
+boatswain-iter3-foul	13	15:40:35	37572	2376	
+SUMMARY	boatswain-iter3-foul	invocations=13	cache_read=374522	out=6595	wall=15:38:55 to 15:40:35

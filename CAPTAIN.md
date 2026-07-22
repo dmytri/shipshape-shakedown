@@ -1,7 +1,57 @@
 # Captain notes - shipshape-shakedown workstream
 
 <!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
-## >>> PICKUP STATE, 2026-07-22 close. THIS IS THE ONLY LIVE ORDER. <<<
+## >>> PICKUP STATE, 2026-07-22 close (post-final-pilot). THIS IS THE ONLY LIVE ORDER. <<<
+
+**THE FINAL PILOT RAN AND PASSED.** 0.13.61, installed channel, `todopilot-final`, 25 legs,
+532 inv / 32.1M cache / 355k out (`data/pilot-final/`, full account in METRICS.md). Oracle
+graded 17/29 → 17/29 → 23/29 → 24/29 → **28/29, "All specs passed!"** across 5 build voyages,
+matching pilot #5/#7's cleanest result. Every voyage tree-verified (green suite + clean commit)
+by the operator before the next dispatch; every oracle grade taken from a freshly-served build,
+patches applied and framework name fixed from the first grading run (no phantom failures this
+time). Zero lost legs, zero silent stalls, one cheap operator contamination error (a QM
+dispatch over-narrated a custody foul; QM correctly refused it; clean redispatch re-derived the
+same foul from the diff alone, no narration needed).
+
+**NEW FINDING, HIGHEST VALUE THIS PILOT, ROUTED, NOT SHIPPED:** `bash-custody.sh`'s CAPTAIN.md
+content-blind `git add` exemption breaks on any multi-line Bash command — the ordinary form
+every role in this pilot used (`PR=...` / `cd "$PR"` / `git add -- CAPTAIN.md ...`). Root cause
+reproduced directly against the hook script with crafted payloads (not just inferred from a
+role's report): the command is extracted from JSON via `sed`, which leaves a literal `\n`
+between statements rather than a real newline or a space; the exemption's `git add` detection
+regex requires a preceding space/`/`/string-start, and a literal backslash-n satisfies none of
+those, so the exemption never fires and the doctrine-legal commit is denied. Every existing
+`tests/hooks.sh` assertion for this path is single-line, so nothing catches it. Mechanical and
+artifact-visible (same footing as 0.13.57/0.13.59's write-custody fixes) — **needs dk's word
+before any fix ships**, per the standing rule; not touched this session beyond the live
+reproduction. Worked around in-pilot: Captain (outside this hook's restricted-role list)
+committed `CAPTAIN.md` directly when Boatswain was blocked.
+
+**Also confirmed for the first time under a validly-patched grade: the DOM-identity /
+full-teardown-`render()` defect class (pilots #6, #7) is real, reproducible a third time, and
+fully fixable** with keyed reconciliation — no regressions across 51 scenarios. The corpus's
+prior write-up had downgraded this class to "not a doctrine candidate" because both earlier
+sightings were under void, unpatched oracle grades. This pilot re-opens it as confirmed real,
+though still not a doctrine-text finding (it is an application bug the spec doesn't mandate a
+particular render strategy for) — recorded for anyone extending fixture/harbour guidance on
+this class.
+
+**Rigging gap, not a fault:** `todopilot-final`'s `RIGGING.md` never advanced past greenfield
+`none` defaults for `plank-inventory`/`step-usage`/`typecheck`/`lint`/`conformance`; every
+custody pass this pilot fell back to `rg`-grep plank verification instead of a derived command.
+Never blocked anything, but is the same "obligation with no act" shape as prior doctrine
+findings, this time in scaffolded rigging rather than doctrine text.
+
+**Next standing action:** none owed immediately — the final pilot's job (validate 0.13.61 at
+acceptance scale) is discharged. Route the `bash-custody.sh` multi-line finding to dk and await
+their word before any fix. The three items below from the pre-pilot ledger remain open and
+un-touched by this pilot (it did not exercise the hook-block class or M5):
+
+1. **The unexplained resumption** (0.13.49/M5, n=1) — still open.
+2. **0.13.55/0.13.56 have no fixture** — still true.
+3. **M5 for the hook** — still open at n=1.
+
+<!-- ===================== PRIOR PICKUP STATE, superseded above ===================== -->
 
 **0.13.61 is the FINAL 0.13.x candidate.** Eleven versions shipped this day. Installed
 and registry-verified (`5fe3611`). Both repos clean and level with origin.
