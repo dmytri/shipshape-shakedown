@@ -3,10 +3,11 @@
 <!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
 ## >>> PICKUP STATE, end of 2026-07-21. THIS IS THE ONLY LIVE ORDER. <<<
 
-Everything below this block is a dated record. Sections further down still carry
-`>>> ... <<<` headings from the sessions that wrote them; **they are history, not a
-queue.** In particular the "PRIMED ORDER FOR THE NEXT PILOT" further down has had its
-item 1 discharged (result: NULL) — do not run it as written.
+Everything below this block is a dated record — **history, not a queue.** This is the
+only `READ THIS FIRST` block in the file and the only heading still marked `>>> <<<`;
+if you find another, someone added it without reading this. In particular the "PRIMED
+ORDER FOR THE NEXT PILOT" further down has had its item 1 discharged (result: NULL) —
+do not run it as written.
 
 **Deck:** doctrine **0.13.50**, installed and registry-verified, both repos clean and
 level with origin (`shipshape` `daf0443`, `shakedown` at this commit). `tests/*.sh` 5/5
