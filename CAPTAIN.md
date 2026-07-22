@@ -1,7 +1,20 @@
 # Captain notes - shipshape-shakedown workstream
 
 <!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
-## >>> PICKUP STATE, 2026-07-22 close (post-sprawl-audit). THIS IS THE ONLY LIVE ORDER. <<<
+## >>> PICKUP STATE, 2026-07-22 close (post-0.13.64-pilot). THIS IS THE ONLY LIVE ORDER. <<<
+
+**Standard `/shakedown` entry ran clean end to end.** Deck reported (doctrine at 0.13.64, METRICS baseline stale at 0.13.61), cheapest-scope proposed (a probe on the 0.13.64 custody-sweep sites), one question asked, dk pre-authorized a full pilot mid-turn ("then do full pilot, you are pre-authorized"). The standalone probe was folded into the pilot's own observations rather than run separately.
+
+**PILOT PASSED, 28/29, 3 voyages, 16 legs, 317 inv / 22.4M cache / 266k out — full account in METRICS.md's new top section.** Cheapest, cleanest pilot to date (roughly 60% of the final pilot's invocation cost for the same clean result). The 0.13.64 custody-sweep fix ("load role in place" only where it doesn't collide with write custody) was confirmed LIVE 4/4 across both roles it touches (QM, 3 times; Boatswain, twice) — unprompted, as an ordinary side effect of the voyages rather than a dedicated probe. No doctrine text findings this run; 0.13.64 held completely under live pressure.
+
+**Two things routed to dk, nothing shipped:**
+1. Recurrence: happy-dom does not fire `blur` on node removal (a second independent instance of this class, different specific gap than the final pilot's — same tier, same missing DOM-spec step). A real reentrancy bug (uncaught `removeChild` exception) could only be pinned by its structural cause, not scripted red directly, in this DOM tier. Worth a standing rigging note or a real-browser tier for browser-event-timing-dependent specs.
+2. Operator process hygiene: this session's oracle grading avoided a port collision with an unrelated day-old orphaned process from another session by using a different port rather than killing a PID it didn't own — worth carrying forward as the default move, not just a one-off.
+
+Data banked at `data/pilot-shakedown/` (16 leg transcripts + 3 oracle grade logs). METRICS.md and this file updated same-session; commit pending.
+
+<!-- =================== PRIOR PICKUP STATE, superseded below =================== -->
+## >>> PICKUP STATE, 2026-07-22 close (post-sprawl-audit). SUPERSEDED. <<<
 
 **0.13.64 SHIPPED, installed, both repos clean and level with origin.** A full sprawl/bloat/
 redundancy audit of the doctrine corpus (dk's ask, before the next pilot), discussed in full

@@ -1,0 +1,134 @@
+npm notice run todomvc@2.0.0 npx
+npm notice run 'cypress' run --config baseUrl=http://localhost:8001/examples/ --env framework=shakedown --spec cypress/e2e/spec.cy.js
+Warning: The allowCypressEnv configuration option is enabled. This allows any browser code to read values from Cypress.env(). This is insecure and will be removed in a future major version.
+
+1. Replace Cypress.env() calls with cy.env() (for sensitive values) or Cypress.expose() (for public configuration)
+2. Set allowCypressEnv: false in your Cypress configuration to disable Cypress.env()
+
+Learn more: https://on.cypress.io/cypress-env-migration
+
+
+================================================================================
+
+  (Run Starting)
+
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Cypress:        15.14.2                                                                        │
+  │ Browser:        Electron 138 (headless)                                                        │
+  │ Node Version:   v24.18.0 (/usr/bin/node)                                                       │
+  │ Specs:          1 found (spec.cy.js)                                                           │
+  │ Searched:       cypress/e2e/spec.cy.js                                                         │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+                                                                                                    
+  Running:  spec.cy.js                                                                      (1 of 1)
+
+
+  TodoMVC - shakedown
+    When page is initially opened
+      ✓ should focus on the todo input field (246ms)
+    No Todos
+      ✓ starts with nothing (151ms)
+      ✓ should hide #main and #footer (134ms)
+    New Todo
+      ✓ should allow me to add todo items (668ms)
+      ✓ should clear text input field when an item is added (389ms)
+      ✓ should append new items to the bottom of the list (1023ms)
+      ✓ should trim text input (484ms)
+      ✓ should show #main and #footer when items added (366ms)
+    Mark all as completed
+      ✓ should allow me to mark all items as completed (1106ms)
+      ✓ should allow me to clear the complete state of all items (1139ms)
+      ✓ complete all checkbox should update state when items are completed / cleared (1170ms)
+    Item
+      ✓ should allow me to mark items as complete (752ms)
+      ✓ should allow me to un-mark items as complete (779ms)
+      ✓ should allow me to edit an item (1538ms)
+    Editing
+      ✓ should hide other controls when editing (1101ms)
+      ✓ should save edits on blur (1412ms)
+      ✓ should trim entered text (1506ms)
+      1) should remove the item if an empty text string was entered
+      ✓ should cancel edits on escape (1149ms)
+    Counter
+      ✓ should display the current number of todo items (552ms)
+    Clear completed button
+      ✓ should display the correct text (950ms)
+      ✓ should remove completed items when clicked (1042ms)
+      ✓ should be hidden when there are no items that are completed (1073ms)
+    Persistence
+      - should persist its data
+    Routing
+      ✓ should allow me to display active items (1040ms)
+      ✓ should respect the back button (1244ms)
+      ✓ should allow me to display completed items (1116ms)
+      ✓ should allow me to display all items (1279ms)
+      ✓ should highlight the currently applied filter (1149ms)
+
+
+  27 passing (27s)
+  1 pending
+  1 failing
+
+  1) TodoMVC - shakedown
+       Editing
+         should remove the item if an empty text string was entered:
+     NotFoundError: The following error originated from your application code, not from Cypress.
+
+  > Failed to execute 'removeChild' on 'Node': The node to be removed is no longer a child of this node. Perhaps it was moved in a 'blur' event handler?
+
+When Cypress detects uncaught errors originating from your application it will automatically fail the current test.
+
+This behavior is configurable, and you can choose to turn this off by listening to the `uncaught:exception` event.
+
+https://on.cypress.io/uncaught-exception-from-application
+      at <unknown> (http://localhost:8001/examples/shakedown/js/app.js:139:43)
+      at Array.forEach (<anonymous>)
+      at render (http://localhost:8001/examples/shakedown/js/app.js:138:51)
+      at destroyTodo (http://localhost:8001/examples/shakedown/js/app.js:190:3)
+      at commitEdit (http://localhost:8001/examples/shakedown/js/app.js:236:4)
+      at HTMLUListElement.<anonymous> (http://localhost:8001/examples/shakedown/js/app.js:305:4)
+      at Keyboard.fireSimulatedEvent (http://localhost:8001/__cypress/runner/cypress_runner.js:118974:27)
+      at Keyboard.simulatedKeydown (http://localhost:8001/__cypress/runner/cypress_runner.js:119087:58)
+      at Keyboard.typeSimulatedKey (http://localhost:8001/__cypress/runner/cypress_runner.js:119125:10)
+      at <unknown> (http://localhost:8001/__cypress/runner/cypress_runner.js:118821:14)
+
+
+
+
+  (Results)
+
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Tests:        29                                                                               │
+  │ Passing:      27                                                                               │
+  │ Failing:      1                                                                                │
+  │ Pending:      1                                                                                │
+  │ Skipped:      0                                                                                │
+  │ Screenshots:  1                                                                                │
+  │ Video:        false                                                                            │
+  │ Duration:     27 seconds                                                                       │
+  │ Spec Ran:     spec.cy.js                                                                       │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+  (Screenshots)
+
+  -  /tmp/claude-1000/-home-exedev-shipshape-shakedown/2ea89db8-98b4-4916-a088-517273     (1280x720)
+     4f827d/scratchpad/oracle-shakedown/cypress/screenshots/spec.cy.js/TodoMVC - shak               
+     edown -- Editing -- should remove the item if an empty text string was entered (               
+     failed).png                                                                                    
+
+
+================================================================================
+
+  (Run Finished)
+
+
+       Spec                                              Tests  Passing  Failing  Pending  Skipped  
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ ✖  spec.cy.js                               00:27       29       27        1        1        - │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+    ✖  1 of 1 failed (100%)                     00:27       29       27        1        1        -  
+

@@ -1,0 +1,20 @@
+# source: /tmp/claude-1000/-home-exedev-shipshape-shakedown/2ea89db8-98b4-4916-a088-5172734f827d/tasks/a026c4f665034d32a.output
+# banked: 2026-07-22T22:01:07Z
+a026c4f665034d32a.output	1	21:57:59	12776	157	Read:SKILL.md ||| Read:SKILL.md
+a026c4f665034d32a.output	2	21:58:03	17305	186	Read:SKILL.md
+a026c4f665034d32a.output	3	21:58:08	44290	328	Bash:cat RIGGING.md AGENTS.md && echo "---STATUS---" && git status && echo 
+a026c4f665034d32a.output	4	21:58:13	54048	3	Bash:cat watchbill.json && echo "---STEPUSAGE---" && npx cucumber-js --dry-
+a026c4f665034d32a.output	5	21:58:20	56567	601	Bash:npx cucumber-js --dry-run --format usage --tags "not @captain and not 
+a026c4f665034d32a.output	6	21:58:30	60128	397	Bash:grep -rn "@planks" js/ features/ 2>/dev/null | head -20; echo "---"; s
+a026c4f665034d32a.output	7	21:58:36	61996	259	Bash:grep -n "@planks\|function bindEvents\|^\s*function \|^\tfunction " js
+a026c4f665034d32a.output	8	21:58:42	63492	319	Read:app.js
+a026c4f665034d32a.output	9	21:58:55	64829	1058	Bash:cat -n features/editing-todo.feature
+a026c4f665034d32a.output	10	21:59:14	65870	1552	Bash:git show f66a334:js/app.js | sed -n '290,310p'
+a026c4f665034d32a.output	11	22:00:20	67722	5781	Bash:npx cucumber-js --tags "not @captain and not @shipwright" 2>&1 | tail 
+a026c4f665034d32a.output	12	22:00:37	69566	1356	Bash:git add -- features/editing-todo.feature features/support/steps.js js/
+a026c4f665034d32a.output	13	22:00:43	75466	423	Bash:git commit -m "$(cat <<'EOF' Boatswain custody: watch1 Enter-to-commit
+a026c4f665034d32a.output	14	22:00:47	76917	1289	
+SUMMARY	a026c4f665034d32a.output	invocations=14	cache_read=790972	out=13709	wall=21:57:59 to 22:00:47
+LEDGER	a026c4f665034d32a.output	Bash	invocations=10	cache_read=620482	out=11758
+LEDGER	a026c4f665034d32a.output	Read	invocations=3	cache_read=93573	out=662
+LEDGER	a026c4f665034d32a.output	FINAL	invocations=1	cache_read=76917	out=1289

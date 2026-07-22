@@ -1,0 +1,17 @@
+# source: /tmp/claude-1000/-home-exedev-shipshape-shakedown/2ea89db8-98b4-4916-a088-5172734f827d/tasks/af6fbc0c667a57b76.output
+# banked: 2026-07-22T21:19:08Z
+af6fbc0c667a57b76.output	1	21:18:19	12776	2	Read:SKILL.md ||| Read:SKILL.md
+af6fbc0c667a57b76.output	2	21:18:25	17384	5	Bash:cat RIGGING.md 2>/dev/null; echo "---git---"; git log --oneline -3; gi
+af6fbc0c667a57b76.output	3	21:18:29	40879	186	Bash:grep -n "script" index.html; echo "---tail---"; tail -20 index.html; e
+af6fbc0c667a57b76.output	4	21:18:32	41735	228	Edit:index.html
+af6fbc0c667a57b76.output	5	21:18:36	42156	332	Bash:grep -n "@planks" js/app.js | head -20; echo "---"; grep -rn "@planks"
+af6fbc0c667a57b76.output	6	21:18:40	42511	434	Bash:cat watchbill.json | python3 -c " import json,sys d=json.load(sys.stdi
+af6fbc0c667a57b76.output	7	21:18:46	44167	401	Bash:timeout 100 npx cucumber-js --tags "not @captain and not @shipwright" 
+af6fbc0c667a57b76.output	8	21:18:53	44675	363	Bash:git diff -- index.html 2>/dev/null || diff <(git show f8c5e6e:index.ht
+af6fbc0c667a57b76.output	9	21:18:56	45200	174	Bash:tail -5 index.html
+af6fbc0c667a57b76.output	10	21:19:03	45578	503	
+SUMMARY	af6fbc0c667a57b76.output	invocations=10	cache_read=377061	out=2628	wall=21:18:19 to 21:19:03
+LEDGER	af6fbc0c667a57b76.output	Bash	invocations=7	cache_read=276972	out=1895
+LEDGER	af6fbc0c667a57b76.output	FINAL	invocations=1	cache_read=45578	out=503
+LEDGER	af6fbc0c667a57b76.output	Edit	invocations=1	cache_read=41735	out=228
+LEDGER	af6fbc0c667a57b76.output	Read	invocations=1	cache_read=12776	out=2

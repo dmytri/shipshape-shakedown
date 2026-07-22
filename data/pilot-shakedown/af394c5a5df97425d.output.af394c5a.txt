@@ -1,0 +1,25 @@
+# source: /tmp/claude-1000/-home-exedev-shipshape-shakedown/2ea89db8-98b4-4916-a088-5172734f827d/tasks/af394c5a5df97425d.output
+# banked: 2026-07-22T21:21:40Z
+af394c5a5df97425d.output	1	21:19:23	12776	5	Read:SKILL.md ||| Read:SKILL.md
+af394c5a5df97425d.output	2	21:19:27	17361	185	Read:SKILL.md
+af394c5a5df97425d.output	3	21:19:29	44351	192	Bash:cat RIGGING.md AGENTS.md 2>&1 | head -300
+af394c5a5df97425d.output	4	21:19:33	54108	306	Bash:git log --oneline -n5 && echo --- && git status && echo --- && git dif
+af394c5a5df97425d.output	5	21:19:38	54799	356	Bash:git status --porcelain=v1 && echo --- && find . -path ./node_modules -
+af394c5a5df97425d.output	6	21:19:41	55263	266	Bash:cat watchbill.json 2>&1 && echo "---cat.gitignore---" && cat .gitignor
+af394c5a5df97425d.output	7	21:19:44	55943	376	Bash:(npx cucumber-js --dry-run --format usage --tags "not @captain and not
+af394c5a5df97425d.output	8	21:19:51	57384	111	Read:step-usage.out
+af394c5a5df97425d.output	9	21:20:00	57775	638	Bash:grep -c '@planks' js/app.js && echo "---" && grep -n 'PERTURBATION' -r
+af394c5a5df97425d.output	10	21:20:23	65470	1966	Bash:npx cucumber-js --tags "not @captain and not @shipwright" > /tmp/claud
+af394c5a5df97425d.output	11	21:20:29	66238	142	Bash:tail -20 /tmp/claude-1000/-home-exedev-shipshape-shakedown/2ea89db8-98
+af394c5a5df97425d.output	12	21:20:32	68219	7	Bash:grep -rn '@captain\|@shipwright' features/*.feature 2>/dev/null; echo 
+af394c5a5df97425d.output	13	21:20:35	68485	253	Bash:stat -c '%n %s bytes' CAPTAIN.md
+af394c5a5df97425d.output	14	21:20:39	68793	220	Bash:cat package.json
+af394c5a5df97425d.output	15	21:20:44	69067	352	Bash:grep -n '@planks' js/app.js
+af394c5a5df97425d.output	16	21:21:05	69511	2215	Bash:git add -- .gitignore AGENTS.md CAPTAIN.md RIGGING.md assets css featu
+af394c5a5df97425d.output	17	21:21:09	70634	386	Bash:git commit -m "$(cat <<'EOF' Fit out TodoMVC vanilla-js app: watch1-wa
+af394c5a5df97425d.output	18	21:21:15	73105	175	Bash:git status --porcelain=v1; echo "---"; git log --oneline -n3
+af394c5a5df97425d.output	19	21:21:32	73933	1492	
+SUMMARY	af394c5a5df97425d.output	invocations=19	cache_read=1103215	out=9643	wall=21:19:23 to 21:21:32
+LEDGER	af394c5a5df97425d.output	Bash	invocations=15	cache_read=941761	out=7850
+LEDGER	af394c5a5df97425d.output	Read	invocations=3	cache_read=87521	out=301
+LEDGER	af394c5a5df97425d.output	FINAL	invocations=1	cache_read=73933	out=1492
