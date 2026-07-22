@@ -1,7 +1,67 @@
 # Captain notes - shipshape-shakedown workstream
 
 <!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
-## >>> 2026-07-21 late: A PLUGIN INSTALL LEFT A DANGLING PATH AND KILLED THE WHOLE PLUGIN SILENTLY <<<
+## >>> PICKUP STATE, end of 2026-07-21. THIS IS THE ONLY LIVE ORDER. <<<
+
+Everything below this block is a dated record. Sections further down still carry
+`>>> ... <<<` headings from the sessions that wrote them; **they are history, not a
+queue.** In particular the "PRIMED ORDER FOR THE NEXT PILOT" further down has had its
+item 1 discharged (result: NULL) — do not run it as written.
+
+**Deck:** doctrine **0.13.50**, installed and registry-verified, both repos clean and
+level with origin (`shipshape` `daf0443`, `shakedown` at this commit). `tests/*.sh` 5/5
+green. Plugin cache repaired after a dangling-installPath failure (below).
+
+**Step 0, always: `bash bin/preflight.sh`.** It exits non-zero when work must not start.
+Note `bash`, not `sh` — it uses `set -o pipefail`.
+
+### The one next action
+
+**Exercise 0.13.49's hook live. It has never run.** It is the only thing shipped this
+session with no live evidence, and it is the current best candidate for this class after
+text failed twice.
+
+Requires a session whose process postdates the 18:08:58 reinstall — preflight will FAIL
+on a stale snapshot until then, and it was still failing when this was written.
+
+Then, in order:
+1. Verify the channel **empirically**: marker-grep a dispatched leg's raw transcript for
+   a 0.13.50-unique string. Never trust timestamps, and note that plugin parity passing
+   does NOT prove the plugin loaded — see the dangling-path finding.
+2. Run the guard on the forced-220s-sweep state (`fixtures/probe-states/slow_steps.js`,
+   rebuild via the recipe in `designs/bgact/rubric.md`). Markers, fixed here in advance:
+   the guard fires on the finishing agent's **own** task; it does **not** fire on a
+   sibling's or the operator's; it blocks a stop holding a still-running task even where
+   that task's output was read part-way; a clean leg passes untouched.
+3. **Declare an observation horizon before scoring anything** — see the method debt below.
+   A stalled leg's outcome depends on when you look.
+
+### Standing conclusions from this session, do not relitigate
+
+- **Text is the wrong instrument for the background-stall class.** Two wordings have now
+  failed (0.13.48's prohibition, 0.13.50's named act, the latter NULL at n=6/arm with the
+  mechanism confirmed 12/12). **Do not ship a third wording.** Next candidate is
+  machinery.
+- **0.13.50 stands on textual footing only.** No revert indicated; the text it replaced
+  was worse. But it must not be recorded as a validated behavioural fix.
+- **Naming an act works where the obligation is UNOBSERVABLE** (0.13.42, 0/4→4/4), not
+  where it is merely unperformed. This corrects how the corpus read 0.13.42.
+- **Method debt, binding on any future probe of this class:** "did it deadlock" is a
+  function of when you look. Every earlier rate in this corpus for it (pilot #2's,
+  0.13.33's, the n=8 rerun's 1/3) is a snapshot with no observation time recorded.
+- The cross-role rider is **discharged** — Boatswain hit the same fault unprompted.
+
+### Operator errors from this session, kept visible on purpose
+
+- A "fixed" claim for the contaminated fixture was written into METRICS.md and CAPTAIN.md
+  **before the edit existed**. Caught an hour later by the next probe re-reading the file.
+- The recovery count was called wrong twice, and a leg recovered again mid-correction.
+- A broad `pkill -f cucumber-js` was used to clear orphaned suites — the exact
+  process-name hazard this corpus already records. May have reached another session.
+
+<!-- ===================== end of live order ===================== -->
+
+## 2026-07-21 late: a plugin install left a dangling path and killed the whole plugin silently
 
 The restart taken to exercise 0.13.49's hook live produced a session with **no shipshape
 skills, no agents and no hooks at all.** Cause: the 18:07:55 install wrote
@@ -26,10 +86,8 @@ is NOT established, only its signature.
 this session, so preflight correctly FAILs on a stale snapshot. It needs one more restart,
 then channel verification by marker-grep on a dispatched leg — never by timestamp.
 
-<!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
 
-<!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
-## >>> 2026-07-21, LATEST: 0.13.50's PROBE RAN. NULL. STOP WRITING TEXT FOR THIS. <<<
+## 2026-07-21: 0.13.50's probe ran - NULL (superseded by the pickup state at the top)
 
 12 legs, n=6/arm, rubric fixed and committed before any leg ran (`52e758f`). Full account
 `designs/bgact/results.md`, banked `data/bgact-0.13.50/`. 273 inv / 16.1M cache, 12/12 sonnet.
@@ -61,10 +119,8 @@ committed. **"Did it deadlock" is a function of when you look.** Pilot #2's, 0.1
 n=8 rerun's 1/3, this session's earlier 3/3 — all snapshots, none with an observation time.
 **Any future probe here fixes an observation horizon in advance and states it.**
 
-<!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
 
-<!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
-## >>> 2026-07-21, LATER: THE PRIMED ITEM 1 PROBE RAN. 0.13.48 IS NOT GOOD. <<<
+## 2026-07-21: the primed item-1 probe ran - 0.13.48 is not good (superseded by the pickup state at the top)
 
 Item 1 below is DISCHARGED as a probe and its conclusion is not the one the order
 expected. Full numbers in METRICS.md, banked `data/bgact-0.13.48/`. 4 legs, sonnet,
@@ -133,8 +189,11 @@ re-read the file. A fix asserted into the record is not a fix.**) And concurrent
 share task ids and the process table (aug1 read siblings' output files and killed a PID
 off `ps aux`); run background-class probes serially.
 
-<!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
-## >>> PRIMED ORDER FOR THE NEXT PILOT (set 2026-07-21, after #7 passed) <<<
+## PRIMED ORDER FOR THE NEXT PILOT (set 2026-07-21) - PARTLY SPENT, NOT A QUEUE
+
+> **Item 1 (the background-task act) is DISCHARGED and came back NULL. Do not run this
+> as written.** The tier free-rider and the pilot framing below are still usable. See the
+> pickup state at the top of this file.
 
 **Run `bin/preflight.sh` first. It is ordered step 0 and it exits non-zero when the
 pilot must not start.** As of this writing it BLOCKS on a stale plugin snapshot in
@@ -229,7 +288,7 @@ stayed real, reproduced live in #7, individually correct at every step.
 
 <!-- =================== END PRIMED ORDER =================== -->
 
-## >>> PILOT #7 PASSED (2026-07-21, sonnet session) - 28/29, 0 failing, "All specs passed!" <<<
+## PILOT #7 PASSED (2026-07-21, sonnet session) - 28/29, 0 failing, "All specs passed!" (historical)
 
 Ran on bare `/shakedown`, dk's "proceed as proposed". Full account in METRICS.md's "Pilot #7" entry.
 Fresh build (`todopilot8`) reached 33/33 self-authored green on voyage 1 (`13bcd53`), same TodoMVC
@@ -312,7 +371,7 @@ problem) — confirmed as standing recipe.
 >
 > Text below kept verbatim as the run-time record, per this file's convention.
 
-## >>> PILOT #6 STOPPED MID-RUN BY DK'S WORD (2026-07-21, sonnet session) - PRIMED ORDER BELOW IS SUPERSEDED, DO NOT RE-RUN BLINDLY <<<
+## PILOT #6 STOPPED MID-RUN BY DK'S WORD (2026-07-21, sonnet session) - PRIMED ORDER BELOW IS SUPERSEDED, DO NOT RE-RUN BLINDLY (historical)
 
 Ran on bare `/shakedown`, dk's "proceed as proposed" against the standing PILOT PRIMED ORDER below.
 **Session was sonnet, channel confirmed empirically (0.13.46 marker hit), both repos clean/level at
@@ -415,8 +474,7 @@ record.
 
 <!-- =================== END PILOT #6 STOP RECORD =================== -->
 
-<!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
-## >>> PILOT PRIMED ORDER (written 2026-07-21, opus session, at dk's "is pilot primed?") <<<
+## PILOT PRIMED ORDER (written 2026-07-21, opus session, at dk's "is pilot primed?") (historical)
 
 **RUN PILOT #6 (`todopilot7`) on 0.13.46, per `scenarios/pilot.md`.** Every earlier primed order in
 this file is DISCHARGED and archival: the fixtures are repaired AND guarded by a conformance check,
@@ -984,8 +1042,7 @@ this leaves: no probe here forces the auto-background boundary reliably (it curr
 on wall-clock chance around the ~150s sleep vs the ~120s cap), so a trustworthy rate needs a
 probe redesign, not more reruns of this one.
 
-<!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
-## >>> PRIMED ORDER for a CLEAN RESTART (written 2026-07-20, opus session, at dk's "is everything ready for a restart") <<<
+## PRIMED ORDER for a CLEAN RESTART (written 2026-07-20, opus session, at dk's "is everything ready for a restart") (historical)
 
 **SUPERSEDES the pilot order below (now marked ARCHIVED). DO NOT RUN PILOT #6 NEXT.** That order
 was written before this session's audit and paired battery. Running a pilot next would spend
