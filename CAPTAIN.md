@@ -46,6 +46,20 @@ clearer, not harder" watchword — over-prescription is a form of "harder." The 
 candidate TOOL for the audit: an over-opinionated section may show as cost-without-affordance (IEPE)
 or as text that helps no model/project. NOT to be actioned without the dedicated rethink.
 
+**OPEN, consumer-routed finding (dk, 2026-07-23, from ~/yoink CAPTAIN.md Upstream Note):
+Captain over-routed a package-script change to QM.** yoink's note: a `tests:all` `.env`
+package-script defect was dispatched to QM (a cancelled dispatch), wrong because QM is
+verification-support only and package-script/tooling is Captain's; the note asks doctrine to
+"keep Captain-owned assets and package-script decisions on Captain's side; dispatch QM only for
+verification support." BEHAVIOURAL finding -> owes a probe (probe-first). Real ambiguity to
+settle first: doctrine gap (text doesn't scope tooling-vs-verification, so agents conflate and
+over-route) vs one-off Captain conflation (the note says Captain conflated the script defect with
+a separate verification blocker). Probeable with the eval instrument: a CAPTAIN-role over-routing
+probe — give Captain a bare "change a package.json script" task under control doctrine across
+models; over-routing across models => doctrine cause; clean => one-off. Connects to the
+over-opinionation item above (over-routing a trivial change through verification machinery). Do
+NOT fix doctrine without the probe + dk word.
+
 <!-- ---------------------------------------------------------------------- -->
 ## >>> PICKUP STATE, 2026-07-22 close (post-0.13.64-pilot). SUPERSEDED by the eval note above. <<<
 
