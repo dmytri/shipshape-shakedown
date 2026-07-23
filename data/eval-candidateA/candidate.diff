@@ -1,10 +1,10 @@
 --- /home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/4ee36ff0efb8/skills/shipwright/SKILL.md	2026-07-22 20:02:23.756850161 +0000
-+++ experiments/no-gap-ledger/skills/shipwright/SKILL.md	2026-07-23 09:28:06.319400885 +0000
++++ experiments/no-gap-ledger/skills/shipwright/SKILL.md	2026-07-23 09:53:51.931610842 +0000
 @@ -154,6 +154,7 @@
  
  - scope, module/directory or full codebase,
  - modules analysed,
-+- seam-disposition ledger: the `plank-inventory` output with every production seam it lists accounted for by its disposition, covered giving the `@planks(...)` pattern that carries it, or a live behaviour with no binding scenario giving the `@captain` skeleton written for it and its `@planks-provisional` link. A coverage percent or a zero count is not a disposition; "no gap found" is a claim this ledger earns seam by seam, never a summary standing in for the walk,
++- seam-disposition ledger: the `plank-inventory` output, and for every production seam it lists, EACH behaviour the seam implements on its own row — the happy path AND every boundary and error path the code handles — with that behaviour's disposition: a binding scenario given as its `@planks(...)` pattern, or, where no scenario asserts it, the `@captain` skeleton written for it and its `@planks-provisional` link. A seam entered as a single "covered" row is incomplete: "covered" is a per-behaviour claim, not a per-function one, and a coverage percent or a zero count is not a disposition. "No gap found" is a claim this ledger earns behaviour by behaviour, never a summary standing in for the walk,
  - `@captain` scenarios written, total and by finding type,
  - coverage summary, overall percent and uncovered module count,
  - policy violations found by category,
