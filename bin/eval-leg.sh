@@ -63,7 +63,7 @@ fi
 
 mkdir -p "$OUT"
 FAKEHOME="$OUT/home"; SESSDIR="$OUT/session"
-mkdir -p "$FAKEHOME/.config" "$FAKEHOME/.local/share" "$FAKEHOME/.cache" "$SESSDIR"
+mkdir -p "$FAKEHOME/.config" "$FAKEHOME/.local/share" "$FAKEHOME/.cache" "$FAKEHOME/tmp" "$SESSDIR"
 
 # Assemble --skill flags.
 SKILL_ARGS=()
@@ -83,24 +83,30 @@ PY
 
 echo "eval-leg[$NAME]: $MODEL over $(basename "$WORKSPACE"), skills: ${SKILLS[*]##*/skills/}" >&2
 
-# The isolated run. --approve neutralises the confirm/ask derail; --mode json
-# writes the full session (usage per turn) to SESSDIR. cwd is the sim.
+# The isolated, CONTAINED run. bwrap gives pi a READ-ONLY view of the whole VM
+# and writable access to ONLY the sim workspace, the fake HOME, and the capture
+# dir — so a leg that wanders (they do) can READ but can NEVER WRITE the cockpit,
+# the source fixture, doctrine, or a consumer repo. Detection alone let an escaped
+# leg clobber AGENTS.md and the fixture (2026-07-23); this makes that impossible.
+# --approve neutralises the confirm derail; --mode json writes the session to SESSDIR.
+PI_ARGS=(-p "$TASK" --provider "$PROVIDER" --model "$MODEL" --approve --mode json
+         "${SKILL_ARGS[@]}" --session-dir "$SESSDIR")
+ENVV=(HOME="$FAKEHOME" XDG_CONFIG_HOME="$FAKEHOME/.config"
+      XDG_DATA_HOME="$FAKEHOME/.local/share" XDG_CACHE_HOME="$FAKEHOME/.cache"
+      TMPDIR="$FAKEHOME/tmp" PATH="$PATH" OPENROUTER_API_KEY="$OPENROUTER_API_KEY")
 set +e
-env -i \
-  HOME="$FAKEHOME" \
-  XDG_CONFIG_HOME="$FAKEHOME/.config" \
-  XDG_DATA_HOME="$FAKEHOME/.local/share" \
-  XDG_CACHE_HOME="$FAKEHOME/.cache" \
-  PATH="$PATH" \
-  OPENROUTER_API_KEY="$OPENROUTER_API_KEY" \
-  timeout "${TIMEOUT_S}s" \
-  "$PI" -p "$TASK" \
-    --provider "$PROVIDER" --model "$MODEL" \
-    --approve --mode json \
-    "${SKILL_ARGS[@]}" \
-    --session-dir "$SESSDIR" \
-  >"$OUT/pi.stdout" 2>"$OUT/pi.stderr"
-EXIT=$?
+if command -v bwrap >/dev/null 2>&1; then
+  BW=(bwrap --ro-bind / / --dev /dev --proc /proc
+      --bind "$WORKSPACE" "$WORKSPACE" --bind "$OUT" "$OUT" --bind "$FAKEHOME" "$FAKEHOME"
+      --share-net --chdir "$WORKSPACE" --clearenv)
+  for kv in "${ENVV[@]}"; do BW+=(--setenv "${kv%%=*}" "${kv#*=}"); done
+  timeout "${TIMEOUT_S}s" "${BW[@]}" "$PI" "${PI_ARGS[@]}" >"$OUT/pi.stdout" 2>"$OUT/pi.stderr"
+  EXIT=$?
+else
+  echo "eval-leg[$NAME]: WARN bwrap missing — running UNCONTAINED (repo-damage risk)" >&2
+  env -i "${ENVV[@]}" timeout "${TIMEOUT_S}s" "$PI" "${PI_ARGS[@]}" >"$OUT/pi.stdout" 2>"$OUT/pi.stderr"
+  EXIT=$?
+fi
 set -e
 echo "$EXIT" > "$OUT/exit"
 
