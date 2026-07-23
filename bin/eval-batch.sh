@@ -67,6 +67,10 @@ run_one() {
        --timeout-s "$TIMEOUT_S" >"$base/leg.log" 2>&1; then
     "$HERE/bin/eval-bank.sh" --wave "$WAVE" --name "$name" --out "$out" \
        --workspace "$ws" --verdict PENDING >/dev/null 2>&1 || true
+    # Bound disk: the banked session.jsonl + tree.diff hold everything analysis
+    # needs, so drop the heavy scratch (node_modules ~30-50MB/leg, fake home, raw
+    # session dir). Keeps sim src/features + out/session.jsonl for convenience.
+    rm -rf "$ws/node_modules" "$out/home" "$out/session" 2>/dev/null || true
     echo "  [$name] done -> banked"
   else
     echo "  [$name] LEG FAILED (see $base/leg.log)"
