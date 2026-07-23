@@ -1,0 +1,143 @@
+diff --git a/.rgignore b/.rgignore
+new file mode 100644
+index 0000000..1295120
+--- /dev/null
++++ b/.rgignore
+@@ -0,0 +1 @@
++CAPTAIN.md
+\ No newline at end of file
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..329a156
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,21 @@
++# Agent Instructions
++
++This project uses Shipshape, a context-isolated spec-driven workflow for coding agents.
++
++Agent opening this project: ensure Shipshape is installed, then load the `shipshape` skill (`shipshape:shipshape` under the plugin channel) and follow its routing before other work. Decide how to involve the human per your configured preferences.
++
++Tooling values such as stack, directories, and commands live in `RIGGING.md`.
++
++Install with the open skills CLI, which works across most agent runtimes:
++
++```bash
++npx skills add dmytri/shipshape --skill '*'
++```
++
++If your runtime supports the open-plugin format, such as Claude Code or Cursor, install the experimental plugin build instead:
++
++```bash
++npx plugins add dmytri/shipshape
++```
++
++Update Shipshape at a voyage boundary with `npx skills update` for the skills install, or re-run `npx plugins add dmytri/shipshape` for the plugin build.
+\ No newline at end of file
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..78fe904
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,54 @@
++# Rigging
++
++Project tooling values for Shipshape roles. Values only, not procedure.
++Procedure lives in the skills. Every role reads this on open.
++
++## Stack
++
++- language: JavaScript
++- runtime: node
++- packageManager: npm
++
++## Directories
++
++- implementation: src
++- specs: features
++- verification: features/support
++- assets: data
++- scantlings: none
++
++## Commands
++
++- discover: `npx cucumber-js --dry-run --format json`
++- focused: `npx cucumber-js --name "{scenario}"`
++- broad: `npx cucumber-js`
++- coverage: `npx c8 npx cucumber-js`
++- step-usage: `npx cucumber-js --format usage-json 2>/dev/null`
++- plank-inventory: `npx jsdoc -X --recurse src 2>/dev/null`
++- typecheck: none
++- lint: none
++- conformance: none
++
++## Perturbation
++
++- message: `PERTURBATION: consider current durable context; remove when fixed`
++- perturb: `throw new Error("PERTURBATION: consider current durable context; remove when fixed");`
++
++## Tiers
++
++- default: @logic
++- sandbox: none
++- policy: @logic is the default tier; no credentials needed
++- weather: logs/weather.json
++- runrecord: logs/runrecord.jsonl
++
++## Dependencies
++
++- policy: locked
++- dependency: @cucumber/cucumber
++
++## Outbound
++
++- outbound: none
++- ship: `none`
++- verify: `none`
+\ No newline at end of file
+diff --git a/features/conformance.feature b/features/conformance.feature
+new file mode 100644
+index 0000000..c263847
+--- /dev/null
++++ b/features/conformance.feature
+@@ -0,0 +1,13 @@
++Feature: Methodology conformance
++
++  @captain @conformance
++  Scenario: Watchbill shape conforms
++    Given the project has no watchbill.json
++    When the watchbill is read
++    Then the shape conforms
++
++  @captain @conformance
++  Scenario: Perturbation quiescence
++    Given the project has no perturbation
++    When the implementation directories are scanned for the PERTURBATION token
++    Then no token is found
+\ No newline at end of file
+diff --git a/features/verification.feature b/features/verification.feature
+new file mode 100644
+index 0000000..d016f1f
+--- /dev/null
++++ b/features/verification.feature
+@@ -0,0 +1,7 @@
++Feature: Verification support hygiene
++
++  @captain
++  Scenario: Run log writes inside project root
++    Given the run log hook runs
++    When it writes the run record
++    Then the file is written under the project root, not a parent directory
+\ No newline at end of file
+diff --git a/src/tide.js b/src/tide.js
+index c3c80cc..a97c697 100644
+--- a/src/tide.js
++++ b/src/tide.js
+@@ -1,3 +1,7 @@
++/**
++ * Find the next high tide after a given time.
++ * @planks("I ask for the next high tide after {string}")
++ */
+ function nextHighTide(tides, after) {
+   const next = tides.find((t) => new Date(t.time) > new Date(after) && t.type === "high");
+   if (!next) throw new Error("no upcoming high tide in data");
