@@ -32,6 +32,16 @@ their whole run on it and never reach the deliverable. FIX = tighten the opening
 size-bounded + JSON-safe (prefer `git ls-files` over raw find, simple globs, no shell-escape
 predicates, cap output). This should recover the floor without losing the others' latency win.
 Owes a test with a tightened example after the golden run.
+  UPSTREAM-TO-YOINK candidates (feedback for the ~/yoink project, not Shipshape doctrine):
+  (a) Bundle SIZE-CAP behaviour: one flooding command (find over node_modules) blows the ~50KB
+      cap and truncates the WHOLE bundle, silently dropping useful parts (git status, listings).
+      Better: truncate PER-COMMAND (bound each part), and/or name which command overflowed so the
+      agent can fix that command, not refetch everything. The skill could warn about output size.
+  (b) Plan AUTHORING fragility: JSON-in-heredoc breaks on shell-escape-heavy commands (find `\(`,
+      nested quotes) -> parse error, retries. Yoink could give a clearer parse error pointing at
+      the offending command, and the skill could show JSON-safe patterns (git ls-files, simple
+      globs) and warn off find-predicate escapes. A less brittle plan input would help weak models.
+  These are the same "real consumer surfaces a tool gap" channel as the yoink/researcher feedback.
 GOAL PRIORITY (dk, 2026-07-23): #1 is LATENCY, #2 is token efficiency (correctness/
 affordance is the floor — a candidate must still CLEAR). Weight results accordingly:
 the key latency proxy is ROUND-TRIP COUNT — turns (inv) and tool calls — because each is
