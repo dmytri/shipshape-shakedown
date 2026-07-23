@@ -1,0 +1,61 @@
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..3e5a827
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,54 @@
++# Rigging
++
++Project tooling values for Shipshape roles. Values only, not procedure.
++Procedure lives in the skills. Every role reads this on open.
++
++## Stack
++
++- language: JavaScript
++- runtime: node
++- packageManager: npm
++
++## Directories
++
++- implementation: src
++- specs: features
++- verification: features/support
++- assets: data
++- scantlings: none
++
++## Commands
++
++- discover: `npx cucumber-js --dry-run --format usage`
++- focused: `npx cucumber-js {scenario} --tags "not @captain and not @shipwright"`
++- broad: `npx cucumber-js --tags "not @captain and not @shipwright"`
++- coverage: `npx cucumber-js --tags "not @captain and not @shipwright"`
++- step-usage: `npx cucumber-js --format usage-json --tags "not @captain and not @shipwright"`
++- plank-inventory: `none`
++- typecheck: `none`
++- lint: `none`
++- conformance: `none`
++
++## Perturbation
++
++- message: `PERTURBATION: consider current durable context; remove when fixed`
++- perturb: `throw new Error("PERTURBATION: consider current durable context; remove when fixed");`
++
++## Tiers
++
++- default: @logic
++- sandbox: none
++- policy: @logic: none (local execution)
++- weather: none
++- runrecord: none
++
++## Dependencies
++
++- policy: none
++- dependency: @cucumber/cucumber
++
++## Outbound
++
++- outbound: none
++- ship: none
++- verify: none
+\ No newline at end of file

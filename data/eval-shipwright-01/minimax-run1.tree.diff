@@ -1,0 +1,111 @@
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..754f55d
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,21 @@
++# Agent Instructions
++
++This project uses Shipshape, a context-isolated spec-driven workflow for coding agents.
++
++Agent opening this project: ensure Shipshape is installed, then load the `shipshape` skill (`shipshape:shipshape` under the plugin channel) and follow its routing before other work. Decide how to involve the human per your configured preferences.
++
++Tooling values such as stack, directories, and commands live in `RIGGING.md`.
++
++Install with the open skills CLI, which works across most agent runtimes:
++
++```bash
++npx skills add dmytri/shipshape --skill '*'
++```
++
++If your runtime supports the open-plugin format, such as Claude Code or Cursor, install the experimental plugin build instead:
++
++```bash
++npx plugins add dmytri/shipshape
++```
++
++Update Shipshape at a voyage boundary with `npx skills update` for the skills install, or re-run `npx plugins add dmytri/shipshape` for the plugin build.
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..707b95e
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,66 @@
++# Rigging
++
++Project tooling values for Shipshape roles. Values only, not procedure.
++Procedure lives in the skills. Every role reads this on open.
++
++## Stack
++
++- language: JavaScript
++- runtime: Node.js v24.18.0
++- packageManager: npm v12.0.1
++
++## Directories
++
++- implementation: src
++- specs: features
++- verification: features/support
++- assets: data
++- scantlings: none
++
++## Commands
++
++- discover: `npx cucumber-js --dry-run`
++- focused: `npx cucumber-js {scenario}`
++- broad: `npx cucumber-js`
++- coverage: `npx c8 --exclude-after-remapping false --reporter=text npx cucumber-js`
++- step-usage: `npx cucumber-js --format usage-json`
++- plank-inventory: `node -e "const fs=require('fs');const patt=/@planks(-provisionally)?\(['\"]([^'\"]+)['\"]\)/g;['src'].forEach(d=>fs.readdirSync(d).filter(f=>f.endsWith('.js')).forEach(f=>{const m=fs.readFileSync(d+'/'+f,'utf8');let b;while((b=patt.exec(m))!==null)console.log(b[1]?'PROVISIONAL:'+b[2]:'PLANK:'+b[2]);}))"`
++- typecheck: `node --check`
++- lint: none (no lint tool configured; gap: consider biome or eslint for the project)
++
++## Perturbation
++
++- message: `PERTURBATION: consider current durable context; remove when fixed`
++- perturb: `throw new Error("PERTURBATION: consider current durable context; remove when fixed");`
++
++## Tiers
++
++- default: @logic
++- sandbox: none
++- policy: `@logic tier runs against local Node.js runtime with no credential`
++- weather: coverage/coverage.json
++- runrecord: none
++
++## Dependencies
++
++- policy: locked
++- dependency: @cucumber/cucumber (dev)
++- dependency: c8 (dev, installed for coverage; not declared in package.json)
++
++## Outbound
++
++- outbound: none
++- ship: none
++- verify: none
++
++## Methodology checks
++
++- watchbill-conformance: required, derived as @captain @conformance skeleton
++- perturbation-quiescence: required, derived as @captain @conformance skeleton
++- plank-join: none (token-search plank-inventory is not a join source; step-usage provides the join)
++- plank-form: none (token-search plank-inventory; plank-form rules deferred to verification-conformance rule set)
++- forbidden-doubles: none (no @exceptional-double marks present)
++- scantling-reference: none (no scantlings declared)
++- feature-lint: none (no .gplintrc or equivalent)
++- budget: none (no budget ceiling set)
++- verification-conformance: none (scantlings path is none; rule set deferred)
+diff --git a/src/tide.js b/src/tide.js
+index c3c80cc..7ece622 100644
+--- a/src/tide.js
++++ b/src/tide.js
+@@ -1,3 +1,7 @@
++/**
++ * @planks("I ask for the next high tide after {string}")
++ * @planks("the predicted high tide is at {string} with height {float}")
++ */
+ function nextHighTide(tides, after) {
+   const next = tides.find((t) => new Date(t.time) > new Date(after) && t.type === "high");
+   if (!next) throw new Error("no upcoming high tide in data");
