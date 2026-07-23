@@ -1,0 +1,42 @@
+# banked: 2026-07-23T19:18:01Z
+# verdict: PENDING
+# leg: {  "name": "mistralai-devstral-2512",  "model": "mistralai/devstral-2512",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/eval-yoink-cited/mistralai-devstral-2512/sim",  "timeout_s": 900,  "skills": [    "experiments/yoink-cited/skills/shipshape",    "experiments/yoink-cited/skills/shipwright",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== mistralai-devstral-2512.session.jsonl ===
+  turns=31  wall=154.7s  in=36938  out=4065  cache_read=943360  cost=$0.0606
+  role reads: shipshape@t0 -> shipwright@t0
+  roles loaded: shipshape, shipwright
+  ~ repeated tool signature at turns [13, 14, 16, 19, 24, 25, 26, 28] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    1343/126      640 $0.0008  read, read, read
+    t1   22850/99      2048 $0.0094  bash
+    t2     961/91     24960 $0.0016  read, read
+    t3     170/61     25984 $0.0012  bash
+    t4     232/47     26112 $0.0012  read
+    t5     188/62     26368 $0.0013  bash
+    t6     244/97     26496 $0.0014  read, read
+    t7     426/62     26752 $0.0014  bash
+    t8     181/47     27136 $0.0013  read
+    t9     268/62     27264 $0.0013  bash
+    t10    106/46     27520 $0.0012  read
+    t11     34/83     27648 $0.0013  bash
+    t12    128/404    27648 $0.0020  bash
+    t13   5929/279    28160 $0.0041  bash
+    t14     82/71     34304 $0.0015  bash
+    t15     74/450    34432 $0.0023  write
+    t16     63/283    34944 $0.0020  write
+    t17    139/59     35200 $0.0016  read
+    t18    121/150    35328 $0.0018  write
+    t19     62/63     35584 $0.0016  write
+    t20    172/168    35584 $0.0018  edit
+    t21    134/63     35840 $0.0016  bash
+    t22    134/199    35968 $0.0019  write
+    t23    126/79     36224 $0.0017  bash
+    t24    154/72     36352 $0.0017  bash
+    t25   1154/99     36480 $0.0021  bash
+    t26    751/100    37632 $0.0020  bash
+    t27    219/61     38400 $0.0017  read
+    t28    114/45     38656 $0.0017  read
+    t29    114/112    38784 $0.0018  bash
+    t30    265/425    38912 $0.0025  -
