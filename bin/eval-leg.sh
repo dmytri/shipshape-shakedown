@@ -122,6 +122,37 @@ git -C "$WORKSPACE" log --oneline -10 > "$OUT/git.log" 2>/dev/null || true
 # session JSONL is the structured transcript, this is the human-readable form.
 # Both are banked so a later evaluator has maximum detail.
 
+# Containment check: did the leg wander OUT of the sim into a real repo on the VM?
+# A leg that inspects ~/shipshape (doctrine), the cockpit, or a consumer repo is
+# not inspecting the sim, so its verdict is invalid and must be excluded from any
+# clear-rate. The skill dirs live under .claude and never match these repo names.
+if [ -f "$OUT/session.jsonl" ]; then
+  ESC="$(python3 - "$OUT/session.jsonl" <<'PY'
+import json, sys, re
+# Scan only the model's OWN tool calls (bash/read/ls/find args), never the task
+# prompt echo, for access to a real repo on the VM outside the sim.
+pat = re.compile(r'/home/[a-z]+/(?:shipshape|shipshape-shakedown|jolly|yoink|swamp)[a-zA-Z0-9_-]*')
+hits = set()
+for line in open(sys.argv[1], encoding='utf-8'):
+    try:
+        e = json.loads(line)
+    except Exception:
+        continue
+    m = e.get('message') or {}
+    if m.get('role') != 'assistant':
+        continue
+    for p in m.get('content') or []:
+        if p.get('type') == 'toolCall':
+            hits.update(pat.findall(json.dumps(p.get('arguments', {}))))
+print(' '.join(sorted(hits)))
+PY
+)"
+  if [ -n "$ESC" ]; then
+    echo "$ESC" > "$OUT/escaped"
+    echo "eval-leg[$NAME]: ESCAPED the sim — touched: $ESC (leg INVALID for clear-rate)" >&2
+  fi
+fi
+
 if [ "$EXIT" -eq 124 ]; then
   echo "eval-leg[$NAME]: TIMED OUT after ${TIMEOUT_S}s (exit 124)" >&2
 elif [ "$EXIT" -ne 0 ]; then
