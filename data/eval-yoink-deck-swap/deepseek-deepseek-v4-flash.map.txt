@@ -1,0 +1,36 @@
+# banked: 2026-07-23T18:43:41Z
+# verdict: PENDING
+# leg: {  "name": "deepseek-deepseek-v4-flash",  "model": "deepseek/deepseek-v4-flash",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/eval-yoink-deck-swap/deepseek-deepseek-v4-flash/sim",  "timeout_s": 900,  "skills": [    "experiments/yoink-deck-swap/skills/shipshape",    "experiments/yoink-deck-swap/skills/shipwright",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== deepseek-deepseek-v4-flash.session.jsonl ===
+  turns=25  wall=161.1s  in=88039  out=13198  cache_read=880640  cost=$0.0273
+  role reads: shipshape@t0 -> shipwright@t0
+  roles loaded: shipshape, shipwright
+  ~ repeated tool signature at turns [5, 6, 7, 8, 9, 10, 11, 15, 16, 18, 21, 22, 23] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    1935/154      256 $0.0002  read, read
+    t1   23501/192        0 $0.0022  read, bash
+    t2   24952/136        0 $0.0024  bash
+    t3     318/588    24832 $0.0006  read, read, read, read, read, read, read, read
+    t4    6858/309    25088 $0.0012  bash, bash, bash
+    t5     609/399    31744 $0.0007  bash, bash, bash
+    t6    2035/195    31744 $0.0008  bash, bash
+    t7    1532/320    32768 $0.0008  bash, bash, bash
+    t8    1849/187    33792 $0.0008  bash, bash
+    t9    1844/1653   34816 $0.0011  bash, bash
+    t10   2865/476    35840 $0.0010  bash, bash, bash
+    t11   1580/341    37888 $0.0009  bash
+    t12   1611/2301   38912 $0.0013  write, write
+    t13   3004/186    39936 $0.0011  bash
+    t14   1158/1260   41984 $0.0011  write, edit
+    t15   1509/433    43008 $0.0010  write, write
+    t16   1039/764    44032 $0.0011  write, write, write
+    t17    958/868    45056 $0.0011  read, bash
+    t18   2163/237    45056 $0.0011  bash, bash
+    t19   1758/458    47104 $0.0011  write
+    t20   1250/191    48128 $0.0011  bash, bash
+    t21    841/191    49152 $0.0010  bash
+    t22   1269/267    49152 $0.0011  bash, bash
+    t23    709/170    50176 $0.0010  bash
+    t24    892/922    50176 $0.0012  -

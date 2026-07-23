@@ -1,0 +1,40 @@
+# banked: 2026-07-23T18:51:39Z
+# verdict: PENDING
+# leg: {  "name": "mistralai-devstral-2512",  "model": "mistralai/devstral-2512",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/eval-yoink-deck-swap/mistralai-devstral-2512/sim",  "timeout_s": 900,  "skills": [    "experiments/yoink-deck-swap/skills/shipshape",    "experiments/yoink-deck-swap/skills/shipwright",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== mistralai-devstral-2512.session.jsonl ===
+  turns=29  wall=602.5s  in=37878  out=4177  cache_read=882048  cost=$0.0588
+  role reads: shipshape@t0 -> shipwright@t0
+  roles loaded: shipshape, shipwright
+  ~ repeated tool signature at turns [6, 12, 13, 15, 18, 24, 25] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    1351/137      640 $0.0008  read, read, read
+    t1   22427/76      2048 $0.0092  bash
+    t2    1022/50     24448 $0.0015  bash
+    t3     344/94     25472 $0.0013  read, read
+    t4     134/75     25856 $0.0012  bash
+    t5     251/147    25984 $0.0014  read, read, read
+    t6     469/99     26368 $0.0014  read, bash
+    t7     347/11     26880 $0.0012  bash
+    t8     116/81     27136 $0.0013  bash
+    t9      80/111    27264 $0.0013  bash
+    t10   2476/99     27392 $0.0023  read, read
+    t11   6303/77     29952 $0.0039  bash
+    t12    143/51     36224 $0.0016  bash
+    t13     77/64     36352 $0.0016  bash
+    t14     76/653    36480 $0.0028  write
+    t15    142/285    37120 $0.0021  write
+    t16     94/89     37504 $0.0017  bash
+    t17     62/157    37632 $0.0018  write
+    t18    140/100    37760 $0.0018  write
+    t19    161/72     37888 $0.0017  bash
+    t20    744/171    38016 $0.0022  edit
+    t21     71/70     38912 $0.0017  bash
+    t22     76/198    39040 $0.0020  write
+    t23     69/68     39296 $0.0017  bash
+    t24    400/115    39424 $0.0020  bash
+    t25    127/84     39936 $0.0018  bash
+    t26      0/0          0 $0.0000  -
+    t27     35/690    40192 $0.0030  write
+    t28    141/253    40832 $0.0022  -

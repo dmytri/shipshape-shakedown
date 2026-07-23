@@ -1,0 +1,207 @@
+diff --git a/.rgignore b/.rgignore
+new file mode 100644
+index 0000000..1295120
+--- /dev/null
++++ b/.rgignore
+@@ -0,0 +1 @@
++CAPTAIN.md
+\ No newline at end of file
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..329a156
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,21 @@
++# Agent Instructions
++
++This project uses Shipshape, a context-isolated spec-driven workflow for coding agents.
++
++Agent opening this project: ensure Shipshape is installed, then load the `shipshape` skill (`shipshape:shipshape` under the plugin channel) and follow its routing before other work. Decide how to involve the human per your configured preferences.
++
++Tooling values such as stack, directories, and commands live in `RIGGING.md`.
++
++Install with the open skills CLI, which works across most agent runtimes:
++
++```bash
++npx skills add dmytri/shipshape --skill '*'
++```
++
++If your runtime supports the open-plugin format, such as Claude Code or Cursor, install the experimental plugin build instead:
++
++```bash
++npx plugins add dmytri/shipshape
++```
++
++Update Shipshape at a voyage boundary with `npx skills update` for the skills install, or re-run `npx plugins add dmytri/shipshape` for the plugin build.
+\ No newline at end of file
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..6fbb22d
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,3 @@
++## Built with Shipshape
++
++This repository uses [Shipshape](https://github.com/dmytri/shipshape), a context-isolated spec-driven workflow for coding agents. Install with `npx skills add dmytri/shipshape --skill '*'`, or the experimental open-plugin build with `npx plugins add dmytri/shipshape`.
+\ No newline at end of file
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..3da3527
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,54 @@
++# Rigging
++
++Project tooling values for Shipshape roles. Values only, not procedure.
++Procedure lives in the skills. Every role reads this on open.
++
++## Stack
++
++- language: javascript
++- runtime: node
++- packageManager: npm
++
++## Directories
++
++- implementation: src
++- specs: features
++- verification: features/support
++- assets: data
++- scantlings: none
++
++## Commands
++
++- discover: `npx cucumber-js --dry-run --format json --tags "not @captain and not @shipwright"`
++- focused: `npx cucumber-js --tags "not @captain and not @shipwright" --name "$(echo '{scenario}' | sed 's/.*://')"`
++- broad: `npx cucumber-js --tags "not @captain and not @shipwright" --format json`
++- coverage: `npx c8 cucumber-js --tags "not @captain and not @shipwright"`
++- step-usage: `npx cucumber-js --dry-run --format usage-json --tags "not @captain and not @shipwright"`
++- plank-inventory: `grep -rn '@planks\b\|@planks-provisional\b' src/`
++- typecheck: `none`
++- lint: `none`
++- conformance: `none`
++
++## Perturbation
++
++- message: `PERTURBATION: consider current durable context; remove when fixed`
++- perturb: `throw new Error("PERTURBATION: consider current durable context; remove when fixed");`
++
++## Tiers
++
++- default: @logic
++- sandbox: none
++- policy: @logic uses local filesystem
++- weather: none
++- runrecord: logs/runrecord.json
++
++## Dependencies
++
++- policy: locked
++- dependency: @cucumber/cucumber
++
++## Outbound
++
++- outbound: none
++- ship: `none`
++- verify: `none`
+\ No newline at end of file
+diff --git a/features/low-tide.feature b/features/low-tide.feature
+new file mode 100644
+index 0000000..2149c08
+--- /dev/null
++++ b/features/low-tide.feature
+@@ -0,0 +1,13 @@
++Feature: Low tide prediction
++
++  @captain
++  Scenario: Next low tide after a given time
++    Given the tide table for Fundy Cove
++    When I ask for the next low tide after "2026-07-12T05:00:00Z"
++    Then the predicted low tide is at "2026-07-12T10:30:00Z" with height 0.8
++
++  @captain
++  Scenario: No upcoming low tide is an error
++    Given the tide table for Fundy Cove
++    When I ask for the next low tide after "2026-07-13T00:00:00Z"
++    Then the prediction fails with "no upcoming low tide in data"
+\ No newline at end of file
+diff --git a/features/perturbation.feature b/features/perturbation.feature
+new file mode 100644
+index 0000000..271633c
+--- /dev/null
++++ b/features/perturbation.feature
+@@ -0,0 +1,7 @@
++Feature: Perturbation quiescence
++
++  @captain @conformance
++  Scenario: No perturbation token is present in implementation code
++    Given the implementation directory
++    When I search for "PERTURBATION" tokens
++    Then no PERTURBATION token is found in any source file
+\ No newline at end of file
+diff --git a/features/stations.feature b/features/stations.feature
+new file mode 100644
+index 0000000..6cda79d
+--- /dev/null
++++ b/features/stations.feature
+@@ -0,0 +1,13 @@
++Feature: Station data
++
++  @captain
++  Scenario: Station harmonic data is carried in the data directory
++    Given the station data file
++    When I read the stations data
++    Then the data contains 120 station entries with phase offset and amplitude scale values
++
++  @captain
++  Scenario: Station data is used by a production seam
++    Given the station data
++    When I search for station references in production code
++    Then no production seam references the stations data
+\ No newline at end of file
+diff --git a/features/verification.feature b/features/verification.feature
+new file mode 100644
+index 0000000..96c2d1c
+--- /dev/null
++++ b/features/verification.feature
+@@ -0,0 +1,13 @@
++Feature: Verification harness
++
++  @captain
++  Scenario: Run log writes outside the project root
++    Given the BeforeAll hook
++    When the test suite runs
++    Then a run log entry is written to "../.instrument/tidewatch5/runs.log"
++
++  @captain
++  Scenario: Run log uses a project-relative path
++    Given the BeforeAll hook in features/support/runlog.js
++    When I inspect the log path
++    Then the log path resolves outside the project root directory
+\ No newline at end of file
+diff --git a/features/watchbill.feature b/features/watchbill.feature
+new file mode 100644
+index 0000000..f0235b5
+--- /dev/null
++++ b/features/watchbill.feature
+@@ -0,0 +1,7 @@
++Feature: Watchbill shape conformance
++
++  @captain @conformance
++  Scenario: Watchbill is valid when present or absent at rest
++    Given the project tree
++    When I check watchbill shape
++    Then the watchbill conforms: absent or valid per the schema
+\ No newline at end of file
+diff --git a/src/tide.js b/src/tide.js
+index c3c80cc..a97c697 100644
+--- a/src/tide.js
++++ b/src/tide.js
+@@ -1,3 +1,7 @@
++/**
++ * Find the next high tide after a given time.
++ * @planks("I ask for the next high tide after {string}")
++ */
+ function nextHighTide(tides, after) {
+   const next = tides.find((t) => new Date(t.time) > new Date(after) && t.type === "high");
+   if (!next) throw new Error("no upcoming high tide in data");
