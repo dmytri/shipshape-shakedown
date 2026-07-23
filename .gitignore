@@ -3,3 +3,9 @@
 # RESULT (maps, verdicts) and the diff-vs-installed get banked to data/. Keeps
 # real doctrine text out of the cockpit's history. See AGENTS.md "Eval tier".
 experiments/
+
+# Local secrets for eval providers (SAIA key etc.) — never committed. eval-leg.sh
+# reads the key non-printing and injects it only into the throwaway eval $HOME.
+.env.local
+*.saia.env
+.saia.env
