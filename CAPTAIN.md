@@ -46,6 +46,19 @@ clearer, not harder" watchword — over-prescription is a form of "harder." The 
 candidate TOOL for the audit: an over-opinionated section may show as cost-without-affordance (IEPE)
 or as text that helps no model/project. NOT to be actioned without the dedicated rethink.
 
+**Over-opinionation candidate #2 for the rethink (dk, 2026-07-23): the `## Narration` rule
+(shipshape:316) — a role that dispatches another into isolation "owes that visibility back"
+(narrate the dispatched role's progress, or run foreground). dk: no agent has managed to do a
+good job with it; maybe cut.** STRONG prior evidence already in this corpus: the background-task
+saga (0.13.48/49/50, METRICS.md) concluded "discipline alone has been observed to fail here,"
+with pilot deadlocks and a silent-stall class that "does not yield to wording" — the SAME
+obligation (make isolated work visible) that text has never achieved. So this is likely
+text-that-does-not-work rather than harmless aspiration: candidate to cut, or replace with
+machinery (the SubagentStop/background-custody hook route the corpus already leans toward).
+NOTE: NOT probeable by the pi eval instrument — pi is skill-only (no dispatch/isolation), so
+narration is never exercised there; #2's evidence stays the Claude-subagent corpus. (Distinct
+from the smart-but-silent VOICE register, which dk rules is FINE and stays.) For the rethink.
+
 **OPEN, consumer-routed finding (dk, 2026-07-23, from ~/yoink CAPTAIN.md Upstream Note):
 Captain over-routed a package-script change to QM.** yoink's note: a `tests:all` `.env`
 package-script defect was dispatched to QM (a cancelled dispatch), wrong because QM is
