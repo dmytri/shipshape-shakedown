@@ -1,0 +1,195 @@
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..574baf2
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,25 @@
++# Shipshape Agents Configuration
++
++## Project-specific Rules
++
++- This is a Node.js project using Cucumber for BDD testing
++- The tide prediction service provides high/low tide information for coastal locations
++- Main entry point is `src/tide.js` with the `nextHighTide` function
++
++## Tooling
++
++- Test runner: cucumber-js
++- Assertion library: Node.js assert module
++- No type checking or linting configured
++
++## Workflow Notes
++
++- Data files are stored in the `data/` directory
++- Test support code is in `features/support/`
++- Feature files use standard Gherkin syntax
++
++## Harbour Notes
++
++- First fitting out for this project
++- No existing plank annotations found
++- All production code needs planking
+\ No newline at end of file
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..a93a92d
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,36 @@
++# Tidewatch5
++
++A tide prediction service that provides high and low tide information.
++
++## Shipshape
++
++This project uses [Shipshape](https://github.com/dmytri/shipshape), a context-isolated spec-driven workflow for coding agents.
++
++- **Stack**: JavaScript, Node.js, npm
++- **Specs**: `features/`
++- **Implementation**: `src/`
++- **Verification**: `features/support/`
++- **Assets**: `data/`
++
++## Installation
++
++```bash
++npm install
++```
++
++## Testing
++
++```bash
++npm test
++```
++
++## Usage
++
++The main function `nextHighTide` in `src/tide.js` takes a tide table and a timestamp, returning the next high tide after the given time.
++
++```javascript
++const { nextHighTide } = require('./src/tide');
++const tides = require('./data/tides.json');
++const nextTide = nextHighTide(tides, '2026-07-12T05:00:00Z');
++console.log(nextTide);
++```
+\ No newline at end of file
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..ca4b02c
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,42 @@
++# Shipshape Rigging
++
++## Stack
++- language: JavaScript
++- runtime: Node.js
++- packageManager: npm
++
++## Directories
++- implementation: src
++- specs: features
++- verification: features/support
++- assets: data
++
++## Commands
++- discover: `npx cucumber-js --dry-run`
++- focused: `npx cucumber-js '{scenario}'`
++- broad: `npx cucumber-js`
++- coverage: `npx cucumber-js`
++- step-usage: `npx cucumber-js --format usage`
++- plank-inventory: `none`
++- typecheck: `none`
++- lint: `none`
++
++## Perturbation
++- message: "PERTURBATION: This is a test perturbation"
++- perturb: `// PERTURBATION: {message}`
++
++## Tiers
++- default: @logic
++- policy: none
++- budget: none
++- weather: none
++- runrecord: none
++
++## Dependencies
++- dependency: @cucumber/cucumber
++- policy: none
++
++## Outbound
++- outbound: none
++- ship: none
++- verify: none
+\ No newline at end of file
+diff --git a/features/error-handling.feature b/features/error-handling.feature
+new file mode 100644
+index 0000000..471cb31
+--- /dev/null
++++ b/features/error-handling.feature
+@@ -0,0 +1,17 @@
++@captain
++Feature: Error handling improvements
++
++  Scenario: Invalid tide data format
++    Given the tide table contains invalid date format
++    When I ask for the next high tide after "2026-07-12T05:00:00Z"
++    Then the prediction fails with a descriptive error about invalid data
++
++  Scenario: Missing required fields in tide data
++    Given the tide table with missing time fields
++    When I ask for the next high tide after "2026-07-12T05:00:00Z"
++    Then the prediction fails with a descriptive error about missing fields
++
++  Scenario: Invalid after parameter format
++    Given the tide table for Fundy Cove
++    When I ask for the next high tide after "invalid-date-format"
++    Then the prediction fails with a descriptive error about invalid input
+\ No newline at end of file
+diff --git a/features/performance.feature b/features/performance.feature
+new file mode 100644
+index 0000000..1524d54
+--- /dev/null
++++ b/features/performance.feature
+@@ -0,0 +1,8 @@
++@captain
++Feature: Performance considerations
++
++  Scenario: Date parsing optimization
++    Given a large tide table with 1000 entries
++    When I ask for the next high tide after "2026-07-12T05:00:00Z" repeatedly 1000 times
++    Then all predictions complete within 100ms
++    And no excessive Date object creation occurs
+\ No newline at end of file
+diff --git a/features/station-support.feature b/features/station-support.feature
+new file mode 100644
+index 0000000..89002c0
+--- /dev/null
++++ b/features/station-support.feature
+@@ -0,0 +1,12 @@
++@captain
++Feature: Station-specific tide predictions
++
++  Scenario: Tide prediction for specific station
++    Given the station data for "Fundy Cove 1"
++    When I ask for the next high tide after "2026-07-12T05:00:00Z"
++    Then the predicted high tide accounts for station phase offset and amplitude
++
++  Scenario: Multiple station support
++    Given station data for multiple locations
++    When I request tide predictions for each station
++    Then each prediction reflects that station's specific characteristics
+\ No newline at end of file
+diff --git a/src/tide.js b/src/tide.js
+index c3c80cc..75faefd 100644
+--- a/src/tide.js
++++ b/src/tide.js
+@@ -1,3 +1,8 @@
++/**
++ * @planks("I ask for the next high tide after {string}")
++ * @planks("the predicted high tide is at {string} with height {float}")
++ * @planks("the prediction fails with {string}")
++ */
+ function nextHighTide(tides, after) {
+   const next = tides.find((t) => new Date(t.time) > new Date(after) && t.type === "high");
+   if (!next) throw new Error("no upcoming high tide in data");

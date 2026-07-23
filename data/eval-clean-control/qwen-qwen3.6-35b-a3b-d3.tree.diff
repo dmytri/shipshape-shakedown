@@ -1,0 +1,176 @@
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..754f55d
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,21 @@
++# Agent Instructions
++
++This project uses Shipshape, a context-isolated spec-driven workflow for coding agents.
++
++Agent opening this project: ensure Shipshape is installed, then load the `shipshape` skill (`shipshape:shipshape` under the plugin channel) and follow its routing before other work. Decide how to involve the human per your configured preferences.
++
++Tooling values such as stack, directories, and commands live in `RIGGING.md`.
++
++Install with the open skills CLI, which works across most agent runtimes:
++
++```bash
++npx skills add dmytri/shipshape --skill '*'
++```
++
++If your runtime supports the open-plugin format, such as Claude Code or Cursor, install the experimental plugin build instead:
++
++```bash
++npx plugins add dmytri/shipshape
++```
++
++Update Shipshape at a voyage boundary with `npx skills update` for the skills install, or re-run `npx plugins add dmytri/shipshape` for the plugin build.
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..cd2c9d3
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,54 @@
++# Rigging
++
++Project tooling values for Shipshape roles. Values only, not procedure.
++Procedure lives in the skills. Every role reads this on open.
++
++## Stack
++
++- language: JavaScript
++- runtime: Node.js
++- packageManager: npm
++
++## Directories
++
++- implementation: src
++- specs: features
++- verification: features/support
++- assets: none
++- scantlings: none
++
++## Commands
++
++- discover: npx cucumber-js --dry-run
++- focused: npx cucumber-js features/{scenario}.feature --name "{Scenario Name}" --tags "not @captain and not @shipwright"
++- broad: npx cucumber-js features/ --tags "not @captain and not @shipwright"
++- coverage: none
++- step-usage: npx cucumber-js --dry-run --format summary
++- plank-inventory: none
++- typecheck: none
++- lint: none
++- conformance: none
++
++## Perturbation
++
++- message: `PERTURBATION: consider current durable context; remove when fixed`
++- perturb: `throw new Error("PERTURBATION: consider current durable context; remove when fixed");`
++
++## Tiers
++
++- default: @logic
++- sandbox: none
++- policy: @logic - pure local tests, no external accounts. Fast, deterministic, safe.
++- weather: none
++- runrecord: none
++
++## Dependencies
++
++- policy: locked
++- dependency: @cucumber/cucumber
++
++## Outbound
++
++- outbound: none
++- ship: none
++- verify: none
+diff --git a/features/tides-missing.feature b/features/tides-missing.feature
+new file mode 100644
+index 0000000..d830679
+--- /dev/null
++++ b/features/tides-missing.feature
+@@ -0,0 +1,53 @@
++Feature: Missing seam coverage
++
++  The following scenarios are non-binding scenarios written by the Shipwright
++  role during harbour fitting-out. They are not QM targets. Captain reads them
++  to decide whether to promote any to binding scenarios, to refine existing ones,
++  or to discard as low worth.
++
++  @captain
++  Scenario: Empty tide table returns an error
++    Given an empty tide table
++    When I ask for the next high tide after "2026-07-12T05:00:00Z"
++    Then the prediction fails with "no upcoming high tide in data"
++
++  @captain
++  Scenario: Multiple high tides returns the chronologically next
++    Given the tide table for Fundy Cove
++    When I ask for the next high tide after "2026-07-12T05:00:00Z"
++    Then the predicted high tide is at "2026-07-12T16:45:00Z" with height 4.5
++    # Plank gap: current step hardcodes the data source — when the data
++    # shape changes (more stations, extra tides) the single assertion
++    # still passes but the chronology invariant is no longer tested
++    # because every tide row is fixed. A captain-tagged faster form:
++    #   Given a tide table with multiple highs before and after a pivot
++    #   When I ask for the next high after {time}
++    #   Then the returned tide is the earliest high with time > {time}
++
++  @captain
++  Scenario: Boundary — pivot exactly on a high tide
++    Given the tide table for Fundy Cove
++    When I ask for the next high tide after "2026-07-12T16:45:00Z"
++    Then the prediction fails with "no upcoming high tide in data"
++    # Plank gap: the implementation uses strict greater-than
++    # (new Date(t.time) > new Date(after)), so a pivot equal to a high
++    # tide correctly skips it. This behaviour is NOT tested by the current
++    # scenarios and should be captured.
++
++  @captain
++  Scenario: Only low tides in data returns an error
++    Given a tide table with no high tides
++    When I ask for the next high tide after "2026-07-12T05:00:00Z"
++    Then the prediction fails with "no upcoming high tide in data"
++    # Plank gap: no scenario verifies that the function correctly
++    # rejects data that has tides but no high-tide rows.
++
++  @captain
++  Scenario: Stations data is loaded for product use
++    Given the station data for Fundy Cove
++    When the system uses the station data
++    Then the station data is available for tide calculations
++    # Plank gap: data/stations.json exists with 120 stations but is never
++    # read by production code or exercised by any scenario. Either it is
++    # dead data (report-only finding), or it should be plumbed into the
++    # product — Captain decides.
+diff --git a/features/tides.feature b/features/tides.feature
+index 9d4dddf..08ea928 100644
+--- a/features/tides.feature
++++ b/features/tides.feature
+@@ -2,10 +2,25 @@ Feature: Tide prediction
+ 
+   Scenario: Next high tide after a given time
+     Given the tide table for Fundy Cove
++    # @plank src/tide.js::nextHighTide — data loading (tides.json read by steps.js)
++    # @plank src/tide.js::nextHighTide — implementation of next-high-seek
++    #   type: find first t where t.type === "high" && t.time > after
++    # @plank features/support/steps.js::step-data-loading — JSON file read and parse
++    # @plank features/support/steps.js::step-ask — nextHighTide call + error capture
++    # @plank features/support/steps.js::step-assert-result — time and height equality
++    # Planked by step-usage: src/tide.js::nextHighTide ✓
+     When I ask for the next high tide after "2026-07-12T05:00:00Z"
++    # @plank src/tide.js::nextHighTide — assertion of returned shape {time, height}
++    # @plank src/tide.js::nextHighTide — data seam: data/tides.json row shape
++    # Planked by step-usage: features/support/steps.js::step-assert-result ✓
+     Then the predicted high tide is at "2026-07-12T16:45:00Z" with height 4.5
+ 
+   Scenario: No upcoming high tide is an error
+     Given the tide table for Fundy Cove
++    # @plank features/support/steps.js::step-ask — error capture path
++    # @plank features/support/steps.js::step-assert-error — error message equality
++    # Planked by step-usage: src/tide.js::nextHighTide ✓
+     When I ask for the next high tide after "2026-07-13T00:00:00Z"
++    # @plank src/tide.js::nextHighTide — error throw with message
++    # Planked by step-usage: features/support/steps.js::step-assert-error ✓
+     Then the prediction fails with "no upcoming high tide in data"

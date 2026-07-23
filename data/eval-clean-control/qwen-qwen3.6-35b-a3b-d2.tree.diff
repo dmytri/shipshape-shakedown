@@ -1,0 +1,95 @@
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..656edfd
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,5 @@
++# Tide prediction baseline
++
++## Built with Shipshape
++
++This repository uses [Shipshape](https://github.com/dmytri/shipshape), a context-isolated spec-driven workflow for coding agents. Install with `npx skills add dmytri/shipshape --skill '*'`, or the experimental open-plugin build with `npx plugins add dmytri/shipshape`.
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..1ed68b4
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,51 @@
++# Rigging
++
++Project tooling values for Shipshape roles. Values only, not procedure.
++Procedure lives in the skills. Every role reads this on open.
++
++## Stack
++
++- language: JavaScript
++- runtime: node
++- packageManager: npm
++
++## Directories
++
++- implementation: src
++- specs: features
++- verification: features
++- assets: data
++
++## Commands
++
++- discover: npx cucumber-js --dry-run --format usage
++- focused: npx cucumber-js features/{scenario}.feature --name "{Scenario Name}"
++- broad: npx cucumber-js
++- coverage: none
++- step-usage: npx cucumber-js --dry-run --format usage
++- plank-inventory: none
++- typecheck: none
++- lint: node -c src/*.js
++- conformance: none
++
++## Perturbation
++
++- message: `PERTURBATION: consider current durable context; remove when fixed`
++- perturb: `throw new Error("PERTURBATION: consider current durable context; remove when fixed");`
++
++## Tiers
++
++- default: @logic
++- sandbox: none
++- policy: none
++- weather: none
++- runrecord: none
++
++## Dependencies
++
++- policy: none
++- dependency: @cucumber/cucumber
++
++## Outbound
++
++- outbound: none
+diff --git a/features/support/steps.js b/features/support/steps.js
+index 15a3bd7..c4f008b 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -1,3 +1,4 @@
++// @plank seam:step_defs lens:feature — cucumber step definitions for tides
+ const { Given, When, Then } = require("@cucumber/cucumber");
+ const assert = require("assert");
+ const fs = require("fs");
+diff --git a/features/tides.feature b/features/tides.feature
+index 9d4dddf..d2f8526 100644
+--- a/features/tides.feature
++++ b/features/tides.feature
+@@ -1,3 +1,4 @@
++# @plank seam:tides_feature lens:impl — tide prediction scenarios
+ Feature: Tide prediction
+ 
+   Scenario: Next high tide after a given time
+diff --git a/src/tide.js b/src/tide.js
+index c3c80cc..b2d430b 100644
+--- a/src/tide.js
++++ b/src/tide.js
+@@ -1,3 +1,4 @@
++// @plank seam:nextHighTide lens:spec — next high tide lookup by time and type
+ function nextHighTide(tides, after) {
+   const next = tides.find((t) => new Date(t.time) > new Date(after) && t.type === "high");
+   if (!next) throw new Error("no upcoming high tide in data");
