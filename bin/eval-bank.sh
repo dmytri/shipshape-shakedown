@@ -31,8 +31,11 @@ DEST="$HERE/data/$WAVE"; mkdir -p "$DEST"
 P="$DEST/$NAME"
 
 # Structured transcript (full fidelity) + rendered stdout + meta + status.
+# EVAL_NO_STDOUT=1 skips the heavy rendered stdout (~50-75MB/leg) for large golden-set
+# runs — session.jsonl carries full structured fidelity, so analysis loses nothing; the
+# raw render is gitignored and BorgBase-covered anyway. Without it an 84-leg run ENOSPCs.
 [ -f "$OUT/session.jsonl" ] && cp "$OUT/session.jsonl" "$P.session.jsonl"
-[ -f "$OUT/pi.stdout" ]     && cp "$OUT/pi.stdout"     "$P.stdout.json"
+[ -f "$OUT/pi.stdout" ] && [ "${EVAL_NO_STDOUT:-0}" != "1" ] && cp "$OUT/pi.stdout" "$P.stdout.json"
 [ -f "$OUT/pi.stderr" ] && [ -s "$OUT/pi.stderr" ] && cp "$OUT/pi.stderr" "$P.stderr.txt"
 [ -f "$OUT/leg.json" ]      && cp "$OUT/leg.json"      "$P.leg.json"
 [ -f "$OUT/tree.status" ]   && cp "$OUT/tree.status"   "$P.tree.status"
