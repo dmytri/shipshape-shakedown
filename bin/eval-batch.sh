@@ -50,6 +50,19 @@ for m in $INLINE; do MODELS+=("$m"); done
 mkdir -p "$SCRATCH/$WAVE"
 SKILL_FLAGS=(); for s in "${SKILLS[@]}"; do SKILL_FLAGS+=(--skill "$s"); done
 
+# Fixture-integrity guard: an escaped leg that wanders into ~/shipshape-shakedown
+# can run a Shipwright inspection ON THE SOURCE FIXTURE (writes error-messages.feature,
+# RIGGING.md, edits tide.js), which then breaks EVERY subsequent scaffold. Restore the
+# fixture pristine before the run so a prior escape can't poison this one.
+fixture_guard() {
+  if [ -n "$(git -C "$HERE" status --porcelain fixtures/ 2>/dev/null)" ]; then
+    echo "eval-batch[$WAVE]: $1 fixtures/ dirty (escape pollution) — restoring pristine" >&2
+    git -C "$HERE" checkout -- fixtures/ 2>/dev/null || true
+    git -C "$HERE" clean -fdx fixtures/ >/dev/null 2>&1 || true
+  fi
+}
+fixture_guard "pre-run:"
+
 # Build ONE shared cucumber node_modules the scaffolds symlink (disk-robust: a
 # 20-leg run otherwise npm-installs ~1GB and exhausts a tight tmpfs). scaffold.sh
 # reads EVAL_SHARED_NM and symlinks it instead of installing per leg.
@@ -100,4 +113,5 @@ for model in "${MODELS[@]}"; do
   done
 done
 wait
+fixture_guard "POST-RUN (a leg ESCAPED!):"
 echo "eval-batch[$WAVE]: complete. Banked under data/$WAVE/ ; fold: bin/eval-map.py data/$WAVE/*.session.jsonl"
