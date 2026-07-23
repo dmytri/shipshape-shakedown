@@ -93,6 +93,11 @@ fixture, doctrine, or a consumer repo — the escape-DAMAGE class is closed at t
 via hardlink copy, `scaffold.sh` EVAL_SHARED_NM) and a fixture-integrity guard in eval-batch.
 Validated: a deepseek Shipwright leg ran 47 turns contained, CLEARED, repo 0 changes.
 
+**>>> ON RESUME, FIRST show the latest draws as a table: `python3 bin/eval-table.py` <<<** (reads
+the DURABLE banked data/, so it works after VM cleanup; `--list` for waves, or name one e.g.
+`bin/eval-table.py eval-workhorse-x10`). Verdict CLEAR = wrote @planks AND >=1 @captain, scoped to
+src/*.feature; turns/wall/cost from the fold. Show this to dk before anything else.
+
 **RESUME POINT: the workhorse x10 baseline is still OWED** — every attempt was disrupted by the
 now-fixed harness bugs (disk, then fixture pollution, then the AGENTS.md clobber). It is now
 SAFE to run contained. deepseek was tracking ~5/6 clean before disruption; devstral's clean
