@@ -1,0 +1,50 @@
+diff --git a/harbour-fitting-out-inspection.md b/harbour-fitting-out-inspection.md
+new file mode 100644
+index 0000000..3653ad7
+--- /dev/null
++++ b/harbour-fitting-out-inspection.md
+@@ -0,0 +1,12 @@
++# Harbour Fitting-Out Inspection
++
++## Introduction
++This inspection aims to discover existing behaviour and any policy violations from the production code, and write @captain-tagged scenario skeletons and @planks annotations for Captain review.
++
++## Inspection Report
++TODO: add a complete inspection report including @captain-tagged scenario skeletons and
++
++## Policy Violations
++TODO: an appendix detailing policy violations and recommended changes
++
++@captain hand-back
+\ No newline at end of file
+diff --git a/work-loop.md b/work-loop.md
+new file mode 100644
+index 0000000..ed0c9b3
+--- /dev/null
++++ b/work-loop.md
+@@ -0,0 +1,24 @@
++## 7. Judge each seam as the planking pass holds it open. A separate whole-code scan is a second retrieval; instead, while steps 8 and 9 have a seam in hand, evaluate it against these categories, and run the tool-backed analyzers named in Discovery tools for the categories a tool discharges. Report each finding once, in one category:
++
++
++  - **Content catalog violations:** hardcoded product-facing strings, such as labels, messages, emails, UI copy, and user-facing error messages, that should live in assets or content catalogs per the Asset policy.
++
++  - **Hidden behaviour:** product logic in constructors, global state, static initialization, singletons, registries, service locators, framework lifecycle hooks.
++
++  - **Verification seam violations:** side effects mixed into domain logic, hard dependencies created internally, digging through collaborator graphs, broad modules whose purpose requires `and` to describe.
++
++  - **Fragmented seams:** near-duplicate parallel seams, or several seams whose planks all carry the same step. The shared-plank case is not visible from a seam in hand, since the duplicate sits in another file this step never opened: group the `plank-inventory` output already run by plank string, where a string claimed by more than one seam is the cluster. Report the cluster as a Captain finding; consolidation is a perturbation decision, not a harbour edit. Distinguish two kinds. Copy-paste or token-similar seams are textual duplication, discharged by an off-the-shelf duplication scanner. Two seams that implement one named behaviour under different code, such as a real seam and a test-only twin registered under one name, are behaviour-identity duplication a token scanner misses; the anchor is the project\u2019s naming or registration mechanism, and it needs a bespoke conformance checker per the Scantling agreement. Report the naming anchor as evidence for Captain.
++
++  - **Unreachable code:** code no production entry point or live seam reaches, judged by reference analysis of the real import and call graph, never by coverage alone, with a dead-code analyzer named in Discovery tools. Coverage-unexecuted code that a live entry point reaches is unspecified behaviour and gets a `@captain` scenario instead.
++
++  - **Missing coverage:** the modules the step 6 uncovered-module search found; when another category also fits, they count here.
++
++  - **Planking errors:** real coverage shows a seam executes but carries no `@planks(...)` annotation. Distinct from missing coverage and from a stale-plank join; this is a covered seam the plank inventory missed entirely.
++
++  - **Verification debt:** verification support that breaks the Verification agreement, such as a guessed delay where a signal is observable, independent scenarios forced serial, or ambient state rebuilt per scenario. Report findings to Captain; where the verification-conformance rule set misses the breach kind, name the missing rule as evidence, since Captain routes green debt by adding the rule and listing the conformance scenario in the watchbill, per the Harbour flow.
++
++  - **Verification economy:** ride the per-scenario duration from step 4\u2019s weather record into a per-scenario audit. Assess five lenses per scenario: cost, its duration against the rest of its tier; spec-bearing, whether it proves a real falsifiable behaviour needed now or restates one another scenario owns, which duration cannot show and the `step-usage` output already run can: scenarios binding the same pattern set are the restatement candidates, and the specs in hand settle which of them asserts anything the others do not; form, whether a structural fact could move to a scantling or bespoke checker instead of an executing example; fixture, whether its setup is minimal-sufficient or amortizable to once-per-run; and cadence, whether the cost must be paid every inner-loop run or belongs at harbour cadence. Report each finding to Captain with its scenario and lens; routing is Captain\u2019s per the Harbour flow. Where Shipwright speaks with the user during harbour, interrogate the outliers with them directly. Report the methodology-corpus ratio alongside these findings: the count of `@conformance`-tagged scenarios against the total scenario count, cheap to derive from tags already in hand. It turns methodology overhead into a number Captain can rule on across harbours, rather than a felt sense that the corpus has grown self-referential.
++
++  - **Missing boundary scantling:** a `Rule:` prose block or a code comment states an internal module or layer boundary constraint, such as which layer may import which, that a structural or policy rule set tool could check directly instead. Also derive a candidate from the real import graph alone: when scope holds multiple internal modules or layers with a consistent one-directional import pattern, such as domain code never importing infrastructure code, that observed pattern is boundary-constraint evidence even with no comment stating it. No prose names this one, so nothing surfaces it: read it from the module graph the stack\u2019s dead-code analyser already resolved for the unreachable-code check, grouping its edges by directory or layer and reporting a direction every edge of a group respects. Report the constraint or the observed pattern, its location, and a boundary-policy scantling candidate from the Scantling agreement\u2019s named-engine catalog, as a Captain finding. Include the observed pattern as evidence for Captain to refine into the actual scantling. Do not author the scantling; adoption and its exact shape are a Captain product decision.
++
++  - **Content classification:** content consumed by a build or generator, such as static-site pages, templates rendered as content, and data files, derives into the `assets` value, never `implementation`. List the existing content directories under `assets` in place; move nothing. On a content-heavy project, `implementation` is the build config and custom code only, and it is legitimately small.
+\ No newline at end of file

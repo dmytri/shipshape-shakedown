@@ -1,0 +1,17 @@
+# banked: 2026-07-23T08:29:13Z
+# verdict: PENDING
+# leg: {  "name": "meta-llama-llama-3.1-8b-instruct",  "model": "meta-llama/llama-3.1-8b-instruct",  "provider": "openrouter",  "workspace": "/tmp/claude-1000/-home-exedev-shipshape-shakedown/3661dbff-7e2b-4f51-9805-fd28946c9fac/scratchpad/batch/eval-shipwright-researcher/meta-llama-llama-3.1-8b-instruct/sim",  "timeout_s": 900,  "skills": [    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/4ee36ff0efb8/skills/shipshape",    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/4ee36ff0efb8/skills/shipwright"  ]}
+
+
+=== meta-llama-llama-3.1-8b-instruct.session.jsonl ===
+  turns=6  in=67508  out=2354  cache_read=14848  cost=$0.0039
+  role reads: shipwright@t1
+  roles loaded: shipwright
+  ~ repeated tool signature at turns [2] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    5005/259        0 $0.0003  edit
+    t1     653/318     4608 $0.0002  write, bash, read, read
+    t2   11683/54      5120 $0.0007  read
+    t3   17811/290        0 $0.0009  edit
+    t4   18015/1337       0 $0.0010  write, bash
+    t5   14341/96      5120 $0.0009  -

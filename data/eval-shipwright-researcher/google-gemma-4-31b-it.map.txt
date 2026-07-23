@@ -1,0 +1,23 @@
+# banked: 2026-07-23T08:40:02Z
+# verdict: PENDING
+# leg: {  "name": "google-gemma-4-31b-it",  "model": "google/gemma-4-31b-it",  "provider": "openrouter",  "workspace": "/tmp/claude-1000/-home-exedev-shipshape-shakedown/3661dbff-7e2b-4f51-9805-fd28946c9fac/scratchpad/batch/eval-shipwright-researcher/google-gemma-4-31b-it/sim",  "timeout_s": 900,  "skills": [    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/4ee36ff0efb8/skills/shipshape",    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/4ee36ff0efb8/skills/shipwright"  ]}
+
+
+=== google-gemma-4-31b-it.session.jsonl ===
+  turns=12  in=501230  out=6411  cache_read=0  cost=$0.0625
+  role reads: shipshape@t0 -> shipwright@t0
+  roles loaded: shipshape, shipwright
+  ~ repeated tool signature at turns [9, 10] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    5032/445        0 $0.0008  read, read, read
+    t1   27184/303        0 $0.0034  bash
+    t2   51114/611        0 $0.0064  bash
+    t3   51249/571        0 $0.0064  bash
+    t4   51389/99         0 $0.0062  read
+    t5   51728/457        0 $0.0064  bash
+    t6   51696/756        0 $0.0065  bash
+    t7   52179/1077       0 $0.0067  read, read, read
+    t8   53019/955        0 $0.0067  bash
+    t9   53242/1031       0 $0.0068  bash
+    t10  53398/106        0 $0.0064  bash
+    t11      0/0          0 $0.0000  -

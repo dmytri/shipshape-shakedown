@@ -115,11 +115,29 @@ def _sig(tool):
     return (tool["name"], str(key)[:80])
 
 
+def wall_clock_s(session_file):
+    """Leg wall-clock from message timestamps (ms epoch): last - first."""
+    ts = []
+    with open(session_file, encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                ev = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            for cand in (ev.get("timestamp"), (ev.get("message") or {}).get("timestamp")):
+                if isinstance(cand, (int, float)) and cand > 1_000_000_000_000:
+                    ts.append(cand)
+    return round((max(ts) - min(ts)) / 1000.0, 1) if len(ts) >= 2 else 0.0
+
+
 def analyse(session_file):
     """One leg's affordance map + derived signals."""
     turns = read_turns(session_file)
     if not turns:
-        return {"turns": [], "empty": True}
+        return {"turns": [], "empty": True, "wall_s": wall_clock_s(session_file)}
 
     # Flail signal, harness-agnostic: a `confirm`/`ask_question` round-trip in
     # non-interactive mode (should never happen with --approve — its presence
@@ -148,6 +166,7 @@ def analyse(session_file):
         "empty": False,
         "turns": turns,
         "n_turns": len(turns),
+        "wall_s": wall_clock_s(session_file),
         "tokens_in": sum(t["input"] for t in turns),
         "tokens_out": sum(t["output"] for t in turns),
         "cache_read": sum(t["cache_read"] for t in turns),
@@ -165,7 +184,7 @@ def print_leg(name, a):
         print("  RED: agent recorded no usage — a leg that reports no model "
               "invocation cannot report a cost of zero.")
         return
-    print(f"  turns={a['n_turns']}  in={a['tokens_in']}  out={a['tokens_out']}  "
+    print(f"  turns={a['n_turns']}  wall={a['wall_s']}s  in={a['tokens_in']}  out={a['tokens_out']}  "
           f"cache_read={a['cache_read']}  cost=${a['cost']:.4f}")
     seq = " -> ".join(f"{r}@t{n}" for n, r in a["role_sequence"]) or "(no role SKILL.md read)"
     print(f"  role reads: {seq}")
