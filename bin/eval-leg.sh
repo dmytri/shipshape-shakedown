@@ -74,11 +74,14 @@ mkdir -p "$FAKEHOME/.config" "$FAKEHOME/.local/share" "$FAKEHOME/.cache" "$FAKEH
 # run, and the cockpit/doctrine/fixture-source stay read-only (escape-damage still blocked).
 INSTR="$(dirname "$WORKSPACE")/.instrument"; mkdir -p "$INSTR"
 
-# Assemble --skill flags.
-SKILL_ARGS=()
+# Assemble --skill flags. Resolve to ABSOLUTE paths: the leg runs chdir'd into the sim
+# under a tight bind, so a relative skill path would not resolve, and each skill dir is
+# bind-mounted read-only BY ABSOLUTE PATH (so nothing else under experiments/ is exposed).
+SKILL_ARGS=(); SKILLS_ABS=()
 for s in "${SKILLS[@]}"; do
   [ -e "$s" ] || { echo "eval-leg.sh: --skill path '$s' missing" >&2; exit 2; }
-  SKILL_ARGS+=(--skill "$s")
+  s="$(realpath "$s")"
+  SKILLS_ABS+=("$s"); SKILL_ARGS+=(--skill "$s")
 done
 
 # Leg meta (banked with the raw so a fold knows what produced it).
@@ -92,12 +95,8 @@ PY
 
 echo "eval-leg[$NAME]: $MODEL over $(basename "$WORKSPACE"), skills: ${SKILLS[*]##*/skills/}" >&2
 
-# The isolated, CONTAINED run. bwrap gives pi a READ-ONLY view of the whole VM
-# and writable access to ONLY the sim workspace, the fake HOME, and the capture
-# dir — so a leg that wanders (they do) can READ but can NEVER WRITE the cockpit,
-# the source fixture, doctrine, or a consumer repo. Detection alone let an escaped
-# leg clobber AGENTS.md and the fixture (2026-07-23); this makes that impossible.
-# --approve neutralises the confirm derail; --mode json writes the session to SESSDIR.
+# The isolated, CONTAINED run. --approve neutralises the confirm derail; --mode json
+# writes the session to SESSDIR.
 PI_ARGS=(-p "$TASK" --provider "$PROVIDER" --model "$MODEL" --approve --mode json
          "${SKILL_ARGS[@]}" --session-dir "$SESSDIR")
 ENVV=(HOME="$FAKEHOME" XDG_CONFIG_HOME="$FAKEHOME/.config"
@@ -105,14 +104,28 @@ ENVV=(HOME="$FAKEHOME" XDG_CONFIG_HOME="$FAKEHOME/.config"
       TMPDIR="$FAKEHOME/tmp" PATH="$PATH" OPENROUTER_API_KEY="$OPENROUTER_API_KEY")
 set +e
 if command -v bwrap >/dev/null 2>&1; then
-  BW=(bwrap --ro-bind / / --dev /dev --proc /proc
-      --bind "$WORKSPACE" "$WORKSPACE" --bind "$OUT" "$OUT" --bind "$FAKEHOME" "$FAKEHOME"
-      --bind "$INSTR" "$INSTR")
+  # MINIMAL read exposure (dk 2026-07-23). NOT `--ro-bind / /`: that left the ENTIRE VM
+  # readable, so a leg could read the cockpit (CAPTAIN.md), OTHER candidates under
+  # experiments/ (a control leg reading the treatment skill = silent A/B contamination),
+  # other legs' data/, and consumer secrets (~/yoink/.env holds the API key). Now nothing
+  # under /home is bound wholesale: the leg sees ONLY the runtime (/usr + node/npm), pi's
+  # own dep tree, the specific --skill dirs under test, and its sim/HOME/capture. The
+  # cockpit, sibling experiments, other legs, and every consumer repo are INVISIBLE.
+  PI_NM="$(cd "$(dirname "$PI")/.." && pwd)"   # pi's node_modules root (pi + its deps)
+  BW=(bwrap
+      --ro-bind /usr /usr --ro-bind /etc /etc
+      --symlink usr/bin /bin --symlink usr/sbin /sbin
+      --symlink usr/lib /lib --symlink usr/lib64 /lib64
+      --ro-bind-try /opt /opt --ro-bind-try /run /run
+      --proc /proc --dev /dev
+      --ro-bind "$PI_NM" "$PI_NM")
+  for s in "${SKILLS_ABS[@]}"; do BW+=(--ro-bind "$s" "$s"); done
+  BW+=(--bind "$WORKSPACE" "$WORKSPACE" --bind "$OUT" "$OUT" --bind "$FAKEHOME" "$FAKEHOME"
+       --bind "$INSTR" "$INSTR")
   # Isolated node_modules via overlay: the shared toolkit ($EVAL_SHARED_NM, from
   # eval-batch) as a READ-ONLY base + a per-leg tmpfs writable upper. The leg installs
-  # anything it wants into the upper; the shared store never mutates and nothing
-  # persists to disk (bwrap 0.11.2, dk-provisioned 2026-07-23). scaffold.sh leaves an
-  # empty node_modules dir as the mountpoint.
+  # anything it wants into the upper; the shared store never mutates and nothing persists
+  # to disk (bwrap 0.11.2). scaffold.sh leaves an empty node_modules dir as the mountpoint.
   if [ -n "${EVAL_SHARED_NM:-}" ] && [ -d "$EVAL_SHARED_NM/@cucumber" ]; then
     BW+=(--overlay-src "$EVAL_SHARED_NM" --tmp-overlay "$WORKSPACE/node_modules")
   fi
