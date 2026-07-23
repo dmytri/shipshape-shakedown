@@ -1,0 +1,138 @@
+diff --git a/.rgignore b/.rgignore
+new file mode 100644
+index 0000000..ba910ba
+--- /dev/null
++++ b/.rgignore
+@@ -0,0 +1 @@
++CAPTAIN.md
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..754f55d
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,21 @@
++# Agent Instructions
++
++This project uses Shipshape, a context-isolated spec-driven workflow for coding agents.
++
++Agent opening this project: ensure Shipshape is installed, then load the `shipshape` skill (`shipshape:shipshape` under the plugin channel) and follow its routing before other work. Decide how to involve the human per your configured preferences.
++
++Tooling values such as stack, directories, and commands live in `RIGGING.md`.
++
++Install with the open skills CLI, which works across most agent runtimes:
++
++```bash
++npx skills add dmytri/shipshape --skill '*'
++```
++
++If your runtime supports the open-plugin format, such as Claude Code or Cursor, install the experimental plugin build instead:
++
++```bash
++npx plugins add dmytri/shipshape
++```
++
++Update Shipshape at a voyage boundary with `npx skills update` for the skills install, or re-run `npx plugins add dmytri/shipshape` for the plugin build.
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..39ccab4
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,54 @@
++# Rigging
++
++Project tooling values for Shipshape roles. Values only, not procedure.
++Procedure lives in the skills. Every role reads this on open.
++
++## Stack
++
++- language: javascript
++- runtime: node
++- packageManager: npm
++
++## Directories
++
++- implementation: src
++- specs: features
++- verification: features/support
++- assets: data
++- scantlings: none
++
++## Commands
++
++- discover: `cucumber-js --dry-run --format json features/`
++- focused: `cucumber-js --name "{scenario}" features/`
++- broad: `cucumber-js features/`
++- coverage: `c8 cucumber-js features/`
++- step-usage: `cucumber-js --format usage-json features/`
++- plank-inventory: `jsdoc -X src/`
++- typecheck: `none`
++- lint: `biome check src/ features/`
++- conformance: `none`
++
++## Perturbation
++
++- message: `PERTURBATION: consider current durable context; remove when fixed`
++- perturb: `throw new Error("PERTURBATION: consider current durable context; remove when fixed");`
++
++## Tiers
++
++- default: @logic
++- sandbox: none
++- policy: @logic: none
++- weather: logs/weather
++- runrecord: logs/runrecord
++
++## Dependencies
++
++- policy: open
++- dependency: @cucumber/cucumber
++
++## Outbound
++
++- outbound: none
++- ship: `none`
++- verify: `none`
+diff --git a/features/conformance.feature b/features/conformance.feature
+new file mode 100644
+index 0000000..a63e811
+--- /dev/null
++++ b/features/conformance.feature
+@@ -0,0 +1,12 @@
++Feature: Methodology conformance
++
++  @captain @conformance
++  Scenario: Missing watchbill conforms as deck at rest
++    Given the project has no watchbill.json
++    Then the watchbill shape check passes
++
++  @captain @conformance
++  Scenario: No perturbation token in implementation
++    Given the implementation directory src
++    When I search for PERTURBATION tokens
++    Then no PERTURBATION token is found
+diff --git a/features/tides.feature b/features/tides.feature
+index 9d4dddf..5d9fef1 100644
+--- a/features/tides.feature
++++ b/features/tides.feature
+@@ -9,3 +9,9 @@ Feature: Tide prediction
+     Given the tide table for Fundy Cove
+     When I ask for the next high tide after "2026-07-13T00:00:00Z"
+     Then the prediction fails with "no upcoming high tide in data"
++
++  @captain
++  Scenario: Error message is externalized as content
++    Given the system uses a content catalog for product-facing strings
++    When the prediction fails
++    Then the error message is served from the content catalog
+diff --git a/src/tide.js b/src/tide.js
+index c3c80cc..a97c697 100644
+--- a/src/tide.js
++++ b/src/tide.js
+@@ -1,3 +1,7 @@
++/**
++ * Find the next high tide after a given time.
++ * @planks("I ask for the next high tide after {string}")
++ */
+ function nextHighTide(tides, after) {
+   const next = tides.find((t) => new Date(t.time) > new Date(after) && t.type === "high");
+   if (!next) throw new Error("no upcoming high tide in data");
