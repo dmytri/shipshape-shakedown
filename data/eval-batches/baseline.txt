@@ -9,6 +9,7 @@
 #   qwen/qwen3.5-397b-a17b  ($0.33, did not clear — big + expensive + failed)
 #   mistralai/mistral-medium-3-5 ($0.50, cleared but spun/expensive)
 #   minimax/minimax-m2.7    (not in the researcher set; devstral kept as the failer)
+#   meta-llama/llama-3.1-8b-instruct (8B floor, not a real deployment target)
 #
 # Last-run verdict in the trailing comment (one draw, provisional).
 deepseek/deepseek-v4-flash          # CLEAR — cheapest ($0.11), most thorough
@@ -18,6 +19,5 @@ z-ai/glm-4.7                        # no  — SILENT off-ramp (declares 100%, wr
 mistralai/devstral-2512             # no  — failer control (kept from old baseline)
 openai/gpt-oss-120b                 # no  — fast off-ramp
 google/gemma-4-31b-it               # no  — slow, no artifacts
-meta-llama/llama-3.1-8b-instruct    # no  — floor
 qwen/qwen3-30b-a3b-instruct-2507    # no  — no artifacts
 qwen/qwen3-coder-next               # ERROR last run (empty completion) — re-run to confirm
