@@ -60,6 +60,17 @@ models; over-routing across models => doctrine cause; clean => one-off. Connects
 over-opinionation item above (over-routing a trivial change through verification machinery). Do
 NOT fix doctrine without the probe + dk word.
 
+**PRIORITY (dk, 2026-07-23): get MORE MODELS TO CLEAR, first.** Strategy: the fast-iteration
+WORKHORSES are deepseek-v4-flash + devstral-2512 (data/eval-batches/sample.txt) — both cheap,
+both ~2/3 clean. Iterate LEVERS toward near-100% clear on these two, THEN broaden
+(baseline/researcher/medium/premium) to test generalisation. First validated lever is
+HARNESS/DISPATCH, not doctrine: fixing the task's VM-path leak and framing the sim as "the
+ENTIRE codebase, the only project that exists" took the sample 1/9 -> 4/9 clean (data/
+eval-clean-control/), attributed to framing (control never escaped). Prefer harness/prompt
+levers over doctrine edits (avoids over-prescription; Candidate A's doctrine edit was NULL).
+Containment is fixed + enforced (eval-leg.sh escape detector; bwrap available for hard
+containment later). Repeat draws are the DEFAULT now (single-draw verdicts overstated).
+
 **CANDIDATE A (Shipwright no-gap off-ramp -> seam-ledger report gate): probed, NULL, NOT
 shipped (2026-07-23).** Full account data/eval-candidateA/. v1 (seam ledger) bought structural
 compliance but the off-ramp survived at seam granularity. v2 (behaviour-level ledger) forces

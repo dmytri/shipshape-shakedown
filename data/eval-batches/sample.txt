@@ -1,7 +1,8 @@
-# Fast-iteration SAMPLE subset of baseline (dk, 2026-07-23). Use this to iterate
-# on a candidate doctrine edit cheaply; run the full baseline.txt only for the
-# final confirmation. Minimal but representative: two failers (the treatment
-# targets) + one clearer (regression check).
-z-ai/glm-4.7                        # FAILER — the flagship silent off-ramp (the money test)
-mistralai/devstral-2512             # FAILER — zero-artifact failer (different failure mode)
-qwen/qwen3.6-35b-a3b                # CLEARER — cheap/fast regression check (best value)
+# Fast-iteration WORKHORSE set (dk, 2026-07-23). deepseek-v4-flash + devstral-2512:
+# both cheap, both ~2/3 clean, good cheap signal for frequent iteration. STRATEGY:
+# iterate levers (harness/prompt first, doctrine only if warranted) on these two
+# toward NEAR-100% clear, THEN do broader model tests (baseline/researcher/medium/
+# premium) to check the levers generalise. Don't spend on breadth until the
+# workhorses are near-100%.
+deepseek/deepseek-v4-flash
+mistralai/devstral-2512
