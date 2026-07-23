@@ -1,7 +1,42 @@
 # Captain notes - shipshape-shakedown workstream
 
 <!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
-## >>> PICKUP STATE, 2026-07-22 close (post-0.13.64-pilot). THIS IS THE ONLY LIVE ORDER. <<<
+## >>> PICKUP STATE, 2026-07-23 (eval tier built). THIS IS THE ONLY LIVE ORDER. <<<
+
+**A new instrument exists: pi baseline-agent doctrine-affordance eval on non-Claude
+models.** Built and proven this session (dk-directed, not a standard shakedown).
+Full docs in AGENTS.md "Eval tier"; instrument = `bin/eval-leg.sh` (atom) +
+`bin/eval-map.py` (pure fold) + `bin/eval-bank.sh` (commits c8bf1a9, ae58be3).
+Drives `pi` on any OpenRouter model over the installed 0.13.64 role skills; measures
+AFFORDANCE (did the role read the skill and produce the right artifacts) not outcome.
+
+**First result, `data/eval-shipwright-01/` (commit 20d6580): Shipwright, the hardest
+role, baseline batch, one draw each — 2/4 CLEARED from doctrine text alone.**
+deepseek-v4-flash (7 @captain skeletons, most thorough) and qwen3.6-27b (tidy, 19
+turns) CLEARED; minimax-m2.7 (0 @captain, reasoned "no gap" but under-inspected, spun
+32t) and devstral-2512 (nothing but RIGGING.md, declared 100%/0-violations, spun 52t)
+did NOT. **Nominated finding, NOT shipped, owes a probe:** both failures reached the
+skill's "no gap found" off-ramp INSTEAD of inspecting; turn count inversely tracks
+success. Hypothesis: the no-gap path does not force evidence-of-inspection first.
+Equally consistent with a model floor (2/4 cleared). More draws owed before any
+doctrine look. Text-affordance only — no Claude hooks fire under pi.
+
+**STANDING RULE (dk, 2026-07-23): iterate without polluting real doctrine commits.**
+`~/shipshape` gets a commit ONLY at the approved ship step. Candidate doctrine edits
+live in a gitignored `experiments/<name>/skills` copy, reached by the TREATMENT leg's
+`--skill`; the CONTROL leg reads the installed plugin. Bank results + diff-vs-installed,
+never the candidate text as a cockpit commit. Full mechanics in AGENTS.md "Eval tier".
+
+**OPEN: a real researcher uses Shipshape on GWDG SAIA (dk, 2026-07-23)** — a genuine
+consuming-agent context, so their actual model is the highest-value eval row (real-
+consumer feedback, a legal Captain channel). SAIA model list captured; which model
+that researcher runs, and whether SAIA is reachable as a pi provider (vs the OpenRouter
+arm used so far), are the open questions before a SAIA-matched batch. Medium/premium
+batches (larger open-weight, scale-within-family qwen curve, a Claude calibration row)
+are designed but not yet run.
+
+<!-- ---------------------------------------------------------------------- -->
+## >>> PICKUP STATE, 2026-07-22 close (post-0.13.64-pilot). SUPERSEDED by the eval note above. <<<
 
 **Standard `/shakedown` entry ran clean end to end.** Deck reported (doctrine at 0.13.64, METRICS baseline stale at 0.13.61), cheapest-scope proposed (a probe on the 0.13.64 custody-sweep sites), one question asked, dk pre-authorized a full pilot mid-turn ("then do full pilot, you are pre-authorized"). The standalone probe was folded into the pilot's own observations rather than run separately.
 

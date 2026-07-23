@@ -83,6 +83,46 @@ nothing else (no notes, no fixtures, no scratch).
    and state in CAPTAIN.md here (notes migrated from ~/shipshape at the 2026-07-12
    handover; the shipshape repo gets doctrine commits only).
 
+## Eval tier: pi baseline agents on non-Claude models (built 2026-07-23)
+
+A cheap, repeatable, control-armed instrument for measuring doctrine AFFORDANCE
+on models that are NOT Claude - the portability claim this corpus had only ever
+validated on sonnet/opus. A baseline `pi` agent (`@earendil-works/pi-coding-agent`,
+`node_modules/.bin/pi`, isolated `$HOME`/XDG, `--approve` to kill the non-
+interactive confirm-loop) reads the installed role skill(s) via `--skill` and
+acts over a scaffolded sim; the run is captured raw and folded deterministically.
+
+- `bin/eval-leg.sh` ATOM: one isolated pi session -> raw capture (session JSONL
+  transcript + rendered stdout + FULL tree.diff of artifacts + tree.status + git.log).
+- `bin/eval-map.py` FOLD (pure, no model call): role-phased affordance map -
+  per-turn in/out/cache/cost, tool calls, role-skill loads, confirm/repeat flail
+  signals. Sibling of doctrine-sections.py; tested on data/eval-fixture/.
+- `bin/eval-bank.sh` bank a leg into data/<wave>/ with maximum durable detail.
+- Pilot-capable by composition: eval-pilot.sh (to build) sequences legs
+  (Captain -> /new -> QM-assumes-rest, x voyages, + oracle grade) over the atom.
+  Skill-only pi IS the doctrine's "load role in place" branch natively - QM/
+  Shipwright assume downstream roles by READING the next skill and following it.
+- Batches are named model manifests (baseline/medium/premium); a batch is just a
+  model list fed to the same atom. Baseline (2026-07-23): qwen3.6-27b,
+  deepseek-v4-flash, devstral-2512, minimax-m2.7 - see data/eval-shipwright-01/.
+
+**Iterating on candidate doctrine WITHOUT polluting real doctrine commits (dk asked,
+2026-07-23; standing rule).** Three separate places, and only one ever takes a
+doctrine commit:
+1. `~/shipshape` = the real doctrine/plugin. The eval NEVER writes or commits here;
+   it only READS skills. It gets a commit ONLY at the approved ship step
+   (ship-first: edit -> bump -> tests green -> commit -> push -> reinstall), after
+   a probe earns it AND dk approves. Structurally insulated.
+2. installed plugin cache = read-only 0.13.64, the eval's CONTROL arm (`--skill`).
+3. this cockpit = the instrument, data, and ALL iteration.
+   To test a candidate doctrine edit: COPY the skills into a gitignored
+   `experiments/<name>/skills`, edit the copy, and point the TREATMENT leg's
+   `--skill` at it; the CONTROL leg points at the installed plugin. A/B the same
+   models across both arms. `~/shipshape` is untouched until ship. Bank only the
+   RESULT (maps, verdicts) plus the candidate's diff-vs-installed as a text
+   artifact - never the candidate skill text as a cockpit commit that could read
+   as a real change.
+
 ## Probe-first (dk ruled, 2026-07-19). Which findings owe a probe BEFORE a fix ships
 
 Classify the finding, then route:
