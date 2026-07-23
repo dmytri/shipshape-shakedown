@@ -21,6 +21,14 @@ wanted. Default to candidate-only unless dk says to include control. Also: run l
 PARALLEL (concurrency = leg count, both arms at once), never sequential arms; and for a
 pure bloat/token cut, report the DETERMINISTIC IEPE cost delta first (no legs needed) —
 legs only confirm affordance survived, for which one fast devstral leg per arm suffices.
+GOAL PRIORITY (dk, 2026-07-23): #1 is LATENCY, #2 is token efficiency (correctness/
+affordance is the floor — a candidate must still CLEAR). Weight results accordingly:
+the key latency proxy is ROUND-TRIP COUNT — turns (inv) and tool calls — because each is
+a sequential model round-trip (~10-18s each here), the dominant wall cost. A Yoink batch
+runs N shell commands in ONE tool call (one round-trip) instead of N, so tool-call
+reduction IS the latency win (yoink-only: deepseek 61->21 tools, wall 392->207s). Token
+efficiency can move the other way (a big bundle is one large input read — devstral cost
+rose) and that's acceptable when latency improves, since latency outranks it.
 YOINK STAYS + NO HEDGING (dk, 2026-07-23): yoink is a permanent part of the doctrine
 direction — do NOT propose shelving/abandoning it, ever. And yoink is REQUIRED, not
 optional: doctrine states it UNCONDITIONALLY — never "where available"/"if available"/
