@@ -1,0 +1,37 @@
+# banked: 2026-07-23T18:31:38Z
+# verdict: PENDING
+# leg: {  "name": "mistralai-devstral-2512",  "model": "mistralai/devstral-2512",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/eval-yoink-v2/mistralai-devstral-2512/sim",  "timeout_s": 900,  "skills": [    "experiments/yoink-doctrine-v2/skills/shipshape",    "experiments/yoink-doctrine-v2/skills/shipwright",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== mistralai-devstral-2512.session.jsonl ===
+  turns=26  wall=232.3s  in=37824  out=5409  cache_read=749824  cost=$0.0559
+  role reads: shipshape@t0 -> shipwright@t0
+  roles loaded: shipshape, shipwright
+  ~ repeated tool signature at turns [2, 3, 4, 5, 6, 8, 9, 10, 11, 15, 19, 20, 21] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    1989/133        0 $0.0011  read, read, read
+    t1   22721/121     2048 $0.0094  bash, bash
+    t2    1233/132    24832 $0.0018  bash, bash
+    t3     101/159    26112 $0.0014  bash, read, read
+    t4     513/153    26368 $0.0016  read, read, bash
+    t5     386/97     27008 $0.0014  read, read
+    t6     440/69     27392 $0.0014  read, bash
+    t7     307/143    27776 $0.0015  bash, bash
+    t8     768/99     28160 $0.0016  bash
+    t9     104/388    28928 $0.0020  bash
+    t10    191/368    29312 $0.0020  bash
+    t11     98/171    29824 $0.0016  bash, bash, bash
+    t12   1096/776    30080 $0.0032  write, write
+    t13    180/58     31872 $0.0015  read
+    t14    161/150    32000 $0.0016  write
+    t15    102/63     32256 $0.0015  write
+    t16     84/173    32384 $0.0017  edit
+    t17     51/187    32640 $0.0017  write
+    t18    159/77     32768 $0.0015  bash
+    t19    185/82     32896 $0.0016  bash
+    t20     98/166    33152 $0.0017  bash, bash
+    t21    125/247    33408 $0.0019  bash, bash
+    t22    136/85     33664 $0.0016  read
+    t23   6258/158    33792 $0.0042  bash, bash
+    t24    220/612    40192 $0.0029  write
+    t25    118/542    40960 $0.0028  -

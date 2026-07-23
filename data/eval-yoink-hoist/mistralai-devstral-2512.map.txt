@@ -1,0 +1,39 @@
+# banked: 2026-07-23T18:33:36Z
+# verdict: PENDING
+# leg: {  "name": "mistralai-devstral-2512",  "model": "mistralai/devstral-2512",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/eval-yoink-hoist/mistralai-devstral-2512/sim",  "timeout_s": 900,  "skills": [    "experiments/yoink-hoist/skills/shipshape",    "experiments/yoink-hoist/skills/shipwright",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== mistralai-devstral-2512.session.jsonl ===
+  turns=28  wall=232.0s  in=31973  out=3819  cache_read=773888  cost=$0.0514
+  role reads: shipshape@t0 -> shipwright@t0
+  roles loaded: shipshape, shipwright
+  ~ repeated tool signature at turns [5, 6, 11, 12, 13, 16, 19, 24, 25] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    1343/125      640 $0.0008  read, read, read
+    t1   22838/99      2048 $0.0094  bash
+    t2     949/48     24960 $0.0015  bash
+    t3     397/136    25856 $0.0015  read, read, read
+    t4     173/49     26368 $0.0012  bash
+    t5     217/97     26496 $0.0013  read, bash
+    t6     347/97     26752 $0.0014  read, read
+    t7     401/59     27136 $0.0014  bash, bash
+    t8     217/47     27520 $0.0013  read
+    t9     176/79     27776 $0.0013  bash
+    t10    138/142    27904 $0.0015  bash, bash
+    t11    733/56     28160 $0.0015  bash
+    t12    964/62     28928 $0.0017  bash
+    t13     67/65     29952 $0.0014  bash
+    t14    142/69     29952 $0.0014  read
+    t15    260/489    30080 $0.0023  write
+    t16    160/283    30720 $0.0019  write
+    t17    108/75     31104 $0.0014  bash
+    t18     61/139    31232 $0.0016  write
+    t19    119/63     31360 $0.0014  write
+    t20    101/69     31488 $0.0014  read
+    t21    114/160    31616 $0.0016  edit
+    t22     68/170    31872 $0.0016  write
+    t23    160/77     32000 $0.0015  bash
+    t24    186/68     32128 $0.0015  bash
+    t25   1159/73     32256 $0.0019  bash
+    t26    205/678    33408 $0.0028  write
+    t27    170/245    34176 $0.0019  -
