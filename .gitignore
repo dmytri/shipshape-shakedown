@@ -12,3 +12,11 @@ experiments/
 
 # Batch scratch (fresh sim trees per model) — never committed.
 .eval-scratch/
+
+# Raw pi captures are 75MB+ each; bank the durable KB layer (session.jsonl,
+# tree.diff, maps) instead. Raw lives on BorgBase (AGENTS.md).
+*.stdout.json
+
+# Python bytecode
+__pycache__/
+*.pyc

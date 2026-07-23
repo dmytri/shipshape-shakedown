@@ -1,0 +1,41 @@
+# banked: 2026-07-23T15:29:22Z
+# verdict: PENDING
+# leg: {  "name": "mistralai-devstral-2512",  "model": "mistralai/devstral-2512",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/eval-cand01-treatment/mistralai-devstral-2512/sim",  "timeout_s": 900,  "skills": [    "experiments/deopinionate-01/skills/shipshape",    "experiments/deopinionate-01/skills/shipwright"  ]}
+
+
+=== mistralai-devstral-2512.session.jsonl ===
+  turns=31  wall=795.3s  in=33552  out=3523  cache_read=808256  cost=$0.0528
+  role reads: shipshape@t5 -> shipwright@t5
+  roles loaded: shipshape, shipwright
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    4693/62       288 $0.0020  read, read, read
+    t1     166/53      5040 $0.0004  bash, bash
+    t2     533/85      5248 $0.0006  bash, bash
+    t3    1142/65      5856 $0.0008  read, read
+    t4     159/28      7056 $0.0004  bash
+    t5     147/68      7232 $0.0005  read, read, read
+    t6   22173/81      7440 $0.0093  bash, bash, bash
+    t7     390/26     29680 $0.0014  read, bash
+    t8     211/28     30080 $0.0013  read, bash
+    t9     304/29     30304 $0.0014  read, read
+    t10    354/27     30624 $0.0014  bash, bash
+    t11    308/60     30992 $0.0015  bash, bash
+    t12     46/61     31344 $0.0014  bash
+    t13     74/149    31440 $0.0016  bash, bash
+    t14     45/66     31648 $0.0014  bash
+    t15    187/43     31744 $0.0014  read
+    t16      0/0          0 $0.0000  -
+    t17      5/466    32832 $0.0022  write
+    t18     23/315    33296 $0.0020  write
+    t19     16/240    33632 $0.0018  edit
+    t20     31/38     33872 $0.0014  bash
+    t21    971/105    33936 $0.0020  bash
+    t22     67/64     35008 $0.0016  bash, bash
+    t23    270/27     35136 $0.0016  bash
+    t24    177/357    35424 $0.0022  write
+    t25     23/27     35952 $0.0015  bash
+    t26    320/50     35984 $0.0017  bash
+    t27    136/372    36336 $0.0023  write
+    t28    110/39     36752 $0.0016  bash, bash
+    t29    260/35     36896 $0.0016  bash
+    t30    211/457    37184 $0.0025  -

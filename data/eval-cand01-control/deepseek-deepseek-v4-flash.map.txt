@@ -1,0 +1,35 @@
+# banked: 2026-07-23T15:04:15Z
+# verdict: PENDING
+# leg: {  "name": "deepseek-deepseek-v4-flash",  "model": "deepseek/deepseek-v4-flash",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/eval-cand01-control/deepseek-deepseek-v4-flash/sim",  "timeout_s": 900,  "skills": [    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/4ee36ff0efb8/skills/shipshape",    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/4ee36ff0efb8/skills/shipwright"  ]}
+
+
+=== deepseek-deepseek-v4-flash.session.jsonl ===
+  turns=24  wall=242.2s  in=161070  out=15903  cache_read=838656  cost=$0.0338
+  role reads: shipshape@t0 -> shipwright@t0
+  roles loaded: shipshape, shipwright
+  ~ repeated tool signature at turns [1, 6, 7, 8, 9, 10, 11, 12, 14, 16, 19, 20, 21, 22] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    5381/266        0 $0.0006  read, read, read
+    t1   22546/134     4096 $0.0022  read
+    t2   22702/94      4096 $0.0022  bash
+    t3   27168/439        0 $0.0026  read, bash, bash
+    t4    1628/555    27136 $0.0008  read, read, read, read, read, read
+    t5   10855/796    24576 $0.0016  bash, bash, bash
+    t6    2628/290    35328 $0.0010  bash, bash, bash
+    t7    1657/1383   36864 $0.0011  bash, bash, bash
+    t8    3293/217    36864 $0.0010  bash
+    t9   11734/221    28672 $0.0017  bash, bash
+    t10   4948/1717   36864 $0.0015  bash, bash, bash
+    t11   2971/209    40960 $0.0011  read, bash
+    t12   7432/1522   36864 $0.0017  bash, bash
+    t13   4935/1399   40960 $0.0015  write, write, write
+    t14   1632/1898   45824 $0.0014  write
+    t15   4352/295    45056 $0.0013  edit
+    t16    610/1060   49152 $0.0012  edit
+    t17   1729/759    49152 $0.0012  write
+    t18   1009/461    50688 $0.0011  bash, bash, bash
+    t19   3350/262    49152 $0.0013  bash, bash
+    t20  12179/217    40960 $0.0020  bash
+    t21    475/305    52992 $0.0011  bash
+    t22   4666/410    49152 $0.0014  read, bash
+    t23   1190/994    53248 $0.0013  -

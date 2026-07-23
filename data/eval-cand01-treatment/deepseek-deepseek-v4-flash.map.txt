@@ -1,0 +1,24 @@
+# banked: 2026-07-23T15:16:56Z
+# verdict: PENDING
+# leg: {  "name": "deepseek-deepseek-v4-flash",  "model": "deepseek/deepseek-v4-flash",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/eval-cand01-treatment/deepseek-deepseek-v4-flash/sim",  "timeout_s": 900,  "skills": [    "experiments/deopinionate-01/skills/shipshape",    "experiments/deopinionate-01/skills/shipwright"  ]}
+
+
+=== deepseek-deepseek-v4-flash.session.jsonl ===
+  turns=13  wall=89.7s  in=53757  out=7877  cache_read=368640  cost=$0.0134
+  role reads: shipwright@t3 -> shipshape@t4
+  roles loaded: shipshape, shipwright
+  ~ repeated tool signature at turns [5, 7, 8, 9, 10, 11] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0     945/175     4096 $0.0002  bash, bash
+    t1    4534/244     4096 $0.0005  bash, bash
+    t2     859/139     8192 $0.0003  bash, bash
+    t3    1712/200     8192 $0.0004  read, read, read
+    t4   12600/252     9216 $0.0014  read, bash
+    t5   11321/198    21504 $0.0015  read, bash
+    t6    8347/387    32768 $0.0015  read, read, read, read
+    t7    1134/234    40960 $0.0009  read, read, bash
+    t8    5979/1090   41984 $0.0016  bash, bash, bash
+    t9    2321/378    47104 $0.0012  bash, bash, bash
+    t10   1916/242    49152 $0.0011  bash, bash
+    t11   1251/241    50176 $0.0011  bash, bash
+    t12    838/4097   51200 $0.0018  -

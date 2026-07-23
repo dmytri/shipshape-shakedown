@@ -1,0 +1,204 @@
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..329a156
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,21 @@
++# Agent Instructions
++
++This project uses Shipshape, a context-isolated spec-driven workflow for coding agents.
++
++Agent opening this project: ensure Shipshape is installed, then load the `shipshape` skill (`shipshape:shipshape` under the plugin channel) and follow its routing before other work. Decide how to involve the human per your configured preferences.
++
++Tooling values such as stack, directories, and commands live in `RIGGING.md`.
++
++Install with the open skills CLI, which works across most agent runtimes:
++
++```bash
++npx skills add dmytri/shipshape --skill '*'
++```
++
++If your runtime supports the open-plugin format, such as Claude Code or Cursor, install the experimental plugin build instead:
++
++```bash
++npx plugins add dmytri/shipshape
++```
++
++Update Shipshape at a voyage boundary with `npx skills update` for the skills install, or re-run `npx plugins add dmytri/shipshape` for the plugin build.
+\ No newline at end of file
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..fade39a
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,54 @@
++# Rigging
++
++Project tooling values for Shipshape roles. Values only, not procedure.
++Procedure lives in the skills. Every role reads this on open.
++
++## Stack
++
++- language: JavaScript
++- runtime: Node.js
++- packageManager: npm
++
++## Directories
++
++- implementation: src
++- specs: features
++- verification: features/support
++- assets: data
++- scantlings: none
++
++## Commands
++
++- discover: `npx cucumber-js --dry-run`
++- focused: `npx cucumber-js {scenario}`
++- broad: `npx cucumber-js`
++- coverage: `npx cucumber-js`
++- step-usage: `npx cucumber-js --format usage`
++- plank-inventory: `none`
++- typecheck: `none`
++- lint: `none`
++- conformance: `none`
++
++## Perturbation
++
++- message: `PERTURBATION: consider current durable context; remove when fixed`
++- perturb: `throw new Error("PERTURBATION: consider current durable context; remove when fixed");`
++
++## Tiers
++
++- default: @logic
++- sandbox: none
++- policy: none
++- weather: none
++- runrecord: none
++
++## Dependencies
++
++- policy: locked
++- dependency: @cucumber/cucumber
++
++## Outbound
++
++- outbound: none
++- ship: none
++- verify: none
+\ No newline at end of file
+diff --git a/SHIPWRIGHT_REPORT.md b/SHIPWRIGHT_REPORT.md
+new file mode 100644
+index 0000000..8089686
+--- /dev/null
++++ b/SHIPWRIGHT_REPORT.md
+@@ -0,0 +1,95 @@
++# Shipwright Harbour Report
++
++## Summary
++
++Shipwright completed first-run fitting out and harbour inventory for the tidewatch5 project.
++
++## Scope
++
++Full codebase fitting out and inventory.
++
++## Modules Analyzed
++
++- `src/tide.js` - Production tide prediction code
++- `features/tides.feature` - Existing Gherkin scenarios  
++- `features/support/steps.js` - Step definitions
++- `data/tides.json` - Test data
++
++## Actions Taken
++
++### Fitting Out
++1. **Created RIGGING.md** - Derived project tooling values:
++   - Stack: JavaScript, Node.js, npm
++   - Directories: src (implementation), features (specs), features/support (verification), data (assets)
++   - Commands: cucumber-js based verification commands
++   - Perturbation: JavaScript error throw statement
++   - Dependencies: @cucumber/cucumber
++
++2. **Created AGENTS.md** - Shipshape agent instructions and installation guide
++
++3. **No README.md found** - Skipped README block append per template rules
++
++### Harbour Inventory
++1. **Plank Annotations Added**:
++   - Added `@planks` annotations to `src/tide.js::nextHighTide()` function
++   - Linked to all three step patterns from step definitions:
++     - `"I ask for the next high tide after {string}"`
++     - `"the predicted high tide is at {string} with height {float}"`
++     - `"the prediction fails with {string}"`
++
++2. **Coverage Analysis**:
++   - All production code (100%) covered by existing scenarios
++   - No uncovered modules found
++   - No missing coverage gaps
++
++3. **Policy Violations**: None found
++   - No content catalog violations
++   - No hidden behaviour in constructors/global state
++   - No verification seam violations
++   - No fragmented seams or duplication
++   - No unreachable code
++   - No planking errors
++
++4. **Verification Economy**:
++   - 2 scenarios total, 0 @conformance scenarios
++   - Methodology corpus ratio: 0%
++   - Both scenarios prove real falsifiable behaviours needed now
++   - No structural facts that could move to scantlings
++   - Fixtures are minimal-sufficient (single JSON file reused)
++   - Cost is appropriate for inner-loop cadence
++
++5. **Condemned Scenarios**: None to process
++
++## Tools Used
++
++- `npx cucumber-js` - Test execution and coverage
++- `npx cucumber-js --format usage` - Step usage mapping
++- `git` - Version control status
++
++## Tiers Run
++
++- `@logic` (default): 2 scenarios passed, 6 steps passed, 0.2s
++
++## Pending Outbound
++
++None
++
++## Blockers
++
++None
++
++## Next Steps
++
++Captain review of:
++1. RIGGING.md and AGENTS.md configuration
++2. Plank annotations on production code
++3. No @captain scenarios needed (full coverage achieved)
++
++Captain may:
++- Promote configuration as-is
++- Add additional tooling (lint, typecheck) if desired
++- Consider adding verification economy checks for larger projects
++
++## Harbour Complete
++
++Tree left clean for Captain. Boatswain custody next if changes accepted.
+\ No newline at end of file
+diff --git a/src/tide.js b/src/tide.js
+index c3c80cc..75faefd 100644
+--- a/src/tide.js
++++ b/src/tide.js
+@@ -1,3 +1,8 @@
++/**
++ * @planks("I ask for the next high tide after {string}")
++ * @planks("the predicted high tide is at {string} with height {float}")
++ * @planks("the prediction fails with {string}")
++ */
+ function nextHighTide(tides, after) {
+   const next = tides.find((t) => new Date(t.time) > new Date(after) && t.type === "high");
+   if (!next) throw new Error("no upcoming high tide in data");

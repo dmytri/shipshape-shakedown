@@ -63,16 +63,32 @@ fixture_guard() {
 }
 fixture_guard "pre-run:"
 
-# Build ONE shared cucumber node_modules the scaffolds symlink (disk-robust: a
-# 20-leg run otherwise npm-installs ~1GB and exhausts a tight tmpfs). scaffold.sh
-# reads EVAL_SHARED_NM and symlinks it instead of installing per leg.
+# Build ONE shared node_modules the scaffolds symlink (disk-robust: a 20-leg run
+# otherwise npm-installs ~1GB and exhausts a tight tmpfs). scaffold.sh reads
+# EVAL_SHARED_NM and symlinks it instead of installing per leg. Carries cucumber
+# (the runner) AND @dk/yoink (batch context retrieval) — the latter so a leg can
+# run `npx @dk/yoink`/`node_modules/.bin/yoink` OFFLINE under bwrap (empty fake
+# HOME kills the npx cache, so it must resolve from node_modules), which future
+# yoink-using doctrine requires the eval to be able to exercise. Verified under
+# containment 2026-07-23. Registry install, falling back to the local ~/yoink checkout.
+# Preinstall the EXPECTED fitting-out toolkit into the shared store (install latency
+# is not what the eval measures, dk 2026-07-23): the runner (cucumber), batch retrieval
+# (@dk/yoink), coverage (c8), plank-inventory (jsdoc), dead-code (knip), lint (biome).
+# scaffold.sh cp -a's this into each sim (a REAL copy, not hardlinks — a leg is free to
+# `npm install` anything else it wants without corrupting the shared store; proven 07-23).
+# `biome` present = toolkit complete (the gate). yoink falls back to the local ~/yoink checkout.
 SHARED_NM="$SCRATCH/.shared-nm"
-if [ ! -d "$SHARED_NM/node_modules/@cucumber" ]; then
+if [ ! -e "$SHARED_NM/node_modules/.bin/biome" ]; then
   mkdir -p "$SHARED_NM"
-  ( cd "$SHARED_NM" && npm install --save-dev @cucumber/cucumber >/dev/null 2>&1 )
+  ( cd "$SHARED_NM" && [ -f package.json ] || npm init -y >/dev/null 2>&1
+    npm install --no-fund --no-audit --save-dev \
+      @cucumber/cucumber @dk/yoink c8 jsdoc knip @biomejs/biome >/dev/null 2>&1 \
+    || npm install --no-fund --no-audit \
+      @cucumber/cucumber "$HOME/yoink" c8 jsdoc knip @biomejs/biome >/dev/null 2>&1 )
 fi
 export EVAL_SHARED_NM="$SHARED_NM/node_modules"
-[ -d "$EVAL_SHARED_NM/@cucumber" ] && echo "eval-batch[$WAVE]: shared node_modules ready ($EVAL_SHARED_NM)" || echo "eval-batch[$WAVE]: WARN shared node_modules missing, legs will install per-leg"
+KIT=""; for t in cucumber-js yoink c8 jsdoc knip biome; do [ -e "$EVAL_SHARED_NM/.bin/$t" ] && KIT="$KIT+$t" || KIT="$KIT-$t"; done
+[ -d "$EVAL_SHARED_NM/@cucumber" ] && echo "eval-batch[$WAVE]: shared toolkit ready ($EVAL_SHARED_NM) [$KIT]" || echo "eval-batch[$WAVE]: WARN shared node_modules missing, legs will install per-leg"
 
 echo "eval-batch[$WAVE]: ${#MODELS[@]} models, concurrency $CONC"
 

@@ -1,0 +1,223 @@
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..b332047
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,29 @@
++# Shipshape Agents
++
++This project uses Shipshape for spec-driven development.
++
++## Configuration
++
++See RIGGING.md for project tooling values.
++
++## Workflow
++
++- Captain writes durable specs in features/
++- QM implements verification in features/support/
++- Crew implements production code in src/
++- Shipwright inspects existing code and adds trace annotations
++- Boatswain maintains hygiene and local commit custody
++
++## Current State
++
++The project has a working tide prediction system with:
++- Production code in src/tide.js
++- Specs in features/tides.feature
++- Verification in features/support/steps.js
++
++## Known Issues
++
++1. The runlog.js hook has a path resolution issue
++2. No plank annotations exist on production seams
++3. No coverage tooling is configured
++4. Configuration files were missing and have been created
+\ No newline at end of file
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..175915b
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,37 @@
++# Rigging
++
++## Stack
++- language: JavaScript
++- runtime: Node.js
++- packageManager: npm
++
++## Directories
++- implementation: src
++- specs: features
++- verification: features/support
++- assets: data
++
++## Commands
++- discover: npx cucumber-js --dry-run
++- focused: npx cucumber-js {scenario}
++- broad: npx cucumber-js
++- coverage: npx cucumber-js
++- step-usage: npx cucumber-js --format usage
++- plank-inventory: none
++- typecheck: none
++- lint: none
++
++## Perturbation
++- message: PERTURBATION
++- perturb: // PERTURBATION
++
++## Tiers
++- default: @logic
++- policy: none
++
++## Dependencies
++- policy: latest-stable
++- dependency: @cucumber/cucumber
++
++## Outbound
++none
+\ No newline at end of file
+diff --git a/SHIPWRIGHT-REPORT.md b/SHIPWRIGHT-REPORT.md
+new file mode 100644
+index 0000000..1339960
+--- /dev/null
++++ b/SHIPWRIGHT-REPORT.md
+@@ -0,0 +1,124 @@
++# Shipwright Harbour Report
++
++## Scope
++Full codebase inventory and fitting out
++
++## Modules Analyzed
++- src/tide.js (production code)
++- features/tides.feature (specs)
++- features/support/steps.js (verification)
++- features/support/runlog.js (verification support)
++
++## @captain Scenarios Written
++0 (existing scenarios are already binding)
++
++## Coverage Summary
++- Overall: Unable to run coverage due to filesystem constraints
++- Uncovered modules: None identified through static analysis
++- Existing scenarios cover the main tide prediction behavior
++
++## Policy Violations Found
++
++### 1. Configuration Missing (RESOLVED)
++- **Finding**: No RIGGING.md or AGENTS.md files existed
++- **Action**: Created both configuration files with derived values
++- **Status**: Resolved during harbour
++
++### 2. Path Resolution Issue
++- **Finding**: runlog.js hook has incorrect path resolution
++- **Location**: features/support/runlog.js:8
++- **Evidence**: Hook fails with ENOENT trying to create directory at wrong level
++- **Impact**: Tests cannot run due to hook failure
++- **Type**: Verification support violation
++
++### 3. Missing Plank Annotations (RESOLVED)
++- **Finding**: nextHighTide function had no @planks annotations
++- **Location**: src/tide.js:1
++- **Action**: Added @planks annotations for both scenarios
++- **Status**: Resolved during harbour
++
++### 4. No Coverage Tooling
++- **Finding**: No coverage command configured or tool installed
++- **Impact**: Cannot measure actual code coverage
++- **Type**: Methodology gap
++
++### 5. No Type Checking
++- **Finding**: No typecheck command configured
++- **Impact**: No static type verification
++- **Type**: Quality gate missing
++
++### 6. No Linting
++- **Finding**: No lint command configured
++- **Impact**: No code style enforcement
++- **Type**: Quality gate missing
++
++## Verification Economy Findings
++
++### Scenario: Next high tide after a given time
++- **Cost**: Unknown (cannot run due to hook issue)
++- **Spec-bearing**: ✓ Proves real falsifiable behavior
++- **Form**: ✓ Concrete example of tide prediction
++- **Fixture**: ✓ Uses minimal test data
++- **Cadence**: ✓ Appropriate for inner-loop runs
++
++### Scenario: No upcoming high tide is an error
++- **Cost**: Unknown (cannot run due to hook issue)
++- **Spec-bearing**: ✓ Proves error handling behavior
++- **Form**: ✓ Concrete example of error case
++- **Fixture**: ✓ Uses same minimal test data
++- **Cadence**: ✓ Appropriate for inner-loop runs
++
++## @shipwright-condemned Scenarios Processed
++0 (none found)
++
++## Tools Used
++- Static analysis: ✓
++- Git history: ✓
++- Coverage collection: ✗ (filesystem constraints)
++- Plank inventory: ✗ (no tool configured)
++
++## Tiers Run
++None (cannot run due to hook issue)
++
++## Pending Outbound
++None identified
++
++## Blockers
++
++### 1. Filesystem Read-Only
++- **Impact**: Cannot create directories needed by runlog.js hook
++- **Evidence**: mkdir fails with "Read-only file system"
++- **Resolution Needed**: Operator intervention to fix path or filesystem
++
++### 2. Path Resolution Bug
++- **Impact**: runlog.js hook fails before any tests run
++- **Location**: features/support/runlog.js:6-8
++- **Evidence**: Tries to create directory at incorrect path level
++- **Resolution**: Fix path resolution logic or create expected directory structure
++
++## Unverified Findings
++
++### Hook Path Issue
++- **Finding**: runlog.js path resolution is incorrect
++- **Evidence**: Static code analysis shows wrong directory calculation
++- **Check Lacking**: Cannot run tests to confirm fix
++- **Label**: unverified
++
++## Next Steps
++
++1. **Captain Review**: Review configuration files and plank annotations
++2. **Operator Action**: Fix filesystem issue or path resolution bug
++3. **QM Dispatch**: Run verification once hook issue is resolved
++4. **Coverage Setup**: Add coverage tooling (e.g., c8)
++5. **Quality Gates**: Add type checking and linting
++
++## Harbour Summary
++
++- **Configuration**: Created RIGGING.md and AGENTS.md
++- **Planking**: Added @planks annotations to production seam
++- **Blockers**: Filesystem read-only prevents test execution
++- **Findings**: 6 policy violations (2 resolved, 4 require action)
++- **Scenarios**: 2 existing scenarios analyzed
++- **Seams**: 1 production seam planked
++
++Harbour complete. Captain next.
+\ No newline at end of file
+diff --git a/src/tide.js b/src/tide.js
+index c3c80cc..c5de710 100644
+--- a/src/tide.js
++++ b/src/tide.js
+@@ -1,3 +1,7 @@
++/**
++ * @planks("I ask for the next high tide after {string}")
++ * @planks("the prediction fails with {string}")
++ */
+ function nextHighTide(tides, after) {
+   const next = tides.find((t) => new Date(t.time) > new Date(after) && t.type === "high");
+   if (!next) throw new Error("no upcoming high tide in data");

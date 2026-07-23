@@ -1,5 +1,35 @@
 # Captain notes - shipshape-shakedown workstream
 
+<!-- STANDING OPERATOR CONVENTION (dk, 2026-07-23): when dk asks for "results", that
+means the METRICS TABLE — per-leg invocations, tool calls, tokens (in/out/cache),
+OpenRouter price, wall-clock latency, and verdict, WITH totals. Not a prose summary.
+Prose is for findings; "results" means the numbers. Fold every leg with bin/eval-map.py
+(+ a tool-call count) and render the table. -->
+
+<!-- ITERATION MODE (dk, 2026-07-23): default eval run is 1 DRAW each of the two
+WORKHORSES (deepseek-v4-flash + devstral-2512) — cheap single-draw exploration while
+iterating harness/rubric levers. Do NOT run repeat-draw rates or broaden the model set
+until dk says "expand". (Suspends the "repeat draws are the default" rule for the
+iteration phase; repeat draws resume when a lever earns a measured result.)
+CONTROL IS OPT-IN (dk, 2026-07-23): do NOT assume an A/B control arm every iteration.
+ASK whether dk wants a control this run; often only the candidate (treatment) arm is
+wanted. Default to candidate-only unless dk says to include control. Also: run legs in
+PARALLEL (concurrency = leg count, both arms at once), never sequential arms; and for a
+pure bloat/token cut, report the DETERMINISTIC IEPE cost delta first (no legs needed) —
+legs only confirm affordance survived, for which one fast devstral leg per arm suffices.
+ALWAYS COMMIT AND PUSH (dk, 2026-07-23): dk NEVER objects to commit+push — do it
+without asking, always, at every natural checkpoint. (VM-mortality durability rule:
+unpushed work dies with the VM.) Keep raw `*.stdout.json` captures OUT of git — bank
+the durable KB layer (session.jsonl, tree.diff, maps, leg.json); raw lives on BorgBase.
+WATCHER FALSE-ALARM TRAP (dk, 2026-07-23, hit TWICE): when a batch is backgrounded via
+`setsid bash -c '...'`, a watcher bound to `pgrep ... | head -1` grabs the setsid/launcher
+wrapper that exits INSTANTLY, firing a premature "DONE" while the real legs still run.
+Wait on the OUTPUT FILE, not a pgrep'd PID (the AGENTS.md rule): poll the batch log for its
+completion SENTINEL (e.g. "TREATMENT-COMPLETE") or the banked `.exit` count reaching N.
+If binding to a PID, capture the REAL `eval-batch.sh` PID (grep out the `bash -c` wrapper)
+BEFORE watching, never `head -1` of a fuzzy pattern. -->
+
+
 <!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
 ## >>> PICKUP STATE, 2026-07-23 (eval tier built). THIS IS THE ONLY LIVE ORDER. <<<
 

@@ -1,0 +1,182 @@
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..49bae0e
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,57 @@
++# Shipshape Agents
++
++This project uses Shipshape for spec-driven development.
++
++## Project Configuration
++
++See [RIGGING.md](RIGGING.md) for tooling values.
++
++## Stack
++
++- Language: JavaScript
++- Runtime: Node.js
++- Package Manager: npm
++- Test Runner: Cucumber.js
++
++## Directories
++
++- Implementation: `src/` - Production code
++- Specs: `features/` - Gherkin feature files
++- Verification: `features/support/` - Step definitions and test support
++- Assets: `data/` - Test data and content
++
++## Commands
++
++- `npm test`: Run Cucumber.js test suite
++- `npx cucumber-js`: Run Cucumber.js directly
++- `npx cucumber-js --dry-run`: Static discovery (list undefined/unimplemented steps)
++- `npx cucumber-js --format usage`: List step usage
++
++## Verification Tiers
++
++- `@logic`: Default tier for pure local tests (no external dependencies)
++
++## Workflow
++
++1. Captain writes durable specs in `.feature` files
++2. QM runs verification and creates worklist from failing targets
++3. Crew implements smallest production change
++4. Boatswain handles hygiene and local commit custody
++5. Shipwright performs harbour inspection and fitting out
++
++## Harbour Cadence
++
++Shipwright runs between voyages to:
++- Inventory production code
++- Add `@planks(...)` trace annotations
++- Write `@captain` scenario skeletons
++- Remove condemned scenarios and code
++- Audit verification economy
++
++## Current State
++
++This is a tide prediction project with:
++- `src/tide.js`: Production tide prediction logic
++- `features/tides.feature`: Tide prediction scenarios
++- `features/support/steps.js`: Step definitions
++- `data/tides.json`: Tide data for testing
+\ No newline at end of file
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..6820fa0
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,42 @@
++# Tidewatch 5
++
++A tide prediction system.
++
++## Shipshape
++
++This repository uses [Shipshape](https://github.com/dmytri/shipshape), a context-isolated spec-driven workflow for coding agents.
++
++### Articles of Agreement
++
++- **Durable artifacts outrank chat**: Binding product behaviour lives in `.feature` files
++- **Current design only**: Specs and code describe the current design
++- **Simplest sufficient change**: One role, one job, smallest useful change
++- **Deferral is not safety**: Push to 100% completion in the fewest possible cycles
++- **Real by default**: Verification exercises real behaviour
++- **Passing verification is not proof**: Passing checks only show that current checks pass
++
++### Roles
++
++- **Captain**: Human-facing discovery, durable specs/assets
++- **QM**: Fresh-context verification and executable coverage
++- **Crew**: Smallest production change for one failing target
++- **Boatswain**: Hygiene, verification recheck, local commit custody
++- **Shipwright**: Harbour code inspection, `@planks(...)` annotations, `@captain` scenarios
++
++### Configuration
++
++See [RIGGING.md](RIGGING.md) and [AGENTS.md](AGENTS.md) for project tooling and workflow details.
++
++## Development
++
++```bash
++npm install
++npm test
++```
++
++## Project Structure
++
++- `src/`: Production code
++- `features/`: Gherkin specifications
++- `features/support/`: Step definitions and test support
++- `data/`: Test data
+\ No newline at end of file
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..4399cb5
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,37 @@
++# Shipshape Rigging
++
++## Stack
++- language: JavaScript
++- runtime: Node.js
++- packageManager: npm
++
++## Directories
++- implementation: src
++- specs: features
++- verification: features/support
++- assets: data
++
++## Commands
++- discover: npx cucumber-js --dry-run
++- focused: npx cucumber-js {scenario}
++- broad: npx cucumber-js
++- coverage: npx cucumber-js
++- step-usage: npx cucumber-js --format usage
++- plank-inventory: none
++- typecheck: none
++- lint: none
++
++## Perturbation
++- message: PERTURBATION
++- perturb: // PERTURBATION
++
++## Tiers
++- default: @logic
++- policy: none
++
++## Dependencies
++- policy: locked
++- dependency: @cucumber/cucumber
++
++## Outbound
++none
+\ No newline at end of file
+diff --git a/features/tides.feature b/features/tides.feature
+index 9d4dddf..2d6c61f 100644
+--- a/features/tides.feature
++++ b/features/tides.feature
+@@ -9,3 +9,9 @@ Feature: Tide prediction
+     Given the tide table for Fundy Cove
+     When I ask for the next high tide after "2026-07-13T00:00:00Z"
+     Then the prediction fails with "no upcoming high tide in data"
++
++  @captain
++  Scenario: Error message should come from content catalog
++    Given the tide table for Fundy Cove
++    When I ask for the next high tide after "2026-07-13T00:00:00Z"
++    Then the error message should be defined in the content catalog
+diff --git a/src/tide.js b/src/tide.js
+index c3c80cc..dbe02d5 100644
+--- a/src/tide.js
++++ b/src/tide.js
+@@ -1,3 +1,6 @@
++/**
++ * @planks("I ask for the next high tide after {string}")
++ */
+ function nextHighTide(tides, after) {
+   const next = tides.find((t) => new Date(t.time) > new Date(after) && t.type === "high");
+   if (!next) throw new Error("no upcoming high tide in data");

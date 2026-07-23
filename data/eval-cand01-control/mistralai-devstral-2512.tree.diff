@@ -1,0 +1,107 @@
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..b205473
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,42 @@
++# Shipshape Agents
++
++This project uses Shipshape for spec-driven development.
++
++## Stack
++- Language: JavaScript
++- Runtime: Node.js
++- Test runner: Cucumber.js
++- Package manager: npm
++
++## Directories
++- Implementation: `src/`
++- Specs: `features/`
++- Verification: `features/support/`
++- Assets: `data/`
++
++## Commands
++- `npm test`: Run Cucumber.js test suite
++- `npx cucumber-js`: Run Cucumber.js directly
++- `npx cucumber-js --dry-run`: Static discovery (undefined/unimplemented steps)
++
++## Project Configuration
++See `RIGGING.md` for machine-readable configuration.
++
++## Shipshape Workflow
++1. Captain writes durable specs in `.feature` files
++2. QM makes steps executable from current production code
++3. Crew implements minimal production changes
++4. Boatswain verifies, cleans, and commits
++5. Shipwright (harbour) inspects existing code and adds trace annotations
++
++## Current State
++- Fitted out for Shipshape
++- 2 passing scenarios
++- 1 production seam (`src/tide.js`)
++- 1 step definition file (`features/support/steps.js`)
++- Data files in `data/` directory
++
++## Next Steps
++- Add `@planks(...)` annotations to production seams
++- Write additional scenarios as needed
++- Maintain clean working tree between voyages
+\ No newline at end of file
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..8518e6f
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,40 @@
++# Shipshape Rigging
++
++## Stack
++- language: JavaScript
++- runtime: node
++- packageManager: npm
++
++## Directories
++- implementation: src
++- specs: features
++- verification: features/support
++- assets: data
++
++## Commands
++- discover: npx cucumber-js --dry-run
++- focused: npx cucumber-js {scenario}
++- broad: npx cucumber-js
++- coverage: npx cucumber-js
++- step-usage: npx cucumber-js --format usage
++- plank-inventory: none
++- typecheck: none
++- lint: none
++
++## Perturbation
++- message: // PERTURBATION: rebuild this seam from current durable context
++- perturb: // PERTURBATION: rebuild this seam from current durable context
++
++## Tiers
++- default: @logic
++- policy: none
++- budget: none
++- weather: none
++- runrecord: none
++
++## Dependencies
++- policy: locked
++- dependency: @cucumber/cucumber
++
++## Outbound
++none
+\ No newline at end of file
+diff --git a/src/tide.js b/src/tide.js
+index c3c80cc..dbe02d5 100644
+--- a/src/tide.js
++++ b/src/tide.js
+@@ -1,3 +1,6 @@
++/**
++ * @planks("I ask for the next high tide after {string}")
++ */
+ function nextHighTide(tides, after) {
+   const next = tides.find((t) => new Date(t.time) > new Date(after) && t.type === "high");
+   if (!next) throw new Error("no upcoming high tide in data");

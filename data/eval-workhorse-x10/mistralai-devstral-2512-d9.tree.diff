@@ -1,0 +1,140 @@
+diff --git a/.instrument/runs.log b/.instrument/runs.log
+new file mode 100644
+index 0000000..63e5f74
+--- /dev/null
++++ b/.instrument/runs.log
+@@ -0,0 +1,2 @@
++{"t":"2026-07-23T14:20:21.679Z","argv":[]}
++{"t":"2026-07-23T14:20:37.804Z","argv":["--format","usage"]}
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..c31ba4a
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,50 @@
++# Shipshape Agents Configuration
++
++## Project-Specific Rules
++
++### Test Execution
++- Tests run with Cucumber.js
++- Test data stored in data/tides.json
++- Test hooks in features/support/runlog.js
++
++### Development Workflow
++- Private project (not published)
++- Node.js v16+ required
++- npm scripts for test execution
++
++### Verification Policies
++- Real tide data used for testing
++- Error cases explicitly tested
++- No mocks or fakes used
++
++### Outbound Rules
++- No deployment targets configured
++- Local development only
++
++## Methodology Checks
++
++### Watchbill Shape
++- Watchbill conforms when absent (deck at rest)
++
++### Perturbation Quiescence
++- Green tree carries no PERTURBATION token
++
++### Verification Conformance
++- No doubles used (real data only)
++- Scenarios independent and observable
++
++## Harbour Procedures
++
++### Fitting Out Complete
++- RIGGING.md created with derived values
++- AGENTS.md created with project rules
++- Plank annotations added to production code
++
++### Next Harbour Items
++- Add plank inventory tooling
++- Set up coverage reporting
++- Add type checking and linting
++
++## Blockers
++
++None - clean tree, all configuration derived.
+\ No newline at end of file
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..a40daf9
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,44 @@
++# Shipshape Rigging
++
++## Stack
++- language: JavaScript
++- runtime: Node.js
++- packageManager: npm
++
++## Directories
++- implementation: src
++- specs: features
++- verification: features/support
++- assets: data
++- scantlings: none
++
++## Commands
++- discover: npx cucumber-js --dry-run --format usage
++- focused: npx cucumber-js --tags "not @captain and not @shipwright"
++- broad: npx cucumber-js --tags "not @captain and not @shipwright"
++- coverage: npx cucumber-js --tags "not @captain and not @shipwright"
++- step-usage: npx cucumber-js --format usage-json
++- plank-inventory: none
++- typecheck: none
++- lint: none
++
++## Perturbation
++- message: PERTURBATION
++- perturb: // PERTURBATION
++
++## Tiers
++- default: @logic
++- sandbox: none
++- policy: none
++- budget: none
++- weather: none
++- runrecord: none
++
++## Dependencies
++- policy: none
++- dependency: @cucumber/cucumber
++
++## Outbound
++- outbound: none
++- ship: none
++- verify: none
+\ No newline at end of file
+diff --git a/features/support/runlog.js b/features/support/runlog.js
+index 4312276..f8145af 100644
+--- a/features/support/runlog.js
++++ b/features/support/runlog.js
+@@ -4,7 +4,7 @@ const path = require("path");
+ 
+ BeforeAll(function () {
+   const root = path.resolve(__dirname, "..", "..");
+-  const dir = path.join(path.dirname(root), ".instrument", path.basename(root));
++  const dir = path.join(root, ".instrument");
+   fs.mkdirSync(dir, { recursive: true });
+   fs.appendFileSync(
+     path.join(dir, "runs.log"),
+diff --git a/src/tide.js b/src/tide.js
+index c3c80cc..dbe02d5 100644
+--- a/src/tide.js
++++ b/src/tide.js
+@@ -1,3 +1,6 @@
++/**
++ * @planks("I ask for the next high tide after {string}")
++ */
+ function nextHighTide(tides, after) {
+   const next = tides.find((t) => new Date(t.time) > new Date(after) && t.type === "high");
+   if (!next) throw new Error("no upcoming high tide in data");

@@ -65,6 +65,15 @@ mkdir -p "$OUT"
 FAKEHOME="$OUT/home"; SESSDIR="$OUT/session"
 mkdir -p "$FAKEHOME/.config" "$FAKEHOME/.local/share" "$FAKEHOME/.cache" "$FAKEHOME/tmp" "$SESSDIR"
 
+# The fixture's cucumber run-log ledger (features/support/runlog.js BeforeAll) writes
+# to a `.instrument` dir in the sim's PARENT, OUTSIDE the project root — the deckstate
+# run-record pattern. Under bwrap's --ro-bind / / that parent is read-only, so mkdirSync
+# throws (EROFS/ENOENT), BeforeAll aborts, and the ENTIRE suite fails before any scenario
+# runs — every leg (found 2026-07-23, workhorse x10: all 16 legs hit it; d10 produced
+# nothing, sunk fighting it). Give ONLY this sibling dir a writable bind: the suite can
+# run, and the cockpit/doctrine/fixture-source stay read-only (escape-damage still blocked).
+INSTR="$(dirname "$WORKSPACE")/.instrument"; mkdir -p "$INSTR"
+
 # Assemble --skill flags.
 SKILL_ARGS=()
 for s in "${SKILLS[@]}"; do
@@ -98,7 +107,16 @@ set +e
 if command -v bwrap >/dev/null 2>&1; then
   BW=(bwrap --ro-bind / / --dev /dev --proc /proc
       --bind "$WORKSPACE" "$WORKSPACE" --bind "$OUT" "$OUT" --bind "$FAKEHOME" "$FAKEHOME"
-      --share-net --chdir "$WORKSPACE" --clearenv)
+      --bind "$INSTR" "$INSTR")
+  # Isolated node_modules via overlay: the shared toolkit ($EVAL_SHARED_NM, from
+  # eval-batch) as a READ-ONLY base + a per-leg tmpfs writable upper. The leg installs
+  # anything it wants into the upper; the shared store never mutates and nothing
+  # persists to disk (bwrap 0.11.2, dk-provisioned 2026-07-23). scaffold.sh leaves an
+  # empty node_modules dir as the mountpoint.
+  if [ -n "${EVAL_SHARED_NM:-}" ] && [ -d "$EVAL_SHARED_NM/@cucumber" ]; then
+    BW+=(--overlay-src "$EVAL_SHARED_NM" --tmp-overlay "$WORKSPACE/node_modules")
+  fi
+  BW+=(--share-net --chdir "$WORKSPACE" --clearenv)
   for kv in "${ENVV[@]}"; do BW+=(--setenv "${kv%%=*}" "${kv#*=}"); done
   timeout "${TIMEOUT_S}s" "${BW[@]}" "$PI" "${PI_ARGS[@]}" >"$OUT/pi.stdout" 2>"$OUT/pi.stderr"
   EXIT=$?
