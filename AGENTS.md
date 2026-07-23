@@ -123,6 +123,13 @@ doctrine commit:
    artifact - never the candidate skill text as a cockpit commit that could read
    as a real change.
 
+**Watchword for doctrine tightening (dk, 2026-07-23): "prompt clearer, not harder."**
+Prefer a STRUCTURAL edit that makes the output form require the work (a ledger the
+report must fill, a form a command can check) over exhortation telling the role to try
+harder. Exhortation nulls where an obligation is merely unperformed (the 0.13.50
+lesson); making the artifact demand the act is what moves behaviour. Candidate A (the
+Shipwright seam-disposition ledger gate, eval-candidateA) is the first instance.
+
 ## Probe-first (dk ruled, 2026-07-19). Which findings owe a probe BEFORE a fix ships
 
 Classify the finding, then route:

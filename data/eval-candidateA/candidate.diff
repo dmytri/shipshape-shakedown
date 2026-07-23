@@ -1,0 +1,17 @@
+--- /home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/4ee36ff0efb8/skills/shipwright/SKILL.md	2026-07-22 20:02:23.756850161 +0000
++++ experiments/no-gap-ledger/skills/shipwright/SKILL.md	2026-07-23 09:28:06.319400885 +0000
+@@ -154,6 +154,7 @@
+ 
+ - scope, module/directory or full codebase,
+ - modules analysed,
++- seam-disposition ledger: the `plank-inventory` output with every production seam it lists accounted for by its disposition, covered giving the `@planks(...)` pattern that carries it, or a live behaviour with no binding scenario giving the `@captain` skeleton written for it and its `@planks-provisional` link. A coverage percent or a zero count is not a disposition; "no gap found" is a claim this ledger earns seam by seam, never a summary standing in for the walk,
+ - `@captain` scenarios written, total and by finding type,
+ - coverage summary, overall percent and uncovered module count,
+ - policy violations found by category,
+@@ -166,4 +167,6 @@
+ - any finding judged by read rather than run, labelled unverified with the check it lacked,
+ - next: Captain review and user discovery.
+ 
++Line and branch coverage measure the lines existing scenarios execute, not whether every behaviour a seam supports is asserted: a 100%-covered seam still owes a `@captain` gap for each boundary or error behaviour no scenario names. The ledger is what makes that visible, so a seam absent from it, or present with only a coverage number, is an incomplete report rather than a clean one.
++
+ Every tree claim in this report is a command's answer, per Hand-off custody. Harbour findings become Captain's decisions and Shipwright's own removals, so a finding nobody checked can condemn working code.

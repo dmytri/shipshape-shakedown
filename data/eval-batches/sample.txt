@@ -1,0 +1,7 @@
+# Fast-iteration SAMPLE subset of baseline (dk, 2026-07-23). Use this to iterate
+# on a candidate doctrine edit cheaply; run the full baseline.txt only for the
+# final confirmation. Minimal but representative: two failers (the treatment
+# targets) + one clearer (regression check).
+z-ai/glm-4.7                        # FAILER — the flagship silent off-ramp (the money test)
+mistralai/devstral-2512             # FAILER — zero-artifact failer (different failure mode)
+qwen/qwen3.6-35b-a3b                # CLEARER — cheap/fast regression check (best value)
