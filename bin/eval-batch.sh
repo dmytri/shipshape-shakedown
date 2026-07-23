@@ -49,6 +49,18 @@ for m in $INLINE; do MODELS+=("$m"); done
 
 mkdir -p "$SCRATCH/$WAVE"
 SKILL_FLAGS=(); for s in "${SKILLS[@]}"; do SKILL_FLAGS+=(--skill "$s"); done
+
+# Build ONE shared cucumber node_modules the scaffolds symlink (disk-robust: a
+# 20-leg run otherwise npm-installs ~1GB and exhausts a tight tmpfs). scaffold.sh
+# reads EVAL_SHARED_NM and symlinks it instead of installing per leg.
+SHARED_NM="$SCRATCH/.shared-nm"
+if [ ! -d "$SHARED_NM/node_modules/@cucumber" ]; then
+  mkdir -p "$SHARED_NM"
+  ( cd "$SHARED_NM" && npm install --save-dev @cucumber/cucumber >/dev/null 2>&1 )
+fi
+export EVAL_SHARED_NM="$SHARED_NM/node_modules"
+[ -d "$EVAL_SHARED_NM/@cucumber" ] && echo "eval-batch[$WAVE]: shared node_modules ready ($EVAL_SHARED_NM)" || echo "eval-batch[$WAVE]: WARN shared node_modules missing, legs will install per-leg"
+
 echo "eval-batch[$WAVE]: ${#MODELS[@]} models, concurrency $CONC"
 
 run_one() {
