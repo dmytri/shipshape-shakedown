@@ -1,0 +1,41 @@
+# banked: 2026-07-23T09:44:36Z
+# verdict: NOT-CLEARED: 1 plank (up from 0), still 0 @captain
+# leg: {  "name": "mistralai-devstral-2512",  "model": "mistralai/devstral-2512",  "provider": "openrouter",  "workspace": "/tmp/claude-1000/-home-exedev-shipshape-shakedown/3661dbff-7e2b-4f51-9805-fd28946c9fac/scratchpad/batch/eval-candidateA-treatment/mistralai-devstral-2512/sim",  "timeout_s": 900,  "skills": [    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/4ee36ff0efb8/skills/shipshape",    "/home/exedev/shipshape-shakedown/experiments/no-gap-ledger/skills/shipwright"  ]}
+
+
+=== mistralai-devstral-2512.session.jsonl ===
+  turns=30  wall=616.6s  in=35311  out=3840  cache_read=836256  cost=$0.0553
+  role reads: shipwright@t0 -> shipshape@t0
+  roles loaded: shipshape, shipwright
+  ~ repeated tool signature at turns [4, 5, 8, 9, 10, 11, 12, 13, 14, 16, 20, 21, 25] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    5056/145        0 $0.0023  read, read, read
+    t1   22356/107     5200 $0.0094  bash
+    t2     443/35     27648 $0.0014  read, read, read
+    t3    3171/102    28112 $0.0026  bash
+    t4     427/99     31376 $0.0016  bash
+    t5    1192/129    31888 $0.0020  bash
+    t6      35/53     33200 $0.0014  read, read, read, read
+    t7     124/93     33280 $0.0016  bash
+    t8      81/93     33488 $0.0016  bash
+    t9     179/95     33648 $0.0016  bash
+    t10    220/95     33920 $0.0016  bash
+    t11    134/93     34224 $0.0016  bash
+    t12    171/104    34448 $0.0017  bash
+    t13     17/145    34720 $0.0017  bash
+    t14     11/236    34880 $0.0019  bash
+    t15     70/516    35120 $0.0025  write
+    t16    103/315    35696 $0.0021  write
+    t17     93/123    36112 $0.0017  bash
+    t18     14/181    36320 $0.0018  write
+    t19     92/131    36512 $0.0018  bash
+    t20     92/127    36720 $0.0018  bash
+    t21     20/123    36928 $0.0017  bash
+    t22    993/338    37056 $0.0026  edit
+    t23     95/101    38384 $0.0018  read
+    t24     94/145    38576 $0.0019  bash
+    t25     28/116    38800 $0.0018  bash
+    t26      0/0          0 $0.0000  -
+    t27      0/0          0 $0.0000  -
+    t28      0/0          0 $0.0000  -
+    t29      0/0          0 $0.0000  -

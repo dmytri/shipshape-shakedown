@@ -1,0 +1,27 @@
+# banked: 2026-07-23T09:44:36Z
+# verdict: CLEARED (no regression under candidate)
+# leg: {  "name": "qwen-qwen3.6-35b-a3b",  "model": "qwen/qwen3.6-35b-a3b",  "provider": "openrouter",  "workspace": "/tmp/claude-1000/-home-exedev-shipshape-shakedown/3661dbff-7e2b-4f51-9805-fd28946c9fac/scratchpad/batch/eval-candidateA-treatment/qwen-qwen3.6-35b-a3b/sim",  "timeout_s": 900,  "skills": [    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/4ee36ff0efb8/skills/shipshape",    "/home/exedev/shipshape-shakedown/experiments/no-gap-ledger/skills/shipwright"  ]}
+
+
+=== qwen-qwen3.6-35b-a3b.session.jsonl ===
+  turns=16  wall=95.7s  in=875146  out=7442  cache_read=0  cost=$0.1300
+  role reads: shipwright@t0 -> shipshape@t0
+  roles loaded: shipshape, shipwright
+  ~ repeated tool signature at turns [1, 2, 5, 6, 7, 9, 11, 13] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    5280/249        0 $0.0010  read, read, read
+    t1   27748/228        0 $0.0041  read, bash
+    t2   45274/277        0 $0.0066  bash, bash
+    t3   50152/904        0 $0.0079  read, read, read, read, read, read, read, read
+    t4   58724/227        0 $0.0084  bash
+    t5   59035/311        0 $0.0086  bash, bash
+    t6   59402/754        0 $0.0091  bash, bash
+    t7   60337/669        0 $0.0091  bash, bash
+    t8   61488/838        0 $0.0094  write
+    t9   62434/352        0 $0.0091  write
+    t10  62893/613        0 $0.0094  edit
+    t11  63614/364        0 $0.0093  edit
+    t12  64086/192        0 $0.0092  bash
+    t13  64439/290        0 $0.0093  bash
+    t14  64815/294        0 $0.0094  read, read
+    t15  65425/880        0 $0.0100  -

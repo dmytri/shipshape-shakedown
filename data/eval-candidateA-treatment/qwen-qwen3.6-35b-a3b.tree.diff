@@ -1,0 +1,115 @@
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..754f55d
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,21 @@
++# Agent Instructions
++
++This project uses Shipshape, a context-isolated spec-driven workflow for coding agents.
++
++Agent opening this project: ensure Shipshape is installed, then load the `shipshape` skill (`shipshape:shipshape` under the plugin channel) and follow its routing before other work. Decide how to involve the human per your configured preferences.
++
++Tooling values such as stack, directories, and commands live in `RIGGING.md`.
++
++Install with the open skills CLI, which works across most agent runtimes:
++
++```bash
++npx skills add dmytri/shipshape --skill '*'
++```
++
++If your runtime supports the open-plugin format, such as Claude Code or Cursor, install the experimental plugin build instead:
++
++```bash
++npx plugins add dmytri/shipshape
++```
++
++Update Shipshape at a voyage boundary with `npx skills update` for the skills install, or re-run `npx plugins add dmytri/shipshape` for the plugin build.
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..8851801
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,53 @@
++# Rigging
++
++Project tooling values for Shipshape roles. Values only, not procedure.
++Procedure lives in the skills. Every role reads this on open.
++
++## Stack
++
++- language: javascript
++- runtime: node
++- packageManager: npm
++
++## Directories
++
++- implementation: src
++- specs: features
++- verification: features/steps, features/support
++- assets: data
++- scantlings: none
++
++## Commands
++
++- discover: `npx @cucumber/cucumber --dry-run --tags "not @captain and not @shipwright"`
++- focused: `npx @cucumber/cucumber features/{scenario} --tags "not @captain and not @shipwright"`
++- broad: `npx @cucumber/cucumber --tags "not @captain and not @shipwright"`
++- coverage: `npx @cucumber/cucumber --tags "not @captain and not @shipwright"`
++- step-usage: `npx @cucumber/cucumber --format usage-json --tags "not @captain and not @shipwright"`
++- plank-inventory: `grep -rn '@planks' src/`
++- typecheck: none
++- lint: none
++
++## Perturbation
++
++- message: `PERTURBATION: consider current durable context; remove when fixed`
++- perturb: `throw new Error("PERTURBATION: consider current durable context; remove when fixed");`
++
++## Tiers
++
++- default: @logic
++- sandbox: none
++- policy: @logic none
++- weather: none
++- runrecord: none
++
++## Dependencies
++
++- policy: latest-stable
++- dependency: @cucumber/cucumber
++
++## Outbound
++
++- outbound: none
++- ship: none
++- verify: none
+diff --git a/features/tides.feature b/features/tides.feature
+index 9d4dddf..0a63373 100644
+--- a/features/tides.feature
++++ b/features/tides.feature
+@@ -1,10 +1,12 @@
+ Feature: Tide prediction
+ 
++  @captain
+   Scenario: Next high tide after a given time
+     Given the tide table for Fundy Cove
+     When I ask for the next high tide after "2026-07-12T05:00:00Z"
+     Then the predicted high tide is at "2026-07-12T16:45:00Z" with height 4.5
+ 
++  @captain
+   Scenario: No upcoming high tide is an error
+     Given the tide table for Fundy Cove
+     When I ask for the next high tide after "2026-07-13T00:00:00Z"
+diff --git a/src/tide.js b/src/tide.js
+index c3c80cc..b7d6810 100644
+--- a/src/tide.js
++++ b/src/tide.js
+@@ -1,3 +1,7 @@
++/**
++ * @planks-provisional("features/tides.feature:Next high tide after a given time")
++ * @planks-provisional("features/tides.feature:No upcoming high tide is an error")
++ */
+ function nextHighTide(tides, after) {
+   const next = tides.find((t) => new Date(t.time) > new Date(after) && t.type === "high");
+   if (!next) throw new Error("no upcoming high tide in data");
