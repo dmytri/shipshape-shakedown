@@ -21,6 +21,17 @@ wanted. Default to candidate-only unless dk says to include control. Also: run l
 PARALLEL (concurrency = leg count, both arms at once), never sequential arms; and for a
 pure bloat/token cut, report the DETERMINISTIC IEPE cost delta first (no legs needed) —
 legs only confirm affordance survived, for which one fast devstral leg per arm suffices.
+YOINK BUNDLE-MECHANICS FINDING (dk, 2026-07-23, golden run): a yoink CLEAR-floor drop for
+some models (kimi-k2.7-code: 2/3 control -> 0/2 treatment) is NOT bundle comprehension — the
+model groks yoink fine. It drowns in bundle MECHANICS that eat its turn budget: (1) the opening
+`find . -type f -not -path './node_modules/*'` floods node_modules into the bundle and blows
+yoink's ~50KB output cap, TRUNCATING the useful content (root listing, git status) so it must
+refetch; (2) JSON-in-heredoc breaks on `find` predicate escapes (`\(`, quotes) -> plan parse
+errors and retries. Fast models (deepseek-v4-pro) absorb this cost; slow ones (kimi-k2.7) spend
+their whole run on it and never reach the deliverable. FIX = tighten the opening-batch EXAMPLE:
+size-bounded + JSON-safe (prefer `git ls-files` over raw find, simple globs, no shell-escape
+predicates, cap output). This should recover the floor without losing the others' latency win.
+Owes a test with a tightened example after the golden run.
 GOAL PRIORITY (dk, 2026-07-23): #1 is LATENCY, #2 is token efficiency (correctness/
 affordance is the floor — a candidate must still CLEAR). Weight results accordingly:
 the key latency proxy is ROUND-TRIP COUNT — turns (inv) and tool calls — because each is
