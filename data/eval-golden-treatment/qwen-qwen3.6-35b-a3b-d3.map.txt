@@ -1,0 +1,29 @@
+# banked: 2026-07-23T21:02:48Z
+# verdict: PENDING
+# leg: {  "name": "qwen-qwen3.6-35b-a3b-d3",  "model": "qwen/qwen3.6-35b-a3b",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/eval-golden-treatment/qwen-qwen3.6-35b-a3b-d3/sim",  "timeout_s": 900,  "skills": [    "experiments/yoink-settle/skills/shipshape",    "experiments/yoink-settle/skills/shipwright",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== qwen-qwen3.6-35b-a3b-d3.session.jsonl ===
+  turns=18  wall=248.9s  in=161883  out=13250  cache_read=569184  cost=$0.0359
+  role reads: shipshape@t0 -> shipwright@t0
+  roles loaded: shipshape, shipwright
+  ~ repeated tool signature at turns [11] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    2230/233        0 $0.0005  read, read
+    t1   24253/92         0 $0.0035  read
+    t2   23233/243     2112 $0.0035  yoink
+    t3     264/82     25344 $0.0001  read
+    t4    2159/266    25344 $0.0006  bash
+    t5    5166/531    24288 $0.0013  bash
+    t6    9644/730    29568 $0.0021  bash
+    t7   14670/218    27456 $0.0023  bash
+    t8     996/118    42240 $0.0003  bash
+    t9    4734/2640   39072 $0.0033  bash
+    t10   4453/4397   43296 $0.0050  write
+    t11    469/304    51744 $0.0004  write
+    t12   7175/199    45408 $0.0012  edit
+    t13  52849/234        0 $0.0076  write
+    t14   1405/1011   51744 $0.0012  bash
+    t15   4094/732    51744 $0.0013  bash
+    t16   2732/217    53856 $0.0006  read, read, read
+    t17   1357/1003   55968 $0.0012  -

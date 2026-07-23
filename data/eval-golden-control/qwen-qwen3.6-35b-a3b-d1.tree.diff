@@ -1,0 +1,156 @@
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..754f55d
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,21 @@
++# Agent Instructions
++
++This project uses Shipshape, a context-isolated spec-driven workflow for coding agents.
++
++Agent opening this project: ensure Shipshape is installed, then load the `shipshape` skill (`shipshape:shipshape` under the plugin channel) and follow its routing before other work. Decide how to involve the human per your configured preferences.
++
++Tooling values such as stack, directories, and commands live in `RIGGING.md`.
++
++Install with the open skills CLI, which works across most agent runtimes:
++
++```bash
++npx skills add dmytri/shipshape --skill '*'
++```
++
++If your runtime supports the open-plugin format, such as Claude Code or Cursor, install the experimental plugin build instead:
++
++```bash
++npx plugins add dmytri/shipshape
++```
++
++Update Shipshape at a voyage boundary with `npx skills update` for the skills install, or re-run `npx plugins add dmytri/shipshape` for the plugin build.
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..b55c7de
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,7 @@
++# TideWatch5
++
++Tide prediction system.
++
++## Built with Shipshape
++
++This repository uses [Shipshape](https://github.com/dmytri/shipshape), a context-isolated spec-driven workflow for coding agents. Install with `npx skills add dmytri/shipshape --skill '*'`, or the experimental open-plugin build with `npx plugins add dmytri/shipshape`.
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..9168305
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,53 @@
++# Rigging
++
++Project tooling values for Shipshape roles. Values only, not procedure.
++Procedure lives in the skills. Every role reads this on open.
++
++## Stack
++
++- language: JavaScript
++- runtime: node
++- packageManager: npm
++
++## Directories
++
++- implementation: src
++- specs: features
++- verification: features/support
++- assets: none
++- scantlings: none
++
++## Commands
++
++- discover: npx cucumber-js --dry-run
++- focused: npx cucumber-js {scenario}
++- broad: npx cucumber-js
++- coverage: none
++- step-usage: none
++- plank-inventory: none
++- typecheck: none
++- lint: none
++
++## Perturbation
++
++- message: PERTURBATION: consider current durable context; remove when fixed
++- perturb: throw new Error("PERTURBATION: consider current durable context; remove when fixed");
++
++## Tiers
++
++- default: @logic
++- sandbox: none
++- policy: @logic - Pure local tests, no external accounts. Fast, deterministic, safe.
++- weather: none
++- runrecord: none
++
++## Dependencies
++
++- policy: locked
++- dependency: @cucumber/cucumber
++
++## Outbound
++
++- outbound: none
++- ship: none
++- verify: none
+diff --git a/features/support/steps.js b/features/support/steps.js
+index 15a3bd7..61d2228 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -4,10 +4,12 @@ const fs = require("fs");
+ const path = require("path");
+ const { nextHighTide } = require("../../src/tide");
+ 
++// @plank: data/tides.json
+ Given("the tide table for Fundy Cove", function () {
+   this.tides = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "..", "data", "tides.json"), "utf8"));
+ });
+ 
++// @plank: src/tide.js:nextHighTide
+ When("I ask for the next high tide after {string}", function (after) {
+   try {
+     this.result = nextHighTide(this.tides, after);
+diff --git a/features/tides.feature b/features/tides.feature
+index 9d4dddf..60e1ccf 100644
+--- a/features/tides.feature
++++ b/features/tides.feature
+@@ -9,3 +9,21 @@ Feature: Tide prediction
+     Given the tide table for Fundy Cove
+     When I ask for the next high tide after "2026-07-13T00:00:00Z"
+     Then the prediction fails with "no upcoming high tide in data"
++
++  @captain
++  Scenario: Nearest high tide is returned among several candidates
++    Given the tide table for Fundy Cove
++    When I ask for the next high tide after "2026-07-12T11:00:00Z"
++    Then the predicted high tide is at "2026-07-12T16:45:00Z" with height 4.5
++
++  @captain
++  Scenario: Empty tide table returns error
++    Given the tide table for Fundy Cove
++    When I ask for the next high tide after "2026-07-12T00:00:00Z"
++    Then the prediction fails with "no upcoming high tide in data"
++
++  @captain
++  Scenario: Only low tides returns error
++    Given the tide table for Fundy Cove
++    When I ask for the next high tide after "2026-07-12T00:00:00Z"
++    Then the prediction fails with "no upcoming high tide in data"
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..a720243
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,8 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/tides.feature:Next high tide after a given time",
++      "features/tides.feature:No upcoming high tide is an error"
++    ]
++  }
++}

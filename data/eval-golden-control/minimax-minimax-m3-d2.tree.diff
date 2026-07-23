@@ -1,0 +1,157 @@
+diff --git a/.rgignore b/.rgignore
+new file mode 100644
+index 0000000..ba910ba
+--- /dev/null
++++ b/.rgignore
+@@ -0,0 +1 @@
++CAPTAIN.md
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..754f55d
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,21 @@
++# Agent Instructions
++
++This project uses Shipshape, a context-isolated spec-driven workflow for coding agents.
++
++Agent opening this project: ensure Shipshape is installed, then load the `shipshape` skill (`shipshape:shipshape` under the plugin channel) and follow its routing before other work. Decide how to involve the human per your configured preferences.
++
++Tooling values such as stack, directories, and commands live in `RIGGING.md`.
++
++Install with the open skills CLI, which works across most agent runtimes:
++
++```bash
++npx skills add dmytri/shipshape --skill '*'
++```
++
++If your runtime supports the open-plugin format, such as Claude Code or Cursor, install the experimental plugin build instead:
++
++```bash
++npx plugins add dmytri/shipshape
++```
++
++Update Shipshape at a voyage boundary with `npx skills update` for the skills install, or re-run `npx plugins add dmytri/shipshape` for the plugin build.
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..179a151
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,7 @@
++# tidewatch5
++
++A tide prediction baseline: given a tide table, return the next high tide strictly after a given time. Throws when no upcoming high tide exists in the data.
++
++## Built with Shipshape
++
++This repository uses [Shipshape](https://github.com/dmytri/shipshape), a context-isolated spec-driven workflow for coding agents. Install with `npx skills add dmytri/shipshape --skill '*'`, or the experimental open-plugin build with `npx plugins add dmytri/shipshape`.
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..a52eaae
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,58 @@
++# Rigging
++
++Project tooling values for Shipshape roles. Values only, not procedure.
++Procedure lives in the skills. Every role reads this on open.
++
++## Stack
++
++- language: JavaScript
++- runtime: Node.js 24
++- packageManager: npm
++
++## Directories
++
++- implementation: src
++- specs: features
++- verification: features/support
++- assets: data
++- scantlings: none
++
++## Commands
++
++- discover: `npx cucumber-js --dry-run --tags "not @captain and not @shipwright"`
++- focused: `ref={scenario}; file="${ref%:*}"; name="${ref##*:}"; npx cucumber-js "$file" --name "$name" --tags "not @captain and not @shipwright"`
++- broad: `npx cucumber-js --tags "not @captain and not @shipwright"`
++- coverage: `npx c8 --reporter=text-summary --reporter=json-summary --reports-dir=coverage npx cucumber-js --tags "not @captain and not @shipwright"`
++- step-usage: `npx cucumber-js --format usage-json:features/_step_usage.json --tags "not @captain and not @shipwright"`
++- plank-inventory: `rg -n --no-heading '@planks(?:-provisional)?\(' src`
++- typecheck: none
++- lint: none
++- conformance: none
++
++## Perturbation
++
++- message: `PERTURBATION: consider current durable context; remove when fixed`
++- perturb: `throw new Error("PERTURBATION: consider current durable context; remove when fixed");`
++
++## Tiers
++
++- default: @logic
++- sandbox: none
++- policy: @logic runs no external services and uses no credentials
++- weather: coverage/_weather.json
++- runrecord: coverage/_runrecord.jsonl
++
++## Dependencies
++
++- policy: latest-stable
++- dependency: @cucumber/cucumber
++- dependency: c8
++- dependency: jsdoc
++- dependency: knip
++- dependency: @biomejs/biome
++
++## Outbound
++
++- outbound: none
++- ship: none
++- verify: none
+diff --git a/features/methodology.feature b/features/methodology.feature
+new file mode 100644
+index 0000000..702bc7e
+--- /dev/null
++++ b/features/methodology.feature
+@@ -0,0 +1,22 @@
++Feature: Methodology conformance
++
++  Methodology checks assert the project's own method rather than product
++  behaviour. They live in the binding layer only when Captain promotes
++  them; until then the `@captain` tag keeps them out of QM and every
++  derived verification command.
++
++  Rule: The implementation directories are listed in RIGGING.md under
++  `## Directories` as `implementation`. The repository root is the
++  project root for all path resolution.
++
++  @captain @conformance
++  Scenario: Watchbill shape conforms when no watchbill is present
++    Given the project has no watchbill.json at the repository root
++    When the watchbill shape check runs
++    Then the check passes because an absent watchbill is the deck at rest
++
++  @captain @conformance
++  Scenario: Perturbation quiescence holds on a green tree
++    Given a green verification tree with no live perturbation
++    When the perturbation quiescence check runs
++    Then no PERTURBATION token is present in the implementation directories
+diff --git a/src/tide.js b/src/tide.js
+index c3c80cc..f59c98c 100644
+--- a/src/tide.js
++++ b/src/tide.js
+@@ -1,3 +1,13 @@
++/**
++ * Find the next high tide in a tide table at or after a given time.
++ *
++ * @param {Array<{time: string, type: string, height: number}>} tides
++ *   Tide table entries with ISO 8601 time strings, a type of "high" or "low", and a height in metres.
++ * @param {string} after ISO 8601 timestamp; entries with a time strictly after this value are considered.
++ * @returns {{time: string, type: string, height: number}} The next high tide entry.
++ * @throws {Error} When the table contains no high tide strictly after the given time.
++ * @planks("I ask for the next high tide after {string}")
++ */
+ function nextHighTide(tides, after) {
+   const next = tides.find((t) => new Date(t.time) > new Date(after) && t.type === "high");
+   if (!next) throw new Error("no upcoming high tide in data");

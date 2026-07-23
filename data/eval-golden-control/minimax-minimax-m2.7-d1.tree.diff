@@ -1,0 +1,138 @@
+diff --git a/.rgignore b/.rgignore
+new file mode 100644
+index 0000000..ba910ba
+--- /dev/null
++++ b/.rgignore
+@@ -0,0 +1 @@
++CAPTAIN.md
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..754f55d
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,21 @@
++# Agent Instructions
++
++This project uses Shipshape, a context-isolated spec-driven workflow for coding agents.
++
++Agent opening this project: ensure Shipshape is installed, then load the `shipshape` skill (`shipshape:shipshape` under the plugin channel) and follow its routing before other work. Decide how to involve the human per your configured preferences.
++
++Tooling values such as stack, directories, and commands live in `RIGGING.md`.
++
++Install with the open skills CLI, which works across most agent runtimes:
++
++```bash
++npx skills add dmytri/shipshape --skill '*'
++```
++
++If your runtime supports the open-plugin format, such as Claude Code or Cursor, install the experimental plugin build instead:
++
++```bash
++npx plugins add dmytri/shipshape
++```
++
++Update Shipshape at a voyage boundary with `npx skills update` for the skills install, or re-run `npx plugins add dmytri/shipshape` for the plugin build.
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..cdcc66a
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,54 @@
++# Rigging
++
++Project tooling values for Shipshape roles. Values only, not procedure.
++Procedure lives in the skills. Every role reads this on open.
++
++## Stack
++
++- language: JavaScript
++- runtime: node v24.18.0
++- packageManager: npm
++
++## Directories
++
++- implementation: src
++- specs: features
++- verification: features/support
++- assets: data
++- scantlings: none
++
++## Commands
++
++- discover: `npx cucumber-js --dry-run --tags "not @captain and not @shipwright"`
++- focused: `npx cucumber-js --name "{scenario}" --tags "not @captain and not @shipwright"`
++- broad: `npx cucumber-js --tags "not @captain and not @shipwright"`
++- coverage: `npx c8 --reporter=text npx cucumber-js --tags "not @captain and not @shipwright"`
++- step-usage: `npx cucumber-js --format usage --tags "not @captain and not @shipwright"`
++- plank-inventory: `grep -rn "@planks\|@planks-provisional" src/`
++- typecheck: none
++- lint: `npx biome lint src/ features/`
++- conformance: none
++
++## Perturbation
++
++- message: `PERTURBATION: consider current durable context; remove when fixed`
++- perturb: `throw new Error("PERTURBATION: consider current durable context; remove when fixed");`
++
++## Tiers
++
++- default: @logic
++- sandbox: none
++- policy: none
++- weather: none
++- runrecord: none
++
++## Dependencies
++
++- policy: none
++- dependency: none
++
++## Outbound
++
++- outbound: none
++- ship: none
++- verify: none
+diff --git a/features/methodology-conformance.feature b/features/methodology-conformance.feature
+new file mode 100644
+index 0000000..5c001c0
+--- /dev/null
++++ b/features/methodology-conformance.feature
+@@ -0,0 +1,12 @@
++@captain
++Feature: Methodology conformance
++
++  @conformance
++  Scenario: Watchbill shape is absent or valid
++    When the Shipshape watchbill is absent or conforms to the required shape
++    Then the project deck is at rest
++
++  @conformance
++  Scenario: Perturbation token is absent from the tree
++    When the implementation directories are searched for the PERTURBATION token
++    Then no PERTURBATION token is found in a clean tree
+diff --git a/features/tide-ambiguous.feature b/features/tide-ambiguous.feature
+new file mode 100644
+index 0000000..e86353e
+--- /dev/null
++++ b/features/tide-ambiguous.feature
+@@ -0,0 +1,9 @@
++@captain
++Feature: Tide seam ambiguous behaviour
++
++  Scenario: Tide entry with absent type field is silently skipped
++    Given the tide table for Fundy Cove with a tide entry missing the type field
++    When I ask for the next high tide after "2026-07-12T05:00:00Z"
++    Then the predicted high tide is at "2026-07-12T16:45:00Z" with height 4.5
++    # The entry missing type is silently skipped; no error is raised.
++    # Captain: is this intended behaviour or a data-validation gap?
+diff --git a/src/tide.js b/src/tide.js
+index c3c80cc..dbe02d5 100644
+--- a/src/tide.js
++++ b/src/tide.js
+@@ -1,3 +1,6 @@
++/**
++ * @planks("I ask for the next high tide after {string}")
++ */
+ function nextHighTide(tides, after) {
+   const next = tides.find((t) => new Date(t.time) > new Date(after) && t.type === "high");
+   if (!next) throw new Error("no upcoming high tide in data");

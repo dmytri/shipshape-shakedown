@@ -1,0 +1,28 @@
+# banked: 2026-07-23T21:22:59Z
+# verdict: PENDING
+# leg: {  "name": "minimax-minimax-m2.7-d2",  "model": "minimax/minimax-m2.7",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/eval-golden-treatment/minimax-minimax-m2.7-d2/sim",  "timeout_s": 900,  "skills": [    "experiments/yoink-settle/skills/shipshape",    "experiments/yoink-settle/skills/shipwright",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== minimax-minimax-m2.7-d2.session.jsonl ===
+  turns=17  wall=194.4s  in=81235  out=8027  cache_read=531423  cost=$0.0549
+  role reads: shipshape@t0 -> shipwright@t0
+  roles loaded: shipshape, shipwright
+  ~ repeated tool signature at turns [1, 3, 4, 5, 6, 7, 8, 9, 10, 11] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    2040/122        0 $0.0006  read, read
+    t1   23209/123        0 $0.0059  read, read
+    t2   24365/307        0 $0.0064  bash
+    t3    2216/385    24187 $0.0021  bash
+    t4    8231/134    25979 $0.0035  bash
+    t5     352/173    34043 $0.0020  bash
+    t6    1954/459    34043 $0.0026  bash
+    t7    1067/367    36283 $0.0024  bash
+    t8     659/239    37627 $0.0023  bash
+    t9    3972/322    35835 $0.0031  bash
+    t10    950/656    39867 $0.0029  bash
+    t11   3606/396    39419 $0.0033  bash
+    t12   1154/1256   43003 $0.0037  write, write, write
+    t13    168/355    45408 $0.0027  edit
+    t14    300/1278   45691 $0.0036  write, write, write
+    t15    405/223    47035 $0.0027  bash
+    t16   6587/1232   43003 $0.0050  -

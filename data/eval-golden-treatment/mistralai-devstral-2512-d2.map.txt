@@ -1,0 +1,30 @@
+# banked: 2026-07-23T20:53:52Z
+# verdict: PENDING
+# leg: {  "name": "mistralai-devstral-2512-d2",  "model": "mistralai/devstral-2512",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/eval-golden-treatment/mistralai-devstral-2512-d2/sim",  "timeout_s": 900,  "skills": [    "experiments/yoink-settle/skills/shipshape",    "experiments/yoink-settle/skills/shipwright",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== mistralai-devstral-2512-d2.session.jsonl ===
+  turns=19  wall=119.8s  in=36401  out=3037  cache_read=540416  cost=$0.0423
+  role reads: shipshape@t0 -> shipwright@t0
+  roles loaded: shipshape, shipwright
+  ~ repeated tool signature at turns [8, 10, 15, 16] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    1986/128        0 $0.0011  read, read, read
+    t1   22979/99      2048 $0.0095  bash
+    t2     982/49     25088 $0.0015  bash
+    t3     303/139    26112 $0.0014  read, read, read
+    t4     210/99     26496 $0.0013  bash, bash
+    t5     303/144    26752 $0.0015  read, read, read
+    t6     614/80     27136 $0.0015  bash
+    t7      65/83     27776 $0.0013  bash
+    t8      34/384    27904 $0.0019  bash
+    t9    5962/560    28288 $0.0046  write
+    t10    174/274    34688 $0.0020  write
+    t11    114/231    35072 $0.0019  edit
+    t12    140/64     35328 $0.0016  bash
+    t13    141/180    35456 $0.0018  write
+    t14    116/62     35712 $0.0016  bash
+    t15    166/55     35840 $0.0016  bash
+    t16    738/57     35968 $0.0018  bash
+    t17   1229/75     36736 $0.0021  read
+    t18    145/274    38016 $0.0021  -

@@ -1,0 +1,41 @@
+# banked: 2026-07-23T21:31:58Z
+# verdict: PENDING
+# leg: {  "name": "mistralai-mistral-medium-3-5-d2",  "model": "mistralai/mistral-medium-3-5",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/eval-golden-treatment/mistralai-mistral-medium-3-5-d2/sim",  "timeout_s": 900,  "skills": [    "experiments/yoink-settle/skills/shipshape",    "experiments/yoink-settle/skills/shipwright",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== mistralai-mistral-medium-3-5-d2.session.jsonl ===
+  turns=30  wall=187.8s  in=270735  out=11493  cache_read=1039152  cost=$0.4923
+  role reads: shipshape@t0 -> shipwright@t0
+  roles loaded: shipshape, shipwright
+  ~ repeated tool signature at turns [1, 3, 4, 5, 7, 8, 9, 10, 11, 13, 17, 18, 19, 20, 21, 25, 26, 27, 28] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    2000/148        0 $0.0041  read, read, read
+    t1   24041/60       976 $0.0365  read
+    t2     141/183    24992 $0.0016  bash
+    t3     376/169    25104 $0.0018  read, read, bash
+    t4     324/205    25456 $0.0020  read, read, read, read
+    t5     650/147    25760 $0.0021  read, read, read
+    t6    6724/158    26384 $0.0113  bash, bash, bash
+    t7     330/54     33088 $0.0009  bash
+    t8     143/334    33392 $0.0027  bash, bash, bash, bash
+    t9    1946/818    33504 $0.0091  bash
+    t10  14479/745    35424 $0.0273  bash, bash
+    t11    194/997    49872 $0.0078  bash
+    t12    428/746    50048 $0.0062  write
+    t13    532/275    50448 $0.0029  write
+    t14    347/47     50960 $0.0009  read
+    t15    127/133    51280 $0.0012  write
+    t16    213/106    51376 $0.0011  bash
+    t17     83/72     51568 $0.0007  bash
+    t18    109/1035   51632 $0.0079  bash
+    t19    119/79     51712 $0.0008  bash
+    t20    332/571    51808 $0.0048  bash, bash
+    t21    313/81     52112 $0.0011  bash
+    t22    150/3028   52400 $0.0229  edit
+    t23    330/457    52528 $0.0039  write, write
+    t24  53225/63         0 $0.0803  bash
+    t25  53621/59         0 $0.0809  bash
+    t26  53754/100        0 $0.0814  bash
+    t27  53901/82         0 $0.0815  bash
+    t28   1684/54     52832 $0.0029  bash
+    t29    119/487    54496 $0.0038  -

@@ -1,0 +1,20 @@
+# banked: 2026-07-23T20:44:37Z
+# verdict: PENDING
+# leg: {  "name": "z-ai-glm-5.2-d3",  "model": "z-ai/glm-5.2",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/eval-golden-control/z-ai-glm-5.2-d3/sim",  "timeout_s": 900,  "skills": [    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/4ee36ff0efb8/skills/shipshape",    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/4ee36ff0efb8/skills/shipwright"  ]}
+
+
+=== z-ai-glm-5.2-d3.session.jsonl ===
+  turns=9  wall=584.4s  in=135329  out=12026  cache_read=159424  cost=$0.1632
+  role reads: shipshape@t0 -> shipwright@t0 -> shipshape@t1
+  roles loaded: shipshape, shipwright
+  ~ repeated tool signature at turns [1, 2, 3, 5, 6, 7, 8] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0     257/183     1664 $0.0009  read, read
+    t1   20916/231     1920 $0.0177  read, bash
+    t2    8339/165    22784 $0.0105  read, bash
+    t3    1428/746    31104 $0.0077  bash
+    t4     915/382    32512 $0.0066  read, read, read, read
+    t5     947/252    33408 $0.0064  read, read, bash
+    t6    6678/7268   34304 $0.0289  bash
+    t7   47622/592      704 $0.0399  bash, bash, bash, bash
+    t8   48227/2207    1024 $0.0446  bash, bash, bash, bash, bash, bash

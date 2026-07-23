@@ -1,0 +1,187 @@
+diff --git a/.gitignore b/.gitignore
+index 41ab7aa..760bf34 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -1,3 +1,4 @@
+ node_modules/
+ logs/
+ coverage/
++.shipshape/
+diff --git a/.rgignore b/.rgignore
+new file mode 100644
+index 0000000..1295120
+--- /dev/null
++++ b/.rgignore
+@@ -0,0 +1 @@
++CAPTAIN.md
+\ No newline at end of file
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..329a156
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,21 @@
++# Agent Instructions
++
++This project uses Shipshape, a context-isolated spec-driven workflow for coding agents.
++
++Agent opening this project: ensure Shipshape is installed, then load the `shipshape` skill (`shipshape:shipshape` under the plugin channel) and follow its routing before other work. Decide how to involve the human per your configured preferences.
++
++Tooling values such as stack, directories, and commands live in `RIGGING.md`.
++
++Install with the open skills CLI, which works across most agent runtimes:
++
++```bash
++npx skills add dmytri/shipshape --skill '*'
++```
++
++If your runtime supports the open-plugin format, such as Claude Code or Cursor, install the experimental plugin build instead:
++
++```bash
++npx plugins add dmytri/shipshape
++```
++
++Update Shipshape at a voyage boundary with `npx skills update` for the skills install, or re-run `npx plugins add dmytri/shipshape` for the plugin build.
+\ No newline at end of file
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..0f38c72
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,7 @@
++# tidewatch5
++
++Tide prediction tool.
++
++## Built with Shipshape
++
++This repository uses [Shipshape](https://github.com/dmytri/shipshape), a context-isolated spec-driven workflow for coding agents. Install with `npx skills add dmytri/shipshape --skill '*'`, or the experimental open-plugin build with `npx plugins add dmytri/shipshape`.
+\ No newline at end of file
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..cbcee07
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,54 @@
++# Rigging
++
++Project tooling values for Shipshape roles. Values only, not procedure.
++Procedure lives in the skills. Every role reads this on open.
++
++## Stack
++
++- language: JavaScript
++- runtime: node
++- packageManager: npm
++
++## Directories
++
++- implementation: src
++- specs: features
++- verification: features/support
++- assets: data
++- scantlings: none
++
++## Commands
++
++- discover: `npx cucumber-js --dry-run --tags "not @captain and not @shipwright"`
++- focused: `bash -c 'set -e; spec="${1%%:*}"; name="${1#*:}"; npx cucumber-js "$spec" --name "$name" --tags "not @captain and not @shipwright"' _ {scenario}`
++- broad: `npx cucumber-js --tags "not @captain and not @shipwright"`
++- coverage: `npx c8 --reporter=text npx cucumber-js --tags "not @captain and not @shipwright"`
++- step-usage: `npx cucumber-js --format usage --tags "not @captain and not @shipwright"`
++- plank-inventory: `npx jsdoc -X src/*.js`
++- typecheck: none
++- lint: none
++- conformance: none
++
++## Perturbation
++
++- message: `PERTURBATION: consider current durable context; remove when fixed`
++- perturb: `throw new Error("PERTURBATION: consider current durable context; remove when fixed");`
++
++## Tiers
++
++- default: @logic
++- sandbox: none
++- policy: @logic local
++- weather: .shipshape/weather.json
++- runrecord: .shipshape/runlog.json
++
++## Dependencies
++
++- policy: locked
++- dependency: @cucumber/cucumber ^13.0.0
++
++## Outbound
++
++- outbound: none
++- ship: none
++- verify: none
+\ No newline at end of file
+diff --git a/features/low-tide.feature b/features/low-tide.feature
+new file mode 100644
+index 0000000..2149c08
+--- /dev/null
++++ b/features/low-tide.feature
+@@ -0,0 +1,13 @@
++Feature: Low tide prediction
++
++  @captain
++  Scenario: Next low tide after a given time
++    Given the tide table for Fundy Cove
++    When I ask for the next low tide after "2026-07-12T05:00:00Z"
++    Then the predicted low tide is at "2026-07-12T10:30:00Z" with height 0.8
++
++  @captain
++  Scenario: No upcoming low tide is an error
++    Given the tide table for Fundy Cove
++    When I ask for the next low tide after "2026-07-13T00:00:00Z"
++    Then the prediction fails with "no upcoming low tide in data"
+\ No newline at end of file
+diff --git a/features/methodology.feature b/features/methodology.feature
+new file mode 100644
+index 0000000..3bf5c7b
+--- /dev/null
++++ b/features/methodology.feature
+@@ -0,0 +1,11 @@
++Feature: Shipshape methodology conformance
++
++  @captain @conformance
++  Scenario: Watchbill shape conforms
++    When the watchbill at the project root is validated against the watchbill schema
++    Then the watchbill conforms
++
++  @captain @conformance
++  Scenario: Perturbation quiescence
++    When the implementation directories are searched for the perturbation token
++    Then no PERTURBATION token is found
+\ No newline at end of file
+diff --git a/features/station-tide.feature b/features/station-tide.feature
+new file mode 100644
+index 0000000..ea77380
+--- /dev/null
++++ b/features/station-tide.feature
+@@ -0,0 +1,13 @@
++Feature: Station-specific tide prediction
++
++  @captain
++  Scenario: Next high tide for a named station
++    Given the tide table for "Barnacle Point 1"
++    When I ask for the next high tide after "2026-07-12T05:00:00Z"
++    Then the predicted high tide is at "2026-07-12T16:45:00Z" with height 4.5
++
++  @captain
++  Scenario: Unknown station name is an error
++    Given the tide table for "Atlantis Deep"
++    When I ask for the next high tide after "2026-07-12T05:00:00Z"
++    Then the prediction fails with "unknown station: Atlantis Deep"
+\ No newline at end of file
+diff --git a/src/tide.js b/src/tide.js
+index c3c80cc..e400613 100644
+--- a/src/tide.js
++++ b/src/tide.js
+@@ -1,3 +1,4 @@
++/** @planks("I ask for the next high tide after {string}") */
+ function nextHighTide(tides, after) {
+   const next = tides.find((t) => new Date(t.time) > new Date(after) && t.type === "high");
+   if (!next) throw new Error("no upcoming high tide in data");

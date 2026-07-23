@@ -1,0 +1,24 @@
+# banked: 2026-07-23T21:07:23Z
+# verdict: PENDING
+# leg: {  "name": "qwen-qwen3.7-plus-d2",  "model": "qwen/qwen3.7-plus",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/eval-golden-treatment/qwen-qwen3.7-plus-d2/sim",  "timeout_s": 900,  "skills": [    "experiments/yoink-settle/skills/shipshape",    "experiments/yoink-settle/skills/shipwright",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== qwen-qwen3.7-plus-d2.session.jsonl ===
+  turns=13  wall=433.3s  in=207701  out=23527  cache_read=339840  cost=$0.1183
+  role reads: shipshape@t0 -> shipwright@t0
+  roles loaded: shipshape, shipwright
+  ~ repeated tool signature at turns [1, 5, 6, 7, 9, 11] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    2198/170        0 $0.0009  read, read
+    t1   24153/164        0 $0.0079  read, bash
+    t2    1130/59     23296 $0.0019  read
+    t3    2188/157    23296 $0.0024  read
+    t4    4157/257    23296 $0.0032  bash
+    t5    2599/595    25472 $0.0032  bash
+    t6   40927/8310       0 $0.0237  bash
+    t7   49296/449        0 $0.0163  bash
+    t8    5943/9541   48896 $0.0172  write, write, write, write
+    t9   64574/379        0 $0.0211  write, edit
+    t10   1317/525    63744 $0.0052  bash
+    t11   4731/731    63744 $0.0065  bash
+    t12   4488/2190   68096 $0.0086  -

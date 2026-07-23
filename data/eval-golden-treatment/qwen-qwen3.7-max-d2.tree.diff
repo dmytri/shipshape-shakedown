@@ -1,0 +1,222 @@
+diff --git a/.rgignore b/.rgignore
+new file mode 100644
+index 0000000..ba910ba
+--- /dev/null
++++ b/.rgignore
+@@ -0,0 +1 @@
++CAPTAIN.md
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..aeac370
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,25 @@
++# Agent Instructions
++
++This project uses Shipshape, a context-isolated spec-driven workflow for coding agents.
++
++Agent opening this project: ensure Shipshape is installed, then load the `shipshape` skill (`shipshape:shipshape` under the plugin channel) and follow its routing before other work. Decide how to involve the human per your configured preferences.
++
++Tooling values such as stack, directories, and commands live in `RIGGING.md`.
++
++Install with the open skills CLI, which works across most agent runtimes:
++
++```bash
++npx skills add dmytri/shipshape --skill '*'
++```
++
++If your runtime supports the open-plugin format, such as Claude Code or Cursor, install the experimental plugin build instead:
++
++```bash
++npx plugins add dmytri/shipshape
++```
++
++Update Shipshape at a voyage boundary with `npx skills update` for the skills install, or re-run `npx plugins add dmytri/shipshape` for the plugin build.
++
++## Built with Shipshape
++
++This repository uses [Shipshape](https://github.com/dmytri/shipshape), a context-isolated spec-driven workflow for coding agents. Install with `npx skills add dmytri/shipshape --skill '*'`, or the experimental open-plugin build with `npx plugins add dmytri/shipshape`.
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..0532873
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,56 @@
++# Rigging
++
++Project tooling values for Shipshape roles. Values only, not procedure.
++Procedure lives in the skills. Every role reads this on open.
++
++## Stack
++
++- language: JavaScript
++- runtime: Node.js v24.18.0
++- packageManager: npm 12.0.1
++
++## Directories
++
++- implementation: src
++- specs: features
++- verification: features/support
++- assets: data
++- scantlings: scantlings
++
++## Commands
++
++- discover: `npx cucumber-js --dry-run`
++- focused: `npx cucumber-js --tags "not @captain and not @shipwright" {scenario}`
++- broad: `npx cucumber-js --tags "not @captain and not @shipwright"`
++- coverage: `npx c8 --reporter=text npx cucumber-js`
++- step-usage: `npx cucumber-js --format usage`
++- plank-inventory: `npx jsdoc -X src/*.js`
++- typecheck: none
++- lint: `npx biome lint features/support src`
++- conformance: `npx biome check features/support --config-path scantlings`
++
++## Perturbation
++
++- message: `PERTURBATION: consider current durable context; remove when fixed`
++- perturb: `throw new Error("PERTURBATION: consider current durable context; remove when fixed");`
++
++## Tiers
++
++- default: @logic
++- sandbox: none
++- policy: @logic local-only
++- weather: coverage/weather.json
++- runrecord: coverage/runrecord.json
++
++## Dependencies
++
++- policy: unlocked
++- dependency: @cucumber/cucumber
++- dependency: c8
++- dependency: jsdoc
++- dependency: @biomejs/biome
++- dependency: knip
++
++## Outbound
++
++- outbound: none
+diff --git a/features/methodology.feature b/features/methodology.feature
+new file mode 100644
+index 0000000..ad9a44a
+--- /dev/null
++++ b/features/methodology.feature
+@@ -0,0 +1,28 @@
++Feature: Methodology conformance
++
++  @captain @conformance
++  Scenario: Watchbill shape conformance
++    Given the watchbill file at the project root
++    When the watchbill is validated against the required format
++    Then the watchbill conforms or is absent at the deck at rest
++
++  @captain @conformance
++  Scenario: Perturbation quiescence
++    Given the implementation directories from RIGGING.md
++    When the implementation files are searched for the PERTURBATION token
++    Then no PERTURBATION token is found when the working tree is green
++
++  @captain @conformance
++  Scenario: Stale plank join
++    Given the plank inventory from jsdoc over the implementation directories
++    And the step-usage patterns from the runner
++    When each @planks string is cross-referenced against the step-usage patterns
++    Then every @planks string matches a current step-definition pattern exactly
++    And every @planks-provisional reference names a scenario that still carries @captain
++
++  @captain @conformance
++  Scenario: Plank form check
++    Given the plank inventory extracted from docblock comments on declarations
++    When each @planks and @planks-provisional token is checked for valid form
++    Then every plank token appears as a docblock tag immediately preceding a declaration
++    And no @planks token appears as a line comment or in-body annotation
+diff --git a/features/unreachable-data.feature b/features/unreachable-data.feature
+new file mode 100644
+index 0000000..e5634dc
+--- /dev/null
++++ b/features/unreachable-data.feature
+@@ -0,0 +1,8 @@
++Feature: Unreachable data
++
++  @captain
++  Scenario: Unreachable tide station configuration
++    Given the tide prediction code in src/tide.js
++    When the production imports and requires are analysed
++    Then the tide table data file is referenced by the production code
++    And no production file imports or requires the station configuration data file
+diff --git a/scantlings/biome.json b/scantlings/biome.json
+new file mode 100644
+index 0000000..d9440d6
+--- /dev/null
++++ b/scantlings/biome.json
+@@ -0,0 +1,13 @@
++{
++  "$schema": "https://biomejs.dev/schemas/2.0.0/schema.json",
++  "linter": {
++    "enabled": true,
++    "rules": {
++      "recommended": false,
++      "suspicious": {
++        "noExplicitAny": "warn"
++      }
++    },
++    "includes": ["features/support/**"]
++  }
++}
+diff --git a/scantlings/verification-conformance.json b/scantlings/verification-conformance.json
+new file mode 100644
+index 0000000..667a325
+--- /dev/null
++++ b/scantlings/verification-conformance.json
+@@ -0,0 +1,36 @@
++{
++  "description": "Verification-conformance rule set. Scanned against verification support files by the conformance command.",
++  "rules": {
++    "plank-form": {
++      "description": "Every @planks token must be a docblock tag immediately preceding a declaration.",
++      "forbiddenPatterns": [],
++      "requiredAnnotations": ["@planks", "@planks-provisional"]
++    },
++    "plank-coverage": {
++      "description": "Every behaviour-bearing step-definition pattern must have a matching @planks token in implementation.",
++      "joinSource": "step-usage against plank-inventory"
++    },
++    "guessedDelay": {
++      "description": "No hardcoded numeric delays in verification support. Use signal-based waits.",
++      "forbiddenPatterns": [
++        "await new Promise.*setTimeout",
++        "sleep\\("
++      ],
++      "notes": "Text search can miss template literals and indirect setTimeout calls. Structured AST scanning would close the gap."
++    },
++    "missingExceptionalDouble": {
++      "description": "Test doubles must carry the @exceptional-double inline mark with justification.",
++      "requiredWhenPresent": ["sinon.", "jest.mock", "jest.spy", "vi.mock", "vi.spy", "td."],
++      "requiredAnnotation": "@exceptional-double"
++    },
++    "expensiveCreationOutsideCreationScenario": {
++      "description": "Expensive resource creation seams must be confined to their one creation scenario.",
++      "expensivePatterns": [],
++      "notes": "Expensive seam names are project-specific and populated after Captain review."
++    }
++  },
++  "toolingNotes": {
++    "searchWeakness": "Text-pattern search against source text. Misses AST-level structure such as indirect calls, template literals spanning lines, and computed property names. Biome GritQL or ts-morph would close the gap.",
++    "stackCapability": "Plain JavaScript without TypeScript compiler API. Biome 2.5.5 available for syntax-level checks."
++  }
++}
+diff --git a/src/tide.js b/src/tide.js
+index c3c80cc..75faefd 100644
+--- a/src/tide.js
++++ b/src/tide.js
+@@ -1,3 +1,8 @@
++/**
++ * @planks("I ask for the next high tide after {string}")
++ * @planks("the predicted high tide is at {string} with height {float}")
++ * @planks("the prediction fails with {string}")
++ */
+ function nextHighTide(tides, after) {
+   const next = tides.find((t) => new Date(t.time) > new Date(after) && t.type === "high");
+   if (!next) throw new Error("no upcoming high tide in data");

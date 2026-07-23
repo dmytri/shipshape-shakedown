@@ -1,0 +1,125 @@
+diff --git a/.rgignore b/.rgignore
+new file mode 100644
+index 0000000..1295120
+--- /dev/null
++++ b/.rgignore
+@@ -0,0 +1 @@
++CAPTAIN.md
+\ No newline at end of file
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..329a156
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,21 @@
++# Agent Instructions
++
++This project uses Shipshape, a context-isolated spec-driven workflow for coding agents.
++
++Agent opening this project: ensure Shipshape is installed, then load the `shipshape` skill (`shipshape:shipshape` under the plugin channel) and follow its routing before other work. Decide how to involve the human per your configured preferences.
++
++Tooling values such as stack, directories, and commands live in `RIGGING.md`.
++
++Install with the open skills CLI, which works across most agent runtimes:
++
++```bash
++npx skills add dmytri/shipshape --skill '*'
++```
++
++If your runtime supports the open-plugin format, such as Claude Code or Cursor, install the experimental plugin build instead:
++
++```bash
++npx plugins add dmytri/shipshape
++```
++
++Update Shipshape at a voyage boundary with `npx skills update` for the skills install, or re-run `npx plugins add dmytri/shipshape` for the plugin build.
+\ No newline at end of file
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..0f4bbcc
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,52 @@
++# Rigging
++
++Project tooling values for Shipshape roles. Values only, not procedure.
++Procedure lives in the skills. Every role reads this on open.
++
++## Stack
++
++- language: javascript
++- runtime: v24.18.0
++- packageManager: npm 12.0.1
++
++## Directories
++
++- implementation: src
++- specs: features
++- verification: features/support
++- assets: data
++- scantlings: none
++
++## Commands
++
++- discover: `npx cucumber-js --dry-run`
++- focused: `bash -c 'npx cucumber-js "${1%%:*}" --name "${1#*:}"' -- {scenario}`
++- broad: `npx cucumber-js --tags "not @captain and not @shipwright"`
++- coverage: `npx c8 npx cucumber-js --tags "not @captain and not @shipwright"`
++- step-usage: `npx cucumber-js --format usage-json`
++- plank-inventory: `npx jsdoc -X src/*.js`
++- typecheck: `none`
++- lint: `none`
++- conformance: `none`
++
++## Perturbation
++
++- message: `PERTURBATION: consider current durable context; remove when fixed`
++- perturb: `throw new Error("PERTURBATION: consider current durable context; remove when fixed");`
++
++## Tiers
++
++- default: @logic
++- sandbox: none
++- policy: @logic: local
++- weather: logs/weather.json
++- runrecord: logs/runrecord.ndjson
++
++## Dependencies
++
++- policy: locked
++- dependency: @cucumber/cucumber
++
++## Outbound
++
++- outbound: none
+\ No newline at end of file
+diff --git a/features/conformance.feature b/features/conformance.feature
+new file mode 100644
+index 0000000..07e3459
+--- /dev/null
++++ b/features/conformance.feature
+@@ -0,0 +1,11 @@
++Feature: Methodology conformance
++
++  @captain @conformance
++  Scenario: Watchbill shape is valid when present
++    When the watchbill shape checker runs against the project root
++    Then every entry in the watchbill conforms to the expected shape
++
++  @captain @conformance
++  Scenario: No perturbation token stands in implementation
++    When the perturbation quiescence checker scans the implementation directories
++    Then the checker reports no PERTURBATION token in any source file
+\ No newline at end of file
+diff --git a/src/tide.js b/src/tide.js
+index c3c80cc..c5de710 100644
+--- a/src/tide.js
++++ b/src/tide.js
+@@ -1,3 +1,7 @@
++/**
++ * @planks("I ask for the next high tide after {string}")
++ * @planks("the prediction fails with {string}")
++ */
+ function nextHighTide(tides, after) {
+   const next = tides.find((t) => new Date(t.time) > new Date(after) && t.type === "high");
+   if (!next) throw new Error("no upcoming high tide in data");

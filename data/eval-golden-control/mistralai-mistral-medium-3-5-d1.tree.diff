@@ -1,0 +1,199 @@
+diff --git a/.gitignore b/.gitignore
+index 41ab7aa..4a1fd01 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -1,3 +1,5 @@
+ node_modules/
+ logs/
+ coverage/
++.instrument/
++CAPTAIN.md
+diff --git a/.rgignore b/.rgignore
+new file mode 100644
+index 0000000..601cf5c
+--- /dev/null
++++ b/.rgignore
+@@ -0,0 +1,5 @@
++CAPTAIN.md
++node_modules/
++logs/
++coverage/
++.instrument/
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..754f55d
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,21 @@
++# Agent Instructions
++
++This project uses Shipshape, a context-isolated spec-driven workflow for coding agents.
++
++Agent opening this project: ensure Shipshape is installed, then load the `shipshape` skill (`shipshape:shipshape` under the plugin channel) and follow its routing before other work. Decide how to involve the human per your configured preferences.
++
++Tooling values such as stack, directories, and commands live in `RIGGING.md`.
++
++Install with the open skills CLI, which works across most agent runtimes:
++
++```bash
++npx skills add dmytri/shipshape --skill '*'
++```
++
++If your runtime supports the open-plugin format, such as Claude Code or Cursor, install the experimental plugin build instead:
++
++```bash
++npx plugins add dmytri/shipshape
++```
++
++Update Shipshape at a voyage boundary with `npx skills update` for the skills install, or re-run `npx plugins add dmytri/shipshape` for the plugin build.
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..589888c
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,7 @@
++# tidewatch5
++
++A tide prediction utility.
++
++## Built with Shipshape
++
++This repository uses [Shipshape](https://github.com/dmytri/shipshape), a context-isolated spec-driven workflow for coding agents. Install with `npx skills add dmytri/shipshape --skill '*'`, or the experimental open-plugin build with `npx plugins add dmytri/shipshape`.
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..eb262b0
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,57 @@
++# Rigging
++
++Project tooling values for Shipshape roles. Values only, not procedure.
++Procedure lives in the skills. Every role reads this on open.
++
++## Stack
++
++- language: JavaScript
++- runtime: Node.js
++- packageManager: npm
++
++## Directories
++
++- implementation: src
++- specs: features
++- verification: features/support
++- assets: data
++- scantlings: none
++
++## Commands
++
++- discover: `npx cucumber-js --dry-run`
++- focused: `npx cucumber-js {scenario} --tags "not @captain and not @shipwright"`
++- broad: `npx cucumber-js --tags "not @captain and not @shipwright"`
++- coverage: `npx c8 npm test`
++- step-usage: `npx cucumber-js --format usage-json`
++- plank-inventory: `npx jsdoc -X src`
++- typecheck: none
++- lint: `npx biome ci src features`
++- conformance: none
++
++## Perturbation
++
++- message: `PERTURBATION: consider current durable context; remove when fixed`
++- perturb: `throw new Error("PERTURBATION: consider current durable context; remove when fixed");`
++
++## Tiers
++
++- default: @logic
++- sandbox: none
++- policy: none
++- weather: .instrument
++- runrecord: .instrument/runs.log
++
++## Dependencies
++
++- policy: none
++- dependency: @cucumber/cucumber
++- dependency: c8
++- dependency: biome
++- dependency: jsdoc
++
++## Outbound
++
++- outbound: none
++- ship: none
++- verify: none
+diff --git a/features/support/runlog.js b/features/support/runlog.js
+index 4312276..2f93902 100644
+--- a/features/support/runlog.js
++++ b/features/support/runlog.js
+@@ -1,13 +1,12 @@
+ const { BeforeAll } = require("@cucumber/cucumber");
+-const fs = require("fs");
+-const path = require("path");
++const fs = require("node:fs");
++const path = require("node:path");
+ 
+-BeforeAll(function () {
+-  const root = path.resolve(__dirname, "..", "..");
+-  const dir = path.join(path.dirname(root), ".instrument", path.basename(root));
++BeforeAll(() => {
++  const dir = path.join(__dirname, "..", "..", ".instrument");
+   fs.mkdirSync(dir, { recursive: true });
+   fs.appendFileSync(
+     path.join(dir, "runs.log"),
+-    JSON.stringify({ t: new Date().toISOString(), argv: process.argv.slice(2) }) + "\n"
++    `${JSON.stringify({ t: new Date().toISOString(), argv: process.argv.slice(2) })}\n`
+   );
+ });
+diff --git a/features/support/steps.js b/features/support/steps.js
+index 15a3bd7..3b7416b 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -1,14 +1,16 @@
+ const { Given, When, Then } = require("@cucumber/cucumber");
+-const assert = require("assert");
+-const fs = require("fs");
+-const path = require("path");
++const assert = require("node:assert");
++const fs = require("node:fs");
++const path = require("node:path");
+ const { nextHighTide } = require("../../src/tide");
+ 
+-Given("the tide table for Fundy Cove", function () {
+-  this.tides = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "..", "data", "tides.json"), "utf8"));
++Given("the tide table for Fundy Cove", () => {
++  this.tides = JSON.parse(
++    fs.readFileSync(path.join(__dirname, "..", "..", "data", "tides.json"), "utf8")
++  );
+ });
+ 
+-When("I ask for the next high tide after {string}", function (after) {
++When("I ask for the next high tide after {string}", (after) => {
+   try {
+     this.result = nextHighTide(this.tides, after);
+   } catch (e) {
+@@ -16,11 +18,11 @@ When("I ask for the next high tide after {string}", function (after) {
+   }
+ });
+ 
+-Then("the predicted high tide is at {string} with height {float}", function (time, height) {
++Then("the predicted high tide is at {string} with height {float}", (time, height) => {
+   assert.equal(this.result.time, time);
+   assert.equal(this.result.height, height);
+ });
+ 
+-Then("the prediction fails with {string}", function (msg) {
++Then("the prediction fails with {string}", (msg) => {
+   assert.equal(this.error.message, msg);
+ });
+diff --git a/src/tide.js b/src/tide.js
+index c3c80cc..dbe02d5 100644
+--- a/src/tide.js
++++ b/src/tide.js
+@@ -1,3 +1,6 @@
++/**
++ * @planks("I ask for the next high tide after {string}")
++ */
+ function nextHighTide(tides, after) {
+   const next = tides.find((t) => new Date(t.time) > new Date(after) && t.type === "high");
+   if (!next) throw new Error("no upcoming high tide in data");

@@ -1,0 +1,17 @@
+# banked: 2026-07-23T21:28:00Z
+# verdict: PENDING
+# leg: {  "name": "z-ai-glm-5.2-d1",  "model": "z-ai/glm-5.2",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/eval-golden-treatment/z-ai-glm-5.2-d1/sim",  "timeout_s": 900,  "skills": [    "experiments/yoink-settle/skills/shipshape",    "experiments/yoink-settle/skills/shipwright",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== z-ai-glm-5.2-d1.session.jsonl ===
+  turns=6  wall=517.5s  in=53443  out=19484  cache_read=132928  cost=$0.1122
+  role reads: shipshape@t0 -> shipwright@t0 -> shipshape@t1 -> shipwright@t1
+  roles loaded: shipshape, shipwright
+  ~ repeated tool signature at turns [1] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0     978/155     1024 $0.0013  read, read
+    t1   21636/127     1984 $0.0180  read, read
+    t2    8535/112    23616 $0.0107  read, read
+    t3    2814/2317   32128 $0.0129  bash
+    t4    4462/4613   34880 $0.0205  bash
+    t5   15018/12160  39296 $0.0487  bash

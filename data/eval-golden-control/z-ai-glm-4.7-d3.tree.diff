@@ -1,0 +1,155 @@
+diff --git a/.rgignore b/.rgignore
+new file mode 100644
+index 0000000..1295120
+--- /dev/null
++++ b/.rgignore
+@@ -0,0 +1 @@
++CAPTAIN.md
+\ No newline at end of file
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..329a156
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,21 @@
++# Agent Instructions
++
++This project uses Shipshape, a context-isolated spec-driven workflow for coding agents.
++
++Agent opening this project: ensure Shipshape is installed, then load the `shipshape` skill (`shipshape:shipshape` under the plugin channel) and follow its routing before other work. Decide how to involve the human per your configured preferences.
++
++Tooling values such as stack, directories, and commands live in `RIGGING.md`.
++
++Install with the open skills CLI, which works across most agent runtimes:
++
++```bash
++npx skills add dmytri/shipshape --skill '*'
++```
++
++If your runtime supports the open-plugin format, such as Claude Code or Cursor, install the experimental plugin build instead:
++
++```bash
++npx plugins add dmytri/shipshape
++```
++
++Update Shipshape at a voyage boundary with `npx skills update` for the skills install, or re-run `npx plugins add dmytri/shipshape` for the plugin build.
+\ No newline at end of file
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..a183d01
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,54 @@
++# Rigging
++
++Project tooling values for Shipshape roles. Values only, not procedure.
++Procedure lives in the skills. Every role reads this on open.
++
++## Stack
++
++- language: JavaScript
++- runtime: Node.js
++- packageManager: npm
++
++## Directories
++
++- implementation: src
++- specs: features
++- verification: features/support
++- assets: data
++- scantlings: none
++
++## Commands
++
++- discover: `node_modules/.bin/cucumber-js --dry-run`
++- focused: `node_modules/.bin/cucumber-js --tags "not @captain and not @shipwright" --name "{scenario}"`
++- broad: `node_modules/.bin/cucumber-js --tags "not @captain and not @shipwright"`
++- coverage: `node_modules/.bin/c8 --reporter=text --reporter=json node_modules/.bin/cucumber-js`
++- step-usage: `node_modules/.bin/cucumber-js --format usage-json`
++- plank-inventory: `node_modules/.bin/jsdoc -X src/**/*.js`
++- typecheck: none
++- lint: `node_modules/.bin/biome check src/ features/`
++- conformance: none
++
++## Perturbation
++
++- message: `PERTURBATION: consider current durable context; remove when fixed`
++- perturb: `throw new Error("PERTURBATION: consider current durable context; remove when fixed");`
++
++## Tiers
++
++- default: @logic
++- sandbox: none
++- policy: @logic
++- weather: coverage/coverage.json
++- runrecord: logs/runs.log
++
++## Dependencies
++
++- policy: none
++- dependency: @cucumber/cucumber
++
++## Outbound
++
++- outbound: none
++- ship: none
++- verify: none
+\ No newline at end of file
+diff --git a/features/methodology.feature b/features/methodology.feature
+new file mode 100644
+index 0000000..3069613
+--- /dev/null
++++ b/features/methodology.feature
+@@ -0,0 +1,9 @@
++Feature: Methodology conformance
++
++  @captain @conformance
++  Scenario: Perturbation quiescence
++    Given no perturbation token exists in the implementation
++
++  @captain @conformance
++  Scenario: Watchbill shape conformance
++    Given no watchbill exists
+\ No newline at end of file
+diff --git a/features/support/methodology-steps.js b/features/support/methodology-steps.js
+new file mode 100644
+index 0000000..2e0c96f
+--- /dev/null
++++ b/features/support/methodology-steps.js
+@@ -0,0 +1,19 @@
++const { Given, Then } = require("@cucumber/cucumber");
++const assert = require("assert");
++const fs = require("fs");
++const path = require("path");
++const { execSync } = require("child_process");
++
++Given("no perturbation token exists in the implementation", function () {
++  const implDir = path.join(__dirname, "..", "..", "src");
++  const files = fs.readdirSync(implDir).filter(f => f.endsWith(".js"));
++  for (const file of files) {
++    const content = fs.readFileSync(path.join(implDir, file), "utf8");
++    assert.ok(!content.includes("PERTURBATION"), `Perturbation token found in ${file}`);
++  }
++});
++
++Given("no watchbill exists", function () {
++  const watchbillPath = path.join(__dirname, "..", "..", "watchbill.json");
++  assert.ok(!fs.existsSync(watchbillPath), "Watchbill file exists");
++});
+\ No newline at end of file
+diff --git a/src/tide.js b/src/tide.js
+index c3c80cc..7eb348d 100644
+--- a/src/tide.js
++++ b/src/tide.js
+@@ -1,3 +1,11 @@
++/**
++ * Finds the next high tide after a given time.
++ * @param {Array} tides - Array of tide objects with time, type, and height
++ * @param {string} after - ISO timestamp to search after
++ * @returns {Object} Next high tide with time and height
++ * @throws {Error} If no upcoming high tide is found
++ * @planks("I ask for the next high tide after {string}")
++ */
+ function nextHighTide(tides, after) {
+   const next = tides.find((t) => new Date(t.time) > new Date(after) && t.type === "high");
+   if (!next) throw new Error("no upcoming high tide in data");

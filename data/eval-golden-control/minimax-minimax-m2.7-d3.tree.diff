@@ -1,0 +1,123 @@
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..329a156
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,21 @@
++# Agent Instructions
++
++This project uses Shipshape, a context-isolated spec-driven workflow for coding agents.
++
++Agent opening this project: ensure Shipshape is installed, then load the `shipshape` skill (`shipshape:shipshape` under the plugin channel) and follow its routing before other work. Decide how to involve the human per your configured preferences.
++
++Tooling values such as stack, directories, and commands live in `RIGGING.md`.
++
++Install with the open skills CLI, which works across most agent runtimes:
++
++```bash
++npx skills add dmytri/shipshape --skill '*'
++```
++
++If your runtime supports the open-plugin format, such as Claude Code or Cursor, install the experimental plugin build instead:
++
++```bash
++npx plugins add dmytri/shipshape
++```
++
++Update Shipshape at a voyage boundary with `npx skills update` for the skills install, or re-run `npx plugins add dmytri/shipshape` for the plugin build.
+\ No newline at end of file
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..bf0f5f3
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,51 @@
++# Rigging
++
++Project tooling values for Shipshape roles. Values only, not procedure.
++Procedure lives in the skills. Every role reads this on open.
++
++## Stack
++
++- language: JavaScript
++- runtime: Node.js v24.18.0
++- packageManager: npm v12.0.1
++
++## Directories
++
++- implementation: src
++- specs: features
++- verification: features/support
++- assets: data
++- scantlings: none
++
++## Commands
++
++- discover: `npx cucumber-js --dry-run`
++- focused: `npx cucumber-js {scenario}`
++- broad: `npx cucumber-js`
++- coverage: `NODE_V8_COVERAGE=./coverage npx cucumber-js`
++- step-usage: `npx cucumber-js --format usage`
++- plank-inventory: none
++- typecheck: none
++- lint: none
++- conformance: none
++
++## Perturbation
++
++- message: `PERTURBATION: consider current durable context; remove when fixed`
++- perturb: `throw new Error("PERTURBATION: consider current durable context; remove when fixed");`
++
++## Tiers
++
++- default: @logic
++- policy: @logic tier has no external accounts or services
++- weather: none
++- runrecord: none
++
++## Dependencies
++
++- policy: locked
++- dependency: @cucumber/cucumber@^13.0.0 (devDependency)
++
++## Outbound
++
++- outbound: none
+\ No newline at end of file
+diff --git a/features/tide-edges.feature b/features/tide-edges.feature
+new file mode 100644
+index 0000000..de0d2b0
+--- /dev/null
++++ b/features/tide-edges.feature
+@@ -0,0 +1,19 @@
++Feature: Tide prediction edge cases
++
++  @captain
++  Scenario: Invalid date string input produces no result
++    Given the tide table for Fundy Cove
++    When I ask for the next high tide after "not-a-date"
++    Then the prediction fails with a TypeError
++
++  @captain
++  Scenario: Empty tides array produces no result
++    Given an empty tide table
++    When I ask for the next high tide after "2026-07-12T05:00:00Z"
++    Then the prediction fails with "no upcoming high tide in data"
++
++  @captain
++  Scenario: Low-tide entries do not satisfy high-tide query
++    Given the tide table for Fundy Cove
++    When I ask for the next high tide after "2026-07-12T10:30:00Z"
++    Then the predicted high tide is at "2026-07-12T16:45:00Z" with height 4.5
+\ No newline at end of file
+diff --git a/src/tide.js b/src/tide.js
+index c3c80cc..dbe02d5 100644
+--- a/src/tide.js
++++ b/src/tide.js
+@@ -1,3 +1,6 @@
++/**
++ * @planks("I ask for the next high tide after {string}")
++ */
+ function nextHighTide(tides, after) {
+   const next = tides.find((t) => new Date(t.time) > new Date(after) && t.type === "high");
+   if (!next) throw new Error("no upcoming high tide in data");

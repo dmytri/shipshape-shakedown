@@ -1,0 +1,52 @@
+# banked: 2026-07-23T21:15:09Z
+# verdict: PENDING
+# leg: {  "name": "moonshotai-kimi-k2.7-code-d2",  "model": "moonshotai/kimi-k2.7-code",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/eval-golden-treatment/moonshotai-kimi-k2.7-code-d2/sim",  "timeout_s": 900,  "skills": [    "experiments/yoink-settle/skills/shipshape",    "experiments/yoink-settle/skills/shipwright",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== moonshotai-kimi-k2.7-code-d2.session.jsonl ===
+  turns=41  wall=448.8s  in=303722  out=17194  cache_read=1550464  cost=$0.5616
+  role reads: shipshape@t0 -> shipwright@t2 -> shipshape@t5 -> shipwright@t17 -> shipshape@t30
+  roles loaded: shipshape, shipwright
+  ~ repeated tool signature at turns [1, 6, 10, 11, 12, 13, 14, 15, 16, 18, 21, 22, 23, 24, 25, 26, 27, 28, 29, 33, 34, 35, 36, 39] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0     286/70      1472 $0.0007  read
+    t1   10547/68      1728 $0.0092  read
+    t2    8369/49     12224 $0.0090  read
+    t3       0/0          0 $0.0000  -
+    t4   11310/95      1472 $0.0099  read, read
+    t5    1168/91     12736 $0.0033  read
+    t6   22970/59      1472 $0.0193  read
+    t7       0/0          0 $0.0000  -
+    t8    9381/54      1472 $0.0081  read
+    t9     542/134    10816 $0.0027  bash
+    t10   3501/216    11328 $0.0055  read, read, bash
+    t11    421/206    14784 $0.0035  read, read, read, read
+    t12    648/195    15360 $0.0037  read, read, bash
+    t13   5758/260    16000 $0.0083  bash, bash
+    t14    758/83     21696 $0.0044  bash
+    t15    181/287    22400 $0.0048  bash, bash
+    t16    444/249    22528 $0.0049  bash
+    t17    375/111    22912 $0.0044  read, read
+    t18  11896/59     23232 $0.0137  read
+    t19    200/2119   35072 $0.0137  read
+    t20   3867/103    35264 $0.0092  bash
+    t21    171/73     39104 $0.0067  bash
+    t22    101/70     39296 $0.0066  bash
+    t23     63/264    39424 $0.0073  bash
+    t24    552/514    39424 $0.0087  bash
+    t25  17229/421    39936 $0.0221  bash
+    t26  13975/1920   57152 $0.0278  bash
+    t27  71633/150     1472 $0.0595  bash
+    t28    285/371    73088 $0.0133  bash
+    t29   4417/1779   73344 $0.0220  bash
+    t30   1922/54     77760 $0.0142  read
+    t31   4491/2637   79680 $0.0263  bash
+    t32   2675/1019   84160 $0.0195  write
+    t33   1132/278    86784 $0.0159  write
+    t34     63/63     88192 $0.0144  write
+    t35    122/212    88256 $0.0150  write
+    t36  87180/137     1472 $0.0722  write
+    t37     80/128    88768 $0.0147  edit
+    t38     80/467    88960 $0.0161  bash
+    t39   2201/1412   89024 $0.0213  bash
+    t40   2728/717    91200 $0.0195  -

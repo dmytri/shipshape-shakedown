@@ -1,0 +1,24 @@
+# banked: 2026-07-23T20:25:07Z
+# verdict: PENDING
+# leg: {  "name": "moonshotai-kimi-k3-d1",  "model": "moonshotai/kimi-k3",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/eval-golden-control/moonshotai-kimi-k3-d1/sim",  "timeout_s": 900,  "skills": [    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/4ee36ff0efb8/skills/shipshape",    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/4ee36ff0efb8/skills/shipwright"  ]}
+
+
+=== moonshotai-kimi-k3-d1.session.jsonl ===
+  turns=13  wall=213.2s  in=40979  out=6724  cache_read=385024  cost=$0.3393
+  role reads: shipshape@t0 -> shipwright@t0 -> shipshape@t1
+  roles loaded: shipshape, shipwright
+  ~ repeated tool signature at turns [1] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    1358/151      512 $0.0065  read, read
+    t1   20753/238     1792 $0.0664  read, read, bash
+    t2    9364/90     22528 $0.0362  bash
+    t3     948/247    31744 $0.0161  read, read, read, read, bash
+    t4    1378/1194   32512 $0.0318  bash
+    t5    1563/251    33792 $0.0186  bash
+    t6     326/264    35328 $0.0155  bash, bash
+    t7     778/1320   35584 $0.0328  bash
+    t8    1423/65     36352 $0.0161  bash
+    t9     560/1239   37632 $0.0316  write, write, write, write, edit
+    t10   1438/240    38144 $0.0194  write
+    t11    437/287    39424 $0.0174  bash
+    t12    653/1138   39680 $0.0309  -

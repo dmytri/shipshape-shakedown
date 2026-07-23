@@ -1,0 +1,261 @@
+diff --git a/.rgignore b/.rgignore
+new file mode 100644
+index 0000000..ba910ba
+--- /dev/null
++++ b/.rgignore
+@@ -0,0 +1 @@
++CAPTAIN.md
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..754f55d
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,21 @@
++# Agent Instructions
++
++This project uses Shipshape, a context-isolated spec-driven workflow for coding agents.
++
++Agent opening this project: ensure Shipshape is installed, then load the `shipshape` skill (`shipshape:shipshape` under the plugin channel) and follow its routing before other work. Decide how to involve the human per your configured preferences.
++
++Tooling values such as stack, directories, and commands live in `RIGGING.md`.
++
++Install with the open skills CLI, which works across most agent runtimes:
++
++```bash
++npx skills add dmytri/shipshape --skill '*'
++```
++
++If your runtime supports the open-plugin format, such as Claude Code or Cursor, install the experimental plugin build instead:
++
++```bash
++npx plugins add dmytri/shipshape
++```
++
++Update Shipshape at a voyage boundary with `npx skills update` for the skills install, or re-run `npx plugins add dmytri/shipshape` for the plugin build.
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..d86ae1e
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,5 @@
++# tidewatch
++
++## Built with Shipshape
++
++This repository uses [Shipshape](https://github.com/dmytri/shipshape), a context-isolated spec-driven workflow for coding agents. Install with `npx skills add dmytri/shipshape --skill '*'`, or the experimental open-plugin build with `npx plugins add dmytri/shipshape`.
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..6961691
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,56 @@
++# Rigging
++
++Project tooling values for Shipshape roles. Values only, not procedure.
++Procedure lives in the skills. Every role reads this on open.
++
++## Stack
++
++- language: JavaScript
++- runtime: Node.js
++- packageManager: npm
++
++## Directories
++
++- implementation: src
++- specs: features
++- verification: features/support
++- assets: data
++- scantlings: scantlings
++
++## Commands
++
++- discover: `npx cucumber-js --dry-run --tags "not @captain and not @shipwright"`
++- focused: `node scripts/run-focused.cjs {scenario}`
++- broad: `npx cucumber-js --tags "not @captain and not @shipwright"`
++- coverage: `npx c8 --reporter=text-summary cucumber-js --tags "not @captain and not @shipwright"`
++- step-usage: `npx cucumber-js --format=usage --tags "not @captain and not @shipwright"`
++- plank-inventory: `npx jsdoc -X src/*.js`
++- typecheck: `none`
++- lint: `npx biome check src features/support`
++- conformance: `none`
++
++## Perturbation
++
++- message: `PERTURBATION: consider current durable context; remove when fixed`
++- perturb: `throw new Error("PERTURBATION: consider current durable context; remove when fixed");`
++
++## Tiers
++
++- default: @logic
++- sandbox: none
++- policy: @logic runs in-process; no external credentials required
++- weather: logs/weather.json
++- runrecord: logs/runs.log
++
++## Dependencies
++
++- policy: open
++- dependency: @cucumber/cucumber
++- dependency: c8
++- dependency: jsdoc
++- dependency: @biomejs/biome
++- dependency: knip
++
++## Outbound
++
++- outbound: none
+diff --git a/features/conformance.feature b/features/conformance.feature
+new file mode 100644
+index 0000000..9253a67
+--- /dev/null
++++ b/features/conformance.feature
+@@ -0,0 +1,64 @@
++Feature: Methodology conformance
++
++  @conformance @captain
++  Scenario: watchbill-shape conforms at rest
++    Given no voyage watchbill is present at "watchbill.json"
++    When the watchbill shape check runs
++    Then it reports the deck at rest
++
++  @conformance @captain
++  Scenario: watchbill-shape conforms at sea
++    Given a voyage watchbill at "watchbill.json"
++    When the watchbill shape check runs
++    Then it reports a valid watchbill
++
++  @conformance @captain
++  Scenario: perturbation-quiescence holds on a green tree
++    Given the implementation tree at "src"
++    When the perturbation quiescence check searches the implementation tree
++    Then it finds no PERTURBATION token
++
++  @conformance @captain
++  Scenario: stale-plank join holds
++    Given the project's plank inventory
++    And the project's step-definition usage
++    When the stale-plank join runs
++    Then every "@planks" string matches a current step-definition pattern
++
++  @conformance @captain
++  Scenario: plank-form check holds
++    Given the project's plank inventory
++    When the plank-form check runs
++    Then every "@planks" token sits in a docblock on a declaration
++    And every "@planks" string matches a current step-definition pattern verbatim
++    And every "@planks-provisional" reference names a scenario still carrying "@captain"
++
++  @conformance @captain
++  Scenario: forbidden-doubles scan holds
++    Given the project's verification support
++    When the forbidden-doubles scan runs
++    Then every test double carries an inline "@exceptional-double" mark with a named condition
++
++  @conformance @captain
++  Scenario: scantling-reference join holds
++    Given the project's "scantlings" paths from "RIGGING.md"
++    When the scantling-reference join runs
++    Then every scantlings path is referenced by at least one scenario
++
++  @conformance @captain
++  Scenario: feature lint passes
++    Given the project's feature files
++    When the feature lint check runs
++    Then it reports no lint violations
++
++  @conformance @captain
++  Scenario: budget check holds
++    Given a recorded weather entry for the default tier
++    When the budget check compares the recorded duration to the tier's "budget" value
++    Then it reports the recorded duration as within the budget ceiling
++
++  @conformance @captain
++  Scenario: verification-conformance rule set holds
++    Given the verification-conformance rule set at "scantlings/verification-conformance.json"
++    When the rule set runs across "features/support"
++    Then it reports no Verification-agreement breaches
+diff --git a/scantlings/verification-conformance.json b/scantlings/verification-conformance.json
+new file mode 100644
+index 0000000..4b83483
+--- /dev/null
++++ b/scantlings/verification-conformance.json
+@@ -0,0 +1,25 @@
++{
++  "rules": [
++    {
++      "id": "no-setTimeout-in-steps",
++      "description": "Step definitions must not use guessed literal delays; wait on an observed signal instead.",
++      "pattern": "setTimeout\\(",
++      "scope": "features/support",
++      "severity": "red"
++    },
++    {
++      "id": "no-sleep-in-steps",
++      "description": "Step definitions must not call guessed sleep or wait helpers; wait on an observed signal instead.",
++      "pattern": "\\b(sleep|wait)\\s*\\(",
++      "scope": "features/support",
++      "severity": "red"
++    },
++    {
++      "id": "no-write-outside-project",
++      "description": "Verification support must write wake artifacts only inside gitignored project paths.",
++      "pattern": "path\\.dirname\\([^)]*root[^)]*\\)",
++      "scope": "features/support",
++      "severity": "red"
++    }
++  ]
++}
+diff --git a/scripts/run-focused.cjs b/scripts/run-focused.cjs
+new file mode 100644
+index 0000000..a44d18e
+--- /dev/null
++++ b/scripts/run-focused.cjs
+@@ -0,0 +1,38 @@
++#!/usr/bin/env node
++// Run a single scenario or a batch from a Cucumber watchbill in the canonical
++// "<spec>.feature:<Scenario Name>" reference form. Accepts one or more
++// references on the command line; deduplicates by feature file and runs the
++// union of named scenarios in one cucumber invocation so ambient setup
++// amortizes across the batch.
++
++const { spawnSync } = require("node:child_process");
++const path = require("node:path");
++
++function parseReferences(args) {
++  const refs = args.filter((a) => a.includes(":"));
++  if (refs.length === 0) {
++    process.stderr.write("usage: run-focused.cjs <spec>.feature:<Scenario> [...]\n");
++    process.exit(2);
++  }
++  const files = new Set();
++  const names = [];
++  for (const ref of refs) {
++    const idx = ref.lastIndexOf(":");
++    if (idx < 1) {
++      process.stderr.write(`malformed reference: ${ref}\n`);
++      process.exit(2);
++    }
++    files.add(ref.slice(0, idx));
++    names.push(ref.slice(idx + 1));
++  }
++  return { files: [...files], names };
++}
++
++const { files, names } = parseReferences(process.argv.slice(2));
++const args = [...files];
++for (const name of names) {
++  args.push("--name", name);
++}
++
++const result = spawnSync("npx", ["cucumber-js", ...args, "--tags", "not @captain and not @shipwright"], { stdio: "inherit" });
++process.exit(result.status === null ? 1 : result.status);
+diff --git a/src/tide.js b/src/tide.js
+index c3c80cc..e400613 100644
+--- a/src/tide.js
++++ b/src/tide.js
+@@ -1,3 +1,4 @@
++/** @planks("I ask for the next high tide after {string}") */
+ function nextHighTide(tides, after) {
+   const next = tides.find((t) => new Date(t.time) > new Date(after) && t.type === "high");
+   if (!next) throw new Error("no upcoming high tide in data");

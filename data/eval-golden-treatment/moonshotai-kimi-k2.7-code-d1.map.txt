@@ -1,0 +1,23 @@
+# banked: 2026-07-23T21:07:55Z
+# verdict: PENDING
+# leg: {  "name": "moonshotai-kimi-k2.7-code-d1",  "model": "moonshotai/kimi-k2.7-code",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/eval-golden-treatment/moonshotai-kimi-k2.7-code-d1/sim",  "timeout_s": 900,  "skills": [    "experiments/yoink-settle/skills/shipshape",    "experiments/yoink-settle/skills/shipwright",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== moonshotai-kimi-k2.7-code-d1.session.jsonl ===
+  turns=12  wall=122.2s  in=95050  out=7523  cache_read=171136  cost=$0.1335
+  role reads: shipshape@t0 -> shipwright@t0 -> shipshape@t1 -> shipwright@t9
+  roles loaded: shipshape, shipwright
+  ~ repeated tool signature at turns [1, 6] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    1246/331      512 $0.0023  read, read, read
+    t1   24544/165      512 $0.0208  read, read
+    t2       0/0          0 $0.0000  -
+    t3    9873/239     1472 $0.0092  read
+    t4    1996/618    11328 $0.0058  bash
+    t5   16479/557    13312 $0.0177  bash
+    t6   30412/758        0 $0.0278  bash
+    t7    3011/293    30400 $0.0084  read, read, read, read, read, read
+    t8    6347/296    33408 $0.0117  bash
+    t9     713/391    39744 $0.0084  read
+    t10    429/3875   40448 $0.0214  bash
+    t11      0/0          0 $0.0000  -

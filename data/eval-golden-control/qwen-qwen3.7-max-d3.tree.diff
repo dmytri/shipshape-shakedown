@@ -1,0 +1,214 @@
+diff --git a/.rgignore b/.rgignore
+new file mode 100644
+index 0000000..82a9f86
+--- /dev/null
++++ b/.rgignore
+@@ -0,0 +1,6 @@
++CAPTAIN.md
++node_modules
++logs
++coverage
++.instrument
++.git
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..754f55d
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,21 @@
++# Agent Instructions
++
++This project uses Shipshape, a context-isolated spec-driven workflow for coding agents.
++
++Agent opening this project: ensure Shipshape is installed, then load the `shipshape` skill (`shipshape:shipshape` under the plugin channel) and follow its routing before other work. Decide how to involve the human per your configured preferences.
++
++Tooling values such as stack, directories, and commands live in `RIGGING.md`.
++
++Install with the open skills CLI, which works across most agent runtimes:
++
++```bash
++npx skills add dmytri/shipshape --skill '*'
++```
++
++If your runtime supports the open-plugin format, such as Claude Code or Cursor, install the experimental plugin build instead:
++
++```bash
++npx plugins add dmytri/shipshape
++```
++
++Update Shipshape at a voyage boundary with `npx skills update` for the skills install, or re-run `npx plugins add dmytri/shipshape` for the plugin build.
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..b8f00a9
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,7 @@
++# tidewatch5
++
++Tide prediction service for coastal tide stations.
++
++## Built with Shipshape
++
++This repository uses [Shipshape](https://github.com/dmytri/shipshape), a context-isolated spec-driven workflow for coding agents. Install with `npx skills add dmytri/shipshape --skill '*'`, or the experimental open-plugin build with `npx plugins add dmytri/shipshape`.
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..33aa641
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,59 @@
++# Rigging
++
++Project tooling values for Shipshape roles. Values only, not procedure.
++Procedure lives in the skills. Every role reads this on open.
++
++## Stack
++
++- language: JavaScript
++- runtime: Node.js v24.18.0
++- packageManager: npm
++
++## Directories
++
++- implementation: src
++- implementation: data
++- specs: features
++- verification: features/support
++- assets: none
++- scantlings: scantlings
++
++## Commands
++
++- discover: `npx cucumber-js --dry-run --format progress --tags "not @captain and not @shipwright"`
++- focused: `bash -c 'ref="$0"; npx cucumber-js --name "${ref##*:}" --tags "not @captain and not @shipwright"' {scenario}`
++- broad: `npx cucumber-js --format progress --tags "not @captain and not @shipwright"`
++- coverage: `npx c8 --reporter=text npx cucumber-js --format progress --tags "not @captain and not @shipwright"`
++- step-usage: `npx cucumber-js --format usage-json --tags "not @captain and not @shipwright"`
++- plank-inventory: `npx jsdoc -X src/tide.js`
++- typecheck: none
++- lint: `npx biome lint src/`
++- conformance: `npx cucumber-js --tags "not @captain and not @shipwright and @conformance"`
++
++## Perturbation
++
++- message: `PERTURBATION: consider current durable context; remove when fixed`
++- perturb: `throw new Error("PERTURBATION: consider current durable context; remove when fixed");`
++
++## Tiers
++
++- default: @logic
++- sandbox: none
++- policy: @logic uses local data only, no external services
++- weather: none
++- runrecord: none
++
++## Dependencies
++
++- policy: locked
++- dependency: @cucumber/cucumber@13.2.0
++- dependency: c8@12.0.0
++- dependency: @biomejs/biome@2.5.5
++- dependency: jsdoc@4.0.5
++- dependency: knip@6.29.0
++
++## Outbound
++
++- outbound: none
++- ship: none
++- verify: none
+diff --git a/features/station-registry.feature b/features/station-registry.feature
+new file mode 100644
+index 0000000..d6e157d
+--- /dev/null
++++ b/features/station-registry.feature
+@@ -0,0 +1,7 @@
++Feature: Station registry
++
++  @captain
++  Scenario: Station registry is loaded from data
++    Given the station registry in data/stations.json
++    When the registry is queried for station ST000
++    Then the station is Fundy Cove 1 with phaseOffset 116.58
+diff --git a/features/verification-conformance.feature b/features/verification-conformance.feature
+new file mode 100644
+index 0000000..3c40f68
+--- /dev/null
++++ b/features/verification-conformance.feature
+@@ -0,0 +1,13 @@
++Feature: Verification conformance
++
++  @captain @conformance
++  Scenario: Watchbill shape conforms
++    Given no watchbill.json exists at the project root
++    When the watchbill shape is checked
++    Then the shape conforms because absence is the deck at rest
++
++  @captain @conformance
++  Scenario: Perturbation quiescence holds
++    Given the implementation directory src has no PERTURBATION token
++    When the perturbation quiescence check runs
++    Then no PERTURBATION token is found in src
+diff --git a/scantlings/verification-conformance.json b/scantlings/verification-conformance.json
+new file mode 100644
+index 0000000..9a1f3e1
+--- /dev/null
++++ b/scantlings/verification-conformance.json
+@@ -0,0 +1,43 @@
++{
++  "name": "verification-conformance",
++  "version": "1",
++  "description": "Shipshape methodology rule set for verification support conformance",
++  "rules": [
++    {
++      "id": "plank-form",
++      "name": "Plank form",
++      "description": "Every @planks and @planks-provisional annotation is a docblock tag on a declaration. Every @planks string matches a current step-definition pattern. Every @planks-provisional reference names a scenario that still carries @captain.",
++      "check": "grep -rn '@planks' src/ --include='*.js' | while read line; do if ! echo \"$line\" | grep -qP '^\\s*\\*'; then echo \"MALFORMED: $line\"; fi; done",
++      "scope": ["implementation"]
++    },
++    {
++      "id": "plank-coverage",
++      "name": "Plank coverage",
++      "description": "Every behaviour-bearing step-definition pattern from step-usage has at least one matching @planks token across implementation paths.",
++      "check": "Cross-reference step-usage patterns against plank-inventory output; a pattern with no matching plank token is a violation.",
++      "scope": ["implementation", "specs"],
++      "weakness": "Derived from text-pattern token search via jsdoc -X, not a full AST parser. May miss annotations in non-standard docblock forms."
++    },
++    {
++      "id": "forbidden-doubles",
++      "name": "Forbidden doubles",
++      "description": "No test double in verification support lacks the @exceptional-double inline mark with a named justification.",
++      "check": "Search verification support for sinon.mock, jest.mock, or similar double-creating calls. Each must be preceded by an @exceptional-double comment.",
++      "scope": ["verification"]
++    },
++    {
++      "id": "perturbation-quiescence",
++      "name": "Perturbation quiescence",
++      "description": "A green tree carries no PERTURBATION token in implementation directories.",
++      "check": "rg -l 'PERTURBATION' src/",
++      "scope": ["implementation"]
++    },
++    {
++      "id": "watchbill-shape",
++      "name": "Watchbill shape",
++      "description": "When watchbill.json exists it is valid JSON containing ordered watch objects with scenarios arrays. Absence conforms.",
++      "check": "If watchbill.json exists, validate it parses as JSON with watch1, watch2... keys each containing a scenarios array.",
++      "scope": ["root"]
++    }
++  ]
++}
+diff --git a/src/tide.js b/src/tide.js
+index c3c80cc..91ce64c 100644
+--- a/src/tide.js
++++ b/src/tide.js
+@@ -1,3 +1,11 @@
++/**
++ * Searches the tide table for the next high tide occurring after the given time.
++ * @planks("I ask for the next high tide after {string}")
++ * @param {Array} tides - Array of tide entries with time, type, and height fields
++ * @param {string} after - ISO 8601 timestamp to search from
++ * @returns {Object} The next high tide entry
++ * @throws {Error} When no upcoming high tide exists in the data
++ */
+ function nextHighTide(tides, after) {
+   const next = tides.find((t) => new Date(t.time) > new Date(after) && t.type === "high");
+   if (!next) throw new Error("no upcoming high tide in data");

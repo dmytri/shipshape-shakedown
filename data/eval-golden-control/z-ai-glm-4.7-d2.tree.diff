@@ -1,0 +1,206 @@
+diff --git a/.gitignore b/.gitignore
+index 41ab7aa..6bb2196 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -1,3 +1,5 @@
+ node_modules/
+ logs/
+ coverage/
++logs/weather.json
++logs/runrecord.json
+diff --git a/.rgignore b/.rgignore
+new file mode 100644
+index 0000000..97c120d
+--- /dev/null
++++ b/.rgignore
+@@ -0,0 +1,4 @@
++CAPTAIN.md
++node_modules/
++logs/
++coverage/
+\ No newline at end of file
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..329a156
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,21 @@
++# Agent Instructions
++
++This project uses Shipshape, a context-isolated spec-driven workflow for coding agents.
++
++Agent opening this project: ensure Shipshape is installed, then load the `shipshape` skill (`shipshape:shipshape` under the plugin channel) and follow its routing before other work. Decide how to involve the human per your configured preferences.
++
++Tooling values such as stack, directories, and commands live in `RIGGING.md`.
++
++Install with the open skills CLI, which works across most agent runtimes:
++
++```bash
++npx skills add dmytri/shipshape --skill '*'
++```
++
++If your runtime supports the open-plugin format, such as Claude Code or Cursor, install the experimental plugin build instead:
++
++```bash
++npx plugins add dmytri/shipshape
++```
++
++Update Shipshape at a voyage boundary with `npx skills update` for the skills install, or re-run `npx plugins add dmytri/shipshape` for the plugin build.
+\ No newline at end of file
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..86ce50f
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,7 @@
++# TideWatch5
++
++Tide prediction service.
++
++## Built with Shipshape
++
++This repository uses [Shipshape](https://github.com/dmytri/shipshape), a context-isolated spec-driven workflow for coding agents. Install with `npx skills add dmytri/shipshape --skill '*'`, or the experimental open-plugin build with `npx plugins add dmytri/shipshape`.
+\ No newline at end of file
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..6c06609
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,54 @@
++# Rigging
++
++Project tooling values for Shipshape roles. Values only, not procedure.
++Procedure lives in the skills. Every role reads this on open.
++
++## Stack
++
++- language: JavaScript
++- runtime: node
++- packageManager: npm
++
++## Directories
++
++- implementation: src
++- specs: features
++- verification: features/support
++- assets: data
++- scantlings: none
++
++## Commands
++
++- discover: `npx cucumber-js --dry-run`
++- focused: `npx cucumber-js --name "{scenario}"`
++- broad: `npx cucumber-js --tags "not @captain and not @shipwright"`
++- coverage: `npx c8 --include="src/**" --include="features/support/**" npx cucumber-js --tags "not @captain and not @shipwright"`
++- step-usage: `npx cucumber-js --format usage-json --tags "not @captain and not @shipwright"`
++- plank-inventory: `npx jsdoc -X src/**/*.js features/support/**/*.js`
++- typecheck: none
++- lint: `npx @biomejs/biome lint src/ features/`
++- conformance: none
++
++## Perturbation
++
++- message: `PERTURBATION: consider current durable context; remove when fixed`
++- perturb: `throw new Error("PERTURBATION: consider current durable context; remove when fixed");`
++
++## Tiers
++
++- default: @logic
++- sandbox: none
++- policy: default
++- weather: none
++- runrecord: logs/runrecord.json
++
++## Dependencies
++
++- policy: locked
++- dependency: @cucumber/cucumber@13.2.0
++
++## Outbound
++
++- outbound: none
++- ship: none
++- verify: none
+\ No newline at end of file
+diff --git a/features/methodology-conformance.feature b/features/methodology-conformance.feature
+new file mode 100644
+index 0000000..b38fdc0
+--- /dev/null
++++ b/features/methodology-conformance.feature
+@@ -0,0 +1,38 @@
++Feature: Methodology conformance
++
++  Scenarios in this feature verify the project follows Shipshape methodology rules. These are @conformance scenarios attesting the project's own method, not product behaviour.
++
++  @captain @conformance
++  Scenario: Watchbill shape conformance
++    When I check watchbill shape conformance
++    Then the watchbill conforms to the required schema
++
++  @captain @conformance
++  Scenario: Perturbation quiescence
++    When I scan implementation for PERTURBATION tokens
++    Then no standing PERTURBATION tokens are found
++
++  @captain @conformance
++  Scenario: Stale plank join
++    When I check every @planks annotation matches a current step definition pattern
++    Then no stale planks are found
++
++  @captain @conformance
++  Scenario: Plank form
++    When I verify every @planks token is a docblock tag on a declaration
++    Then all planks are properly formed
++
++  @captain @conformance
++  Scenario: Verification lint conformance
++    When I lint verification support with biome
++    Then no verification agreement violations are found
++
++  @captain @conformance
++  Scenario: Lint configuration
++    When I check the project lint configuration
++    Then lint is configured for the project stack
++
++  @captain @conformance
++  Scenario: Feature lint configuration
++    When I check the project feature lint configuration
++    Then feature lint is configured for Gherkin files
+\ No newline at end of file
+diff --git a/features/quality-gates.feature b/features/quality-gates.feature
+new file mode 100644
+index 0000000..325d908
+--- /dev/null
++++ b/features/quality-gates.feature
+@@ -0,0 +1,18 @@
++Feature: Quality gates
++
++  Scenarios in this feature verify the project has configured quality gates for code quality and maintainability. These are @conformance scenarios attesting the project's own method, not product behaviour.
++
++  @captain @conformance
++  Scenario: Lint is configured
++    When I check the project for lint configuration
++    Then a lint tool is configured for the stack
++
++  @captain @conformance
++  Scenario: Lint passes on implementation
++    When I lint implementation files
++    Then no lint errors are reported
++
++  @captain @conformance
++  Scenario: Lint passes on verification
++    When I lint verification files
++    Then no lint errors are reported
+\ No newline at end of file
+diff --git a/src/tide.js b/src/tide.js
+index c3c80cc..a97c697 100644
+--- a/src/tide.js
++++ b/src/tide.js
+@@ -1,3 +1,7 @@
++/**
++ * Find the next high tide after a given time.
++ * @planks("I ask for the next high tide after {string}")
++ */
+ function nextHighTide(tides, after) {
+   const next = tides.find((t) => new Date(t.time) > new Date(after) && t.type === "high");
+   if (!next) throw new Error("no upcoming high tide in data");
