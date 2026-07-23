@@ -108,12 +108,19 @@ echo "$EXIT" > "$OUT/exit"
 SF="$(find "$SESSDIR" -name '*.jsonl' | sort | tail -1 || true)"
 if [ -n "$SF" ]; then cp "$SF" "$OUT/session.jsonl"; fi
 
-# Tree facts: what the leg did to the sim (the affordance evidence).
+# Tree facts: what the leg did to the sim (the affordance evidence). Keep the
+# FULL patch, not just the stat — evaluating the QUALITY of the @planks/@captain
+# artifacts a model produced needs the real content, and the workspace itself is
+# scratch that dies with the VM, so the patch is the only durable copy.
 git -C "$WORKSPACE" add -A >/dev/null 2>&1 || true
 git -C "$WORKSPACE" status --porcelain > "$OUT/tree.status" 2>/dev/null || true
 git -C "$WORKSPACE" diff --cached --stat > "$OUT/tree.diffstat" 2>/dev/null || true
+git -C "$WORKSPACE" -c core.pager=cat diff --cached > "$OUT/tree.diff" 2>/dev/null || true
 git -C "$WORKSPACE" reset -q >/dev/null 2>&1 || true
 git -C "$WORKSPACE" log --oneline -10 > "$OUT/git.log" 2>/dev/null || true
+# The agent's own rendered stdout (final report + narration) kept verbatim; the
+# session JSONL is the structured transcript, this is the human-readable form.
+# Both are banked so a later evaluator has maximum detail.
 
 if [ "$EXIT" -eq 124 ]; then
   echo "eval-leg[$NAME]: TIMED OUT after ${TIMEOUT_S}s (exit 124)" >&2
