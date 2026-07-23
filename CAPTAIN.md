@@ -81,8 +81,26 @@ HARNESS/DISPATCH, not doctrine: fixing the task's VM-path leak and framing the s
 ENTIRE codebase, the only project that exists" took the sample 1/9 -> 4/9 clean (data/
 eval-clean-control/), attributed to framing (control never escaped). Prefer harness/prompt
 levers over doctrine edits (avoids over-prescription; Candidate A's doctrine edit was NULL).
-Containment is fixed + enforced (eval-leg.sh escape detector; bwrap available for hard
-containment later). Repeat draws are the DEFAULT now (single-draw verdicts overstated).
+Repeat draws are the DEFAULT now (single-draw verdicts overstated).
+
+**HARNESS HARDENED (dk-approved, 2026-07-23), and it was owed: escaped legs damaged the repo
+TWICE — one clobbered the source fixture (broke every scaffold), one clobbered AGENTS.md (the
+operator manual) by fitting-out the cockpit itself.** Now every pi leg runs under BWRAP with
+`--ro-bind / /` (whole VM read-only) + writable binds ONLY for the sim/fake-HOME/capture dir
+(`bin/eval-leg.sh`, commit 2c37d35). A wandering leg can READ but can NEVER WRITE the cockpit,
+fixture, doctrine, or a consumer repo — the escape-DAMAGE class is closed at the OS level
+(escape detection stays, for data-VALIDITY). Also fixed: disk exhaustion (shared node_modules
+via hardlink copy, `scaffold.sh` EVAL_SHARED_NM) and a fixture-integrity guard in eval-batch.
+Validated: a deepseek Shipwright leg ran 47 turns contained, CLEARED, repo 0 changes.
+
+**RESUME POINT: the workhorse x10 baseline is still OWED** — every attempt was disrupted by the
+now-fixed harness bugs (disk, then fixture pollution, then the AGENTS.md clobber). It is now
+SAFE to run contained. deepseek was tracking ~5/6 clean before disruption; devstral's clean
+n=10 was never obtained. Next: re-run `bin/eval-batch.sh --wave eval-workhorse-x10 --models
+data/eval-batches/sample.txt ... --draws 10` (now bwrap-contained), get the honest deepseek +
+devstral clear-RATES, then test the pre-fit-the-sim lever for the Class-2 (lost-in-fitting-out)
+misses. Two miss classes diagnosed: Class-1 off-ramp (judgment floor, Candidate A NULL'd it),
+Class-2 lost-in-fitting-out (ceremony/budget; pre-fit lever, untested).
 
 **CANDIDATE A (Shipwright no-gap off-ramp -> seam-ledger report gate): probed, NULL, NOT
 shipped (2026-07-23).** Full account data/eval-candidateA/. v1 (seam ledger) bought structural
