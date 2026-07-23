@@ -1,0 +1,38 @@
+# banked: 2026-07-23T19:10:50Z
+# verdict: PENDING
+# leg: {  "name": "deepseek-deepseek-v4-flash",  "model": "deepseek/deepseek-v4-flash",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/eval-yoink-central/deepseek-deepseek-v4-flash/sim",  "timeout_s": 900,  "skills": [    "experiments/yoink-central/skills/shipshape",    "experiments/yoink-central/skills/shipwright",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== deepseek-deepseek-v4-flash.session.jsonl ===
+  turns=27  wall=188.6s  in=233351  out=13024  cache_read=1166336  cost=$0.0462
+  role reads: shipshape@t0 -> shipwright@t0 -> shipshape@t1
+  roles loaded: shipshape, shipwright
+  ~ repeated tool signature at turns [1, 4, 5, 6, 7, 9, 12, 16, 18, 19, 20, 21, 22] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    2179/175        0 $0.0002  read, read
+    t1   23990/169        0 $0.0023  read, read
+    t2    9539/411    23808 $0.0014  bash, bash
+    t3   34123/836        0 $0.0034  bash
+    t4   46910/995        0 $0.0046  bash, bash, bash
+    t5   47870/519      256 $0.0046  bash, bash
+    t6    5453/499    45056 $0.0015  bash, bash, bash
+    t7   18498/2461   32768 $0.0028  bash
+    t8    4607/476    49152 $0.0014  write
+    t9    1044/304    53248 $0.0012  write
+    t10   5499/122    49152 $0.0015  bash
+    t11    260/230    54528 $0.0011  write
+    t12   1825/113    53248 $0.0012  write
+    t13    969/1115   54272 $0.0013  read
+    t14   1652/271    54784 $0.0012  edit
+    t15   3517/734    53248 $0.0015  write
+    t16    981/332    56576 $0.0012  write
+    t17   4701/348    53248 $0.0015  bash, bash
+    t18   1124/251    57344 $0.0012  bash, bash
+    t19   2185/261    57344 $0.0013  bash
+    t20   2201/204    57856 $0.0013  bash
+    t21   1416/190    59904 $0.0013  bash
+    t22   4273/211    57344 $0.0015  bash
+    t23   4674/667    57344 $0.0016  read
+    t24   1731/285    61184 $0.0014  edit
+    t25    540/172    62720 $0.0013  bash
+    t26   1590/673    61952 $0.0014  -
