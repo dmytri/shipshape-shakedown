@@ -1,0 +1,23 @@
+# The real SAIA researcher's accessible model set, tested via OpenRouter (we have
+# no SAIA cluster access; OpenRouter has EXACT matches for almost all of them).
+# eval-batch.sh reads the uncommented OpenRouter ids below. Deliverable: a
+# "which of your models drives Shipshape well" ranking (clears-the-doctrine, not
+# raw capability). Run under CONTROL doctrine (installed 0.13.64).
+#
+# NOT on OpenRouter (SAIA-only) — cannot test here, named as gaps:
+#   apertus-70b-instruct-2509, devstral-2-123b-instruct-2512, qwen3-omni-30b-a3b-instruct
+#
+# Already run in baseline (eval-shipwright-01), reuse those results, not re-run:
+#   qwen/qwen3.6-27b  -> CLEARED ;  deepseek/deepseek-v4-flash -> CLEARED
+#
+# To run now (10 of the researcher's set new to us); SAIA name in comment:
+google/gemma-4-31b-it              # gemma-4-31b-it
+z-ai/glm-4.7                       # glm-4.7  (strong agentic-coding; a fit-for-task favourite)
+meta-llama/llama-3.1-8b-instruct   # meta-llama-3.1-8b-instruct  (the floor)
+mistralai/mistral-medium-3-5       # mistral-medium-3.5-128b
+openai/gpt-oss-120b                # openai-gpt-oss-120b
+qwen/qwen3.5-122b-a10b             # qwen3.5-122b-a10b
+qwen/qwen3.5-397b-a17b             # qwen3.5-397b-a17b  (most capable of the accessible set)
+qwen/qwen3.6-35b-a3b               # qwen3.6-35b-a3b
+qwen/qwen3-30b-a3b-instruct-2507   # qwen3-30b-a3b-instruct-2507
+qwen/qwen3-coder-next              # qwen3-coder-next  (coding-tuned)
