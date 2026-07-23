@@ -21,8 +21,12 @@ wanted. Default to candidate-only unless dk says to include control. Also: run l
 PARALLEL (concurrency = leg count, both arms at once), never sequential arms; and for a
 pure bloat/token cut, report the DETERMINISTIC IEPE cost delta first (no legs needed) —
 legs only confirm affordance survived, for which one fast devstral leg per arm suffices.
-YOINK STAYS (dk, 2026-07-23): yoink is a permanent part of the doctrine direction — do
-NOT propose shelving/abandoning it, ever. The work is to make adoption REAL (a genuine
+YOINK STAYS + NO HEDGING (dk, 2026-07-23): yoink is a permanent part of the doctrine
+direction — do NOT propose shelving/abandoning it, ever. And yoink is REQUIRED, not
+optional: doctrine states it UNCONDITIONALLY — never "where available"/"if available"/
+"else the chained shell" (that negative-primes an out the models will take). The harness
+GUARANTEES availability (yoink is preinstalled in the shared toolkit, runs offline under
+bwrap), so doctrine can and must require it flat. The work is to make adoption REAL (a genuine
 retrieval-efficiency win), not to question whether to keep it. Findings so far: a concrete
 copyable example gets run ROTE/redundantly, a prose directive gets ignored, and the
 individual-read path competes — so the next moves force the discovery reads INTO the yoink
