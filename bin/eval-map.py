@@ -166,6 +166,7 @@ def analyse(session_file):
         "empty": False,
         "turns": turns,
         "n_turns": len(turns),
+        "n_tools": sum(len(t["tools"]) for t in turns),
         "wall_s": wall_clock_s(session_file),
         "tokens_in": sum(t["input"] for t in turns),
         "tokens_out": sum(t["output"] for t in turns),

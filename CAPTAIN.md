@@ -1,10 +1,14 @@
 # Captain notes - shipshape-shakedown workstream
 
 <!-- STANDING OPERATOR CONVENTION (dk, 2026-07-23): when dk asks for "results", that
-means the METRICS TABLE — per-leg invocations, tool calls, tokens (in/out/cache),
-OpenRouter price, wall-clock latency, and verdict, WITH totals. Not a prose summary.
-Prose is for findings; "results" means the numbers. Fold every leg with bin/eval-map.py
-(+ a tool-call count) and render the table. -->
+means the METRICS TABLE — per-leg invocations, tool calls, tokens, OpenRouter price,
+wall-clock latency, and verdict, WITH totals. Not a prose summary. Prose is for findings;
+"results" means the numbers. `bin/eval-table.py <wave>` is the canonical renderer.
+ALWAYS show token USAGE, not only cached (dk, 2026-07-23): report FRESH tok_in AND the
+cache HIT-RATE (hit%), because a model whose provider caches poorly bills far more fresh
+input for the same context — deepseek-v4-flash runs ~58% cached vs devstral ~96%, which
+is the whole reason deepseek's tok_in/cost look ~20x higher (provider caching, not work).
+eval-table.py + eval-map.py (n_tools) carry these columns; keep them. -->
 
 <!-- ITERATION MODE (dk, 2026-07-23): default eval run is 1 DRAW each of the two
 WORKHORSES (deepseek-v4-flash + devstral-2512) — cheap single-draw exploration while

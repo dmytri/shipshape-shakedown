@@ -90,25 +90,41 @@ def main(argv):
         a = fold(sess)
         p, c = artifacts(sess.replace(".session.jsonl", ".tree.diff"))
         cl = p > 0 and c > 0
-        rows.append((model, draw, cl, a["n_turns"], a.get("wall_s", 0), a["cost"], p, c))
+        ti = a.get("tokens_in", 0)
+        ca = a.get("cache_read", 0)
+        hit = (100 * ca / (ti + ca)) if (ti + ca) else 0
+        rows.append((model, draw, cl, a["n_turns"], a.get("n_tools", 0),
+                     ti, a.get("tokens_out", 0), ca, hit,
+                     a.get("wall_s", 0), a["cost"], p, c))
 
     if not rows:
         print("  (no banked legs yet)")
         return 0
-    print(f"  {'model':<28}{'draw':>4}{'verdict':>9}{'inv':>5}{'wall':>7}{'cost$':>8}{'plank':>6}{'@cap':>5}")
-    for m, dr, cl, inv, wall, cost, p, c in rows:
+    # FULL metric row (dk standing rule: report token USAGE, not only cached — show
+    # fresh input AND cache hit-rate, because a model whose provider caches poorly
+    # bills far more fresh input for the same context. cost$ is real OpenRouter spend).
+    print(f"  {'model':<26}{'draw':>4}{'verd':>6}{'inv':>4}{'tools':>6}"
+          f"{'tok_in':>9}{'tok_out':>8}{'cache':>10}{'hit%':>5}{'wall':>6}{'cost$':>8}{'plnk':>5}{'@cap':>5}")
+    T = dict(inv=0, tools=0, ti=0, to=0, ca=0, cost=0.0)
+    for m, dr, cl, inv, tools, ti, to, ca, hit, wall, cost, p, c in rows:
         v = "CLEAR" if cl else "no"
-        print(f"  {m:<28}{dr:>4}{v:>9}{inv:>5}{wall:>7.0f}{cost:>8.3f}{p:>6}{c:>5}")
+        print(f"  {m:<26}{dr:>4}{v:>6}{inv:>4}{tools:>6}"
+              f"{ti:>9,}{to:>8,}{ca:>10,}{hit:>4.0f}%{wall:>5.0f}s{cost:>8.4f}{p:>5}{c:>5}")
+        T['inv'] += inv; T['tools'] += tools; T['ti'] += ti; T['to'] += to
+        T['ca'] += ca; T['cost'] += cost
+    ht = (100 * T['ca'] / (T['ti'] + T['ca'])) if (T['ti'] + T['ca']) else 0
+    print(f"  {'TOTAL':<26}{'':>4}{'':>6}{T['inv']:>4}{T['tools']:>6}"
+          f"{T['ti']:>9,}{T['to']:>8,}{T['ca']:>10,}{ht:>4.0f}%{'':>6}{T['cost']:>8.4f}")
 
     from collections import defaultdict
     by = defaultdict(list)
-    for m, dr, cl, *_ , in [(r[0], r[1], r[2]) for r in rows]:
-        by[m].append(cl)
-    tot = sum(r[5] for r in rows)
+    for r in rows:
+        by[r[0]].append(r[2])
     print("\n  clear-rate:")
     for m, cs in by.items():
-        print(f"    {m:<28}{sum(cs)}/{len(cs)}")
-    print(f"  total cost: ${tot:.2f} over {len(rows)} legs")
+        print(f"    {m:<26}{sum(cs)}/{len(cs)}")
+    print(f"  total cost: ${T['cost']:.4f} over {len(rows)} legs  "
+          f"(fresh tok_in {T['ti']:,} vs cache {T['ca']:,} = {ht:.0f}% cached)")
     return 0
 
 
