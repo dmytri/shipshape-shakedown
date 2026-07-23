@@ -1,0 +1,60 @@
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..8d59502
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,53 @@
++# Rigging
++
++Project tooling values for Shipshape roles. Values only, not procedure.
++Procedure lives in the skills. Every role reads this on open.
++
++## Stack
++
++- language: Python, JavaScript
++- runtime: python3, node
++- packageManager: none
++
++## Directories
++
++- implementation: bin
++- specs: none
++- verification: none
++- assets: scenarios
++- assets: prompts
++- scantlings: none
++
++## Commands
++
++- discover: none
++- focused: none
++- broad: none
++- coverage: none
++- step-usage: none
++- plank-inventory: none
++- typecheck: python3 -m py_compile bin/*.py
++- lint: python3 -m py_compile bin/*.py
++- conformance: none
++
++## Perturbation
++
++- message: `PERTURBATION: consider current durable context; remove when fixed`
++- perturb: `raise RuntimeError("PERTURBATION: consider current durable context; remove when fixed")`
++
++## Tiers
++
++- default: @logic
++- sandbox: none
++- policy: none
++- weather: none
++- runrecord: none
++
++## Dependencies
++
++- policy: none
++- dependency: none
++
++## Outbound
++
++- outbound: none
+\ No newline at end of file

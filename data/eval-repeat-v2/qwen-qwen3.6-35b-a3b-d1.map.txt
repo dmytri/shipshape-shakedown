@@ -1,0 +1,36 @@
+# banked: 2026-07-23T10:22:53Z
+# verdict: PENDING
+# leg: {  "name": "qwen-qwen3.6-35b-a3b-d1",  "model": "qwen/qwen3.6-35b-a3b",  "provider": "openrouter",  "workspace": "/tmp/claude-1000/-home-exedev-shipshape-shakedown/3661dbff-7e2b-4f51-9805-fd28946c9fac/scratchpad/batch/eval-repeat-v2/qwen-qwen3.6-35b-a3b-d1/sim",  "timeout_s": 900,  "skills": [    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/4ee36ff0efb8/skills/shipshape",    "/home/exedev/shipshape-shakedown/experiments/no-gap-ledger/skills/shipwright"  ]}
+
+
+=== qwen-qwen3.6-35b-a3b-d1.session.jsonl ===
+  turns=25  wall=93.9s  in=863571  out=9088  cache_read=0  cost=$0.1300
+  role reads: shipshape@t0 -> shipwright@t0
+  roles loaded: shipshape, shipwright
+  ~ repeated tool signature at turns [3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 20, 21, 22, 23] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    5365/222        0 $0.0010  read, read, read
+    t1   27862/216        0 $0.0041  bash
+    t2   28464/407        0 $0.0044  bash, read, read
+    t3   29053/666        0 $0.0047  read, read, read, read, read, read
+    t4   30621/147        0 $0.0044  bash
+    t5   30810/326        0 $0.0046  bash
+    t6   31180/192        0 $0.0046  bash
+    t7   31435/308        0 $0.0047  bash, bash
+    t8   32786/289        0 $0.0049  bash
+    t9   33163/169        0 $0.0048  bash
+    t10  33387/171        0 $0.0048  bash
+    t11  33796/1179       0 $0.0059  bash, bash
+    t12  35522/160        0 $0.0051  bash
+    t13  35737/258        0 $0.0053  bash, bash
+    t14  37339/1160       0 $0.0064  write, edit
+    t15  38704/289        0 $0.0057  edit
+    t16  39100/596        0 $0.0061  write, edit
+    t17  39911/120        0 $0.0057  read
+    t18  40151/278        0 $0.0059  edit
+    t19  40537/175        0 $0.0059  bash
+    t20  40950/369        0 $0.0061  bash
+    t21  41537/145        0 $0.0060  bash
+    t22  41715/252        0 $0.0061  read, bash
+    t23  42138/152        0 $0.0061  bash
+    t24  42308/842        0 $0.0068  -

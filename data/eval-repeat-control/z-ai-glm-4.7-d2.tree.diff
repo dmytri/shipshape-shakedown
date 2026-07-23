@@ -1,0 +1,118 @@
+diff --git a/.rgignore b/.rgignore
+new file mode 100644
+index 0000000..1295120
+--- /dev/null
++++ b/.rgignore
+@@ -0,0 +1 @@
++CAPTAIN.md
+\ No newline at end of file
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..329a156
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,21 @@
++# Agent Instructions
++
++This project uses Shipshape, a context-isolated spec-driven workflow for coding agents.
++
++Agent opening this project: ensure Shipshape is installed, then load the `shipshape` skill (`shipshape:shipshape` under the plugin channel) and follow its routing before other work. Decide how to involve the human per your configured preferences.
++
++Tooling values such as stack, directories, and commands live in `RIGGING.md`.
++
++Install with the open skills CLI, which works across most agent runtimes:
++
++```bash
++npx skills add dmytri/shipshape --skill '*'
++```
++
++If your runtime supports the open-plugin format, such as Claude Code or Cursor, install the experimental plugin build instead:
++
++```bash
++npx plugins add dmytri/shipshape
++```
++
++Update Shipshape at a voyage boundary with `npx skills update` for the skills install, or re-run `npx plugins add dmytri/shipshape` for the plugin build.
+\ No newline at end of file
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..6fbb22d
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,3 @@
++## Built with Shipshape
++
++This repository uses [Shipshape](https://github.com/dmytri/shipshape), a context-isolated spec-driven workflow for coding agents. Install with `npx skills add dmytri/shipshape --skill '*'`, or the experimental open-plugin build with `npx plugins add dmytri/shipshape`.
+\ No newline at end of file
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..56d2f64
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,54 @@
++# Rigging
++
++Project tooling values for Shipshape roles. Values only, not procedure.
++Procedure lives in the skills. Every role reads this on open.
++
++## Stack
++
++- language: JavaScript
++- runtime: Node.js
++- packageManager: npm
++
++## Directories
++
++- implementation: src
++- specs: features
++- verification: features/support
++- assets: data
++- scantlings: none
++
++## Commands
++
++- discover: `npx cucumber-js --dry-run`
++- focused: `npx cucumber-js {scenario}`
++- broad: `npx cucumber-js`
++- coverage: none
++- step-usage: `npx cucumber-js --format usage-json`
++- plank-inventory: none
++- typecheck: none
++- lint: none
++- conformance: none
++
++## Perturbation
++
++- message: PERTURBATION: consider current durable context; remove when fixed
++- perturb: throw new Error("PERTURBATION: consider current durable context; remove when fixed");
++
++## Tiers
++
++- default: @logic
++- sandbox: none
++- policy: none
++- weather: none
++- runrecord: none
++
++## Dependencies
++
++- policy: locked
++- dependency: @cucumber/cucumber
++
++## Outbound
++
++- outbound: none
++- ship: none
++- verify: none
+\ No newline at end of file
+diff --git a/src/tide.js b/src/tide.js
+index c3c80cc..dbe02d5 100644
+--- a/src/tide.js
++++ b/src/tide.js
+@@ -1,3 +1,6 @@
++/**
++ * @planks("I ask for the next high tide after {string}")
++ */
+ function nextHighTide(tides, after) {
+   const next = tides.find((t) => new Date(t.time) > new Date(after) && t.type === "high");
+   if (!next) throw new Error("no upcoming high tide in data");

@@ -1,0 +1,33 @@
+# banked: 2026-07-23T10:26:15Z
+# verdict: PENDING
+# leg: {  "name": "qwen-qwen3.6-35b-a3b-d3",  "model": "qwen/qwen3.6-35b-a3b",  "provider": "openrouter",  "workspace": "/tmp/claude-1000/-home-exedev-shipshape-shakedown/3661dbff-7e2b-4f51-9805-fd28946c9fac/scratchpad/batch/eval-repeat-control/qwen-qwen3.6-35b-a3b-d3/sim",  "timeout_s": 900,  "skills": [    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/4ee36ff0efb8/skills/shipshape",    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/4ee36ff0efb8/skills/shipwright"  ]}
+
+
+=== qwen-qwen3.6-35b-a3b-d3.session.jsonl ===
+  turns=22  wall=121.0s  in=986497  out=21645  cache_read=0  cost=$0.1598
+  role reads: shipwright@t0 -> shipshape@t1
+  roles loaded: shipshape, shipwright
+  ~ repeated tool signature at turns [1, 5, 6, 7, 8, 9, 10, 15, 19, 20] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    5377/140        0 $0.0009  read, read
+    t1   16774/212        0 $0.0026  read, bash
+    t2   28144/519        0 $0.0045  bash, bash, bash, bash
+    t3   28861/660        0 $0.0047  read, read, read, read, read, read
+    t4   37092/328        0 $0.0055  bash, bash
+    t5   37553/688        0 $0.0059  bash, bash
+    t6   38572/2259       0 $0.0077  bash, bash
+    t7   40906/156        0 $0.0059  bash
+    t8   41397/417        0 $0.0062  bash, bash
+    t9   42510/268        0 $0.0062  bash, bash
+    t10  44146/1121       0 $0.0073  bash, bash
+    t11  45435/5725       0 $0.0121  write, write, write
+    t12  51456/4208       0 $0.0114  bash
+    t13  55682/619        0 $0.0084  write, write
+    t14  56506/909        0 $0.0088  edit
+    t15  57524/246        0 $0.0083  edit
+    t16  57877/519        0 $0.0086  write
+    t17  58502/572        0 $0.0088  edit
+    t18  59181/391        0 $0.0087  write, bash
+    t19  60181/266        0 $0.0087  bash
+    t20  60783/571        0 $0.0091  bash, read, read
+    t21  62038/851        0 $0.0095  -

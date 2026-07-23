@@ -60,6 +60,17 @@ models; over-routing across models => doctrine cause; clean => one-off. Connects
 over-opinionation item above (over-routing a trivial change through verification machinery). Do
 NOT fix doctrine without the probe + dk word.
 
+**CANDIDATE A (Shipwright no-gap off-ramp -> seam-ledger report gate): probed, NULL, NOT
+shipped (2026-07-23).** Full account data/eval-candidateA/. v1 (seam ledger) bought structural
+compliance but the off-ramp survived at seam granularity. v2 (behaviour-level ledger) forces
+behaviour enumeration (reproducible) but on 3 draws/model/arm gave 1/9 control vs 2/9 treatment
+— a one-leg difference, NULL by the 0.13.50 rule. The off-ramp is substantially a JUDGMENT floor
+(the ledger compels enumeration, not the gap-vs-covered call). ~/shipshape untouched. Two
+survivors: (1) the model-agnostic off-ramp finding stands; (2) the METHOD lesson — single-draw
+"CLEARED" verdicts OVERSTATE (qwen3.6-35b clears 1/3, not reliably); the 5/14 baseline/researcher
+tables and the best/fastest/cheapest ranking are single-draw and owe repeat-draw clear-RATES
+before being handed to the real consumer. `eval-batch.sh --draws N` is the tool; see AGENTS.md.
+
 <!-- ---------------------------------------------------------------------- -->
 ## >>> PICKUP STATE, 2026-07-22 close (post-0.13.64-pilot). SUPERSEDED by the eval note above. <<<
 

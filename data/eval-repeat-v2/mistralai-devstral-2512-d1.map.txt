@@ -1,0 +1,42 @@
+# banked: 2026-07-23T10:18:46Z
+# verdict: PENDING
+# leg: {  "name": "mistralai-devstral-2512-d1",  "model": "mistralai/devstral-2512",  "provider": "openrouter",  "workspace": "/tmp/claude-1000/-home-exedev-shipshape-shakedown/3661dbff-7e2b-4f51-9805-fd28946c9fac/scratchpad/batch/eval-repeat-v2/mistralai-devstral-2512-d1/sim",  "timeout_s": 900,  "skills": [    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/4ee36ff0efb8/skills/shipshape",    "/home/exedev/shipshape-shakedown/experiments/no-gap-ledger/skills/shipwright"  ]}
+
+
+=== mistralai-devstral-2512-d1.session.jsonl ===
+  turns=31  wall=201.6s  in=34144  out=4720  cache_read=1085824  cost=$0.0665
+  role reads: shipwright@t0 -> shipshape@t1
+  roles loaded: shipshape, shipwright
+  ~ repeated tool signature at turns [2, 4, 5, 6, 7, 9, 12, 13, 15, 16, 17, 19, 22, 24, 25] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    1089/57      3968 $0.0007  read
+    t1   10620/56      5104 $0.0046  read
+    t2   10839/54     15776 $0.0051  read
+    t3    8150/107    26656 $0.0045  bash
+    t4     430/124    34912 $0.0018  bash
+    t5      18/104    35456 $0.0016  bash
+    t6      24/134    35568 $0.0017  bash
+    t7     227/102    35712 $0.0017  bash
+    t8      16/100    36032 $0.0016  read
+    t9      76/90     36144 $0.0017  read
+    t10    171/109    36304 $0.0017  bash
+    t11     24/92     36576 $0.0017  read
+    t12    222/100    36688 $0.0018  read
+    t13     72/98     37008 $0.0017  read
+    t14    178/124    37168 $0.0018  bash
+    t15     22/279    37456 $0.0021  bash
+    t16     31/107    37744 $0.0017  bash
+    t17     45/294    37872 $0.0021  bash
+    t18     47/348    38208 $0.0022  write
+    t19    104/396    38592 $0.0024  write
+    t20     97/100    39088 $0.0018  read
+    t21     99/197    39280 $0.0020  write
+    t22     98/106    39568 $0.0018  write
+    t23    102/125    39760 $0.0019  bash
+    t24    355/122    39984 $0.0020  bash
+    t25    652/134    40448 $0.0021  bash
+    t26     13/268    41232 $0.0022  edit
+    t27    102/109    41504 $0.0019  bash
+    t28     43/300    41712 $0.0023  read
+    t29    109/103    42048 $0.0019  bash
+    t30     69/281    42256 $0.0023  -

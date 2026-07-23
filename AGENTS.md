@@ -105,6 +105,13 @@ acts over a scaffolded sim; the run is captured raw and folded deterministically
 - Batches are named model manifests (baseline/medium/premium); a batch is just a
   model list fed to the same atom. Baseline (2026-07-23): qwen3.6-27b,
   deepseek-v4-flash, devstral-2512, minimax-m2.7 - see data/eval-shipwright-01/.
+- **REPEAT DRAWS for any ship-or-recommend decision (learned 2026-07-23, eval-candidateA).**
+  A single draw is EXPLORATION only. A live agent's clear/flail verdict is a function of
+  WHICH draw you look at - the same 0.13.50 lesson applied to affordance: qwen3.6-35b-a3b,
+  crisply "CLEARED" at n=1, clears only 1/3 on repeat. `eval-batch.sh --draws N` runs N per
+  model per arm; compare clear-RATES, and honour "a difference of one leg is not a result."
+  The 5/14 single-draw baseline/researcher tables are directionally suggestive but NOT
+  earned until re-run with rates.
 
 **Iterating on candidate doctrine WITHOUT polluting real doctrine commits (dk asked,
 2026-07-23; standing rule).** Three separate places, and only one ever takes a
@@ -169,3 +176,21 @@ Two riders, both learned the same day:
   runs.log count).
 - Findings > green runs. A shakedown that only confirms is a weak shakedown; probe
   the seams that changed.
+
+---
+
+## Built with Shipshape
+
+This repository uses [Shipshape](https://github.com/dmytri/shipshape), a context-isolated spec-driven workflow for coding agents.
+
+Install with:
+
+```bash
+npx skills add dmytri/shipshape --skill '*'
+```
+
+Or the experimental open-plugin build:
+
+```bash
+npx plugins add dmytri/shipshape
+```
