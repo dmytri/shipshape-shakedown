@@ -35,6 +35,17 @@ arm used so far), are the open questions before a SAIA-matched batch. Medium/pre
 batches (larger open-weight, scale-within-family qwen curve, a Claude calibration row)
 are designed but not yet run.
 
+**OPEN, for a detailed rethink when there's a moment (dk, 2026-07-23): is some doctrine too
+OPINIONATED / project-specific — things tried for a specific project that hardened into general
+doctrine?** Named example: verification nudging toward parallelism. OK to keep where genuinely
+beneficial, but owes a deliberate audit separating general doctrine from project-preference that
+should be left to projects. Two anchors already in the record: (1) the 0.13.64 concurrency-conflation
+fix (resource-safety vs correctness-safety; jolly's real dmesg OOM from over-parallelism) is one
+instance where a parallelism nudge already caused consumer harm; (2) this connects to the "prompt
+clearer, not harder" watchword — over-prescription is a form of "harder." The eval instrument is a
+candidate TOOL for the audit: an over-opinionated section may show as cost-without-affordance (IEPE)
+or as text that helps no model/project. NOT to be actioned without the dedicated rethink.
+
 <!-- ---------------------------------------------------------------------- -->
 ## >>> PICKUP STATE, 2026-07-22 close (post-0.13.64-pilot). SUPERSEDED by the eval note above. <<<
 
