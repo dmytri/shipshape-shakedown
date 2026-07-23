@@ -15,7 +15,7 @@
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")/.." && pwd)"
 SCRATCH="${EVAL_SCRATCH:-$(pwd)/.eval-scratch}"
-WAVE=""; MODELS_FILE=""; TASK=""; CONC=4; TIMEOUT_S=900; INLINE=""
+WAVE=""; MODELS_FILE=""; TASK=""; CONC=4; TIMEOUT_S=900; INLINE=""; DRAWS=1
 SKILLS=()
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -25,6 +25,7 @@ while [ $# -gt 0 ]; do
     --task) TASK="$2"; shift 2;;
     --skill) SKILLS+=("$2"); shift 2;;
     --concurrency) CONC="$2"; shift 2;;
+    --draws) DRAWS="$2"; shift 2;;
     --timeout-s) TIMEOUT_S="$2"; shift 2;;
     --scratch) SCRATCH="$2"; shift 2;;
     *) echo "eval-batch.sh: unknown arg '$1'" >&2; exit 2;;
@@ -51,8 +52,9 @@ SKILL_FLAGS=(); for s in "${SKILLS[@]}"; do SKILL_FLAGS+=(--skill "$s"); done
 echo "eval-batch[$WAVE]: ${#MODELS[@]} models, concurrency $CONC"
 
 run_one() {
-  local model="$1"
+  local model="$1" draw="${2:-1}"
   local name; name="$(echo "$model" | tr '/:' '--')"
+  [ "$DRAWS" -gt 1 ] && name="${name}-d${draw}"
   local base="$SCRATCH/$WAVE/$name"
   local ws="$base/sim" out="$base/out"
   rm -rf "$base"; mkdir -p "$base"
@@ -71,12 +73,15 @@ run_one() {
   fi
 }
 
-# Bounded-concurrency scheduler.
+# Bounded-concurrency scheduler over (model x draw).
+echo "eval-batch[$WAVE]: draws=$DRAWS"
 running=0
 for model in "${MODELS[@]}"; do
-  run_one "$model" &
-  running=$((running+1))
-  if [ "$running" -ge "$CONC" ]; then wait -n; running=$((running-1)); fi
+  for draw in $(seq 1 "$DRAWS"); do
+    run_one "$model" "$draw" &
+    running=$((running+1))
+    if [ "$running" -ge "$CONC" ]; then wait -n; running=$((running-1)); fi
+  done
 done
 wait
 echo "eval-batch[$WAVE]: complete. Banked under data/$WAVE/ ; fold: bin/eval-map.py data/$WAVE/*.session.jsonl"
