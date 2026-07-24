@@ -5,16 +5,24 @@ Reusable operator prompts + decision rules distilled from the 28/29 TodoMVC pilo
 operator is the main session loop; each voyage it hands ONE intent to Captain via
 `eval-voyage.sh --captain-task <file>`, then grades out-of-band with `oracle-grade.sh`.
 
-Two hard rules that hold for EVERY intent:
+Three hard rules that hold for EVERY intent:
+- **Address the role, give clear intent, and TRUST THE DOCTRINE.** Do not re-prime or
+  re-phrase Shipshape in the intent — no "read the Articles and follow them," no "author the
+  durable specs and the watchbill, stop after, do not commit/push/tag." The role skill
+  (loaded via `--skill`) already carries all of that; repeating it is noise. An intent is
+  just: name the role, the project root (and base commit for QM), and the product intent.
+  A dispatch this session actually used and won on:
+      `You are the Shipshape Captain. Project root: ‹path›.`
+      `‹the product intent — what a user needs / what is broken›.`
+  QM is leaner still — the doctrine dispatch surface is role + base commit, full stop:
+      `You are the Shipshape Quartermaster. Project root: ‹path›. Base commit: ‹sha›.`
 - **Oracle quarantine.** Never mention the oracle, its tests, selectors, framework name,
-  or a reference implementation in any Captain intent. Re-phrase every failure as a
-  USER-observable symptom in product language. (A raw runtime ERROR the app throws —
-  e.g. a browser `NotFoundError` — is legal to quote; it is the app's behaviour, not the
-  test.)
-- **Always end with the STOP line** (Captain authors specs+watchbill only, no code, no
-  commit) and keep the intent SHORT, CONCRETE, ACTION-FIRST. Open-ended "investigate and
-  figure it out" prompts make a cheap model read endlessly and author nothing (tree-proven
-  v10/v11). Give it the artifact to write.
+  or a reference implementation. Re-phrase every failure as a USER-observable symptom in
+  product language. (A raw runtime ERROR the app throws — e.g. a browser `NotFoundError` —
+  is legal to quote; it is the app's behaviour, not the test.)
+- **Short, concrete, action-first.** Open-ended "investigate and figure it out" prompts make
+  a cheap model read endlessly and author nothing (tree-proven v10/v11). Give it the artifact
+  to write. This is about the INTENT being concrete — not about re-explaining doctrine.
 
 ---
 
@@ -59,40 +67,24 @@ not symptoms — one cause per voyage.
 stay green (a cheap model over-reaches and breaks the app on big rewrites — v15). The
 `eval-voyage.sh` guard reverts a voyage that leaves the self-suite red, protecting the base.
 
-### Template (fill the ‹brackets›)
+### Template (fill the ‹brackets›) — lean; no doctrine priming
 
 ```
-You are the Shipshape Captain role agent. Read the Shipshape shared Articles and the
-Captain role skill (both available as skills) and follow them.
+You are the Shipshape Captain. Project root: PROJECT_ROOT_PLACEHOLDER.
 
-Project root: PROJECT_ROOT_PLACEHOLDER — work ONLY inside it. Small, concrete task; do
-not over-investigate and do not rewrite working code. Everything works except ‹one bug in
-product language›.
+The app works except: ‹symptom in product language — what a user sees; quote any error the
+app itself throws›. ‹one sentence of mechanism from reading js/app.js, if it helps›.
 
-THE BUG (real, and a user sees it in a browser): ‹symptom in product language; quote the
-app's own thrown error if there is one›. ‹one sentence of the mechanism, from reading
-js/app.js›.
-
-Add this scenario to `features/‹file›.feature` and put it on the watchbill — it FAILS on
-the current code:
-
-  Scenario: ‹name›
-    Given ‹concrete precondition›
-    When ‹the user action›
-    Then ‹the observable, falsifiable result›
-
-  [OR, for a tier-invisible/structural defect, a scantling instead:]
-  Scenario: ‹@conformance› ‹structural rule name›
-    Then ‹the source of js/app.js satisfies: "‹exact structural property›"›
-
-The production fix (watchbill target for the crew) must be MINIMAL and must not rewrite
-working logic: ‹the smallest change, named concretely›. After the fix, the ENTIRE existing
-scenario suite must still pass — if a change would break any existing scenario it is the
-wrong change.
-
-Author the scenario and the watchbill target now, then STOP: do not write production code
-or step definitions, do not commit, push, or tag. Report briefly in your Final report form.
+Prove and fix it: ‹the observable acceptance, e.g. "editing the middle todo keeps it in
+place"›. Cover it with a scenario that fails on the current code — for a real-browser-only /
+structural defect the executing tests can't catch, a @conformance check over the js/app.js
+source instead. Make the SMALLEST change; keep every existing behaviour working.
 ```
+
+Keep it to those few lines. Everything about authoring specs, the watchbill, stop-lines, and
+custody is the role skill's job — do not restate it. For a scantling case, name the exact
+structural property (e.g. "the Enter key handler must call the edit field's .blur() and must
+not call commitEdit directly").
 
 **Step 5 — after the voyage:** if `VOYAGE-REGRESSED` (guard reverted it), the change was
 too big — re-issue with an even smaller, more surgical fix. If `VOYAGE-COMPLETE`, re-grade
