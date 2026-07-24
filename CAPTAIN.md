@@ -95,10 +95,49 @@ tests.** gpt-oss-120b dropped (pi tool-protocol incompatible). glm-5.2 TIMES OUT
 draws — its 0/3 is a timeout, not a capability verdict; recommend glm-4.7 over it. TOP-3 on current
 doctrine: deepseek-v4-pro (best value 3/3 $0.093), kimi-k3 (fastest 243s/16inv), qwen3.7-plus.
 
-**NEXT (owed): candidate #4 = yoink-settle + TIGHTENED opening-batch example** (git ls-files over
-raw find, JSON-safe, bounded output) to recover the 2 bundle-mechanics floor drops. Test vs
-yoink-settle on the golden set. Also add a TIMEOUT flag to eval-table (exit 124 != no-clear).
+**>>> FRESH-SESSION MISSION (dk, 2026-07-24): PILOT with the NEW sims, retire the old
+clear-and-sonnet method. <<<** The pi/eval instrument + golden set have matured enough to run a
+PILOT the new way: pi baseline agents over our scaffolded eval sims (bin/eval-leg.sh atom,
+composed per the AGENTS.md "Pilot-capable by composition" note / eval-pilot.sh to build), NOT the
+old Claude-sonnet role-subagent + /clear voyages (scenarios/pilot.md). **Baseline model =
+deepseek/deepseek-v4-flash** — the golden run proved it a great baseline (2/3 -> 3/3 CLEAR under
+the candidate, cheapest reliable clearer, ~$0.07/leg, drives pi's tool protocol cleanly, adopts
+yoink well). Sequence Captain -> QM-assumes-rest -> Crew -> Boatswain over the atom, x voyages,
+oracle-graded, all under bwrap-contained isolated pi sessions. First fresh-session job: stand up
+that pilot; the harness (overlay isolation, minimal read-bind, preinstalled toolkit, stdout gate,
+janitor) is ready.
+
+**ALSO owed (secondary): candidate #4** = yoink-settle + TIGHTENED opening-batch example (git
+ls-files over raw find, JSON-safe, bounded output) to recover the 2 bundle-mechanics floor drops,
+tested vs yoink-settle on the golden set; and a TIMEOUT flag in eval-table (exit 124 != no-clear).
 Upstream-to-yoink note already filed in ~/yoink/CAPTAIN.md.
+
+## Non-clearer taxonomy (golden run, 2026-07-24) — four distinct failure modes, keep them separate
+
+A "0/3" is not one thing. From the 84-leg golden run:
+- **PROTOCOL fail — gpt-oss-120b.** Emits tool calls as TEXT/JSON, not structured tool_use, so pi
+  never executes them; stalls at 1-2 turns / 2s / $0.0005, both arms. It can't drive pi's tool
+  protocol. DROPPED from the golden set (noise, not signal). Not ours to fix.
+- **TIMEOUT — glm-5.2 (the one to watch).** exit=124 on ALL 6 draws (both arms). Extremely verbose
+  (~22k tok_out, slowest wall by ~2x); reads/reasons correctly but NEVER reaches the deliverable
+  inside the 900s wall (d1 touched 1 file then killed, d2/d3 nothing). **Its 0/3 is a TIMEOUT, not
+  a capability verdict — we do not know if it can clear.** Yoink cut its round-trips but not enough
+  (its slowness is reasoning/generation, not retrieval). To get a real verdict: retest a couple of
+  draws at 1800-2700s. Practically: latency-#1 disqualifies it regardless (a model that can't
+  finish in 900s is a poor fit); glm-4.7 (older, 2/3, ~2x faster) DOMINATES glm-5.2 for our use.
+  The newer GLM regressed on agentic speed. Recommend glm-4.7 over glm-5.2 to consumers.
+- **CONFORMANCE off-ramp — devstral, qwen3.6, mistral-medium (on CONTROL).** Complete the run but
+  skip the mandatory @conformance skeletons (the conditional-treated + buried obligation). FIXED by
+  conformance-gate: all three FLIP to clearing under the treatment (devstral 0->3/3, qwen3.6
+  1->3/3, mistral 1->2/3). Doctrine gap, now closed in the banked candidate.
+- **BUNDLE mechanics — minimax-m2.7, kimi-k2.7-code (treatment floor DROPS, 2/3 -> 1/3).** yoink's
+  ~50KB bundle truncation (a flooding find over node_modules blows the cap, drops the useful parts)
+  + JSON-plan parse errors (find-predicate escapes) eat their turn budget before the deliverable.
+  NOT comprehension (they grok yoink). Fix = #4 tightened example + upstream yoink robustness
+  (per-command truncation, clearer parse errors — filed in ~/yoink/CAPTAIN.md). Older/mid models
+  choke; newer siblings (kimi-k3) sail through, which is why it reads as a mechanics gap.
+METHODOLOGY: eval-table should FLAG exit-124 timeouts distinctly so a timeout never masquerades as
+a capability no-clear (glm-5.2, a timeout, currently reads identical to devstral, an off-ramp).
 
 <!-- ---------------------------------------------------------------------- -->
 ## >>> PICKUP STATE, 2026-07-23 (eval tier built). Superseded by the golden-run block above. <<<
