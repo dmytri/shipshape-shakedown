@@ -74,7 +74,34 @@ BEFORE watching, never `head -1` of a fuzzy pattern. -->
 
 
 <!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
-## >>> PICKUP STATE, 2026-07-23 (eval tier built). THIS IS THE ONLY LIVE ORDER. <<<
+## >>> PICKUP STATE, 2026-07-24 (yoink candidate WON the golden run; banked as baseline). <<<
+
+**`yoink-settle` is BANKED as the accepted doctrine baseline** — it won the 84-leg golden run
+(13 models x 3 draws x 2 arms, control-armed, rubric pre-registered): round-trips 2261->978
+(-57%, the #1 latency goal), wall -21%, CLEAR floor net-positive (12/14 held-or-raised, 6 RAISED).
+It = installed 0.13.64 + conformance-gate (unconditional step-8 @conformance + report ledger)
++ yoink (central Batched-retrieval Article + operative rule at point of action + opening hoist
+example), run WITH `--skill ~/yoink/skills/yoink`. Durable diff: `data/eval-golden/CANDIDATE-
+yoink-settle-vs-0.13.64.diff`. Full data `data/eval-golden-{control,treatment}/`.
+
+**NOT yet SHIPPED to ~/shipshape.** Banking != shipping. Ship owes: (1) the #4 tightened-example
+fix landing first (so the shipped floor is clean — 2 bundle-mechanics drops, minimax-m2.7 +
+kimi-k2.7-code, still open); (2) a decision on the yoink DEPENDENCY for real consumers (doctrine
+calls `npx @dk/yoink`, so consumers need yoink available); (3) dk's explicit ship word + the
+ship-first sequence (edit -> bump -> tests green -> commit -> push -> reinstall).
+
+**GOLDEN SET (data/eval-batches/golden.txt, 13 models) is the standard roster for major candidate
+tests.** gpt-oss-120b dropped (pi tool-protocol incompatible). glm-5.2 TIMES OUT (exit 124) all
+draws — its 0/3 is a timeout, not a capability verdict; recommend glm-4.7 over it. TOP-3 on current
+doctrine: deepseek-v4-pro (best value 3/3 $0.093), kimi-k3 (fastest 243s/16inv), qwen3.7-plus.
+
+**NEXT (owed): candidate #4 = yoink-settle + TIGHTENED opening-batch example** (git ls-files over
+raw find, JSON-safe, bounded output) to recover the 2 bundle-mechanics floor drops. Test vs
+yoink-settle on the golden set. Also add a TIMEOUT flag to eval-table (exit 124 != no-clear).
+Upstream-to-yoink note already filed in ~/yoink/CAPTAIN.md.
+
+<!-- ---------------------------------------------------------------------- -->
+## >>> PICKUP STATE, 2026-07-23 (eval tier built). Superseded by the golden-run block above. <<<
 
 **A new instrument exists: pi baseline-agent doctrine-affordance eval on non-Claude
 models.** Built and proven this session (dk-directed, not a standard shakedown).
