@@ -1,0 +1,55 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..8985b7e
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,15 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
++
++## Voyage: next low tide
++
++Intent: Harbouemasters using the tide tool can ask for the next LOW tide after a given time,
++getting the time and height back, and a clear error when no upcoming low tide exists in the data.
++
++The existing high-tide path (`nextHighTide` in `src/tide.js`) serves as the pattern.
++The new function will be `nextLowTide`. The error message is "no upcoming low tide in data".
++
++Project has no `RIGGING.md` yet. Route to Shipwright for fitting out after specs are authored.
+\ No newline at end of file
+diff --git a/features/tides.feature b/features/tides.feature
+index 9d4dddf..e4803cc 100644
+--- a/features/tides.feature
++++ b/features/tides.feature
+@@ -9,3 +9,13 @@ Feature: Tide prediction
+     Given the tide table for Fundy Cove
+     When I ask for the next high tide after "2026-07-13T00:00:00Z"
+     Then the prediction fails with "no upcoming high tide in data"
++
++  Scenario: Next low tide after a given time
++    Given the tide table for Fundy Cove
++    When I ask for the next low tide after "2026-07-12T05:00:00Z"
++    Then the predicted low tide is at "2026-07-12T10:30:00Z" with height 0.8
++
++  Scenario: No upcoming low tide is an error
++    Given the tide table for Fundy Cove
++    When I ask for the next low tide after "2026-07-13T00:00:00Z"
++    Then the prediction fails with "no upcoming low tide in data"
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..726a2ac
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,8 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/tides.feature:Next low tide after a given time",
++      "features/tides.feature:No upcoming low tide is an error"
++    ]
++  }
++}
+\ No newline at end of file

@@ -1,0 +1,25 @@
+# pilot grade: pilot-newsim-01  model=deepseek/deepseek-v4-flash  2026-07-24T08:11:53Z
+# candidate skills: experiments/yoink-settle/skills (+ yoink /home/exedev/yoink/skills/yoink)
+
+## git log (voyage commits)
+95dd3d6 crew: implement nextLowTide for low-tide prediction
+0e69b67 captain: specs + watchbill for next-low-tide voyage
+fdf8e2e tidewatch: tide prediction baseline
+
+## final tree status (uncommitted after QM leg, if any)
+
+## suite (npx cucumber-js, whole sim)
+npm notice run tidewatch5@0.1.0 npx
+npm notice run 'cucumber-js'
+.............
+
+1 hook (1 passed)
+4 scenarios (4 passed)
+12 steps (12 passed)
+0m 0.20s (0m 0.1s executing your code)
+
+## external oracle: nextLowTide against src/tide.js
+PASS next-low-tide -> 10:30Z@0.8
+PASS no-upcoming-low-tide error: "no upcoming low tide in data"
+ORACLE: CLEAR
+oracle_exit=0

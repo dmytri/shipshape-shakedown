@@ -54,12 +54,18 @@ fi
 [ -n "$NAME" ] || NAME="$(basename "$OUT")"
 
 # Fitting-out blocker, loud: an absent key must fail, never skip green.
-if [ -z "${OPENROUTER_API_KEY:-}" ]; then
-  if [ -f "$HOME/yoink/.env" ]; then
-    OPENROUTER_API_KEY="$(grep -E '^HARNESS_OPENROUTER_API_KEY=' "$HOME/yoink/.env" | head -1 | cut -d= -f2-)"
-  fi
+# Key resolution, cockpit-first (dk 2026-07-24): an explicit env var wins; else the
+# cockpit's OWN gitignored .env (so the harness owns its credential, not the consumer
+# repo); else the ~/yoink/.env consumer fallback, kept for back-compat. .env carries
+# OPENROUTER_API_KEY=...; ~/yoink/.env carries HARNESS_OPENROUTER_API_KEY=...
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+if [ -z "${OPENROUTER_API_KEY:-}" ] && [ -f "$REPO_ROOT/.env" ]; then
+  OPENROUTER_API_KEY="$(grep -E '^OPENROUTER_API_KEY=' "$REPO_ROOT/.env" | head -1 | cut -d= -f2-)"
 fi
-[ -n "${OPENROUTER_API_KEY:-}" ] || { echo "eval-leg.sh: no OPENROUTER_API_KEY (and none in ~/yoink/.env) — fitting-out blocker" >&2; exit 3; }
+if [ -z "${OPENROUTER_API_KEY:-}" ] && [ -f "$HOME/yoink/.env" ]; then
+  OPENROUTER_API_KEY="$(grep -E '^HARNESS_OPENROUTER_API_KEY=' "$HOME/yoink/.env" | head -1 | cut -d= -f2-)"
+fi
+[ -n "${OPENROUTER_API_KEY:-}" ] || { echo "eval-leg.sh: no OPENROUTER_API_KEY (not in env, cockpit .env, or ~/yoink/.env) — fitting-out blocker" >&2; exit 3; }
 
 mkdir -p "$OUT"
 FAKEHOME="$OUT/home"; SESSDIR="$OUT/session"
@@ -162,15 +168,27 @@ git -C "$WORKSPACE" log --oneline -10 > "$OUT/git.log" 2>/dev/null || true
 # Containment check: did the leg wander OUT of the sim into a real repo on the VM?
 # A leg that inspects ~/shipshape (doctrine), the cockpit, or a consumer repo is
 # not inspecting the sim, so its verdict is invalid and must be excluded from any
-# clear-rate. The skill dirs live under .claude and never match these repo names.
+# clear-rate.
+#
+# The leg's OWN bound subtrees are NOT escapes and must be whitelisted, or every
+# legitimate in-sim path false-flags (2026-07-24, first full-lifecycle pilot): the
+# sim workspace lives UNDER the cockpit repo (…/shipshape-shakedown/.eval-scratch/…),
+# and the `--skill` dirs live under the cockpit (experiments/<cand>/skills) and the
+# consumer repo (~/yoink/skills) — all three match the repo regex. bwrap exposes only
+# the bound skill LEAVES, so listing their parent `…/skills/` dir reveals nothing but
+# the leg's own skills either; whitelist the parent too. Anything still matching after
+# the whitelist is a genuine reach into a repo the leg was never given.
 if [ -f "$OUT/session.jsonl" ]; then
-  ESC="$(python3 - "$OUT/session.jsonl" <<'PY'
-import json, sys, re
-# Scan only the model's OWN tool calls (bash/read/ls/find args), never the task
-# prompt echo, for access to a real repo on the VM outside the sim.
+  ESC="$(python3 - "$OUT/session.jsonl" "$WORKSPACE" "$OUT" "$INSTR" "${SKILLS_ABS[@]}" <<'PY'
+import json, sys, re, os
+session, ws, out, instr, *skills = sys.argv[1:]
+# Allowlist: the leg's own bound subtrees (and each skill's parent, since bwrap only
+# exposes the bound leaves under it). Longest-first so nested prefixes strip cleanly.
+allow = [ws, out, instr] + list(skills) + [os.path.dirname(s) for s in skills]
+allow = sorted(set(a for a in allow if a), key=len, reverse=True)
 pat = re.compile(r'/home/[a-z]+/(?:shipshape|shipshape-shakedown|jolly|yoink|swamp)[a-zA-Z0-9_-]*')
 hits = set()
-for line in open(sys.argv[1], encoding='utf-8'):
+for line in open(session, encoding='utf-8'):
     try:
         e = json.loads(line)
     except Exception:
@@ -180,7 +198,10 @@ for line in open(sys.argv[1], encoding='utf-8'):
         continue
     for p in m.get('content') or []:
         if p.get('type') == 'toolCall':
-            hits.update(pat.findall(json.dumps(p.get('arguments', {}))))
+            s = json.dumps(p.get('arguments', {}))
+            for a in allow:            # blank the leg's own bound paths before matching
+                s = s.replace(a, '')
+            hits.update(pat.findall(s))
 print(' '.join(sorted(hits)))
 PY
 )"

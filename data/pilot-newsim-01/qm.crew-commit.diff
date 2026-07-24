@@ -1,0 +1,118 @@
+commit 95dd3d6068fda3e5d281802f9060cd624be0a9e2
+Author: Sim Operator <sim@example.test>
+Date:   Fri Jul 24 08:11:36 2026 +0000
+
+    crew: implement nextLowTide for low-tide prediction
+    
+    Add nextLowTide function to src/tide.js, importing from the same
+    module as nextHighTide. Add step definitions for
+    'I ask for the next low tide after {string}' and
+    'the predicted low tide is at {string} with height {float}'.
+    Fits out RIGGING.md. Strikes spent watchbill.
+    
+    Advances: features/tides.feature:Next low tide after a given time,
+    features/tides.feature:No upcoming low tide is an error
+
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..805b867
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,29 @@
++# Tidewatch5 Rigging
++
++## Stack
++- language: javascript
++
++## Directories
++- implementation: src
++- specs: features
++
++## Commands
++- focused: npx cucumber-js --name "{scenario}" --format summary
++- discover: npx cucumber-js --dry-run --format summary
++- broad: npx cucumber-js --format summary
++- step-usage: npx cucumber-js --dry-run --format usage
++- plank-inventory: none
++- typecheck: none
++- lint: none
++
++## Tiers
++- @logic: focused
++
++## Dependencies
++- policy: locked
++
++## Perturbation
++- message: PERTURBATION
++
++## Outbound
++- none
+diff --git a/features/support/steps.js b/features/support/steps.js
+index 15a3bd7..0725241 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -2,7 +2,7 @@ const { Given, When, Then } = require("@cucumber/cucumber");
+ const assert = require("assert");
+ const fs = require("fs");
+ const path = require("path");
+-const { nextHighTide } = require("../../src/tide");
++const { nextHighTide, nextLowTide } = require("../../src/tide");
+ 
+ Given("the tide table for Fundy Cove", function () {
+   this.tides = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "..", "data", "tides.json"), "utf8"));
+@@ -21,6 +21,19 @@ Then("the predicted high tide is at {string} with height {float}", function (tim
+   assert.equal(this.result.height, height);
+ });
+ 
++When("I ask for the next low tide after {string}", function (after) {
++  try {
++    this.result = nextLowTide(this.tides, after);
++  } catch (e) {
++    this.error = e;
++  }
++});
++
++Then("the predicted low tide is at {string} with height {float}", function (time, height) {
++  assert.equal(this.result.time, time);
++  assert.equal(this.result.height, height);
++});
++
+ Then("the prediction fails with {string}", function (msg) {
+   assert.equal(this.error.message, msg);
+ });
+diff --git a/src/tide.js b/src/tide.js
+index c3c80cc..5323bcd 100644
+--- a/src/tide.js
++++ b/src/tide.js
+@@ -1,7 +1,14 @@
++/** @planks("I ask for the next low tide after {string}") */
++function nextLowTide(tides, after) {
++  const next = tides.find((t) => new Date(t.time) > new Date(after) && t.type === "low");
++  if (!next) throw new Error("no upcoming low tide in data");
++  return next;
++}
++
+ function nextHighTide(tides, after) {
+   const next = tides.find((t) => new Date(t.time) > new Date(after) && t.type === "high");
+   if (!next) throw new Error("no upcoming high tide in data");
+   return next;
+ }
+ 
+-module.exports = { nextHighTide };
++module.exports = { nextHighTide, nextLowTide };
+diff --git a/watchbill.json b/watchbill.json
+deleted file mode 100644
+index 726a2ac..0000000
+--- a/watchbill.json
++++ /dev/null
+@@ -1,8 +0,0 @@
+-{
+-  "watch1": {
+-    "scenarios": [
+-      "features/tides.feature:Next low tide after a given time",
+-      "features/tides.feature:No upcoming low tide is an error"
+-    ]
+-  }
+-}
+\ No newline at end of file

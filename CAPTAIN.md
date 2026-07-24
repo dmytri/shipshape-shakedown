@@ -74,10 +74,36 @@ BEFORE watching, never `head -1` of a fuzzy pattern. -->
 
 
 <!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
-## >>> BLOCKER, 2026-07-24 (later session): NEW-sim pilot instrument BUILT, live run BLOCKED on OpenRouter credits. <<<
+## >>> DONE, 2026-07-24 (later session): NEW-sim pilot instrument BUILT + first pilot PASSED. <<<
 
-**The primed fresh-session mission — stand up the NEW-sim pi pilot — is DONE as an instrument
-and BLOCKED as a live run.** `bin/eval-pilot.sh` is built and composes the eval atom into a full
+**The primed fresh-session mission is COMPLETE.** `bin/eval-pilot.sh` is built and NEW-SIM PILOT #1
+ran green: candidate **yoink-settle** (same as the golden draws) + `~/yoink/skills/yoink`, baseline
+**deepseek-v4-flash**, over the tidewatch sim. Voyage: Captain (specs+watchbill) → commit → QM-assumes-
+Crew+Boatswain in one leg (pi's native no-spawn load-in-place) → model-free oracle **CLEAR**, suite
+**4/4**, QM planted-red-then-green, Crew `@planks`-annotated, custody commit landed. **48 inv / $0.1202
+/ 447s.** Full account + metrics table + findings in **METRICS.md (top entry)**; banked `data/pilot-newsim-01/`.
+
+**HEADLINE FINDING routed to dk (directional, n=1 single-draw — NOT earned, owes repeat draws on the
+golden set): yoink adoption is ASYMMETRIC across roles.** QM = 14 yoink plans (strong); **Captain = 0
+yoink plans / 12 bare-shell — ignored the absolute Batched-retrieval Article entirely.** The candidate
+only yoink-ified the *Shipwright* work-loop (golden's only subject); the shared Article alone did not
+move Captain. Supports the candidate's own thesis (prose ignored, operative-at-point-of-action followed).
+**Next move: carry the point-of-action yoink rule into Captain/QM/Crew/Boatswain work-loops too, then
+re-run with repeat draws.** (This is a candidate-#4-adjacent doctrine change — do NOT ship without dk.)
+
+**Instrument bugs found + FIXED this session:** grade `set -e` crash on NOT-CLEAR; credit-out void
+voyage silently graded (now aborts with BLOCKED marker); **escape-detector false-positive** (sim lives
+under the cockpit + skill dirs match the repo regex → both legs false-flagged "escaped"; neither read
+any cockpit file; fixed by whitelisting the leg's own bound subtrees — would also have over-flagged
+golden treatment legs); key resolution now cockpit-local (gitignored `.env`, dk's request). Open nit:
+`eval-table.py` renders Shipwright-shaped `plnk`/`@cap`/clear-rate columns that don't apply to captain/qm
+legs — oracle grade is the authoritative verdict.
+
+<!-- ---- prior blocker note (RESOLVED: OpenRouter account topped up, pilot re-ran green) ---- -->
+**(RESOLVED)** First attempt hit OpenRouter `402 Insufficient credits` (account balance exhausted);
+dk topped up, re-ran, passed. The instrument and its build/validation notes below stand.
+
+**`bin/eval-pilot.sh` is built and composes the eval atom into a full
 lifecycle voyage: Captain (specs+watchbill) -> commit as durable base -> QM-assumes-rest (make
 executable, prove red, Crew implements in place, Boatswain custody in place — pi has no spawn tool,
 so this is doctrine's own load-in-place branch) -> a MODEL-FREE external oracle grade (runs the
