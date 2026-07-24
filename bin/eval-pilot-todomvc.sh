@@ -96,7 +96,13 @@ run_leg() {
        --workspace "$WS" --verdict LEG-FAILED >/dev/null 2>&1 || true
   fi
   local perr; perr="$(leg_provider_error "$out")"
-  [ -n "$perr" ] && { PILOT_BLOCKED="$perr"; echo "eval-pilot-todomvc[$WAVE]: leg $name PROVIDER ERROR: $perr" >&2; }
+  # if/fi, NOT `[ -n "$perr" ] && {...}` — under set -e the && form returns 1 when perr
+  # is empty, making run_leg return non-zero and killing the pilot silently after a
+  # clean leg (bug 2026-07-24: the first TodoMVC run died here right after Captain).
+  if [ -n "$perr" ]; then
+    PILOT_BLOCKED="$perr"
+    echo "eval-pilot-todomvc[$WAVE]: leg $name PROVIDER ERROR: $perr" >&2
+  fi
 }
 abort_if_blocked() {
   [ -n "$PILOT_BLOCKED" ] || return 0
