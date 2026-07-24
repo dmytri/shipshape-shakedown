@@ -2,19 +2,26 @@
 # Run ONE isolated pi eval leg and capture its raw evidence.
 #
 # The atom the eval rig composes: a probe is one leg, a pilot is many legs
-# sequenced (see eval-pilot.sh). A baseline `pi` agent, on a chosen model, reads
-# the real installed Shipshape role skill(s) and acts over a scaffolded sim; we
-# capture everything raw (session JSONL, stdout/stderr, tree diff, git log) so
-# the deterministic fold (eval-map.py) never needs to re-spend a model call.
+# sequenced (see eval-pilot.sh). A baseline `pi` agent, on a chosen model, gets the
+# Shipshape role skill(s) THE NORMAL WAY and acts over a scaffolded sim; we capture
+# everything raw (session JSONL, stdout/stderr, tree diff, git log) so the
+# deterministic fold (eval-map.py) never needs to re-spend a model call.
 #
-# Isolation is total: a throwaway $HOME/XDG per leg (pi's own config/creds stay
-# out of the real home), the sim workspace as cwd, --approve so non-interactive
-# -p mode never derails into the confirm/ask loop (proven flake, 2026-07-23).
+# NORMAL LAUNCH (dk 2026-07-24): no `--skill`, no tool allow/deny. Each `--skill <dir>`
+# names a skill to INSTALL: the leg stages them as a pi package and `pi install`s it into
+# the isolated HOME (exactly as `pi install dmytri/shipshape` does), then launches pi with
+# NO --skill so pi DISCOVERS and loads them itself — the leg exercises the doctrine as a
+# real pi user's session does, not via a force-load workaround.
+#
+# Isolation is total: a throwaway $HOME/XDG per leg (pi's own config/creds and the install
+# stay out of the real home), the sim workspace as cwd, --approve to trust project-local
+# files in headless -p mode (the equivalent of a user trusting their own project).
 #
 # Usage:
 #   eval-leg.sh --model <id> --workspace <dir> --out <dir> \
 #     --skill <path> [--skill <path>...] (--task <str> | --task-file <path>) \
 #     [--provider openrouter] [--name <leg>] [--timeout-s 900]
+#   (--skill <dir> = a skill directory to INSTALL for this leg; not passed to pi as a flag.)
 #
 # The OpenRouter key is read from $OPENROUTER_API_KEY, else mapped from
 # ~/yoink/.env's HARNESS_OPENROUTER_API_KEY. Never printed.
@@ -80,15 +87,31 @@ mkdir -p "$FAKEHOME/.config" "$FAKEHOME/.local/share" "$FAKEHOME/.cache" "$FAKEH
 # run, and the cockpit/doctrine/fixture-source stay read-only (escape-damage still blocked).
 INSTR="$(dirname "$WORKSPACE")/.instrument"; mkdir -p "$INSTR"
 
-# Assemble --skill flags. Resolve to ABSOLUTE paths: the leg runs chdir'd into the sim
-# under a tight bind, so a relative skill path would not resolve, and each skill dir is
-# bind-mounted read-only BY ABSOLUTE PATH (so nothing else under experiments/ is exposed).
-SKILL_ARGS=(); SKILLS_ABS=()
+# Install skills the NORMAL way (dk 2026-07-24): NO --skill runtime flag. Launching pi
+# with --skill force-loads skill text and is NOT how a real session works — pi normally
+# DISCOVERS skills from installed packages (`pi install dmytri/shipshape` writes them into
+# ~/.pi/agent/settings.json and pi loads them by discovery). So a leg must get the doctrine
+# exactly as a real pi user does: stage the skills as a pi package (skills/<name>/SKILL.md),
+# `pi install` it into the isolated HOME, then run pi with no --skill. The staging dir holds
+# ONLY skill dirs (no consumer repo, no secrets), so binding it exposes nothing sensitive.
+# Stage under the fake HOME (where a real user's installed skills live), not in/near the
+# project — so pi discovers them from HOME as normal and they are NOT loose files in the
+# sim the model can trip over. $FAKEHOME is already bound into the sandbox.
+SKILLPKG="$FAKEHOME/.pi-pkg/shipshape"; rm -rf "$SKILLPKG"; mkdir -p "$SKILLPKG/skills"
+SKILLS_ABS=()
 for s in "${SKILLS[@]}"; do
   [ -e "$s" ] || { echo "eval-leg.sh: --skill path '$s' missing" >&2; exit 2; }
-  s="$(realpath "$s")"
-  SKILLS_ABS+=("$s"); SKILL_ARGS+=(--skill "$s")
+  s="$(realpath "$s")"; SKILLS_ABS+=("$s")
+  cp -r "$s" "$SKILLPKG/skills/$(basename "$s")"
 done
+# Register the package in the fake HOME; pi discovers skills/*/SKILL.md from it at runtime.
+# Local path => no network. Runs with the leg's own isolated HOME so nothing leaks to the
+# real config. --approve trusts the (operator-authored) package files for this install.
+env -i HOME="$FAKEHOME" XDG_CONFIG_HOME="$FAKEHOME/.config" \
+    XDG_DATA_HOME="$FAKEHOME/.local/share" XDG_CACHE_HOME="$FAKEHOME/.cache" \
+    TMPDIR="$FAKEHOME/tmp" PATH="$PATH" \
+    "$PI" install "$SKILLPKG" --approve >"$OUT/pi-install.log" 2>&1 \
+  || { echo "eval-leg[$NAME]: pi install failed (see $OUT/pi-install.log)" >&2; exit 3; }
 
 # Leg meta (banked with the raw so a fold knows what produced it).
 python3 - "$OUT/leg.json" "$NAME" "$MODEL" "$PROVIDER" "$WORKSPACE" "$TIMEOUT_S" "${SKILLS[@]}" <<'PY'
@@ -101,10 +124,11 @@ PY
 
 echo "eval-leg[$NAME]: $MODEL over $(basename "$WORKSPACE"), skills: ${SKILLS[*]##*/skills/}" >&2
 
-# The isolated, CONTAINED run. --approve neutralises the confirm derail; --mode json
-# writes the session to SESSDIR.
+# The isolated, CONTAINED run — launched NORMALLY: no --skill (skills come from the install
+# above, by discovery), no tool allow/deny. --approve trusts project-local files (the headless
+# equivalent of a real user trusting their project); --mode json writes the session to SESSDIR.
 PI_ARGS=(-p "$TASK" --provider "$PROVIDER" --model "$MODEL" --approve --mode json
-         "${SKILL_ARGS[@]}" --session-dir "$SESSDIR")
+         --session-dir "$SESSDIR")
 ENVV=(HOME="$FAKEHOME" XDG_CONFIG_HOME="$FAKEHOME/.config"
       XDG_DATA_HOME="$FAKEHOME/.local/share" XDG_CACHE_HOME="$FAKEHOME/.cache"
       TMPDIR="$FAKEHOME/tmp" PATH="$PATH" OPENROUTER_API_KEY="$OPENROUTER_API_KEY")
@@ -125,7 +149,9 @@ if command -v bwrap >/dev/null 2>&1; then
       --ro-bind-try /opt /opt --ro-bind-try /run /run
       --proc /proc --dev /dev
       --ro-bind "$PI_NM" "$PI_NM")
-  for s in "${SKILLS_ABS[@]}"; do BW+=(--ro-bind "$s" "$s"); done
+  # Skills are installed (staged under $FAKEHOME/.pi-pkg, which the $FAKEHOME bind covers)
+  # and discovered from the fake HOME — no per-skill bind, no --skill. The original skill
+  # sources are NOT exposed to the leg (only the operator-authored copy inside the HOME).
   BW+=(--bind "$WORKSPACE" "$WORKSPACE" --bind "$OUT" "$OUT" --bind "$FAKEHOME" "$FAKEHOME"
        --bind "$INSTR" "$INSTR")
   # Isolated node_modules via overlay: the shared toolkit ($EVAL_SHARED_NM, from

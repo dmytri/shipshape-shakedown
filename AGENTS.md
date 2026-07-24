@@ -88,9 +88,15 @@ nothing else (no notes, no fixtures, no scratch).
 A cheap, repeatable, control-armed instrument for measuring doctrine AFFORDANCE
 on models that are NOT Claude - the portability claim this corpus had only ever
 validated on sonnet/opus. A baseline `pi` agent (`@earendil-works/pi-coding-agent`,
-`node_modules/.bin/pi`, isolated `$HOME`/XDG, `--approve` to kill the non-
-interactive confirm-loop) reads the installed role skill(s) via `--skill` and
-acts over a scaffolded sim; the run is captured raw and folded deterministically.
+`node_modules/.bin/pi`, isolated `$HOME`/XDG, `--approve` to trust project-local files
+in headless `-p` mode) gets the role skill(s) THE NORMAL WAY and acts over a scaffolded
+sim; the run is captured raw and folded deterministically. **NORMAL LAUNCH (dk 2026-07-24):
+NO `--skill`, no tool allow/deny flags — a leg must exercise the doctrine as a real pi user's
+session does, not via a force-load workaround.** Each skill dir handed to `eval-leg.sh` is
+staged as a pi package and `pi install`ed into the isolated HOME (exactly as `pi install
+dmytri/shipshape` registers skills in `~/.pi/agent/settings.json`); pi then DISCOVERS and
+loads them itself at launch. Verified 2026-07-24: post-install, pi with no `--skill` reports
+the Shipshape roles as available and loads them.
 
 - `bin/eval-leg.sh` ATOM: one isolated pi session -> raw capture (session JSONL
   transcript + rendered stdout + FULL tree.diff of artifacts + tree.status + git.log).
@@ -120,12 +126,14 @@ doctrine commit:
    it only READS skills. It gets a commit ONLY at the approved ship step
    (ship-first: edit -> bump -> tests green -> commit -> push -> reinstall), after
    a probe earns it AND dk approves. Structurally insulated.
-2. installed plugin cache = read-only 0.13.64, the eval's CONTROL arm (`--skill`).
+2. installed plugin cache = read-only 0.13.64, the eval's CONTROL arm (the skill dirs
+   pi installs for a control leg).
 3. this cockpit = the instrument, data, and ALL iteration.
    To test a candidate doctrine edit: COPY the skills into a gitignored
-   `experiments/<name>/skills`, edit the copy, and point the TREATMENT leg's
-   `--skill` at it; the CONTROL leg points at the installed plugin. A/B the same
-   models across both arms. `~/shipshape` is untouched until ship. Bank only the
+   `experiments/<name>/skills`, edit the copy, and hand the TREATMENT leg those dirs
+   (eval-leg installs them); the CONTROL leg gets the installed-plugin skill dirs. A/B
+   the same models across both arms. (Skills are INSTALLED then discovered — no `--skill`;
+   see the normal-launch note above.) `~/shipshape` is untouched until ship. Bank only the
    RESULT (maps, verdicts) plus the candidate's diff-vs-installed as a text
    artifact - never the candidate skill text as a cockpit commit that could read
    as a real change.
