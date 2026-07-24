@@ -8,10 +8,11 @@
 # deterministic fold (eval-map.py) never needs to re-spend a model call.
 #
 # NORMAL LAUNCH (dk 2026-07-24): no `--skill`, no tool allow/deny. Each `--skill <dir>`
-# names a skill to INSTALL: the leg stages them as a pi package and `pi install`s it into
-# the isolated HOME (exactly as `pi install dmytri/shipshape` does), then launches pi with
-# NO --skill so pi DISCOVERS and loads them itself — the leg exercises the doctrine as a
-# real pi user's session does, not via a force-load workaround.
+# names a skill to INSTALL via the canonical `skills` CLI (`npx skills add dmytri/shipshape
+# --skill '*'`, the shipshape README's own pi command; NOT `pi install`, which is for
+# extensions). The leg stages the dirs and `skills add -g`s them into the isolated HOME's
+# pi agent skills dir, then launches pi with NO --skill so pi DISCOVERS and loads them
+# itself — the leg exercises the doctrine as a real pi user's session does.
 #
 # Isolation is total: a throwaway $HOME/XDG per leg (pi's own config/creds and the install
 # stay out of the real home), the sim workspace as cwd, --approve to trust project-local
@@ -87,31 +88,31 @@ mkdir -p "$FAKEHOME/.config" "$FAKEHOME/.local/share" "$FAKEHOME/.cache" "$FAKEH
 # run, and the cockpit/doctrine/fixture-source stay read-only (escape-damage still blocked).
 INSTR="$(dirname "$WORKSPACE")/.instrument"; mkdir -p "$INSTR"
 
-# Install skills the NORMAL way (dk 2026-07-24): NO --skill runtime flag. Launching pi
-# with --skill force-loads skill text and is NOT how a real session works — pi normally
-# DISCOVERS skills from installed packages (`pi install dmytri/shipshape` writes them into
-# ~/.pi/agent/settings.json and pi loads them by discovery). So a leg must get the doctrine
-# exactly as a real pi user does: stage the skills as a pi package (skills/<name>/SKILL.md),
-# `pi install` it into the isolated HOME, then run pi with no --skill. The staging dir holds
-# ONLY skill dirs (no consumer repo, no secrets), so binding it exposes nothing sensitive.
-# Stage under the fake HOME (where a real user's installed skills live), not in/near the
-# project — so pi discovers them from HOME as normal and they are NOT loose files in the
-# sim the model can trip over. $FAKEHOME is already bound into the sandbox.
-SKILLPKG="$FAKEHOME/.pi-pkg/shipshape"; rm -rf "$SKILLPKG"; mkdir -p "$SKILLPKG/skills"
+# Install skills the NORMAL way (dk 2026-07-24): NO --skill runtime flag. `pi install` is
+# for EXTENSIONS; skills have their own canonical installer — the `skills` CLI (`npx skills
+# add dmytri/shipshape --skill '*'`, the shipshape README's own pi command), which lands
+# `<role>/SKILL.md` under the pi agent skills dir + a skills-lock.json, exactly as jolly (a
+# real Shipshape-pi project) is set up. pi then DISCOVERS and loads them itself — the leg
+# exercises the doctrine as a real pi user's session does. Stage the skill dirs as a source
+# tree (skills/<name>/SKILL.md; the CLI takes a local path) and `skills add -g` into the
+# isolated HOME so they install GLOBALLY (all roles available every leg, as a real user has
+# it) and the sim tree stays clean. The staging holds ONLY skill dirs — no repo, no secrets.
+SKILLS_BIN="${SKILLS_BIN:-$(ls "$HOME"/.npm/_npx/*/node_modules/.bin/skills 2>/dev/null | head -1)}"
+[ -x "$SKILLS_BIN" ] || { echo "eval-leg.sh: 'skills' CLI not found (run 'npx skills --help' once to cache it, or set SKILLS_BIN)" >&2; exit 3; }
+SKILLPKG="$OUT/skillsrc"; rm -rf "$SKILLPKG"; mkdir -p "$SKILLPKG/skills"
 SKILLS_ABS=()
 for s in "${SKILLS[@]}"; do
   [ -e "$s" ] || { echo "eval-leg.sh: --skill path '$s' missing" >&2; exit 2; }
   s="$(realpath "$s")"; SKILLS_ABS+=("$s")
   cp -r "$s" "$SKILLPKG/skills/$(basename "$s")"
 done
-# Register the package in the fake HOME; pi discovers skills/*/SKILL.md from it at runtime.
-# Local path => no network. Runs with the leg's own isolated HOME so nothing leaks to the
-# real config. --approve trusts the (operator-authored) package files for this install.
+# Local path => no network; installs into $FAKEHOME/.pi/agent/skills. Isolated HOME, so
+# nothing leaks to the real config. `--agent pi` scopes to pi (not all 75 known agents).
 env -i HOME="$FAKEHOME" XDG_CONFIG_HOME="$FAKEHOME/.config" \
     XDG_DATA_HOME="$FAKEHOME/.local/share" XDG_CACHE_HOME="$FAKEHOME/.cache" \
     TMPDIR="$FAKEHOME/tmp" PATH="$PATH" \
-    "$PI" install "$SKILLPKG" --approve >"$OUT/pi-install.log" 2>&1 \
-  || { echo "eval-leg[$NAME]: pi install failed (see $OUT/pi-install.log)" >&2; exit 3; }
+    "$SKILLS_BIN" add "$SKILLPKG" --skill '*' --agent pi --copy -g -y >"$OUT/skills-add.log" 2>&1 \
+  || { echo "eval-leg[$NAME]: 'skills add' failed (see $OUT/skills-add.log)" >&2; exit 3; }
 
 # Leg meta (banked with the raw so a fold knows what produced it).
 python3 - "$OUT/leg.json" "$NAME" "$MODEL" "$PROVIDER" "$WORKSPACE" "$TIMEOUT_S" "${SKILLS[@]}" <<'PY'
@@ -149,9 +150,9 @@ if command -v bwrap >/dev/null 2>&1; then
       --ro-bind-try /opt /opt --ro-bind-try /run /run
       --proc /proc --dev /dev
       --ro-bind "$PI_NM" "$PI_NM")
-  # Skills are installed (staged under $FAKEHOME/.pi-pkg, which the $FAKEHOME bind covers)
-  # and discovered from the fake HOME — no per-skill bind, no --skill. The original skill
-  # sources are NOT exposed to the leg (only the operator-authored copy inside the HOME).
+  # Skills are installed into $FAKEHOME/.pi/agent/skills (the $FAKEHOME bind covers it) and
+  # discovered from the fake HOME — no per-skill bind, no --skill. The original skill sources
+  # are NOT exposed; only the operator-authored copy (staged under $OUT/skillsrc) is.
   BW+=(--bind "$WORKSPACE" "$WORKSPACE" --bind "$OUT" "$OUT" --bind "$FAKEHOME" "$FAKEHOME"
        --bind "$INSTR" "$INSTR")
   # Isolated node_modules via overlay: the shared toolkit ($EVAL_SHARED_NM, from

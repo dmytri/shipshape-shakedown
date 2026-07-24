@@ -92,11 +92,13 @@ validated on sonnet/opus. A baseline `pi` agent (`@earendil-works/pi-coding-agen
 in headless `-p` mode) gets the role skill(s) THE NORMAL WAY and acts over a scaffolded
 sim; the run is captured raw and folded deterministically. **NORMAL LAUNCH (dk 2026-07-24):
 NO `--skill`, no tool allow/deny flags — a leg must exercise the doctrine as a real pi user's
-session does, not via a force-load workaround.** Each skill dir handed to `eval-leg.sh` is
-staged as a pi package and `pi install`ed into the isolated HOME (exactly as `pi install
-dmytri/shipshape` registers skills in `~/.pi/agent/settings.json`); pi then DISCOVERS and
-loads them itself at launch. Verified 2026-07-24: post-install, pi with no `--skill` reports
-the Shipshape roles as available and loads them.
+session does, not via a force-load workaround.** Skills are installed via the canonical `skills`
+CLI — `npx skills add dmytri/shipshape --skill '*'`, the shipshape README's own pi command
+(NOT `pi install`, which is for EXTENSIONS and registers a `packages` entry). `eval-leg.sh`
+stages each skill dir and `skills add --agent pi --copy -g`s them into the isolated HOME's
+`~/.pi/agent/skills/`, writing the same skills-lock layout jolly (a real Shipshape-pi project)
+uses; pi then DISCOVERS and loads them at launch. Verified 2026-07-24: after `skills add`, pi
+with no `--skill` reports the Shipshape roles available and loads them.
 
 - `bin/eval-leg.sh` ATOM: one isolated pi session -> raw capture (session JSONL
   transcript + rendered stdout + FULL tree.diff of artifacts + tree.status + git.log).

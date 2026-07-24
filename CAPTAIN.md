@@ -116,8 +116,9 @@ the model with dk at kickoff (standard `/shakedown` one-question) before spendin
 **Deck:** candidate = `yoink-settle` (`experiments/yoink-settle/skills/*` + `~/yoink/skills/yoink`),
 installed control = 0.13.64. NOTHING shipped to `~/shipshape` — the candidate is doctrine-under-test
 and held across 32 legs. **NORMAL-LAUNCH note (dk 2026-07-24): the eval no longer uses `--skill`
-or any tool allow/deny — each leg `pi install`s the skill dirs into its isolated HOME and pi
-DISCOVERS them, exactly as a real `pi install dmytri/shipshape` user (eval-leg.sh).** The
+or any tool allow/deny — each leg installs the skills via the canonical `skills` CLI (`skills
+add … --agent pi -g`, i.e. `npx skills add dmytri/shipshape --skill '*'`; NOT `pi install`,
+which is for extensions) and pi DISCOVERS them, exactly as a real Shipshape-pi user (eval-leg.sh).** The
 process-restart stale-snapshot rule does NOT bind the eval legs (it only ever bound live
 `shipshape:*` dispatches; the eval installs fresh skill copies per leg).
 
