@@ -74,6 +74,43 @@ BEFORE watching, never `head -1` of a fuzzy pattern. -->
 
 
 <!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
+## >>> BLOCKER, 2026-07-24 (later session): NEW-sim pilot instrument BUILT, live run BLOCKED on OpenRouter credits. <<<
+
+**The primed fresh-session mission — stand up the NEW-sim pi pilot — is DONE as an instrument
+and BLOCKED as a live run.** `bin/eval-pilot.sh` is built and composes the eval atom into a full
+lifecycle voyage: Captain (specs+watchbill) -> commit as durable base -> QM-assumes-rest (make
+executable, prove red, Crew implements in place, Boatswain custody in place — pi has no spawn tool,
+so this is doctrine's own load-in-place branch) -> a MODEL-FREE external oracle grade (runs the
+sim's own cucumber suite AND checks `src/tide.js` `nextLowTide` directly). Sim = the tidewatch
+fixture; voyage intent = "add next-LOW-tide prediction, symmetric to the existing next-high-tide"
+(data supports it: low tides 10:30Z@0.8, 22:55Z@0.7). Thin role dispatches in `tasks/pilot/`.
+
+**Candidate piloted = the SAME one the golden draws used (dk's instruction): `yoink-settle`.**
+The banked candidate tree carried only `shipshape`+`shipwright` (all the golden Shipwright run
+needed); the candidate diff (`data/eval-golden/CANDIDATE-yoink-settle-vs-0.13.64.diff`) touches
+ONLY those two skills, so a faithful full-lifecycle candidate = candidate `shipshape`+`shipwright`
++ 0.13.64 `captain/qm/crew/boatswain` (unchanged by the candidate). Completed
+`experiments/yoink-settle/skills/` with those four role dirs (gitignored, never committed). Every
+leg loads `--skill` the shared+role candidate skills PLUS `~/yoink/skills/yoink`, exactly as the
+golden treatment did.
+
+**BLOCKER (external, dk's to resolve — billing): OpenRouter account balance is EXHAUSTED.** Every
+model call returns `402: Insufficient credits` instantly; pi exits 0 with an empty assistant turn
+(stopReason=error), so legs bank as turns=1/in=0/out=0/$0 — no affordance signal. Key is valid, no
+per-key limit, usage $51.27 (`GET /api/v1/key`). **Top up the account behind
+`HARNESS_OPENROUTER_API_KEY` in `~/yoink/.env`, then re-run the one command in
+`data/pilot-newsim-01/BLOCKED.txt`** — the instrument is ready and validated; it will produce the
+real pilot with no further build.
+
+**Instrument validated OFFLINE (no spend):** scaffold green 2/2, isolation/capture/fold all fire,
+grade plumbing correct (baseline oracle -> NOT-CLEAR as expected). Two real harness bugs found and
+FIXED while building it: (1) the grade block crashed under `set -e` when the oracle legitimately
+exits non-zero on a NOT-CLEAR (probing for ABSENCE of work) — now `set +e` for the grade section;
+(2) a credit-out/void voyage silently produced an empty grade that reads as a real NOT-CLEAR — now
+`eval-pilot.sh` detects a provider-errored leg (stopReason=error) and aborts with a `BLOCKED.txt`
+marker instead of grading a void voyage. Committed with the instrument.
+
+<!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
 ## >>> PICKUP STATE, 2026-07-24 (yoink candidate WON the golden run; banked as baseline). <<<
 
 **`yoink-settle` is BANKED as the accepted doctrine baseline** — it won the 84-leg golden run
