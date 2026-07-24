@@ -1,0 +1,99 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 37a4c0a..dfd72c0 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -2,32 +2,24 @@
+ 
+ # Captain Notes
+ 
+-## Voyage 3: Row identity and edit-mode controls
++## Voyage 4: Enter commits edit via blur, not directly
+ 
+-Intent: Fix two defects in the todo app — row element identity lost on toggle, and controls visible during editing.
++Intent: Fix edit-commit behaviour so pressing Enter releases focus (calls blur) and the blur handler performs the commit. This ensures commit runs exactly once, fixes trimming, and enables empty-to-delete.
+ 
+-### Defect 1 — Row identity on toggle
+-`render()` rebuilds `todoList.innerHTML` from scratch on every state change, destroying and recreating every `<li>`. A reference to a toggled row becomes stale immediately after the click.
+-
+-Fix: Change `render()` to update existing rows in place — reuse each todo's `<li>`, keyed by the todo, creating/removing only rows that were added/removed. A toggle mutates the row already on the page instead of rebuilding the list.
+-
+-Discriminating scenario: `features/todo-item.feature` — three new scenarios under Rule "Toggle preserves the list element identity" that capture a reference to a specific `<li>`, toggle, and assert the same element object still carries the updated state.
+-
+-### Defect 2 — Controls hidden during edit
+-When a row is in edit mode (`li.editing`), the `.view` div (checkbox, label, destroy button) remains visible. The app needs a CSS rule at `css/app.css` that hides `.view` inside `li.editing`, so the controls are not visible regardless of where the app is served.
+-
+-Fix: Add to `css/app.css`: a rule targeting `.view` within `li.editing` to `display: none`.
++### Specs authored
++- `features/todo-editing.feature` — added 3 scenarios under Rule "Editing ends and saves on pressing Enter"
++- `watchbill.json` — created with edit-commit-via-blur watch ordering the 3 new scenarios
+ 
+-Discriminating scenario: `features/todo-editing.feature` — one new scenario under Rule "Editing mode hides other controls" that asserts the checkbox, label, and destroy button are not visible when the row is in edit mode.
++### Behaviour captured
++- **Focus release:** Pressing Enter while editing must release focus from the edit field (blur).
++- **Trim on save:** Pressing Enter after editing saves the trimmed title (whitespace stripped).
++- **Delete on empty:** Pressing Enter with empty field deletes the todo.
+ 
+-### Specs authored
+-- `features/todo-item.feature` — added 3 scenarios under new Rule "Toggle preserves the list element identity"
+-- `features/todo-editing.feature` — added 1 scenario under new Rule "Editing mode hides other controls"
+-- `watchbill.json` — created with watch1 ordering the 4 new scenarios
++The intended mechanism: Enter calls blur on the edit field; the blur handler commits the change. Enter must NOT commit directly.
+ 
+ ### Decisions
+-- All 40 existing scenarios pass and are unmodified. All existing behaviour preserved.
+-- The two fixes are independent: row-identity fix in `js/app.js`, and edit-mode CSS rule in `css/app.css`.
+-- `css/app.css` does not exist yet. It must be created with the editing-controls rule and loaded by `index.html` (the link already exists in the template).
++- All 7 existing editing scenarios are unmodified.
++- The first new scenario (focus release) FAILS on current code — this is the planted red target.
++- The new step patterns are distinct from existing ones, so QM writes fresh step definitions.
+ 
+-Status: specs written, watchbill set, working tree clean. Ready for QM dispatch.
+\ No newline at end of file
++Status: specs written, watchbill set, working tree has uncommitted spec work. Ready for QM dispatch after custody.
+\ No newline at end of file
+diff --git a/features/todo-editing.feature b/features/todo-editing.feature
+index 089ba18..35757cd 100644
+--- a/features/todo-editing.feature
++++ b/features/todo-editing.feature
+@@ -23,6 +23,22 @@ Feature: Todo editing
+     Then the todo list contains an item with title "Buy organic groceries"
+     And the todo item "Buy organic groceries" does not have the "editing" class
+ 
++  Scenario: Pressing Enter while editing releases focus from the edit field
++    Given a todo "write tests" that is in edit mode
++    When the user presses Enter in its edit field
++    Then that edit field is no longer the focused element
++
++  Scenario: Editing a todo and pressing Enter saves the new trimmed title
++    Given a todo "write tests" that is in edit mode
++    When the user replaces the text with "  ship it  " and presses Enter
++    Then the todo's title is "ship it"
++    And there is exactly one todo
++
++  Scenario: Clearing a todo's text and committing deletes it
++    Given a todo "write tests" that is in edit mode
++    When the user clears the edit field and presses Enter
++    Then there are no todos
++
+   Rule: Editing ends and saves on blur
+ 
+   Scenario: Blurring the edit input saves the title
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..b352a6d
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,12 @@
++{
++  "watches": [
++    {
++      "name": "edit-commit-via-blur",
++      "scenarios": [
++        "features/todo-editing.feature:Pressing Enter while editing releases focus from the edit field",
++        "features/todo-editing.feature:Editing a todo and pressing Enter saves the new trimmed title",
++        "features/todo-editing.feature:Clearing a todo's text and committing deletes it"
++      ]
++    }
++  ]
++}
+\ No newline at end of file

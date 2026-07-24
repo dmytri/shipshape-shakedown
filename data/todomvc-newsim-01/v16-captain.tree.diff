@@ -1,0 +1,37 @@
+diff --git a/features/todo-editing.feature b/features/todo-editing.feature
+index 35757cd..79b8727 100644
+--- a/features/todo-editing.feature
++++ b/features/todo-editing.feature
+@@ -88,4 +88,11 @@ Feature: Todo editing
+     When the user double-clicks the todo titled "Buy groceries"
+     Then the checkbox for the todo titled "Buy groceries" is not visible
+     And the label for the todo titled "Buy groceries" is not visible
+-    And the destroy button for the todo titled "Buy groceries" is not visible
+\ No newline at end of file
++    And the destroy button for the todo titled "Buy groceries" is not visible
++
++  Rule: Order is preserved when editing a todo
++
++  Scenario: Editing a todo keeps it in its original position
++    Given the todos "one", "two", "three" exist
++    When the user edits the second todo to "two edited"
++    Then the todos are, in order, "one", "two edited", "three"
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..e496d88
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,11 @@
++{
++  "watches": [
++    {
++      "id": "watch1-fix-edit-position",
++      "label": "Editing a todo that is not last in the list moves it to the bottom instead of leaving it in place because render() re-appendChilds a new row when the title changes. Fix: after render() updates all rows, re-append each todo row in todos-model order so an edited row returns to its original position.",
++      "scenarios": [
++        "features/todo-editing.feature:Editing a todo keeps it in its original position"
++      ]
++    }
++  ]
++}
+\ No newline at end of file

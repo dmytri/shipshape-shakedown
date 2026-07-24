@@ -1,0 +1,46 @@
+# oracle grade: framework=shakedown  runner_exit=1
+tests=29 passing=23 failing=5 pending=1
+all_specs_passed=False
+GRADE: 23/29
+
+## cypress summary tail
+     ear the complete state of all items (failed).png                                               
+  -  /home/exedev/shipshape-shakedown/.eval-scratch/oracle-clone/cypress/screenshots/     (1280x720)
+     spec.cy.js/TodoMVC - shakedown -- Item -- should allow me to mark items as compl               
+     ete (failed).png                                                                               
+  -  /home/exedev/shipshape-shakedown/.eval-scratch/oracle-clone/cypress/screenshots/     (1280x720)
+     spec.cy.js/TodoMVC - shakedown -- Item -- should allow me to un-mark items as co               
+     mplete (failed).png                                                                            
+  -  /home/exedev/shipshape-shakedown/.eval-scratch/oracle-clone/cypress/screenshots/     (1280x720)
+     spec.cy.js/TodoMVC - shakedown -- Editing -- should hide other controls when edi               
+     ting (failed).png                                                                              
+
+
+================================================================================
+
+  (Run Finished)
+
+
+       Spec                                              Tests  Passing  Failing  Pending  Skipped  
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ ✖  spec.cy.js                               01:01       29       23        5        1        - │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+    ✖  1 of 1 failed (100%)                     01:01       29       23        5        1        -  
+
+Error: Command failed with exit code 5: npx cypress run --env framework=shakedown --spec cypress/e2e/spec.cy.js --config baseUrl=http://localhost:8881/examples/
+    at makeError (/home/exedev/shipshape-shakedown/.eval-scratch/oracle-clone/node_modules/start-server-and-test/node_modules/execa/lib/error.js:60:11)
+    at handlePromise (/home/exedev/shipshape-shakedown/.eval-scratch/oracle-clone/node_modules/start-server-and-test/node_modules/execa/index.js:118:26)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  shortMessage: 'Command failed with exit code 5: npx cypress run --env framework=shakedown --spec cypress/e2e/spec.cy.js --config baseUrl=http://localhost:8881/examples/',
+  command: 'npx cypress run --env framework=shakedown --spec cypress/e2e/spec.cy.js --config baseUrl=http://localhost:8881/examples/',
+  escapedCommand: '"npx cypress run --env framework=shakedown --spec cypress/e2e/spec.cy.js --config baseUrl=http://localhost:8881/examples/"',
+  exitCode: 5,
+  signal: undefined,
+  signalDescription: undefined,
+  stdout: undefined,
+  stderr: undefined,
+  failed: true,
+  timedOut: false,
+  isCanceled: false,
+  killed: false
+}

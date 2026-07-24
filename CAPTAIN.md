@@ -74,7 +74,25 @@ BEFORE watching, never `head -1` of a fuzzy pattern. -->
 
 
 <!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
-## >>> DONE, 2026-07-24 (later session): NEW-sim pilot instrument BUILT + first pilot PASSED. <<<
+## >>> DONE, 2026-07-24 (later session): NEW-WAY TodoMVC PILOT PASSED 28/29 on deepseek-v4-flash. <<<
+
+**The acceptance-tier TodoMVC pilot, run the new way (pi agents, operator-directed voyages), reached
+28/29 — matching the sonnet pilots, for $1.33.** Same upstream Cypress oracle (pinned + 2 patches +
+`framework=shakedown`). Instrument: `bin/scaffold-todomvc.sh`, `bin/eval-voyage.sh` (per-voyage
+Captain→QM-assumes-rest on one sim), `bin/oracle-grade.sh` (quarantined Cypress grader). 16 voyages,
+32 legs, 518 inv, $1.33; oracle 0→23→24→25→28. Full write-up: METRICS.md top entry. Banked
+`data/todomvc-newsim-01/` (voyage intents, per-voyage grades, final build, and **OPERATOR-LESSONS.md**
+— the axis-4 lens on the operator's own prompting, richly documented per dk's request).
+
+**Headline (operator-craft, not a model verdict): reaching 28/29 was a TARGETING problem, never
+capability — deepseek codes every fix it's given a red target for.** Tier-visible bugs → a plain
+failing scenario; the tier-invisible edit reentrancy (happy-dom won't fire blur-on-removal) → a
+**SCANTLING** (structural source check) per dk's steer; over-reach regression → a base-protecting
+revert guard + surgical intents. Six voyages no-op'd when I restated symptoms the green suite already
+passed — the channel to the implementer is a RED-able target matched to the bug's tier.
+
+<!-- ===================== earlier same-day note ===================== -->
+## >>> DONE, 2026-07-24 (earlier): NEW-sim (tidewatch) pilot instrument BUILT + first pilot PASSED. <<<
 
 **The primed fresh-session mission is COMPLETE.** `bin/eval-pilot.sh` is built and NEW-SIM PILOT #1
 ran green: candidate **yoink-settle** (same as the golden draws) + `~/yoink/skills/yoink`, baseline

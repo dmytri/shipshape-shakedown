@@ -1,0 +1,61 @@
+# TodoMVC pilot grade: todomvc-newsim-01  model=deepseek/deepseek-v4-flash  2026-07-24T13:31:30Z
+# candidate: experiments/yoink-settle/skills (+ yoink /home/exedev/yoink/skills/yoink)
+
+## voyage commits
+4bab6c5 captain: specs + watchbill for TodoMVC build
+aaf8faf todomvc: empty project with spec + template assets
+
+## build tree (app files)
+.gitignore
+README.md
+package.json
+watchbill.json
+
+## self-suite (roles' own cucumber)
+  6) Uncompleting a completed todo hides it in the completed filter # features/routing.feature:57
+       Then the todo list is empty # features/support/steps.js:428
+           Error: Expected empty todo list, found 2 items
+               at TodoWorld.<anonymous> (/home/exedev/shipshape-shakedown/.eval-scratch/todomvc-newsim-01/sim/features/support/steps.js:431:11)
+  7) Active filter is preserved on reload # features/routing.feature:68
+       And the todo list shows only items with titles "Buy groceries" # features/support/steps.js:414
+           Error: Expected visible item "Buy groceries", got: Buy groceries, Walk the dog
+               at TodoWorld.<anonymous> (/home/exedev/shipshape-shakedown/.eval-scratch/todomvc-newsim-01/sim/features/support/steps.js:424:11)
+
+34 scenarios (27 passed, 7 failed)
+182 steps (174 passed, 1 skipped, 7 failed)
+0m 0.352s (0m 0.267s executing your code)
+
+## upstream oracle (Cypress, framework=shakedown)
+oracle-grade: build -> /home/exedev/shipshape-shakedown/.eval-scratch/oracle-clone/examples/shakedown (6 files)
+# oracle grade: framework=shakedown  runner_exit=1
+tests=None passing=None failing=None pending=None
+all_specs_passed=False
+GRADE: UNPARSEABLE (see tail below)
+oracle-grade: grade written -> /home/exedev/shipshape-shakedown/.eval-scratch/todomvc-newsim-01/oracle-grade.txt
+
+## oracle detail
+# oracle grade: framework=shakedown  runner_exit=1
+tests=None passing=None failing=None pending=None
+all_specs_passed=False
+GRADE: UNPARSEABLE (see tail below)
+
+## cypress summary tail
+npm notice run todomvc@2.0.0 npx
+npm notice run 'start-server-and-test' node tests/server.js http://localhost:8876/examples/shakedown/index.html npx cypress run --env framework=shakedown --spec cypress/e2e/spec.cy.js --config baseUrl=http://localhost:8876/examples/
+1: starting server using command "node tests/server.js"
+and when url "[ 'http://localhost:8876/examples/shakedown/index.html' ]" is responding with HTTP status code 200
+running tests using command "npx cypress run --env framework=shakedown --spec cypress/e2e/spec.cy.js --config baseUrl=http://localhost:8876/examples/"
+
+todomvc test server listening on http://localhost:8876
+Error: Timed out waiting for: http://localhost:8876/examples/shakedown/index.html
+    at /home/exedev/shipshape-shakedown/.eval-scratch/oracle-clone/node_modules/wait-on/lib/wait-on.js:131:31
+    at doInnerSub (/home/exedev/shipshape-shakedown/.eval-scratch/oracle-clone/node_modules/rxjs/dist/cjs/internal/operators/mergeInternals.js:22:31)
+    at outerNext (/home/exedev/shipshape-shakedown/.eval-scratch/oracle-clone/node_modules/rxjs/dist/cjs/internal/operators/mergeInternals.js:17:70)
+    at OperatorSubscriber._this._next (/home/exedev/shipshape-shakedown/.eval-scratch/oracle-clone/node_modules/rxjs/dist/cjs/internal/operators/OperatorSubscriber.js:33:21)
+    at Subscriber.next (/home/exedev/shipshape-shakedown/.eval-scratch/oracle-clone/node_modules/rxjs/dist/cjs/internal/Subscriber.js:51:18)
+    at AsyncAction.<anonymous> (/home/exedev/shipshape-shakedown/.eval-scratch/oracle-clone/node_modules/rxjs/dist/cjs/internal/observable/timer.js:28:28)
+    at AsyncAction._execute (/home/exedev/shipshape-shakedown/.eval-scratch/oracle-clone/node_modules/rxjs/dist/cjs/internal/scheduler/AsyncAction.js:79:18)
+    at AsyncAction.execute (/home/exedev/shipshape-shakedown/.eval-scratch/oracle-clone/node_modules/rxjs/dist/cjs/internal/scheduler/AsyncAction.js:67:26)
+    at AsyncScheduler.flush (/home/exedev/shipshape-shakedown/.eval-scratch/oracle-clone/node_modules/rxjs/dist/cjs/internal/scheduler/AsyncScheduler.js:38:33)
+    at listOnTimeout (node:internal/timers:605:17)
+    at process.processTimers (node:internal/timers:541:7)

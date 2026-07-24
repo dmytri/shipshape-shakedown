@@ -1,0 +1,135 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 9e75b47..37a4c0a 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -2,19 +2,32 @@
+ 
+ # Captain Notes
+ 
+-## Voyage 2: Browser-page delivery
++## Voyage 3: Row identity and edit-mode controls
+ 
+-Intent: The app must render and run as a real web page in a browser.
+-Currently: no `index.html` at the project root. The template at `assets/app-template.index.html` is only consumed by the happy-dom test harness. The app behaviour is fully proven (34 passing scenarios) but unreachable from a browser.
++Intent: Fix two defects in the todo app — row element identity lost on toggle, and controls visible during editing.
+ 
+-Authored:
+-- `features/app-page.feature` — 6 new scenarios covering file existence, markup structure, JS loading, and interactive rendering.
+-- `watchbill.json` — watch1 orders the 6 new scenarios for QM.
++### Defect 1 — Row identity on toggle
++`render()` rebuilds `todoList.innerHTML` from scratch on every state change, destroying and recreating every `<li>`. A reference to a toggled row becomes stale immediately after the click.
+ 
+-Status: working tree clean at base, specs and watchbill written, ready for QM dispatch.
++Fix: Change `render()` to update existing rows in place — reuse each todo's `<li>`, keyed by the todo, creating/removing only rows that were added/removed. A toggle mutates the row already on the page instead of rebuilding the list.
+ 
+-## Decisions
+-- `index.html` will be built from `assets/app-template.index.html`, the template the specs reference.
+-- The template's CSS links (`node_modules/todomvc-common/base.css`, `node_modules/todomvc-app-css/index.css`) and the `base.js` script reference will be included per the template structure. The `todomvc-common` and `todomvc-app-css` packages are not installed — that is a production concern for Crew.
+-- No existing feature files or step definitions were modified. All existing behaviour preserved.
+-- RIGGING.md has no `conformance` command slot; no methodology checks were derived for this voyage. The first harbour will fit them.
+\ No newline at end of file
++Discriminating scenario: `features/todo-item.feature` — three new scenarios under Rule "Toggle preserves the list element identity" that capture a reference to a specific `<li>`, toggle, and assert the same element object still carries the updated state.
++
++### Defect 2 — Controls hidden during edit
++When a row is in edit mode (`li.editing`), the `.view` div (checkbox, label, destroy button) remains visible. The app needs a CSS rule at `css/app.css` that hides `.view` inside `li.editing`, so the controls are not visible regardless of where the app is served.
++
++Fix: Add to `css/app.css`: a rule targeting `.view` within `li.editing` to `display: none`.
++
++Discriminating scenario: `features/todo-editing.feature` — one new scenario under Rule "Editing mode hides other controls" that asserts the checkbox, label, and destroy button are not visible when the row is in edit mode.
++
++### Specs authored
++- `features/todo-item.feature` — added 3 scenarios under new Rule "Toggle preserves the list element identity"
++- `features/todo-editing.feature` — added 1 scenario under new Rule "Editing mode hides other controls"
++- `watchbill.json` — created with watch1 ordering the 4 new scenarios
++
++### Decisions
++- All 40 existing scenarios pass and are unmodified. All existing behaviour preserved.
++- The two fixes are independent: row-identity fix in `js/app.js`, and edit-mode CSS rule in `css/app.css`.
++- `css/app.css` does not exist yet. It must be created with the editing-controls rule and loaded by `index.html` (the link already exists in the template).
++
++Status: specs written, watchbill set, working tree clean. Ready for QM dispatch.
+\ No newline at end of file
+diff --git a/features/todo-editing.feature b/features/todo-editing.feature
+index d152c0a..089ba18 100644
+--- a/features/todo-editing.feature
++++ b/features/todo-editing.feature
+@@ -61,4 +61,15 @@ Feature: Todo editing
+     When the user double-clicks the todo titled "Buy groceries"
+     And the user changes the title to "Buy organic groceries" and presses Escape
+     Then the todo list contains an item with title "Buy groceries"
+-    And the todo item "Buy groceries" does not have the "editing" class
+\ No newline at end of file
++    And the todo item "Buy groceries" does not have the "editing" class
++
++  Rule: Editing mode hides other controls
++
++  Scenario: Editing mode hides the checkbox, label and destroy button
++    Given the app has loaded with todos:
++      | title        |
++      | Buy groceries|
++    When the user double-clicks the todo titled "Buy groceries"
++    Then the checkbox for the todo titled "Buy groceries" is not visible
++    And the label for the todo titled "Buy groceries" is not visible
++    And the destroy button for the todo titled "Buy groceries" is not visible
+\ No newline at end of file
+diff --git a/features/todo-item.feature b/features/todo-item.feature
+index 70bab2a..1234002 100644
+--- a/features/todo-item.feature
++++ b/features/todo-item.feature
+@@ -27,4 +27,36 @@ Feature: Todo item interactions
+       | Buy groceries|
+       | Walk the dog |
+     When the user destroys the todo titled "Buy groceries"
+-    Then the todo list contains only items with titles "Walk the dog"
+\ No newline at end of file
++    Then the todo list contains only items with titles "Walk the dog"
++
++  Rule: Toggle preserves the list element identity
++
++  Scenario: Toggling a completed state preserves its list element
++    Given the app has loaded with todos:
++      | title        |
++      | Buy groceries|
++      | Walk the dog |
++    When the user captures the list element for the todo titled "Buy groceries"
++    And the user clicks the toggle for the todo titled "Buy groceries"
++    Then the captured element is still attached to the list
++    And the captured element has the "completed" class
++
++  Scenario: Untoggling preserves its list element
++    Given the app has loaded with todos:
++      | title        | completed |
++      | Buy groceries| true      |
++      | Walk the dog | false     |
++    When the user captures the list element for the todo titled "Buy groceries"
++    And the user clicks the toggle for the todo titled "Buy groceries"
++    Then the captured element is still attached to the list
++    And the captured element does not have the "completed" class
++
++  Scenario: Mark-all preserves individual list elements
++    Given the app has loaded with todos:
++      | title        |
++      | Buy groceries|
++      | Walk the dog |
++    When the user captures the list element for the todo titled "Buy groceries"
++    And the user clicks the mark-all checkbox
++    Then the captured element is still attached to the list
++    And the captured element has the "completed" class
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..14f7992
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,10 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/todo-item.feature:Toggling a completed state preserves its list element",
++      "features/todo-item.feature:Untoggling preserves its list element",
++      "features/todo-item.feature:Mark-all preserves individual list elements",
++      "features/todo-editing.feature:Editing mode hides the checkbox, label and destroy button"
++    ]
++  }
++}
+\ No newline at end of file

@@ -1,0 +1,119 @@
+diff --git a/features/support/steps.js b/features/support/steps.js
+index 6a68748..1d573e1 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -851,6 +851,64 @@ Then('the new-todo input is focused and ready for input', function () {
+   }
+ });
+ 
++// --- Editing position preservation steps (todo-editing.feature) ---
++
++Given('the todos {string}, {string}, {string} exist', function (t1, t2, t3) {
++  var stored = JSON.stringify([
++    { id: Date.now() + Math.random(), title: t1, completed: false },
++    { id: Date.now() + Math.random(), title: t2, completed: false },
++    { id: Date.now() + Math.random(), title: t3, completed: false }
++  ]);
++  this.localStorage.setItem('todos-vanilla', stored);
++  this.window.location.hash = '';
++  this._appLoaded = false;
++  this.loadApp();
++});
++
++When('the user edits the second todo to {string}', function (newTitle) {
++  var items = this.document.querySelectorAll('.todo-list li');
++  if (items.length < 2) {
++    throw new Error('Need at least 2 todos, found ' + items.length);
++  }
++  var secondLi = items[1];
++  var label = secondLi.querySelector('label');
++  if (!label) {
++    throw new Error('Second todo has no label');
++  }
++  // Double-click to enter edit mode
++  var dblclickEvent = new this.window.MouseEvent('dblclick', { bubbles: true });
++  label.dispatchEvent(dblclickEvent);
++  // Find the edit input and change it
++  var editInput = secondLi.querySelector('.edit');
++  if (!editInput) {
++    throw new Error('Edit input not found on second todo');
++  }
++  editInput.value = newTitle;
++  // Press Enter to commit
++  var enterEvent = new this.window.KeyboardEvent('keydown', { key: 'Enter', keyCode: 13 });
++  editInput.dispatchEvent(enterEvent);
++});
++
++Then('the todos are, in order, {string}, {string}, {string}', function (t1, t2, t3) {
++  var items = this.document.querySelectorAll('.todo-list li');
++  var titles = [];
++  for (var i = 0; i < items.length; i++) {
++    var label = items[i].querySelector('label');
++    if (label) {
++      titles.push(label.textContent.trim());
++    }
++  }
++  var expected = [t1, t2, t3];
++  if (titles.length !== expected.length) {
++    throw new Error('Expected ' + expected.length + ' todos, got ' + titles.length + ': ' + titles.join(', '));
++  }
++  for (var j = 0; j < expected.length; j++) {
++    if (titles[j] !== expected[j]) {
++      throw new Error('Expected todos [' + expected.join(', ') + '], got [' + titles.join(', ') + ']');
++    }
++  }
++});
++
+ // --- app-conformance.feature step definitions ---
+ 
+ Given('the app source at {string}', function (filePath) {
+diff --git a/js/app.js b/js/app.js
+index 0847f3c..8737eac 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -24,6 +24,9 @@
+ /* @planks("the label for the todo titled {string} is not visible") */
+ /* @planks("the destroy button for the todo titled {string} is not visible") */
+ /* @planks("the user presses Enter in its edit field") */
++/* @planks("the todos {string}, {string}, {string} exist") */
++/* @planks("the user edits the second todo to {string}") */
++/* @planks("the todos are, in order, {string}, {string}, {string}") */
+ 
+ (function () {
+   'use strict';
+@@ -91,17 +94,16 @@
+         existing[label.textContent.trim()] = li;
+       }
+     }
+-    // Remove elements for todos that no longer exist
+-    var currentTitles = {};
+-    todos.forEach(function (t) { currentTitles[t.title] = true; });
+-    for (var key in existing) {
+-      if (!currentTitles[key]) {
+-        todoList.removeChild(existing[key]);
++    // Add or update items, preserving existing elements and position
++    var maxLen = Math.max(todos.length, todoList.children.length);
++    for (var idx = 0; idx < maxLen; idx++) {
++      if (idx >= todos.length) {
++        // Remove extra child for a deleted todo
++        todoList.removeChild(todoList.lastChild);
++        continue;
+       }
+-    }
+-    // Add or update items, preserving existing elements
+-    todos.forEach(function (todo) {
+-      var li = existing[todo.title];
++      var todo = todos[idx];
++      var li = existing[todo.title] || todoList.children[idx];
+       if (li) {
+         // Update existing element in place
+         if (todo.completed) {
+@@ -139,7 +141,7 @@
+           '<input class="edit" value="' + escapeHtml(todo.title) + '">';
+         todoList.appendChild(li);
+       }
+-    });
++    }
+     updateVisibility();
+     updateCount();
+     updateClearButton();

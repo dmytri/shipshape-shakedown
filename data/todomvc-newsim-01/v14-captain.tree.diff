@@ -1,0 +1,86 @@
+diff --git a/RIGGING.md b/RIGGING.md
+index 3281bcb..fe3aa43 100644
+--- a/RIGGING.md
++++ b/RIGGING.md
+@@ -7,11 +7,13 @@
+ - specs: features
+ - implementation: js
+ - verification: features/support
++- scantlings: scantlings
+ 
+ ## Commands
+ - focused: npx cucumber-js --name "{scenario}" features/
+ - discover: npx cucumber-js --dry-run features/
+ - broad: npx cucumber-js features/
++- conformance: none
+ - step-usage: none
+ - plank-inventory: none
+ - typecheck: none
+diff --git a/features/app-conformance.feature b/features/app-conformance.feature
+new file mode 100644
+index 0000000..c69b941
+--- /dev/null
++++ b/features/app-conformance.feature
+@@ -0,0 +1,13 @@
++Feature: App source conformance
++  As a project maintainer
++  I want the app source to satisfy structural rules
++  So that the project's own method is enforced
++
++  Rule: The edit-commit re-entrancy guard prevents the double-commit bug
++
++  @conformance
++  Scenario: The edit field's Enter handler delegates to blur, not to commitEdit directly
++    Given the app source at "js/app.js"
++    When a conformance check inspects the edit-field Enter handler
++    Then the Enter handler calls editInput.blur()
++    And the Enter handler does not call commitEdit directly
+\ No newline at end of file
+diff --git a/scantlings/edit-commit-structure.md b/scantlings/edit-commit-structure.md
+new file mode 100644
+index 0000000..e1579c9
+--- /dev/null
++++ b/scantlings/edit-commit-structure.md
+@@ -0,0 +1,23 @@
++# Edit-commit re-entrancy guard
++
++The edit field's keydown handler for the Enter key MUST release focus by calling `.blur()` on the edit input element and MUST NOT call `commitEdit` directly. The blur handler on the edit input MUST be the single path that commits the edit.
++
++This structural rule prevents the double-commit re-entrancy bug that occurs in a real browser: when the Enter handler calls `commitEdit` directly, the re-render removes the still-focused edit field from the DOM, which causes the browser to fire `blur` on the removed node, which calls `commitEdit` a second time on a stale node, producing a `NotFoundError` and corrupting the todo.
++
++## Structural constraint
++
++The `editInput.onkeydown` function body that handles `ENTER_KEY` (keyCode 13) must contain:
++
++- A call to `editInput.blur()` — this releases focus and triggers the blur handler in a single controlled path.
++- No call to `commitEdit` — the blur handler is the only commit path.
++
++The `editInput.onblur` function body is the sole allowed call site of `commitEdit`.
++
++## Check method
++
++Read `js/app.js`, locate the `onkeydown` assignment inside the `dblclick` handler, inspect the `ENTER_KEY` branch. Assert:
++
++1. The branch contains `editInput.blur()` or an equivalent focus-release expression.
++2. The branch does NOT contain `commitEdit`.
++
++A passing conformance check on this scantling means the structural rule is satisfied.
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..b33ad64
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,11 @@
++{
++  "watches": [
++    {
++      "id": "watch1-fix-double-commit",
++      "label": "Fix double-commit re-entrancy in todo editing",
++      "scenarios": [
++        "features/app-conformance.feature:The edit field's Enter handler delegates to blur, not to commitEdit directly"
++      ]
++    }
++  ]
++}
+\ No newline at end of file

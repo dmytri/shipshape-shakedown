@@ -1,0 +1,35 @@
+diff --git a/features/todo-editing.feature b/features/todo-editing.feature
+index 35757cd..f1e08e7 100644
+--- a/features/todo-editing.feature
++++ b/features/todo-editing.feature
+@@ -79,6 +79,13 @@ Feature: Todo editing
+     Then the todo list contains an item with title "Buy groceries"
+     And the todo item "Buy groceries" does not have the "editing" class
+ 
++  Rule: Editing preserves the list position
++
++  Scenario: Editing a todo keeps it in its original position
++    Given the todos "one", "two", "three" exist
++    When the user edits the second todo to "two edited"
++    Then the todos are, in order, "one", "two edited", "three"
++
+   Rule: Editing mode hides other controls
+ 
+   Scenario: Editing mode hides the checkbox, label and destroy button
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..ce27b71
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,10 @@
++{
++  "watches": [
++    {
++      "name": "Edit position preservation",
++      "scenarios": [
++        "features/todo-editing.feature:Editing a todo keeps it in its original position"
++      ]
++    }
++  ]
++}
+\ No newline at end of file

@@ -1,5 +1,52 @@
 # Metrics: how to read a shakedown
 
+## NEW-WAY TodoMVC PILOT — deepseek-v4-flash, candidate yoink-settle (2026-07-24) — PASSED 28/29
+
+**The acceptance-tier TodoMVC pilot, run the NEW way (pi baseline agents, not sonnet subagents),
+reached the same 28/29 the sonnet pilots hit — on deepseek-v4-flash, for $1.33.** Same upstream
+tastejs/todomvc Cypress oracle, same pinned commit + 2 patches + `framework=shakedown`, so the
+grade is directly comparable to the sonnet-era pilots. Instrument: `bin/scaffold-todomvc.sh` +
+`bin/eval-voyage.sh` (per-voyage Captain→QM-assumes-rest over one sim) + `bin/oracle-grade.sh`
+(quarantined Cypress grader). Banked `data/todomvc-newsim-01/` (voyage intents, per-voyage oracle
+grades, final winning build, and OPERATOR-LESSONS.md).
+
+**Economy: 16 voyages, 32 legs, 518 invocations, $1.33, ~11.1M tok_in.** Oracle trajectory across
+voyages: **0 → 0 → 23 → 23 → 23 → 23 → 24 → 24 → 24 → 24 → 24 → 24 → 25 → (regress) → 28/29.**
+
+**The pilot's headline is an OPERATOR-CRAFT finding, not a model verdict: reaching 28/29 was a
+TARGETING problem, never a coding-capability one.** deepseek coded every fix it was given a proper
+red target for; it stalled only where the operator failed to give one. The three regimes:
+1. **Tier-visible bugs** (routing/filters, missing page, DOM-identity render, edit ORDER): a plain
+   scenario that fails in the roles' own happy-dom suite gives QM a target; deepseek fixes it. This
+   drove 0→24 and the final 25→28.
+2. **Tier-invisible bug** (the edit-commit reentrancy: happy-dom does not fire blur on node removal,
+   the exact limit METRICS documents): NO executing scenario can redden it, so 6 voyages of symptom/
+   structural/investigation prose NO-OP'd (QM only acts on a red target; `js/app.js` untouched across
+   v8–v13, tree-proven). dk's steer — a **SCANTLING** (a STRUCTURAL check over the source: "Enter must
+   route through blur, not commitEdit directly") — reddens where the DOM tier can't, and deepseek then
+   coded the one-line fix (v14, +1). This is the doctrine-native answer to a fixture the executing
+   tier can't reach.
+3. **Over-reach regression** (v15): asked to fix render ordering, deepseek REWROTE render and broke the
+   app (self-suite 48→6, oracle 0/29). Fix: revert + a new `eval-voyage.sh` guard that reverts any
+   voyage leaving the self-suite red (never poison the base), and a SURGICAL "smallest change, keep the
+   suite green" intent (v16) that landed the fix cleanly.
+
+**Operator no-op lesson, tree-evidenced (the sharpest):** describing a behaviour the roles' green suite
+already "passes" moves nothing — v8 QM ran 14 turns / 0 writes, v9 QM 7 turns / 0 writes, v11 Captain
+16 turns = 25 reads / 0 writes ending MID-investigation. The channel to the implementer is a scenario
+that FAILS; investigation-mandate prose makes a cheap model read endlessly and never author. Prompts
+must be short, concrete, action-first, and carry a red-able target matched to the bug's tier. Full
+account in `data/todomvc-newsim-01/OPERATOR-LESSONS.md`.
+
+**Instrument bugs found+fixed building this (all committed):** grade `set -e` crash on NOT-CLEAR;
+credit-out void voyage marker; escape-detector false-positive (whitelist bound subtrees); cockpit-local
+`.env`; oracle wait-URL + `WAIT_ON_TIMEOUT` cap; screenshots/video off with reporter-parsed failing
+titles (dk); `eval-voyage.sh` regression-revert guard.
+
+**Nothing shipped to `~/shipshape`.** Candidate yoink-settle still unshipped; this pilot exercised it as
+the doctrine under test and it held across 32 legs.
+
+
 ## NEW-SIM PILOT #1 — candidate yoink-settle, deepseek-v4-flash, `bin/eval-pilot.sh` (2026-07-24) — PASSED, oracle CLEAR, and a headline yoink-affordance asymmetry
 
 **The first full-lifecycle pilot on the NEW instrument, retiring the sonnet/clear method for pi baselines.** `bin/eval-pilot.sh` composes the eval atom into one operator-driven voyage over the tidewatch sim: Captain (specs+watchbill) → commit as durable base → QM-assumes-rest → MODEL-FREE external oracle grade. Candidate = **yoink-settle** (the SAME as the golden draws), each leg `--skill`'d the candidate shipshape+role skills + `~/yoink/skills/yoink`. Banked `data/pilot-newsim-01/`. **48 inv / 965,307 fresh-in / 24,146 out / 1,336,576 cache (58%) / $0.1202 / 447s wall, 2 legs.**

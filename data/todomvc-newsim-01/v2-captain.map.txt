@@ -1,0 +1,18 @@
+# banked: 2026-07-24T13:45:28Z
+# verdict: PENDING
+# leg: {  "name": "v2-captain",  "model": "deepseek/deepseek-v4-flash",  "provider": "openrouter",  "workspace": ".eval-scratch/todomvc-newsim-01/sim",  "timeout_s": 1500,  "skills": [    "experiments/yoink-settle/skills/shipshape",    "experiments/yoink-settle/skills/captain",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== v2-captain.session.jsonl ===
+  turns=8  wall=33.6s  in=50298  out=5975  cache_read=105984  cost=$0.0078
+  role reads: shipshape@t0 -> captain@t0
+  roles loaded: captain, shipshape
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    2276/183        0 $0.0002  read, read
+    t1   18443/654        0 $0.0019  read, read, read, read
+    t2   19320/135        0 $0.0018  bash
+    t3     583/254    19200 $0.0005  read, read, read, read
+    t4    1433/192    19712 $0.0005  bash, bash, bash
+    t5     725/280    20992 $0.0005  read, read, read, read, read
+    t6    3156/180    21504 $0.0007  read, read, read
+    t7    4362/4097   24576 $0.0016  -

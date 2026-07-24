@@ -1,0 +1,49 @@
+# oracle grade: framework=shakedown  runner_exit=1
+tests=29 passing=0 failing=1 pending=0
+all_specs_passed=False
+GRADE: 0/29
+
+## failing tests
+  - TodoMVC - shakedown -- When page is initially opened -- "before each" hook for "should focus on the todo input field"
+
+## cypress summary tail
+  │ Tests:        29                                                                               │
+  │ Passing:      0                                                                                │
+  │ Failing:      1                                                                                │
+  │ Pending:      0                                                                                │
+  │ Skipped:      28                                                                               │
+  │ Screenshots:  0                                                                                │
+  │ Video:        false                                                                            │
+  │ Duration:     4 seconds                                                                        │
+  │ Spec Ran:     spec.cy.js                                                                       │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+================================================================================
+
+  (Run Finished)
+
+
+       Spec                                              Tests  Passing  Failing  Pending  Skipped  
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ ✖  spec.cy.js                               00:04       29        -        1        -       28 │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+    ✖  1 of 1 failed (100%)                     00:04       29        -        1        -       28  
+
+Error: Command failed with exit code 1: npx cypress run --env framework=shakedown --spec cypress/e2e/spec.cy.js --config baseUrl=http://localhost:8893/examples/,screenshotOnRunFailure=false,video=false
+    at makeError (/home/exedev/shipshape-shakedown/.eval-scratch/oracle-clone/node_modules/start-server-and-test/node_modules/execa/lib/error.js:60:11)
+    at handlePromise (/home/exedev/shipshape-shakedown/.eval-scratch/oracle-clone/node_modules/start-server-and-test/node_modules/execa/index.js:118:26)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  shortMessage: 'Command failed with exit code 1: npx cypress run --env framework=shakedown --spec cypress/e2e/spec.cy.js --config baseUrl=http://localhost:8893/examples/,screenshotOnRunFailure=false,video=false',
+  command: 'npx cypress run --env framework=shakedown --spec cypress/e2e/spec.cy.js --config baseUrl=http://localhost:8893/examples/,screenshotOnRunFailure=false,video=false',
+  escapedCommand: '"npx cypress run --env framework=shakedown --spec cypress/e2e/spec.cy.js --config baseUrl=http://localhost:8893/examples/,screenshotOnRunFailure=false,video=false"',
+  exitCode: 1,
+  signal: undefined,
+  signalDescription: undefined,
+  stdout: undefined,
+  stderr: undefined,
+  failed: true,
+  timedOut: false,
+  isCanceled: false,
+  killed: false
+}

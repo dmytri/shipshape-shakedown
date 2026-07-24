@@ -48,9 +48,17 @@ mkdir -p "$(dirname "$OUT")"
 RUNLOG="$(mktemp)"
 set +e
 # Wait on the BUILD's entry (a 200), not on /examples/ (a dir → 404, times out).
-( cd "$CLONE" && PORT="$PORT" npx --yes start-server-and-test \
+# WAIT_ON_TIMEOUT caps the wait: a build with no servable index.html (a real finding —
+# roles that test a synthesized DOM but ship no deployable page, pilot #6's gap) would
+# otherwise spin forever, since start-server-and-test waits indefinitely by default.
+# The outer `timeout` is the backstop covering the whole serve+run.
+# screenshots + video OFF (dk 2026-07-24): the failing test TITLES come from cypress's
+# own spec-reporter output (parsed below), so per-failure screenshots were only disk
+# noise. `screenshotOnRunFailure=false,video=false` disables both.
+( cd "$CLONE" && WAIT_ON_TIMEOUT="${WAIT_ON_TIMEOUT:-90000}" PORT="$PORT" \
+    timeout "${ORACLE_TIMEOUT_S:-420}" npx --yes start-server-and-test \
     "node tests/server.js" "http://localhost:$PORT/examples/$FRAMEWORK/index.html" \
-    "npx cypress run --env framework=$FRAMEWORK --spec cypress/e2e/spec.cy.js --config baseUrl=http://localhost:$PORT/examples/" \
+    "npx cypress run --env framework=$FRAMEWORK --spec cypress/e2e/spec.cy.js --config baseUrl=http://localhost:$PORT/examples/,screenshotOnRunFailure=false,video=false" \
   ) >"$RUNLOG" 2>&1
 GEXIT=$?
 set -e
@@ -68,17 +76,41 @@ passing = last(r'Passing:\s+(\d+)')
 failing = last(r'Failing:\s+(\d+)')
 pending = last(r'Pending:\s+(\d+)')
 allpass = "All specs passed!" in txt
+# Failing test titles from the spec reporter's FINAL failures section (replaces the
+# screenshot filenames, dk 2026-07-24). Restrict to the tail after the "N failing" summary
+# so interleaved ✓-passing run lines aren't captured. Each failure is a `  N) ` block whose
+# indented, checkmark-free lines are the describe path + leaf title (ending ':'); error follows.
+m = list(re.finditer(r'\n\s*\d+\s+failing', txt))
+section = txt[m[-1].end():] if m else ""
+fails, cur = [], None
+for line in section.splitlines():
+    if re.match(r'^\s+\d+\)\s', line):
+        if cur: fails.append(cur)
+        rest = line.strip().split(') ', 1)[-1].strip()
+        cur = [rest] if rest else []
+    elif cur is not None:
+        s = line.strip()
+        if not s or '✓' in s or re.match(r'(Assertion|Error|TypeError|NotFound|CypressError|\+ expected|- |at |\d+\))', s):
+            fails.append(cur); cur = None
+        else:
+            cur.append(s.rstrip(':'))
+if cur: fails.append(cur)
+failing_titles = [" -- ".join(dict.fromkeys(p for p in blk if p and '✓' not in p)) for blk in fails if blk]
 lines = [
   f"# oracle grade: framework={fw}  runner_exit={gexit}",
   f"tests={tests} passing={passing} failing={failing} pending={pending}",
   f"all_specs_passed={allpass}",
   f"GRADE: {passing}/{tests}" if tests else "GRADE: UNPARSEABLE (see tail below)",
   "",
+  "## failing tests",
+] + ([f"  - {t}" for t in failing_titles] or ["  (none parsed)"]) + [
+  "",
   "## cypress summary tail",
 ]
 tail = txt.splitlines()[-40:]
 open(out, "w").write("\n".join(lines) + "\n" + "\n".join(tail) + "\n")
 print("\n".join(lines[:4]))
+print("failing:", "; ".join(failing_titles) if failing_titles else "(none parsed)")
 PY
 rm -f "$RUNLOG"
 echo "oracle-grade: grade written -> $OUT" >&2

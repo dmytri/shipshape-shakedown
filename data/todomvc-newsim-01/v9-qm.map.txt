@@ -1,0 +1,18 @@
+# banked: 2026-07-24T15:32:42Z
+# verdict: PENDING
+# leg: {  "name": "v9-qm",  "model": "deepseek/deepseek-v4-flash",  "provider": "openrouter",  "workspace": ".eval-scratch/todomvc-newsim-01/sim",  "timeout_s": 1500,  "skills": [    "experiments/yoink-settle/skills/shipshape",    "experiments/yoink-settle/skills/qm",    "experiments/yoink-settle/skills/crew",    "experiments/yoink-settle/skills/boatswain",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== v9-qm.session.jsonl ===
+  turns=7  wall=107.7s  in=143667  out=4399  cache_read=62720  cost=$0.0155
+  role reads: shipshape@t0 -> qm@t0 -> crew@t0 -> boatswain@t0 -> shipshape@t1
+  roles loaded: boatswain, crew, qm, shipshape
+  ~ repeated tool signature at turns [1] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    2371/328        0 $0.0003  read, read, read, read
+    t1   19816/317     2304 $0.0020  read, bash
+    t2   30717/240      512 $0.0029  bash
+    t3     713/404    30976 $0.0007  bash, bash
+    t4   32201/1782       0 $0.0034  read, read, read, read, read, read
+    t5    8888/289    28672 $0.0014  read, read, read, read, read
+    t6   48961/1039     256 $0.0048  -

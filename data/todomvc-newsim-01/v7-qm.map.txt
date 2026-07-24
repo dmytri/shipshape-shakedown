@@ -1,0 +1,41 @@
+# banked: 2026-07-24T14:39:17Z
+# verdict: PENDING
+# leg: {  "name": "v7-qm",  "model": "deepseek/deepseek-v4-flash",  "provider": "openrouter",  "workspace": ".eval-scratch/todomvc-newsim-01/sim",  "timeout_s": 1500,  "skills": [    "experiments/yoink-settle/skills/shipshape",    "experiments/yoink-settle/skills/qm",    "experiments/yoink-settle/skills/crew",    "experiments/yoink-settle/skills/boatswain",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== v7-qm.session.jsonl ===
+  turns=30  wall=368.8s  in=702731  out=20773  cache_read=1079936  cost=$0.0901
+  role reads: shipshape@t0 -> qm@t0 -> shipshape@t1 -> crew@t1 -> boatswain@t1
+  roles loaded: boatswain, crew, qm, shipshape
+  ~ repeated tool signature at turns [1, 18] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    2366/172        0 $0.0003  read, read
+    t1   14441/253     2048 $0.0014  read, read, read
+    t2   28603/517     2048 $0.0028  bash, bash
+    t3   30763/59       512 $0.0029  bash
+    t4   31727/274        0 $0.0030  bash, bash
+    t5   32509/596        0 $0.0032  write
+    t6   32620/102      512 $0.0031  bash
+    t7   15118/211    31744 $0.0021  read, read, read
+    t8   15321/196    33024 $0.0021  bash
+    t9   48657/188        0 $0.0046  read, read, bash
+    t10   7357/1004   48128 $0.0018  write
+    t11  10433/116    46080 $0.0019  bash
+    t12  13970/2336   45056 $0.0026  edit
+    t13  61399/386        0 $0.0058  bash
+    t14   5669/191    56320 $0.0016  bash
+    t15  33916/2960   28672 $0.0043  read, bash
+    t16  67146/643      640 $0.0064  read, bash, bash
+    t17   2401/4011   68352 $0.0023  edit
+    t18   4138/1038   70656 $0.0019  edit
+    t19  46190/177    29696 $0.0049  bash
+    t20    515/1048   75776 $0.0017  edit
+    t21     66/1059   77312 $0.0017  bash
+    t22    223/249    78336 $0.0015  bash
+    t23  78922/544        0 $0.0075  bash
+    t24  21240/441    61440 $0.0032  bash
+    t25  83210/733        0 $0.0079  bash
+    t26   5210/280    78720 $0.0020  bash
+    t27   2325/229    81920 $0.0018  bash
+    t28   5702/90     78848 $0.0020  bash
+    t29    574/670    84096 $0.0018  -
