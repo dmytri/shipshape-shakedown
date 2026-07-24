@@ -74,6 +74,51 @@ BEFORE watching, never `head -1` of a fuzzy pattern. -->
 
 
 <!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
+## >>> FRESH-SESSION MISSION (primed 2026-07-24): run a NEW pilot the new way. <<<
+
+The new-way pilot instrument and the operator playbook are BOTH proven (28/29 reached last
+session). Your job this session: **run a fresh pilot end to end using them, and keep the
+operator log honest.** Everything you need exists — do not rebuild it.
+
+**The instrument (all committed, all tested):**
+- `bin/scaffold-todomvc.sh` — empty TodoMVC project + vendored spec/template + cucumber/happy-dom.
+- `bin/eval-voyage.sh` — ONE voyage over an existing sim: Captain(your intent) → commit →
+  QM-assumes-rest → self-suite → operator-custody commit; REVERTS the voyage if the self-suite
+  goes red (base never poisoned).
+- `bin/oracle-grade.sh` — quarantined upstream Cypress grader → `GRADE: N/29` + failing titles
+  (screenshots off). Runs on a port you pass; the oracle clone is at `.eval-scratch/oracle-clone`
+  (pinned + patched; re-clone+patch per `fixtures/oracle/README.md` if it's gone).
+- `bin/eval-pilot-todomvc.sh` — the single-voyage build+grade wrapper (voyage 1 only).
+
+**The operator playbook — READ IT FIRST: `tasks/pilot/operator-presets.md`.** Preset A =
+kickoff (`tasks/pilot/captain-todomvc.task.md`); Preset B = the derive-next-voyage-from-oracle
+procedure. Intents are LEAN now (address the role + product intent; trust the doctrine — no
+priming). Narrative "why" + 15 worked-example intents: `data/todomvc-newsim-01/OPERATOR-LESSONS.md`
+and `data/todomvc-newsim-01/voyage-intents/`.
+
+**Run sequence (use a FRESH wave name, e.g. `todomvc-newsim-02`, so last run's bank survives):**
+1. Kickoff: `eval-pilot-todomvc.sh --wave todomvc-newsim-02 --model deepseek/deepseek-v4-flash
+   --skills-dir experiments/yoink-settle/skills --yoink-skill /home/exedev/yoink/skills/yoink`
+   (background it; `.blur`-hang-free launch via `setsid bash -c '…' & disown`).
+2. Phase-1 gate: do NOT grade until the roles' self-suite is fully green; iterate build voyages
+   (`eval-voyage.sh … --voyage N --captain-task <intent>`) until it is.
+3. Grade with `oracle-grade.sh` (fresh port each run), then loop Preset B: group failures by root
+   cause → classify the bug's TIER (visible → failing scenario; invisible → SCANTLING) → lean
+   Captain intent → re-grade, until 28/29 (28 is the ceiling; #29 is perennially pending).
+4. Bank per-voyage intents/grades + final build + update OPERATOR-LESSONS; commit+push (raw
+   `*.stdout.json` stays gitignored).
+
+**Open question worth this run:** is 28/29 REPRODUCIBLE, and does the operator-effort/targeting
+finding hold on a fresh build — or would a DIFFERENT golden-set model (kimi-k3, deepseek-v4-pro,
+qwen3.7-plus) need more/less operator targeting? dk pinned deepseek-v4-flash "for now"; confirm
+the model with dk at kickoff (standard `/shakedown` one-question) before spending.
+
+**Deck:** candidate = `yoink-settle` (`experiments/yoink-settle/skills/*` + `~/yoink/skills/yoink`),
+installed control = 0.13.64. NOTHING shipped to `~/shipshape` — the candidate is doctrine-under-test
+and held across 32 legs. The pi eval reads skills via `--skill` off disk, so the process-restart
+stale-snapshot rule does NOT bind the eval legs (it only ever bound live `shipshape:*` dispatches).
+
+<!-- ===================== prior milestone (reference) ===================== -->
 ## >>> DONE, 2026-07-24 (later session): NEW-WAY TodoMVC PILOT PASSED 28/29 on deepseek-v4-flash. <<<
 
 **The acceptance-tier TodoMVC pilot, run the new way (pi agents, operator-directed voyages), reached
