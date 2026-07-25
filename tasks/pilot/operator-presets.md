@@ -7,10 +7,21 @@ operator is the main session loop; each voyage it hands ONE intent to Captain vi
 
 Three hard rules that hold for EVERY intent:
 - **Address the role, give clear intent, and TRUST THE DOCTRINE.** Do not re-prime or
-  re-phrase Shipshape in the intent — no "read the Articles and follow them," no "author the
-  durable specs and the watchbill, stop after, do not commit/push/tag." The role skill
-  (loaded via `--skill`) already carries all of that; repeating it is noise. An intent is
-  just: name the role, the project root (and base commit for QM), and the product intent.
+  re-phrase Shipshape in the intent — no "read the Articles and follow them." Do not restate
+  doctrine MECHANICS the skill already carries. An intent is just: name the role, the project
+  root (and base commit for QM), and the product intent.
+  - **HEADLESS EXCEPTION (learned 2026-07-25, newsim-02, tree-evidenced).** Stripping the
+    intents bare regressed the pilot: the Captain skill says "tell them what you will do and
+    wait for confirmation," and a headless `pi -p` run has no human to confirm, so Captain
+    states a plan and the turn ends with zero artifacts (0/2 draws). QM stops at the Crew
+    hand-off the same way. In a headless pilot the operator IS the absent human, so the intent
+    MUST carry the confirmation the role is waiting for: a lean action directive — Captain
+    "proceed without waiting for confirmation; author the specs and watchbill, then stop; do
+    not commit/dispatch"; QM "assume the downstream roles in place and carry the voyage to a
+    green self-suite; do not push/tag." This is NOT doctrine re-priming (it restates no
+    Article); it supplies the human turn the runtime removes. Isolation proof: the same lean
+    launch + the primed intent authored 9 features + watchbill; the bare intent authored
+    nothing. This regression was bff21ad, unvalidated until this run.
   A dispatch this session actually used and won on:
       `You are the Shipshape Captain. Project root: ‹path›.`
       `‹the product intent — what a user needs / what is broken›.`
