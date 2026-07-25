@@ -70,24 +70,33 @@ pick_intent(){ # $1=passing  $2=titles(lowercased, newline). MAJORITY-based: the
   # page/crash override
   if [ "${passing:-0}" -le 1 ] || echo "$t" | grep -qE 'before each|initially opened|focus on the todo'; then echo page; return; fi
   [ -f "$SIM/index.html" ] || { echo page; return; }
-  local c_dom c_edit c_route c_back
-  c_dom=$(echo "$t"  | grep -cE 'mark items as complete|un-mark items|mark all items|clear the complete state|hide other controls when editing')
-  c_edit=$(echo "$t" | grep -cE 'edit an item|save edits on blur|trim entered text|empty text string')
-  c_route=$(echo "$t"| grep -cE 'active filter|completed filter|active route|completed route|selected class|preserved on reload|persist|hides it in the (active|completed)')
-  c_back=$(echo "$t" | grep -cE 'back button|forward button|history')
-  # winner = max count; tie-break dom > edit > route > back
-  local best="" bestn=0
-  for pair in "domidentity:$c_dom" "editing:$c_edit" "routing:$c_route" "backbutton:$c_back"; do
-    local g="${pair%%:*}" n="${pair##*:}"
-    if [ "$n" -gt "$bestn" ]; then bestn="$n"; best="$g"; fi
+  local c_dom c_edithide c_edit c_route c_back
+  c_dom=$(echo "$t"     | grep -cE 'mark items as complete|un-mark items|mark all items|clear the complete state')
+  c_edithide=$(echo "$t"| grep -cE 'hide other controls when editing')
+  c_edit=$(echo "$t"    | grep -cE 'edit an item|save edits on blur|trim entered text|empty text string')
+  c_route=$(echo "$t"   | grep -cE 'active filter|completed filter|active route|completed route|selected class|preserved on reload|persist|hides it in the (active|completed)|display active|display completed|highlight the currently')
+  c_back=$(echo "$t"    | grep -cE 'back button|forward button|history')
+  # winner = the group with the most failures; on a TIE, CYCLE (prefer a group != last intent)
+  # so a 1-1-1 residual split doesn't repeat one intent forever (deepseek stuck at 25/29).
+  local best="" bestn=0 g n grp intent
+  # map group -> the intent it dispatches (editing resolves reentrancy-then-order below)
+  for pair in "dom:$c_dom" "edithide:$c_edithide" "edit:$c_edit" "route:$c_route" "back:$c_back"; do
+    n="${pair##*:}"; [ "$n" -gt "$bestn" ] && bestn="$n"
   done
   [ "$bestn" -eq 0 ] && { echo unknown; return; }
-  if [ "$best" = "editing" ]; then
-    if [ "$LAST_INTENT" != "editreentrancy" ] && [ "$LAST_INTENT" != "editorder" ]; then echo editreentrancy; return; fi
-    if [ "$LAST_INTENT" = "editreentrancy" ]; then echo editorder; return; fi
-    echo unknown; return
-  fi
-  echo "$best"
+  # collect tied groups (count==bestn), in priority order, mapped to their intent
+  local tied=()
+  for pair in "dom:domidentity:$c_dom" "edithide:edithide:$c_edithide" "edit:EDIT:$c_edit" "route:routing:$c_route" "back:backbutton:$c_back"; do
+    grp="${pair%%:*}"; intent="$(echo "$pair"|cut -d: -f2)"; n="${pair##*:}"
+    [ "$n" -eq "$bestn" ] && tied+=("$intent")
+  done
+  # editing intent resolves to reentrancy first, then order
+  resolve(){ if [ "$1" = "EDIT" ]; then if [ "$LAST_INTENT" = "editreentrancy" ]; then echo editorder; else echo editreentrancy; fi; else echo "$1"; fi; }
+  # pick the first tied intent whose resolved value != LAST_INTENT; else the first
+  local pick=""
+  for intent in "${tied[@]}"; do local r; r="$(resolve "$intent")"; if [ "$r" != "$LAST_INTENT" ]; then pick="$r"; break; fi; done
+  [ -n "$pick" ] || pick="$(resolve "${tied[0]}")"
+  echo "$pick"
 }
 
 run_voyage(){ # $1=voyage#  $2=captain-task-file  $3=extra(eg --no-revert)
