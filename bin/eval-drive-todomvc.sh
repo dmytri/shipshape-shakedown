@@ -109,14 +109,62 @@ run_voyage(){ # $1=voyage#  $2=captain-task-file  $3=extra(eg --no-revert)
   t1=$(date +%s); echo $((t1-t0))
 }
 
+# --- Shipwright harbour pass + planking evaluation (dk: evaluate the role, don't grade the
+# artifact myself). Runs a Shipwright leg over the current sim, commits its harbour output,
+# and audits WHERE its @planks landed: on the nearest seam (correct) vs hoisted to the file
+# top (the observed non-conformance). Reverts if it breaks the self-suite. ---
+YSK=(); [ -n "$YOINK" ] && YSK=(--skill "$YOINK")
+audit_planks(){ # -> "planks=N on-seam=X hoisted=Y | @captain=C @conformance=K"
+  python3 - "$SIM" <<'PY'
+import sys,re,glob,os
+sim=sys.argv[1]; app=os.path.join(sim,"js","app.js")
+try: lines=open(app).read().splitlines()
+except Exception: print("planks=NO-APP.JS"); raise SystemExit
+fn=[i for i,l in enumerate(lines) if re.search(r'\bfunction\b|=>|^\s*[A-Za-z_$][\w$]*\s*\(',l)]
+firstfn=fn[0] if fn else None
+fnset=set(fn)
+planks=[i for i,l in enumerate(lines) if '@planks' in l]
+onseam=hoisted=0
+for p in planks:
+    if firstfn is not None and p<firstfn: hoisted+=1; continue
+    onseam += 1 if any((p+d) in fnset for d in range(0,4)) else 0
+    if not any((p+d) in fnset for d in range(0,4)): hoisted+=1
+cap=con=0
+for f in glob.glob(os.path.join(sim,"features","**","*.feature"),recursive=True):
+    t=open(f).read(); cap+=t.count("@captain"); con+=t.count("@conformance")
+print(f"planks={len(planks)} on-seam={onseam} hoisted={hoisted} | @captain={cap} @conformance={con}")
+PY
+}
+run_shipwright(){ # $1=label
+  local label="$1" out="$BASE/sw-$label.out" t0 t1 committed=no prehead
+  prehead="$(git -C "$SIM" rev-parse HEAD 2>/dev/null)"
+  t0=$(date +%s)
+  sed "s#PROJECT_ROOT_PLACEHOLDER#$SIM#g" "$HERE/tasks/pilot/shipwright.task.md" > "$BASE/sw-$label.task"
+  "$HERE/bin/eval-leg.sh" --model "$MODEL" --workspace "$SIM" --out "$out" \
+    --skill "$SKILLS_DIR/shipshape" --skill "$SKILLS_DIR/shipwright" "${YSK[@]}" \
+    --task-file "$BASE/sw-$label.task" --name "sw-$label" --timeout-s "$TIMEOUT_S" >"$BASE/sw-$label.leg.log" 2>&1 || true
+  t1=$(date +%s)
+  git -C "$SIM" add -A >/dev/null 2>&1 || true
+  [ -n "$(git -C "$SIM" status --porcelain)" ] && { git -C "$SIM" -c user.name="Sim Operator" -c user.email="sim@example.test" commit -qm "shipwright harbour ($label)" >/dev/null 2>&1 && committed=yes; }
+  local audit; audit="$(audit_planks)"
+  # keep the sim GREEN — a harbour pass that breaks the self-suite is reverted (measured, not merged)
+  rm -rf "$SIM/node_modules"; ln -s "$EVAL_SHARED_NM" "$SIM/node_modules"
+  local ss; ss=$( ( cd "$SIM" && npx cucumber-js 2>&1 | tail -3 ) | grep -oE '[0-9]+ scenarios \([^)]*\)' | head -1 )
+  rm -f "$SIM/node_modules"; mkdir -p "$SIM/node_modules"
+  if echo "$ss" | grep -qE 'failed'; then git -C "$SIM" reset --hard "$prehead" >/dev/null 2>&1 || true; committed="reverted(self-suite red)"; fi
+  say "SHIPWRIGHT[$label] $((t1-t0))s | committed=$committed | self-suite:${ss:-?} | $audit"
+}
+
 # ---- Voyage 1: build (skipped on resume) ----
 if [ "$RESUME_FROM" -eq 0 ]; then
   say "VOYAGE 1 (build)"
   w=$(run_voyage 1 "$HERE/tasks/pilot/captain-todomvc.task.md" "--no-revert")
   if grep -q 'PROVIDER ERROR' "$BASE/v1.log" 2>/dev/null; then say "PROVIDER ERROR on build — STOP"; echo PILOT-DONE; exit 5; fi
   ss=$(tail -3 "$BASE/v1-selfsuite.txt" 2>/dev/null | grep -oE '[0-9]+ scenarios \([^)]*\)' | head -1)
+  say "V1 build ${w}s | self-suite: ${ss:-?} — Shipwright harbour pass #1 (before first oracle)"
+  run_shipwright prebuild
   read -r p t <<<"$(grade v1)"
-  say "V1 build ${w}s | self-suite: ${ss:-?} | oracle ${p}/${t} | failing:"; titles v1 | sed 's/^/    /' | tee -a "$LOG" >/dev/null
+  say "V1 (post-shipwright) | oracle ${p}/${t} | failing:"; titles v1 | sed 's/^/    /' | tee -a "$LOG" >/dev/null
   START=2
 else
   # discard any dirty tree left by an interrupted voyage — grade only the last committed state
@@ -131,7 +179,14 @@ fi
 # ---- Iterate ----
 prev_p=-1; prev_titles=""; stuck=0
 for v in $(seq "$START" "$MAXV"); do
-  if [ "${p:-0}" -ge 28 ]; then say "REACHED ${p}/${t} — DONE"; break; fi
+  if [ "${p:-0}" -ge 28 ]; then
+    say "REACHED ${p}/${t} — Shipwright harbour pass #2 (after 28/29)"
+    run_shipwright final
+    read -r pp tt <<<"$(grade post-shipwright)"
+    if [ "${pp:-0}" -ge 28 ]; then say "POST-SHIPWRIGHT oracle ${pp}/${tt} — STILL 28/29 (shipwright did not regress) — DONE";
+    else say "POST-SHIPWRIGHT oracle ${pp}/${tt} — REGRESSED from ${p}/${t}!! shipwright broke function — DONE(flagged)"; fi
+    break
+  fi
   tl=$(titles v$((v-1)) | tr 'A-Z' 'a-z')
   intent=$(pick_intent "$p" "$tl")
   if [ "$intent" = "unknown" ]; then say "UNKNOWN failure pattern at ${p}/${t} — STOP for operator:"; titles v$((v-1)) | sed 's/^/    /' | tee -a "$LOG" >/dev/null; break; fi
