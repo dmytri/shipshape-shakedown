@@ -45,14 +45,14 @@ rm -rf "$BASE"; mkdir -p "$BASE"
 # Shared toolkit, TodoMVC flavour: cucumber + yoink + happy-dom (the DOM tier). Reuse
 # the eval-batch store and ADD happy-dom if absent (the gate is @cucumber + happy-dom).
 SHARED_NM="$SCRATCH/.shared-nm"
-if [ ! -e "$SHARED_NM/node_modules/@cucumber" ] || [ ! -e "$SHARED_NM/node_modules/happy-dom" ]; then
-  echo "eval-pilot-todomvc[$WAVE]: ensuring toolkit (cucumber + happy-dom + yoink)…" >&2
+if [ ! -e "$SHARED_NM/node_modules/@cucumber" ] || [ ! -e "$SHARED_NM/node_modules/happy-dom" ] || [ ! -e "$SHARED_NM/node_modules/.bin/skills" ]; then
+  echo "eval-pilot-todomvc[$WAVE]: ensuring toolkit (cucumber + happy-dom + yoink + skills)…" >&2
   mkdir -p "$SHARED_NM"
   ( cd "$SHARED_NM" && [ -f package.json ] || npm init -y >/dev/null 2>&1
     npm install --no-fund --no-audit --save-dev \
-      @cucumber/cucumber @dk/yoink happy-dom c8 jsdoc knip @biomejs/biome >/dev/null 2>&1 \
+      @cucumber/cucumber @dk/yoink happy-dom skills c8 jsdoc knip @biomejs/biome >/dev/null 2>&1 \
     || npm install --no-fund --no-audit \
-      @cucumber/cucumber "$HOME/yoink" happy-dom c8 jsdoc knip @biomejs/biome >/dev/null 2>&1 )
+      @cucumber/cucumber "$HOME/yoink" happy-dom skills c8 jsdoc knip @biomejs/biome >/dev/null 2>&1 )
 fi
 export EVAL_SHARED_NM="$SHARED_NM/node_modules"
 [ -d "$EVAL_SHARED_NM/@cucumber" ] && [ -d "$EVAL_SHARED_NM/happy-dom" ] || {

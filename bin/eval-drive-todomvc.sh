@@ -34,12 +34,13 @@ say(){ echo "[$(date -u +%FT%TZ)] $*" | tee -a "$LOG"; }
 
 # Toolkit (cucumber + happy-dom + yoink) — same store the other pilots use.
 SHARED_NM="$SCRATCH/.shared-nm"
-if [ ! -e "$SHARED_NM/node_modules/@cucumber" ] || [ ! -e "$SHARED_NM/node_modules/happy-dom" ]; then
+if [ ! -e "$SHARED_NM/node_modules/@cucumber" ] || [ ! -e "$SHARED_NM/node_modules/happy-dom" ] || [ ! -e "$SHARED_NM/node_modules/.bin/skills" ]; then
   ( cd "$SHARED_NM" && [ -f package.json ] || npm init -y >/dev/null 2>&1
-    npm install --no-fund --no-audit --save-dev @cucumber/cucumber @dk/yoink happy-dom c8 jsdoc knip @biomejs/biome >/dev/null 2>&1 \
-    || npm install --no-fund --no-audit @cucumber/cucumber "$HOME/yoink" happy-dom c8 jsdoc knip @biomejs/biome >/dev/null 2>&1 )
+    npm install --no-fund --no-audit --save-dev @cucumber/cucumber @dk/yoink happy-dom skills c8 jsdoc knip @biomejs/biome >/dev/null 2>&1 \
+    || npm install --no-fund --no-audit @cucumber/cucumber "$HOME/yoink" happy-dom skills c8 jsdoc knip @biomejs/biome >/dev/null 2>&1 )
 fi
 export EVAL_SHARED_NM="$SHARED_NM/node_modules"
+[ -x "$EVAL_SHARED_NM/.bin/skills" ] || { echo "eval-drive: 'skills' CLI missing from toolkit" >&2; exit 3; }
 
 say "PILOT START wave=$WAVE model=$MODEL clone=$CLONE port=$PORT max=$MAXV"
 if ! "$HERE/bin/scaffold-todomvc.sh" "$SIM" >"$BASE/scaffold.log" 2>&1; then say "SCAFFOLD FAILED"; echo PILOT-DONE; exit 4; fi

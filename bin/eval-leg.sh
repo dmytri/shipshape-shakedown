@@ -97,8 +97,13 @@ INSTR="$(dirname "$WORKSPACE")/.instrument"; mkdir -p "$INSTR"
 # tree (skills/<name>/SKILL.md; the CLI takes a local path) and `skills add -g` into the
 # isolated HOME so they install GLOBALLY (all roles available every leg, as a real user has
 # it) and the sim tree stays clean. The staging holds ONLY skill dirs — no repo, no secrets.
-SKILLS_BIN="${SKILLS_BIN:-$(ls "$HOME"/.npm/_npx/*/node_modules/.bin/skills 2>/dev/null | head -1)}"
-[ -x "$SKILLS_BIN" ] || { echo "eval-leg.sh: 'skills' CLI not found (run 'npx skills --help' once to cache it, or set SKILLS_BIN)" >&2; exit 3; }
+# Resolve the `skills` CLI robustly: the shared toolkit (stable — installed by the pilot/
+# batch scripts) first, then the npx cache (EPHEMERAL — evicted between runs, which broke a
+# whole batch 2026-07-25), then $SKILLS_BIN override.
+SKILLS_BIN="${SKILLS_BIN:-}"
+[ -x "$SKILLS_BIN" ] || { [ -n "${EVAL_SHARED_NM:-}" ] && [ -x "$EVAL_SHARED_NM/.bin/skills" ] && SKILLS_BIN="$EVAL_SHARED_NM/.bin/skills"; }
+[ -x "$SKILLS_BIN" ] || SKILLS_BIN="$(ls "$HOME"/.npm/_npx/*/node_modules/.bin/skills 2>/dev/null | head -1)"
+[ -x "$SKILLS_BIN" ] || { echo "eval-leg.sh: 'skills' CLI not found (install into \$EVAL_SHARED_NM or set SKILLS_BIN)" >&2; exit 3; }
 SKILLPKG="$OUT/skillsrc"; rm -rf "$SKILLPKG"; mkdir -p "$SKILLPKG/skills"
 SKILLS_ABS=()
 for s in "${SKILLS[@]}"; do
