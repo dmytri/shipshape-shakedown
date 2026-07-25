@@ -1,10 +1,11 @@
 # Three-model NEW-way TodoMVC pilot comparison (2026-07-25)
 
-Same doctrine (candidate **yoink-settle**, installed via the `skills` CLI — normal launch,
-no `--skill`), same upstream Cypress oracle (pinned + patches + `framework=shakedown`), same
-autonomous driver (`bin/eval-drive-todomvc.sh`) + operator playbook. Three models, run in
-parallel, each own oracle clone + port. **All three reached 28/29** (28 is the ceiling; #29 is
-the perennial pending test).
+Doctrine = **current shipped 0.13.65** (role skills under `experiments/yoink-settle/skills` are
+byte-identical to `~/shipshape` 0.13.65; NO yoink — see "Doctrine tested" below), installed via the
+`skills` CLI (normal launch, no `--skill`). Same upstream Cypress oracle (pinned + patches +
+`framework=shakedown`), same autonomous driver (`bin/eval-drive-todomvc.sh`) + operator playbook.
+Three models, run in parallel, each own oracle clone + port. **All three reached 28/29** (28 is the
+ceiling; #29 is the perennial pending test).
 
 ## Headline table
 
@@ -45,17 +46,24 @@ the perennial pending test).
   and fastest wall-clock (~31 min). Crisp, disciplined role reports (planks, perturbation check,
   verify command, custody). Best value on the latency-first axis.
 
-## The doctrine finding: near-ZERO yoink adoption across ALL THREE
+## Doctrine tested = CURRENT shipped 0.13.65 (NO yoink) — corrected 2026-07-25
 
-The candidate's central claim — every retrieval batched through `npx @dk/yoink` (the Batched-
-retrieval Article) — was **not followed by any of the three models** on the Captain/QM/Crew/
-Boatswain roles: 0 yoink-plan bash calls across all legs; deepseek merely *referenced* `@dk/yoink`
-in 3 legs (never ran a real plan), qwen and glm never mentioned it at all. This confirms, now across
-three independent non-Claude models, the earlier single-model finding: **the shared Article alone
-does not drive yoink adoption; only a per-role operative rule at the point of action does** (the
-golden run's Shipwright — the one role the candidate yoink-ified — adopted it; the four roles it did
-NOT yoink-ify ignore it). If yoink adoption is the goal, the operative rule must be carried into the
-Captain/QM/Crew/Boatswain work-loops, not left to the shared Article. — routed to dk.
+**What was tested:** the six role skills under `experiments/yoink-settle/skills` are BYTE-IDENTICAL
+to shipped `~/shipshape` 0.13.65 (all six `diff`-clean), and neither references yoink — the current
+doctrine backed yoink OUT (session-start record: "yoink reverted from candidate"). So despite the
+stale directory name, these 28/29 results are on **current shipped doctrine**, not the old yoink
+candidate.
+
+**Impurity (no effect on results):** the run also installed the standalone `yoink` skill via
+`--yoink-skill`, extraneous for a no-yoink doctrine. It was ignored — 0 real yoink plans across all
+legs; deepseek only name-referenced `@dk/yoink` in 3 legs, qwen/glm never. That is the CORRECT
+behaviour for a doctrine that does not mention yoink, not a doctrine gap. A fully-clean rerun would
+drop `--yoink-skill`; since no model used it, the 28/29 outcomes and economics are unchanged.
+
+(Earlier note here claimed "zero yoink adoption" as a doctrine finding — retracted: current doctrine
+has no yoink by design, so there was nothing to adopt. The separate historical finding — that the
+old candidate's shared Batched-retrieval Article alone drove no adoption without a per-role operative
+rule — lives in data/todomvc-newsim-01/ and is unaffected.)
 
 ## Caveats (honest)
 - deepseek's 22-leg / 416-inv figure is inflated by ~4 stuck voyages, partly the driver's early
