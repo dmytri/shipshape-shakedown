@@ -1,0 +1,77 @@
+diff --git a/css/app.css b/css/app.css
+index c6e6f28..48548df 100644
+--- a/css/app.css
++++ b/css/app.css
+@@ -2,8 +2,7 @@
+ 	display: none !important;
+ }
+ 
+-/* Hide checkbox and destroy button while editing */
+-.todo-list li.editing .toggle,
+-.todo-list li.editing .destroy {
++/* Hide view controls (checkbox, label, destroy button) while editing */
++.todo-list li.editing .view {
+ 	display: none !important;
+ }
+\ No newline at end of file
+diff --git a/features/support/steps.js b/features/support/steps.js
+index 2898862..2c107c5 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -718,32 +718,17 @@ Then('the todo elements should not be recreated', function () {
+   }
+ });
+ 
+-Then('the todo\'s checkbox should be hidden', function () {
++Then('the todo\'s view should be hidden', function () {
+   const todo = findTodoByTitle('Buy groceries');
+   if (!todo) {
+     throw new Error('Todo should exist');
+   }
+-  const checkbox = todo.querySelector('.toggle');
+-  if (!checkbox) {
+-    throw new Error('Checkbox should exist');
++  const view = todo.querySelector('.view');
++  if (!view) {
++    throw new Error('View should exist');
+   }
+-  const computedStyle = window.getComputedStyle(checkbox);
++  const computedStyle = window.getComputedStyle(view);
+   if (computedStyle.display !== 'none') {
+-    throw new Error('Todo checkbox should be hidden when editing');
+-  }
+-});
+-
+-Then('the todo\'s destroy button should be hidden', function () {
+-  const todo = findTodoByTitle('Buy groceries');
+-  if (!todo) {
+-    throw new Error('Todo should exist');
+-  }
+-  const destroyBtn = todo.querySelector('.destroy');
+-  if (!destroyBtn) {
+-    throw new Error('Destroy button should exist');
+-  }
+-  const computedStyle = window.getComputedStyle(destroyBtn);
+-  if (computedStyle.display !== 'none') {
+-    throw new Error('Todo destroy button should be hidden when editing');
++    throw new Error('Todo view should be hidden when editing');
+   }
+ });
+\ No newline at end of file
+diff --git a/features/todo-management.feature b/features/todo-management.feature
+index 06b8ffa..4b24dc6 100644
+--- a/features/todo-management.feature
++++ b/features/todo-management.feature
+@@ -151,8 +151,7 @@ Feature: Todo Management
+     When I click the "Mark all as complete" checkbox
+     Then the todo elements should not be recreated
+ 
+-  Scenario: Edit mode hides checkbox and destroy button
++  Scenario: Edit mode hides view controls
+     Given the app has a todo "Buy groceries"
+     And the todo is in edit mode
+-    Then the todo's checkbox should be hidden
+-    And the todo's destroy button should be hidden
+\ No newline at end of file
++    Then the todo's view should be hidden
+\ No newline at end of file

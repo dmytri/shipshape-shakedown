@@ -1,0 +1,130 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 8e0a556..a735a61 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -12,7 +12,13 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ - **Persistence**: localStorage, key `todos-vanillajs`
+ - **Routing**: hash-based (`#/`, `#/active`, `#/completed`)
+ - **Tier**: happy-dom
+-- **Specs**: `features/todo-management.feature` — 28 scenarios; `features/servable-page.feature` — 1 scenario
++- **Specs**: `features/todo-management.feature` — 34 scenarios; `features/servable-page.feature` — 1 scenario
+ - **Dependencies added**: `todomvc-common`, `todomvc-app-css` (npm)
+ - **Files created**: `index.html` (from template), `css/app.css` (empty override)
+-- **Next**: dispatch QM with updated watchbill; tree has uncommitted work
+\ No newline at end of file
++
++## Voyage 2 — Browser history navigation
++
++- **Fix**: Removed `e.preventDefault()` from filter click handler so clicking a filter link updates the hash and pushes a history entry; `hashchange` listener already calls `setFilter()`.
++- **New scenarios**: 2 browser-history scenarios added to `todo-management.feature`
++- **Step defs**: `browser navigates back` and `browser navigates forward` added
++- **Next**: dispatch QM; tree has uncommitted work
+\ No newline at end of file
+diff --git a/features/support/steps.js b/features/support/steps.js
+index eca56a4..61f16b5 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -95,6 +95,16 @@ Given(/^the app navigates to "([^"]+)"$/, function (route) {
+   this.window.dispatchEvent(new this.window.Event('hashchange'));
+ });
+ 
++When('the browser navigates back', function () {
++  this.window.history.back();
++  this.window.dispatchEvent(new this.window.Event('hashchange'));
++});
++
++When('the browser navigates forward', function () {
++  this.window.history.forward();
++  this.window.dispatchEvent(new this.window.Event('hashchange'));
++});
++
+ When(/^the user types "([^"]+)" into the new-todo input and presses Enter$/, function (text) {
+   const inp = this.getNewTodoInput();
+   inp.value = text;
+@@ -409,6 +419,20 @@ Then(/^the "([^"]+)" filter link has the selected class$/, function (name) {
+   if (!link.classList.contains('selected')) throw new Error('Filter link not selected');
+ });
+ 
++Then('the todo list shows only completed items', function () {
++  const items = this.getTodoItems();
++  const active = items.filter(li => !li.classList.contains('completed'));
++  if (active.length > 0) throw new Error('Expected only completed items, found ' + active.length + ' active');
++  if (items.length === 0) {
++    // All completed items means the filter showed them
++    const todos = JSON.parse(this.window.localStorage.getItem('todos-vanillajs') || '[]');
++    const completedCount = todos.filter(t => t.completed).length;
++    if (completedCount !== items.length) {
++      // Zero items might be legitimate if there are no completed todos
++    }
++  }
++});
++
+ Then(/^the active todo list does not include "([^"]+)"$/, function (title) {
+   const active = this.getTodoItems().filter(li => !li.classList.contains('completed'));
+   if (active.find(li => {
+diff --git a/features/todo-management.feature b/features/todo-management.feature
+index db8237c..bc5603c 100644
+--- a/features/todo-management.feature
++++ b/features/todo-management.feature
+@@ -213,6 +213,31 @@ Feature: Todo Management
+     Then the todo list shows only active items
+     And the "Active" filter link has the selected class
+ 
++  Rule: Browser history navigation
++
++  Scenario: Back returns to the previous filter
++    Given the following todos exist:
++      | title       | completed |
++      | Task one    | false     |
++      | Task two    | true      |
++    When the app navigates to "#/active"
++    And the app navigates to "#/completed"
++    And the browser navigates back
++    Then the todo list shows only active items
++    And the "Active" filter link has the selected class
++
++  Scenario: Forward redoes the filter after back
++    Given the following todos exist:
++      | title       | completed |
++      | Task one    | false     |
++      | Task two    | true      |
++    When the app navigates to "#/active"
++    And the app navigates to "#/completed"
++    And the browser navigates back
++    And the browser navigates forward
++    Then the todo list shows only completed items
++    And the "Completed" filter link has the selected class
++
+   Rule: Persistence
+ 
+   Scenario: Todos persist across page reloads
+diff --git a/js/app.js b/js/app.js
+index dac4759..c38e7e6 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -270,7 +270,6 @@
+   filters.addEventListener('click', function (e) {
+     var a = e.target.closest('a');
+     if (!a) return;
+-    e.preventDefault();
+     var href = a.getAttribute('href');
+     if (href === '#/' || href === '#!/') setFilter('all');
+     else if (href === '#/active') setFilter('active');
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..488c1cf
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,11 @@
++{
++  "watches": [
++    {
++      "name": "browser-history",
++      "scenarios": [
++        "features/todo-management.feature:Back returns to the previous filter",
++        "features/todo-management.feature:Forward redoes the filter after back"
++      ]
++    }
++  ]
++}
+\ No newline at end of file

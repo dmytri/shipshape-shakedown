@@ -1,0 +1,146 @@
+diff --git a/css/app.css b/css/app.css
+index 55d6b71..219d4eb 100644
+--- a/css/app.css
++++ b/css/app.css
+@@ -1,7 +1,6 @@
+ /* Override styles - kept minimal per spec */
+ 
+-/* During editing, hide the checkbox and destroy button */
+-.todo-list li.editing .toggle,
+-.todo-list li.editing .destroy {
++/* During editing, hide the view (checkbox, label, destroy button) */
++.todo-list li.editing .view {
+   display: none;
+ }
+\ No newline at end of file
+diff --git a/features/support/steps.js b/features/support/steps.js
+index 0df686d..314612d 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -383,17 +383,24 @@ Then(/^the todo list shows (\d+) completed item$/, function (n) {
+ });
+ 
+ Then('the checkbox of the editing todo is not visible', function () {
+-  const editing = this.document.querySelector('.todo-list li.editing .toggle');
+-  if (!editing) throw new Error('No editing todo with checkbox found');
+-  const style = this.window.getComputedStyle(editing);
+-  if (style.display !== 'none') throw new Error('Expected checkbox display "none", got "' + style.display + '"');
++  const view = this.document.querySelector('.todo-list li.editing .view');
++  if (!view) throw new Error('No editing todo with view found');
++  const style = this.window.getComputedStyle(view);
++  if (style.display !== 'none') throw new Error('Expected view display "none" (checkbox inside), got "' + style.display + '"');
+ });
+ 
+ Then('the destroy button of the editing todo is not visible', function () {
+-  const editing = this.document.querySelector('.todo-list li.editing .destroy');
+-  if (!editing) throw new Error('No editing todo with destroy button found');
+-  const style = this.window.getComputedStyle(editing);
+-  if (style.display !== 'none') throw new Error('Expected destroy display "none", got "' + style.display + '"');
++  const view = this.document.querySelector('.todo-list li.editing .view');
++  if (!view) throw new Error('No editing todo with view found');
++  const style = this.window.getComputedStyle(view);
++  if (style.display !== 'none') throw new Error('Expected view display "none" (destroy inside), got "' + style.display + '"');
++});
++
++Then('the label of the editing todo is not visible', function () {
++  const view = this.document.querySelector('.todo-list li.editing .view');
++  if (!view) throw new Error('No editing todo with view found');
++  const style = this.window.getComputedStyle(view);
++  if (style.display !== 'none') throw new Error('Expected view display "none" (label inside), got "' + style.display + '"');
+ });
+ 
+ Then(/^the "([^"]+)" filter link has the selected class$/, function (name) {
+diff --git a/features/todo-management.feature b/features/todo-management.feature
+index cc36e6d..db8237c 100644
+--- a/features/todo-management.feature
++++ b/features/todo-management.feature
+@@ -131,11 +131,12 @@ Feature: Todo Management
+     And the edit input contains "Read a book"
+     And the edit input is focused
+ 
+-  Scenario: Checkbox and destroy button are hidden while editing a todo
++  Scenario: View controls are hidden while editing a todo
+     Given a todo with title "Read a book" exists
+     When the user double-clicks the label of "Read a book"
+     Then the checkbox of the editing todo is not visible
+     And the destroy button of the editing todo is not visible
++    And the label of the editing todo is not visible
+ 
+   Scenario: A user saves an edit by pressing Enter
+     Given the todo "Read a book" is in editing mode
+diff --git a/js/app.js b/js/app.js
+index 7cbc667..54840ad 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -69,12 +69,12 @@
+       if (li) {
+         // Update existing row in place
+         li.className = todo.completed ? 'completed' : '';
++        var view = li.querySelector('.view');
++        if (view) view.style.display = '';
+         var cb = li.querySelector('.toggle');
+-        if (cb) { cb.checked = todo.completed; cb.style.display = ''; }
++        if (cb) { cb.checked = todo.completed; }
+         var label = li.querySelector('label');
+         if (label) label.textContent = todo.title;
+-        var destroy = li.querySelector('.destroy');
+-        if (destroy) destroy.style.display = '';
+         var editInput = li.querySelector('.edit');
+         if (editInput) editInput.value = todo.title;
+         delete itemMap[todo.id];
+@@ -213,11 +213,9 @@
+     var editInput = li.querySelector('.edit');
+     editInput.focus();
+     editInput.value = label.textContent;
+-    // Hide checkbox and destroy button during editing (also covered by CSS)
+-    var toggle = li.querySelector('.toggle');
+-    var destroy = li.querySelector('.destroy');
+-    if (toggle) toggle.style.display = 'none';
+-    if (destroy) destroy.style.display = 'none';
++    // Hide view during editing (also covered by CSS)
++    var view = li.querySelector('.view');
++    if (view) view.style.display = 'none';
+   });
+ 
+   function handleEditBlur(editInput, li) {
+@@ -225,11 +223,9 @@
+     var id = li.dataset.id;
+     if (!id) return;
+     saveEdit(id, editInput.value);
+-    // Restore checkbox and destroy button visibility
+-    var toggle = li.querySelector('.toggle');
+-    var destroy = li.querySelector('.destroy');
+-    if (toggle) toggle.style.display = '';
+-    if (destroy) destroy.style.display = '';
++    // Restore view visibility
++    var view = li.querySelector('.view');
++    if (view) view.style.display = '';
+   }
+ 
+   // Direct keydown and blur handler on edit inputs (attached in render)
+@@ -242,19 +238,15 @@
+       if (e.keyCode === ENTER_KEY) {
+         e.preventDefault();
+         saveEdit(id, editInput.value);
+-        // Restore checkbox and destroy button visibility
+-        var toggle = li.querySelector('.toggle');
+-        var destroy = li.querySelector('.destroy');
+-        if (toggle) toggle.style.display = '';
+-        if (destroy) destroy.style.display = '';
++        // Restore view visibility
++        var view = li.querySelector('.view');
++        if (view) view.style.display = '';
+       } else if (e.keyCode === ESCAPE_KEY) {
+         e.preventDefault();
+         li.classList.remove('editing');
+-        // Restore checkbox and destroy button visibility
+-        var toggle = li.querySelector('.toggle');
+-        var destroy = li.querySelector('.destroy');
+-        if (toggle) toggle.style.display = '';
+-        if (destroy) destroy.style.display = '';
++        // Restore view visibility
++        var view = li.querySelector('.view');
++        if (view) view.style.display = '';
+       }
+     });
+     editInput.addEventListener('blur', function () {

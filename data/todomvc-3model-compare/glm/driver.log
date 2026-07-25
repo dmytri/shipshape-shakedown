@@ -1,0 +1,21 @@
+[2026-07-25T15:39:56Z] PILOT START wave=todomvc-glm model=z-ai/glm-4.7 clone=.eval-scratch/oracle-clone-glm port=8875 max=14 resume=0
+[2026-07-25T15:39:56Z] VOYAGE 1 (build)
+[2026-07-25T15:59:49Z] V1 build 1130s | self-suite: 29 scenarios (29 passed) | oracle 23/29 | failing:
+    TodoMVC - shakedown -- Mark all as completed -- should allow me to mark all items as completed
+    TodoMVC - shakedown -- Mark all as completed -- should allow me to clear the complete state of all items
+    TodoMVC - shakedown -- Item -- should allow me to mark items as complete
+    TodoMVC - shakedown -- Item -- should allow me to un-mark items as complete
+    TodoMVC - shakedown -- Editing -- should hide other controls when editing
+[2026-07-25T15:59:49Z] VOYAGE 2 (intent=domidentity)
+[2026-07-25T16:07:56Z] V2 domidentity 442s | VOYAGE-COMPLETE | self-suite: 32 scenarios (32 passed) | oracle 27/29 | failing:
+    TodoMVC - shakedown -- Editing -- should hide other controls when editing
+[2026-07-25T16:07:56Z] VOYAGE 3 (intent=domidentity)
+[2026-07-25T16:11:39Z] PILOT START wave=todomvc-glm model=z-ai/glm-4.7 clone=.eval-scratch/oracle-clone-glm port=8875 max=16 resume=3
+[2026-07-25T16:11:39Z] RESUME: grading current sim as baseline (voyage 2, HEAD=4c81f34)
+[2026-07-25T16:12:21Z] resume baseline oracle 27/29 | failing:
+    TodoMVC - shakedown -- Editing -- should hide other controls when editing
+[2026-07-25T16:12:21Z] VOYAGE 3 (intent=edithide)
+[2026-07-25T16:18:13Z] V3 edithide 314s | VOYAGE-COMPLETE | self-suite: 32 scenarios (32 passed) | oracle 28/29 | failing:
+    
+[2026-07-25T16:18:13Z] REACHED 28/29 — DONE
+[2026-07-25T16:18:13Z] PILOT END wave=todomvc-glm final=28/29

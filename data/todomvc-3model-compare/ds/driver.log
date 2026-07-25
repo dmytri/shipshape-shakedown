@@ -1,0 +1,91 @@
+[2026-07-25T14:59:36Z] PILOT START wave=todomvc-ds model=deepseek/deepseek-v4-flash clone=.eval-scratch/oracle-clone-ds port=8873 max=14
+[2026-07-25T14:59:37Z] VOYAGE 1 (build)
+[2026-07-25T15:18:55Z] V1 build 1067s | self-suite: 28 scenarios (28 passed) | oracle 0/29 | failing:
+[2026-07-25T15:18:55Z] VOYAGE 2 (intent=page)
+[2026-07-25T15:22:22Z] V2 page 139s | VOYAGE-COMPLETE | self-suite: 29 scenarios (29 passed) | oracle 22/29 | failing:
+    TodoMVC - shakedown -- Mark all as completed -- should allow me to mark all items as completed
+    TodoMVC - shakedown -- Mark all as completed -- should allow me to clear the complete state of all items
+    TodoMVC - shakedown -- Item -- should allow me to mark items as complete
+    TodoMVC - shakedown -- Item -- should allow me to un-mark items as complete
+    TodoMVC - shakedown -- Editing -- should hide other controls when editing
+    TodoMVC - shakedown -- Routing -- should respect the back button
+[2026-07-25T15:22:22Z] VOYAGE 3 (intent=routing)
+[2026-07-25T15:25:04Z] V3 routing 98s | VOYAGE-COMPLETE | self-suite: 29 scenarios (29 passed) | oracle 22/29 | failing:
+    TodoMVC - shakedown -- Mark all as completed -- should allow me to mark all items as completed
+    TodoMVC - shakedown -- Mark all as completed -- should allow me to clear the complete state of all items
+    TodoMVC - shakedown -- Item -- should allow me to mark items as complete
+    TodoMVC - shakedown -- Item -- should allow me to un-mark items as complete
+    TodoMVC - shakedown -- Editing -- should hide other controls when editing
+    TodoMVC - shakedown -- Routing -- should respect the back button
+[2026-07-25T15:25:04Z]   (no change vs prior voyage: stuck=1)
+[2026-07-25T15:25:04Z] VOYAGE 4 (intent=routing)
+[2026-07-25T15:28:01Z] V4 routing 111s | VOYAGE-COMPLETE | self-suite: 29 scenarios (29 passed) | oracle 22/29 | failing:
+    TodoMVC - shakedown -- Mark all as completed -- should allow me to mark all items as completed
+    TodoMVC - shakedown -- Mark all as completed -- should allow me to clear the complete state of all items
+    TodoMVC - shakedown -- Item -- should allow me to mark items as complete
+    TodoMVC - shakedown -- Item -- should allow me to un-mark items as complete
+    TodoMVC - shakedown -- Editing -- should hide other controls when editing
+    TodoMVC - shakedown -- Routing -- should respect the back button
+[2026-07-25T15:28:01Z]   (no change vs prior voyage: stuck=2)
+[2026-07-25T15:28:01Z] NO IMPROVEMENT 2x at 22/29 — STOP for operator
+[2026-07-25T15:28:01Z] PILOT END wave=todomvc-ds final=22/29
+[2026-07-25T15:31:36Z] PILOT START wave=todomvc-ds model=deepseek/deepseek-v4-flash clone=.eval-scratch/oracle-clone-ds port=8873 max=14 resume=5
+[2026-07-25T15:31:36Z] RESUME: grading current sim as baseline (voyage 4)
+[2026-07-25T15:32:47Z] resume baseline oracle 22/29 | failing:
+    TodoMVC - shakedown -- Mark all as completed -- should allow me to mark all items as completed
+    TodoMVC - shakedown -- Mark all as completed -- should allow me to clear the complete state of all items
+    TodoMVC - shakedown -- Item -- should allow me to mark items as complete
+    TodoMVC - shakedown -- Item -- should allow me to un-mark items as complete
+    TodoMVC - shakedown -- Editing -- should hide other controls when editing
+    TodoMVC - shakedown -- Routing -- should respect the back button
+[2026-07-25T15:32:47Z] VOYAGE 5 (intent=domidentity)
+[2026-07-25T15:38:18Z] V5 domidentity 283s | VOYAGE-COMPLETE | self-suite: 31 scenarios (31 passed) | oracle 25/29 | failing:
+    TodoMVC - shakedown -- Editing -- should hide other controls when editing
+    TodoMVC - shakedown -- Editing -- should remove the item if an empty text string was entered
+    TodoMVC - shakedown -- Routing -- should respect the back button
+[2026-07-25T15:38:18Z] VOYAGE 6 (intent=domidentity)
+[2026-07-25T15:42:15Z] V6 domidentity 190s | VOYAGE-COMPLETE | self-suite: 31 scenarios (31 passed) | oracle 25/29 | failing:
+    TodoMVC - shakedown -- Editing -- should hide other controls when editing
+    TodoMVC - shakedown -- Editing -- should remove the item if an empty text string was entered
+    TodoMVC - shakedown -- Routing -- should respect the back button
+[2026-07-25T15:42:15Z]   (no change vs prior voyage: stuck=1)
+[2026-07-25T15:42:15Z] VOYAGE 7 (intent=domidentity)
+[2026-07-25T15:45:55Z] V7 domidentity 173s | VOYAGE-COMPLETE | self-suite: 31 scenarios (31 passed) | oracle 25/29 | failing:
+    TodoMVC - shakedown -- Editing -- should hide other controls when editing
+    TodoMVC - shakedown -- Editing -- should remove the item if an empty text string was entered
+    TodoMVC - shakedown -- Routing -- should respect the back button
+[2026-07-25T15:45:55Z]   (no change vs prior voyage: stuck=2)
+[2026-07-25T15:45:55Z] NO IMPROVEMENT 2x at 25/29 — STOP for operator
+[2026-07-25T15:45:55Z] PILOT END wave=todomvc-ds final=25/29
+[2026-07-25T15:47:59Z] PILOT START wave=todomvc-ds model=deepseek/deepseek-v4-flash clone=.eval-scratch/oracle-clone-ds port=8873 max=16 resume=8
+[2026-07-25T15:47:59Z] RESUME: grading current sim as baseline (voyage 7)
+[2026-07-25T15:48:46Z] resume baseline oracle 25/29 | failing:
+    TodoMVC - shakedown -- Editing -- should hide other controls when editing
+    TodoMVC - shakedown -- Editing -- should remove the item if an empty text string was entered
+    TodoMVC - shakedown -- Routing -- should respect the back button
+[2026-07-25T15:48:46Z] VOYAGE 8 (intent=edithide)
+[2026-07-25T15:51:39Z] V8 edithide 130s | VOYAGE-COMPLETE | self-suite: 31 scenarios (31 passed) | oracle 26/29 | failing:
+    TodoMVC - shakedown -- Editing -- should remove the item if an empty text string was entered
+    TodoMVC - shakedown -- Routing -- should respect the back button
+[2026-07-25T15:51:39Z] VOYAGE 9 (intent=editreentrancy)
+[2026-07-25T15:56:52Z] V9 editreentrancy 269s | VOYAGE-COMPLETE | self-suite: 32 scenarios (32 passed) | oracle 27/29 | failing:
+    TodoMVC - shakedown -- Routing -- should respect the back button
+[2026-07-25T15:56:52Z] VOYAGE 10 (intent=backbutton)
+[2026-07-25T15:59:16Z] V10 backbutton 98s | VOYAGE-COMPLETE | self-suite: 32 scenarios (32 passed) | oracle 27/29 | failing:
+    TodoMVC - shakedown -- Routing -- should respect the back button
+[2026-07-25T15:59:16Z]   (no change vs prior voyage: stuck=1)
+[2026-07-25T15:59:16Z] VOYAGE 11 (intent=backbutton)
+[2026-07-25T16:01:40Z] V11 backbutton 101s | VOYAGE-COMPLETE | self-suite: 32 scenarios (32 passed) | oracle 27/29 | failing:
+    TodoMVC - shakedown -- Routing -- should respect the back button
+[2026-07-25T16:01:40Z]   (no change vs prior voyage: stuck=2)
+[2026-07-25T16:01:40Z] NO IMPROVEMENT 2x at 27/29 — STOP for operator
+[2026-07-25T16:01:40Z] PILOT END wave=todomvc-ds final=27/29
+[2026-07-25T16:03:24Z] PILOT START wave=todomvc-ds model=deepseek/deepseek-v4-flash clone=.eval-scratch/oracle-clone-ds port=8873 max=16 resume=11
+[2026-07-25T16:03:24Z] RESUME: grading current sim as baseline (voyage 10)
+[2026-07-25T16:04:16Z] resume baseline oracle 27/29 | failing:
+    TodoMVC - shakedown -- Routing -- should respect the back button
+[2026-07-25T16:04:16Z] VOYAGE 11 (intent=backbutton)
+[2026-07-25T16:08:10Z] V11 backbutton 192s | VOYAGE-COMPLETE | self-suite: 34 scenarios (34 passed) | oracle 28/29 | failing:
+    
+[2026-07-25T16:08:10Z] REACHED 28/29 — DONE
+[2026-07-25T16:08:10Z] PILOT END wave=todomvc-ds final=28/29

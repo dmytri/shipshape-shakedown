@@ -1,0 +1,15 @@
+[2026-07-25T16:11:03Z] PILOT START wave=todomvc-qwen model=qwen/qwen3.7-plus clone=.eval-scratch/oracle-clone-qwen port=8874 max=16 resume=0
+[2026-07-25T16:11:04Z] VOYAGE 1 (build)
+[2026-07-25T16:36:19Z] V1 build 1424s | self-suite: 26 scenarios (26 passed) | oracle 0/29 | failing:
+[2026-07-25T16:36:19Z] VOYAGE 2 (intent=page)
+[2026-07-25T16:44:12Z] V2 page 408s | VOYAGE-COMPLETE | self-suite: 27 scenarios (27 passed) | oracle 23/29 | failing:
+    TodoMVC - shakedown -- Mark all as completed -- should allow me to mark all items as completed
+    TodoMVC - shakedown -- Mark all as completed -- should allow me to clear the complete state of all items
+    TodoMVC - shakedown -- Item -- should allow me to mark items as complete
+    TodoMVC - shakedown -- Item -- should allow me to un-mark items as complete
+    TodoMVC - shakedown -- Editing -- should hide other controls when editing
+[2026-07-25T16:44:12Z] VOYAGE 3 (intent=domidentity)
+[2026-07-25T16:54:44Z] V3 domidentity 594s | VOYAGE-COMPLETE | self-suite: 30 scenarios (30 passed) | oracle 28/29 | failing:
+    
+[2026-07-25T16:54:44Z] REACHED 28/29 — DONE
+[2026-07-25T16:54:44Z] PILOT END wave=todomvc-qwen final=28/29

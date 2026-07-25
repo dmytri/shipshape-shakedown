@@ -1,0 +1,51 @@
+# oracle grade: framework=shakedown  runner_exit=1
+tests=29 passing=25 failing=3 pending=1
+all_specs_passed=False
+GRADE: 25/29
+
+## failing tests
+  - TodoMVC - shakedown -- Editing -- should hide other controls when editing
+  - TodoMVC - shakedown -- Editing -- should remove the item if an empty text string was entered
+  - TodoMVC - shakedown -- Routing -- should respect the back button
+
+## cypress summary tail
+  │ Tests:        29                                                                               │
+  │ Passing:      25                                                                               │
+  │ Failing:      3                                                                                │
+  │ Pending:      1                                                                                │
+  │ Skipped:      0                                                                                │
+  │ Screenshots:  0                                                                                │
+  │ Video:        false                                                                            │
+  │ Duration:     38 seconds                                                                       │
+  │ Spec Ran:     spec.cy.js                                                                       │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+================================================================================
+
+  (Run Finished)
+
+
+       Spec                                              Tests  Passing  Failing  Pending  Skipped  
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ ✖  spec.cy.js                               00:38       29       25        3        1        - │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+    ✖  1 of 1 failed (100%)                     00:38       29       25        3        1        -  
+
+Error: Command failed with exit code 3: npx cypress run --env framework=shakedown --spec cypress/e2e/spec.cy.js --config baseUrl=http://localhost:8873/examples/,screenshotOnRunFailure=false,video=false
+    at makeError (/home/exedev/shipshape-shakedown/.eval-scratch/oracle-clone-ds/node_modules/start-server-and-test/node_modules/execa/lib/error.js:60:11)
+    at handlePromise (/home/exedev/shipshape-shakedown/.eval-scratch/oracle-clone-ds/node_modules/start-server-and-test/node_modules/execa/index.js:118:26)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  shortMessage: 'Command failed with exit code 3: npx cypress run --env framework=shakedown --spec cypress/e2e/spec.cy.js --config baseUrl=http://localhost:8873/examples/,screenshotOnRunFailure=false,video=false',
+  command: 'npx cypress run --env framework=shakedown --spec cypress/e2e/spec.cy.js --config baseUrl=http://localhost:8873/examples/,screenshotOnRunFailure=false,video=false',
+  escapedCommand: '"npx cypress run --env framework=shakedown --spec cypress/e2e/spec.cy.js --config baseUrl=http://localhost:8873/examples/,screenshotOnRunFailure=false,video=false"',
+  exitCode: 3,
+  signal: undefined,
+  signalDescription: undefined,
+  stdout: undefined,
+  stderr: undefined,
+  failed: true,
+  timedOut: false,
+  isCanceled: false,
+  killed: false
+}

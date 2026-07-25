@@ -1,0 +1,310 @@
+diff --git a/css/app.css b/css/app.css
+index ec41203..55d6b71 100644
+--- a/css/app.css
++++ b/css/app.css
+@@ -1 +1,7 @@
+-/* Override styles - kept minimal per spec */
+\ No newline at end of file
++/* Override styles - kept minimal per spec */
++
++/* During editing, hide the checkbox and destroy button */
++.todo-list li.editing .toggle,
++.todo-list li.editing .destroy {
++  display: none;
++}
+\ No newline at end of file
+diff --git a/features/support/steps.js b/features/support/steps.js
+index b3e13c6..0df686d 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -111,6 +111,13 @@ When(/^the user creates a todo with title "([^"]+)"$/, function (title) {
+   inp.dispatchEvent(new this.window.KeyboardEvent('keydown', { key: 'Enter', keyCode: 13 }));
+ });
+ 
++When('the user captures the todo list element reference', function () {
++  const items = this.getTodoItems();
++  if (items.length > 0) {
++    this._capturedLi = items[0];
++  }
++});
++
+ When(/^the user clicks the toggle checkbox for "([^"]+)"$/, function (title) {
+   const item = this.getTodoItem(title);
+   if (!item) throw new Error('Todo "' + title + '" not found');
+@@ -263,6 +270,12 @@ Then(/^the todo "([^"]+)" has the completed class$/, function (title) {
+   if (!item.classList.contains('completed')) throw new Error('Todo not completed');
+ });
+ 
++Then('the captured todo list element is still attached to the DOM', function () {
++  if (!this._capturedLi) throw new Error('No captured element');
++  if (!this._capturedLi.parentNode) throw new Error('Captured element was removed from DOM');
++  if (!this.document.body.contains(this._capturedLi)) throw new Error('Captured element is not in document');
++});
++
+ Then('its checkbox is checked', function () {
+   const cb = this.document.querySelector('.todo-list li.completed .toggle');
+   if (cb && !cb.checked) throw new Error('Expected checkbox checked');
+@@ -369,6 +382,20 @@ Then(/^the todo list shows (\d+) completed item$/, function (n) {
+   if (completed.length !== parseInt(n)) throw new Error('Expected ' + n + ' completed, got ' + completed.length);
+ });
+ 
++Then('the checkbox of the editing todo is not visible', function () {
++  const editing = this.document.querySelector('.todo-list li.editing .toggle');
++  if (!editing) throw new Error('No editing todo with checkbox found');
++  const style = this.window.getComputedStyle(editing);
++  if (style.display !== 'none') throw new Error('Expected checkbox display "none", got "' + style.display + '"');
++});
++
++Then('the destroy button of the editing todo is not visible', function () {
++  const editing = this.document.querySelector('.todo-list li.editing .destroy');
++  if (!editing) throw new Error('No editing todo with destroy button found');
++  const style = this.window.getComputedStyle(editing);
++  if (style.display !== 'none') throw new Error('Expected destroy display "none", got "' + style.display + '"');
++});
++
+ Then(/^the "([^"]+)" filter link has the selected class$/, function (name) {
+   const link = this.getFilterLink(name);
+   if (!link) throw new Error('Filter "' + name + '" not found');
+diff --git a/features/todo-management.feature b/features/todo-management.feature
+index d6ea89d..cc36e6d 100644
+--- a/features/todo-management.feature
++++ b/features/todo-management.feature
+@@ -43,6 +43,12 @@ Feature: Todo Management
+     Then the todo "Walk the dog" has the completed class
+     And its checkbox is checked
+ 
++  Scenario: Toggling a todo updates the row in place without rebuilding the list
++    Given a todo with title "Walk the dog" exists
++    When the user captures the todo list element reference
++    And the user clicks the toggle checkbox for "Walk the dog"
++    Then the captured todo list element is still attached to the DOM
++
+   Scenario: A user unmarks a completed todo
+     Given a completed todo with title "Walk the dog" exists
+     When the user clicks the toggle checkbox for "Walk the dog"
+@@ -125,6 +131,12 @@ Feature: Todo Management
+     And the edit input contains "Read a book"
+     And the edit input is focused
+ 
++  Scenario: Checkbox and destroy button are hidden while editing a todo
++    Given a todo with title "Read a book" exists
++    When the user double-clicks the label of "Read a book"
++    Then the checkbox of the editing todo is not visible
++    And the destroy button of the editing todo is not visible
++
+   Scenario: A user saves an edit by pressing Enter
+     Given the todo "Read a book" is in editing mode
+     When the user changes the edit input to "Read two books" and presses Enter
+diff --git a/js/app.js b/js/app.js
+index 3bebcbc..7cbc667 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -54,27 +54,58 @@
+     var todos = loadTodos();
+     var filter = window.__todoFilter || 'all';
+     var filtered = getFilteredTodos(todos, filter);
+-    var html = '';
++
++    // Index existing <li> by data-id
++    var itemMap = {};
++    var existing = Array.prototype.slice.call(todoList.children);
++    existing.forEach(function (li) {
++      if (li.dataset && li.dataset.id) itemMap[li.dataset.id] = li;
++    });
++
++    // Reuse or create each row; fragment collects in display order
++    var fragment = document.createDocumentFragment();
+     filtered.forEach(function (todo) {
+-      var liClass = '';
+-      if (todo.completed) liClass += 'completed';
+-      html += '<li' + (liClass ? ' class="' + liClass + '"' : '') + '>';
+-      html += '<div class="view">';
+-      html += '<input class="toggle" type="checkbox"' + (todo.completed ? ' checked' : '') + '>';
+-      html += '<label>' + escapeHtml(todo.title) + '</label>';
+-      html += '<button class="destroy"></button>';
+-      html += '</div>';
+-      html += '<input class="edit" value="' + escapeHtml(todo.title) + '">';
+-      html += '</li>';
++      var li = itemMap[todo.id];
++      if (li) {
++        // Update existing row in place
++        li.className = todo.completed ? 'completed' : '';
++        var cb = li.querySelector('.toggle');
++        if (cb) { cb.checked = todo.completed; cb.style.display = ''; }
++        var label = li.querySelector('label');
++        if (label) label.textContent = todo.title;
++        var destroy = li.querySelector('.destroy');
++        if (destroy) destroy.style.display = '';
++        var editInput = li.querySelector('.edit');
++        if (editInput) editInput.value = todo.title;
++        delete itemMap[todo.id];
++      } else {
++        // Create new row
++        li = document.createElement('li');
++        li.dataset.id = todo.id;
++        li.className = todo.completed ? 'completed' : '';
++        li.innerHTML = '<div class="view">' +
++          '<input class="toggle" type="checkbox"' + (todo.completed ? ' checked' : '') + '>' +
++          '<label>' + escapeHtml(todo.title) + '</label>' +
++          '<button class="destroy"></button>' +
++          '</div>' +
++          '<input class="edit" value="' + escapeHtml(todo.title) + '">';
++        attachEditHandlers(li);
++      }
++      fragment.appendChild(li);
+     });
+-    todoList.innerHTML = html;
+ 
+-    // Attach edit handlers to each item
+-    var allLi = todoList.children;
+-    for (var i = 0; i < allLi.length; i++) {
+-      attachEditHandlers(allLi[i]);
++    // Remove stale rows (present in DOM but not in filtered set)
++    for (var id in itemMap) {
++      if (itemMap.hasOwnProperty(id)) {
++        var stale = itemMap[id];
++        if (stale.parentNode) stale.parentNode.removeChild(stale);
++      }
+     }
+ 
++    // Replace list: existing nodes were moved to fragment, so only stale remain
++    todoList.innerHTML = '';
++    todoList.appendChild(fragment);
++
+     var hasTodos = todos.length > 0;
+     main.style.display = hasTodos ? '' : 'none';
+     footer.style.display = hasTodos ? '' : 'none';
+@@ -159,19 +190,17 @@
+     render();
+   }
+ 
+-  // Event delegation for todo list
++  // Event delegation for todo list — use data-id, never array index
+   todoList.addEventListener('click', function (e) {
+     var li = e.target.closest('li');
+     if (!li) return;
+-    var todos = loadTodos();
+-    var idx = Array.prototype.indexOf.call(todoList.children, li);
+-    if (idx < 0 || idx >= todos.length) return;
+-    var todo = todos[idx];
++    var id = li.dataset.id;
++    if (!id) return;
+ 
+     if (e.target.classList.contains('toggle')) {
+-      toggleTodo(todo.id);
++      toggleTodo(id);
+     } else if (e.target.classList.contains('destroy')) {
+-      removeTodo(todo.id);
++      removeTodo(id);
+     }
+   });
+ 
+@@ -184,14 +213,23 @@
+     var editInput = li.querySelector('.edit');
+     editInput.focus();
+     editInput.value = label.textContent;
++    // Hide checkbox and destroy button during editing (also covered by CSS)
++    var toggle = li.querySelector('.toggle');
++    var destroy = li.querySelector('.destroy');
++    if (toggle) toggle.style.display = 'none';
++    if (destroy) destroy.style.display = 'none';
+   });
+ 
+   function handleEditBlur(editInput, li) {
+     if (!li || !li.classList.contains('editing')) return;
+-    var t = loadTodos();
+-    var idx = Array.prototype.indexOf.call(todoList.children, li);
+-    if (idx < 0 || idx >= t.length) return;
+-    saveEdit(t[idx].id, editInput.value);
++    var id = li.dataset.id;
++    if (!id) return;
++    saveEdit(id, editInput.value);
++    // Restore checkbox and destroy button visibility
++    var toggle = li.querySelector('.toggle');
++    var destroy = li.querySelector('.destroy');
++    if (toggle) toggle.style.display = '';
++    if (destroy) destroy.style.display = '';
+   }
+ 
+   // Direct keydown and blur handler on edit inputs (attached in render)
+@@ -199,15 +237,24 @@
+     var editInput = li.querySelector('.edit');
+     if (!editInput) return;
+     editInput.addEventListener('keydown', function (e) {
+-      var t = loadTodos();
+-      var idx = Array.prototype.indexOf.call(todoList.children, li);
+-      if (idx < 0 || idx >= t.length) return;
++      var id = li.dataset.id;
++      if (!id) return;
+       if (e.keyCode === ENTER_KEY) {
+         e.preventDefault();
+-        saveEdit(t[idx].id, editInput.value);
++        saveEdit(id, editInput.value);
++        // Restore checkbox and destroy button visibility
++        var toggle = li.querySelector('.toggle');
++        var destroy = li.querySelector('.destroy');
++        if (toggle) toggle.style.display = '';
++        if (destroy) destroy.style.display = '';
+       } else if (e.keyCode === ESCAPE_KEY) {
+         e.preventDefault();
+         li.classList.remove('editing');
++        // Restore checkbox and destroy button visibility
++        var toggle = li.querySelector('.toggle');
++        var destroy = li.querySelector('.destroy');
++        if (toggle) toggle.style.display = '';
++        if (destroy) destroy.style.display = '';
+       }
+     });
+     editInput.addEventListener('blur', function () {
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..1d75a72
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,45 @@
++{
++  "watches": [
++    {
++      "name": "in-place update on toggle",
++      "scenarios": [
++        "Todo Management: Toggling a todo updates the row in place without rebuilding the list",
++        "Todo Management: A user marks a single todo as completed",
++        "Todo Management: A user unmarks a completed todo",
++        "Todo Management: Mark all todos as completed",
++        "Todo Management: Toggle-all unchecks when all items are individually unchecked",
++        "Todo Management: Toggle-all checkbox updates when individual todos change",
++        "Todo Management: Checkbox and destroy button are hidden while editing a todo",
++        "Todo Management: A user enters edit mode by double-clicking a todo label",
++        "Todo Management: A user saves an edit by pressing Enter",
++        "Todo Management: A user saves an edit on blur",
++        "Todo Management: A user discards an edit by pressing Escape",
++        "Todo Management: A trimmed empty edit destroys the todo"
++      ]
++    },
++    {
++      "name": "regression — creation, destroy, counter, clear, filter, persistence",
++      "scenarios": [
++        "Todo Management: The main and footer sections are hidden when there are no todos",
++        "Todo Management: A user creates a new todo",
++        "Todo Management: A user cannot create an empty todo",
++        "Todo Management: Multiple todos are appended in order",
++        "Todo Management: Clear completed button removes completed todos",
++        "Todo Management: Clear completed button is hidden when no todos are completed",
++        "Todo Management: Clear completed button appears when a todo is completed",
++        "Todo Management: Counter shows the number of active todos",
++        "Todo Management: Counter shows singular \"item\" for one active todo",
++        "Todo Management: Counter shows \"0 items left\" when all todos are completed",
++        "Todo Management: A user removes a todo by clicking the destroy button",
++        "Todo Management: The default route shows all todos",
++        "Todo Management: The active route shows only active todos",
++        "Todo Management: The completed route shows only completed todos",
++        "Todo Management: An item completed while in a filtered view is hidden",
++        "Todo Management: The selected filter is persisted on reload",
++        "Todo Management: Todos persist across page reloads",
++        "Todo Management: Completed state persists across reloads",
++        "Servable Page: index.html exists and includes the app shell and script source"
++      ]
++    }
++  ]
++}
+\ No newline at end of file

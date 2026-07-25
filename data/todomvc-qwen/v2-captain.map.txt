@@ -1,0 +1,24 @@
+# banked: 2026-07-25T16:39:38Z
+# verdict: PENDING
+# leg: {  "name": "v2-captain",  "model": "qwen/qwen3.7-plus",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/todomvc-qwen/sim",  "timeout_s": 1500,  "skills": [    "experiments/yoink-settle/skills/shipshape",    "experiments/yoink-settle/skills/captain",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== v2-captain.session.jsonl ===
+  turns=13  wall=179.2s  in=82264  out=9433  cache_read=282496  cost=$0.0565
+  role reads: captain@t0 -> shipshape@t0
+  roles loaded: captain, shipshape
+  ~ repeated tool signature at turns [4, 5] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    2101/205        0 $0.0009  read, read, bash
+    t1   18814/353        0 $0.0065  read, bash, bash, bash
+    t2    3533/223    17024 $0.0025  bash, bash, read
+    t3    4507/951    19072 $0.0039  bash, read, read
+    t4    5290/168    23296 $0.0034  read, bash
+    t5    1304/121    27648 $0.0023  bash
+    t6    1510/690    27648 $0.0031  bash
+    t7    2218/1483   27648 $0.0044  bash, read
+    t8   32915/3654       0 $0.0152  write, write
+    t9    4777/239    31872 $0.0039  bash, bash
+    t10   1292/278    36096 $0.0031  write
+    t11   1616/145    36096 $0.0030  bash
+    t12   2387/923    36096 $0.0043  -

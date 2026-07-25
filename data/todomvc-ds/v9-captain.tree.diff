@@ -1,0 +1,95 @@
+diff --git a/features/conformance.feature b/features/conformance.feature
+new file mode 100644
+index 0000000..b923c8e
+--- /dev/null
++++ b/features/conformance.feature
+@@ -0,0 +1,13 @@
++@conformance
++Feature: Editing conformance
++  As a developer
++  I want the edit-commit-on-Enter to release focus instead of committing directly
++  So that a real browser does not double-commit via the subsequent blur event
++
++  Rule: Enter handler delegates to blur
++
++  Scenario: Enter keydown handler calls editInput.blur() and does not call saveEdit directly
++    Given the file "js/app.js" exists
++    When I read the file "js/app.js"
++    Then the source should contain "editInput.blur();" inside the ENTER_KEY handler
++    And the source should not contain "saveEdit(id, editInput.value);" inside the ENTER_KEY handler in attachEditHandlers
+\ No newline at end of file
+diff --git a/features/support/steps.js b/features/support/steps.js
+index 314612d..eca56a4 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -453,4 +453,53 @@ Then('{string} loads {string} via a script tag', function (filename, scriptSrc)
+   const html = fs.readFileSync(path.join(ROOT, filename), 'utf-8');
+   const expected = 'src="' + scriptSrc + '"';
+   if (!html.includes(expected)) throw new Error('Script src "' + scriptSrc + '" not found in ' + filename);
++});
++
++// --- Conformance: source code inspection steps ---
++
++Given('the file {string} exists', function (filename) {
++  const filePath = path.resolve(ROOT, filename);
++  if (!fs.existsSync(filePath)) throw new Error('File not found: ' + filename);
++});
++
++When('I read the file {string}', function (filename) {
++  const filePath = path.resolve(ROOT, filename);
++  this._sourceContent = fs.readFileSync(filePath, 'utf-8');
++});
++
++Then('the source should contain {string} inside the ENTER_KEY handler', function (needle) {
++  const src = this._sourceContent;
++  if (!src) throw new Error('No source content loaded');
++  // Find the ENTER_KEY branch: the block inside `if (e.keyCode === ENTER_KEY)`
++  const enterMatch = src.match(/if\s*\(e\.keyCode\s*===?\s*ENTER_KEY\)\s*\{[^}]*\}/);
++  if (!enterMatch) throw new Error('Could not find ENTER_KEY handler block in source');
++  const block = enterMatch[0];
++  if (!block.includes(needle)) {
++    throw new Error('ENTER_KEY handler block does not contain "' + needle + '"');
++  }
++});
++
++Then('the source should not contain {string} inside the ENTER_KEY handler in attachEditHandlers', function (needle) {
++  const src = this._sourceContent;
++  if (!src) throw new Error('No source content loaded');
++  // Find the attachEditHandlers function body
++  const fnMatch = src.match(/function\s+attachEditHandlers\s*\([^)]*\)\s*\{/);
++  if (!fnMatch) throw new Error('Could not find attachEditHandlers function');
++  const fnStart = fnMatch.index + fnMatch[0].length;
++  // Find the matching closing brace - walk balanced braces
++  let depth = 1;
++  let i = fnStart;
++  while (i < src.length && depth > 0) {
++    if (src[i] === '{') depth++;
++    if (src[i] === '}') depth--;
++    i++;
++  }
++  const fnBody = src.substring(fnStart, i - 1);
++  // Find ENTER_KEY handler within the function body
++  const enterMatch = fnBody.match(/if\s*\(e\.keyCode\s*===?\s*ENTER_KEY\)\s*\{[^}]*\}/);
++  if (!enterMatch) throw new Error('Could not find ENTER_KEY handler inside attachEditHandlers');
++  const block = enterMatch[0];
++  if (block.includes(needle)) {
++    throw new Error('ENTER_KEY handler block should not contain "' + needle + '", but it does');
++  }
+ });
+\ No newline at end of file
+diff --git a/js/app.js b/js/app.js
+index 54840ad..dac4759 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -237,10 +237,7 @@
+       if (!id) return;
+       if (e.keyCode === ENTER_KEY) {
+         e.preventDefault();
+-        saveEdit(id, editInput.value);
+-        // Restore view visibility
+-        var view = li.querySelector('.view');
+-        if (view) view.style.display = '';
++        editInput.blur();
+       } else if (e.keyCode === ESCAPE_KEY) {
+         e.preventDefault();
+         li.classList.remove('editing');

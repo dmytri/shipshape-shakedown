@@ -1,0 +1,76 @@
+diff --git a/features/page-render.feature b/features/page-render.feature
+new file mode 100644
+index 0000000..08a1c58
+--- /dev/null
++++ b/features/page-render.feature
+@@ -0,0 +1,12 @@
++Feature: Page render
++  As a user opening the app in a browser
++  I want to see the todo application
++  So that I can use the app to manage my tasks
++
++  Scenario: The servable page contains the app structure and loads the application script
++    Given the index.html file exists at the project root
++    When the page is examined
++    Then the page contains the new-todo input with placeholder "What needs to be done?"
++    And the page contains the todo-list section
++    And the page contains the footer with the item counter and filter links
++    And the page includes a script tag loading js/app.js
+diff --git a/index.html b/index.html
+new file mode 100644
+index 0000000..5b32afd
+--- /dev/null
++++ b/index.html
+@@ -0,0 +1,36 @@
++<!doctype html>
++<html lang="en">
++	<head>
++		<meta charset="utf-8">
++		<meta name="viewport" content="width=device-width, initial-scale=1">
++		<title>TodoMVC</title>
++		<link rel="stylesheet" href="node_modules/todomvc-common/base.css">
++		<link rel="stylesheet" href="node_modules/todomvc-app-css/index.css">
++	</head>
++	<body>
++		<section class="todoapp">
++			<header class="header">
++				<h1>todos</h1>
++				<input class="new-todo" placeholder="What needs to be done?" autofocus>
++			</header>
++			<section class="main">
++				<input id="toggle-all" class="toggle-all" type="checkbox">
++				<label for="toggle-all">Mark all as complete</label>
++				<ul class="todo-list"></ul>
++			</section>
++			<footer class="footer">
++				<span class="todo-count"><strong>0</strong> items left</span>
++				<ul class="filters">
++					<li><a href="#/">All</a></li>
++					<li><a href="#/active">Active</a></li>
++					<li><a href="#/completed">Completed</a></li>
++				</ul>
++				<button class="clear-completed">Clear completed</button>
++			</footer>
++		</section>
++		<footer class="info">
++			<p>Double-click to edit a todo</p>
++		</footer>
++		<script src="js/app.js"></script>
++	</body>
++</html>
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..283efc2
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,10 @@
++{
++  "watches": [
++    {
++      "purpose": "page-render step definitions",
++      "targets": [
++        "features/page-render.feature:The servable page contains the app structure and loads the application script"
++      ]
++    }
++  ]
++}

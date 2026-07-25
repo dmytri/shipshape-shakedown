@@ -1,0 +1,23 @@
+# banked: 2026-07-25T16:14:19Z
+# verdict: PENDING
+# leg: {  "name": "v3-captain",  "model": "z-ai/glm-4.7",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/todomvc-glm/sim",  "timeout_s": 1500,  "skills": [    "experiments/yoink-settle/skills/shipshape",    "experiments/yoink-settle/skills/captain",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== v3-captain.session.jsonl ===
+  turns=13  wall=100.5s  in=26469  out=3290  cache_read=153856  cost=$0.0287
+  role reads: captain@t0
+  roles loaded: captain
+  per-turn (turn: in/out/cache $cost  tools):
+    t0     153/217     1824 $0.0006  read, bash
+    t1    5730/152     2176 $0.0027  read, read, read
+    t2    1285/434     8032 $0.0019  bash
+    t3    9839/56        32 $0.0040  read
+    t4    1449/518     9920 $0.0023  bash
+    t5      46/46     11872 $0.0010  read
+    t6    7557/452     9728 $0.0046  edit
+    t7      47/172    17728 $0.0017  edit
+    t8      66/482    17920 $0.0023  edit
+    t9      44/88     18464 $0.0016  bash
+    t10     91/50     18592 $0.0016  bash
+    t11     94/58     18720 $0.0016  read
+    t12     68/565    18848 $0.0025  -

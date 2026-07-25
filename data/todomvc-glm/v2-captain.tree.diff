@@ -1,0 +1,230 @@
+diff --git a/css/app.css b/css/app.css
+index 8bb1d34..c6e6f28 100644
+--- a/css/app.css
++++ b/css/app.css
+@@ -1,3 +1,9 @@
+ .hidden {
+ 	display: none !important;
++}
++
++/* Hide checkbox and destroy button while editing */
++.todo-list li.editing .toggle,
++.todo-list li.editing .destroy {
++	display: none !important;
+ }
+\ No newline at end of file
+diff --git a/features/support/steps.js b/features/support/steps.js
+index fb5ed23..2898862 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -1,9 +1,13 @@
+ const { Given, When, Then, Before } = require('@cucumber/cucumber');
+ const { Window } = require('happy-dom');
++const fs = require('fs');
++const path = require('path');
+ 
+ let window;
+ let document;
+ let TodoApp;
++let savedTodoElement;
++let savedTodoElements = [];
+ 
+ // Load the app
+ Before(function () {
+@@ -39,12 +43,16 @@ Before(function () {
+ 
+ // Helper to load the app HTML
+ function loadApp() {
++  // Load the CSS file
++  const cssCode = fs.readFileSync(path.join(__dirname, '../../css/app.css'), 'utf8');
++
+   const html = `<!doctype html>
+ <html lang="en">
+   <head>
+     <meta charset="utf-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1">
+     <title>TodoMVC</title>
++    <style>${cssCode}</style>
+   </head>
+   <body>
+     <section class="todoapp">
+@@ -78,8 +86,6 @@ function loadApp() {
+   document.write(html);
+   
+   // Load the app script
+-  const fs = require('fs');
+-  const path = require('path');
+   const appCode = fs.readFileSync(path.join(__dirname, '../../js/app.js'), 'utf8');
+   
+   // Execute in the window context using eval
+@@ -672,4 +678,72 @@ Then('the new todo input should be focused', function () {
+   if (!todos.newTodoInput.hasAttribute('autofocus') && document.activeElement !== todos.newTodoInput) {
+     throw new Error('New todo input should be focused');
+   }
++});
++
++// Save DOM element before action
++Given('I save the todo element', function () {
++  const todo = findTodoByTitle('Buy groceries');
++  if (todo) {
++    savedTodoElement = todo;
++  }
++});
++
++Given('I save all todo elements', function () {
++  savedTodoElements = [];
++  const todos = document.querySelectorAll('.todo-list li');
++  todos.forEach(todo => {
++    savedTodoElements.push(todo);
++  });
++});
++
++Then('the todo element should not be recreated', function () {
++  const currentTodo = findTodoByTitle('Buy groceries');
++  if (!currentTodo) {
++    throw new Error('Todo should still exist');
++  }
++  if (currentTodo !== savedTodoElement) {
++    throw new Error('Todo element should not be recreated but was');
++  }
++});
++
++Then('the todo elements should not be recreated', function () {
++  const currentTodos = document.querySelectorAll('.todo-list li');
++  if (currentTodos.length !== savedTodoElements.length) {
++    throw new Error('Number of todos should match');
++  }
++  for (let i = 0; i < currentTodos.length; i++) {
++    if (currentTodos[i] !== savedTodoElements[i]) {
++      throw new Error('Todo elements should not be recreated but were');
++    }
++  }
++});
++
++Then('the todo\'s checkbox should be hidden', function () {
++  const todo = findTodoByTitle('Buy groceries');
++  if (!todo) {
++    throw new Error('Todo should exist');
++  }
++  const checkbox = todo.querySelector('.toggle');
++  if (!checkbox) {
++    throw new Error('Checkbox should exist');
++  }
++  const computedStyle = window.getComputedStyle(checkbox);
++  if (computedStyle.display !== 'none') {
++    throw new Error('Todo checkbox should be hidden when editing');
++  }
++});
++
++Then('the todo\'s destroy button should be hidden', function () {
++  const todo = findTodoByTitle('Buy groceries');
++  if (!todo) {
++    throw new Error('Todo should exist');
++  }
++  const destroyBtn = todo.querySelector('.destroy');
++  if (!destroyBtn) {
++    throw new Error('Destroy button should exist');
++  }
++  const computedStyle = window.getComputedStyle(destroyBtn);
++  if (computedStyle.display !== 'none') {
++    throw new Error('Todo destroy button should be hidden when editing');
++  }
+ });
+\ No newline at end of file
+diff --git a/features/todo-management.feature b/features/todo-management.feature
+index 6a41fbd..06b8ffa 100644
+--- a/features/todo-management.feature
++++ b/features/todo-management.feature
+@@ -136,4 +136,23 @@ Feature: Todo Management
+     Given the app has a todo "Buy groceries"
+     And the todo is in edit mode
+     When the page is reloaded
+-    Then the todo should not be in edit mode
+\ No newline at end of file
++    Then the todo should not be in edit mode
++
++  Scenario: Toggling a todo preserves the DOM element
++    Given the app has a todo "Buy groceries"
++    And I save the todo element
++    When I click the checkbox on the todo
++    Then the todo element should not be recreated
++
++  Scenario: Mark all as complete preserves DOM elements
++    Given the app has todos "Buy groceries" and "Walk the dog"
++    And both todos are active
++    And I save all todo elements
++    When I click the "Mark all as complete" checkbox
++    Then the todo elements should not be recreated
++
++  Scenario: Edit mode hides checkbox and destroy button
++    Given the app has a todo "Buy groceries"
++    And the todo is in edit mode
++    Then the todo's checkbox should be hidden
++    And the todo's destroy button should be hidden
+\ No newline at end of file
+diff --git a/js/app.js b/js/app.js
+index f4e0a26..7608984 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -100,8 +100,6 @@
+ 
+   // Render todos
+   function render() {
+-    todoList.innerHTML = '';
+-
+     // Filter todos based on current route
+     const filteredTodos = todos.filter(function (todo) {
+       if (currentFilter === 'active') {
+@@ -112,10 +110,48 @@
+       return true;
+     });
+ 
+-    // Render filtered todos
+-    filteredTodos.forEach(function (todo) {
+-      const todoEl = createTodoElement(todo);
+-      todoList.appendChild(todoEl);
++    // Get existing todo elements by ID
++    const existingElements = {};
++    const existingElementsList = todoList.querySelectorAll('li');
++    existingElementsList.forEach(function (el) {
++      existingElements[el.dataset.id] = el;
++    });
++
++    // Track which IDs are still in the filtered list
++    const filteredIds = {};
++
++    // Render filtered todos, updating existing elements or creating new ones
++    filteredTodos.forEach(function (todo, index) {
++      filteredIds[todo.id] = true;
++      let todoEl = existingElements[todo.id];
++
++      if (todoEl) {
++        // Update existing element in place
++        todoEl.className = todo.completed ? 'completed' : '';
++        const checkbox = todoEl.querySelector('.toggle');
++        if (checkbox) {
++          checkbox.checked = todo.completed;
++        }
++        const label = todoEl.querySelector('label');
++        if (label) {
++          label.textContent = escapeHtml(todo.title);
++        }
++        const editInput = todoEl.querySelector('.edit');
++        if (editInput) {
++          editInput.value = escapeHtml(todo.title);
++        }
++      } else {
++        // Create new element
++        todoEl = createTodoElement(todo);
++        todoList.appendChild(todoEl);
++      }
++    });
++
++    // Remove elements that are no longer in the filtered list
++    existingElementsList.forEach(function (el) {
++      if (!filteredIds[el.dataset.id]) {
++        todoList.removeChild(el);
++      }
+     });
+ 
+     // Update UI state

@@ -118,3 +118,23 @@ pending). Update `OPERATOR-LESSONS.md` with what the voyage taught.
 - Demanding a failing SCENARIO for a tier-invisible bug → impossible; use a scantling.
 - A big "rewrite render/the handler" ask → cheap model breaks the app. Demand the smallest
   change and require the suite stay green.
+
+---
+
+## Multi-model / autonomous-driver lessons (3-model TodoMVC run, 2026-07-25)
+
+`bin/eval-drive-todomvc.sh` runs a whole pilot autonomously (build → grade → matched prepared
+intent → regrade, to 28/29, with breakers). Running deepseek-v4-flash / qwen3.7-plus / glm-4.7 in
+parallel taught:
+- **`skills` CLI belongs in the shared toolkit**, never the npx cache (ephemeral — evicted mid-run,
+  failed every leg).
+- **Intent selector must be MAJORITY-based and cycle on ties** — a lone residual (e.g. one back-button
+  fail) otherwise hijacks a voyage from the real 5-failure group, and a 1-1-1 split makes it repeat
+  one intent forever. Keep `edithide` separate from `domidentity`.
+- **Retry the bwrap overlay-mount error** under parallel legs on a shared node_modules lowerdir.
+- **NEVER kill a driver mid-voyage casually** — it leaves a dirty git tree that grades garbage and
+  can corrupt the pilot (lost the first qwen run). Let the voyage finish (≤10 min), or rely on the
+  resume's `git reset --hard HEAD`.
+- Model efficiency varies WIDELY on the same task: glm-4.7 / qwen3.7-plus reached 28/29 in 3 voyages
+  (~170 round-trips); deepseek-v4-flash took ~11 (~416). glm shipped a servable page in its build;
+  the others needed a separate page voyage. See data/todomvc-3model-compare/REPORT.md.

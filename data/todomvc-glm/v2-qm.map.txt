@@ -1,0 +1,17 @@
+# banked: 2026-07-25T16:07:09Z
+# verdict: PENDING
+# leg: {  "name": "v2-qm",  "model": "z-ai/glm-4.7",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/todomvc-glm/sim",  "timeout_s": 1500,  "skills": [    "experiments/yoink-settle/skills/shipshape",    "experiments/yoink-settle/skills/qm",    "experiments/yoink-settle/skills/crew",    "experiments/yoink-settle/skills/boatswain",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== v2-qm.session.jsonl ===
+  turns=6  wall=60.4s  in=22906  out=869  cache_read=75712  cost=$0.0167
+  role reads: qm@t0 -> shipshape@t1
+  roles loaded: qm, shipshape
+  ~ repeated tool signature at turns [1, 2] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0     766/290     1408 $0.0009  read
+    t1    3284/76      2464 $0.0016  read
+    t2   10579/77      5824 $0.0048  read
+    t3    7945/174    16480 $0.0048  bash
+    t4     295/91     24576 $0.0022  bash
+    t5      37/161    24960 $0.0023  -

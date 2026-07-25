@@ -1,0 +1,278 @@
+diff --git a/features/complete-todo.feature b/features/complete-todo.feature
+new file mode 100644
+index 0000000..04f6e76
+--- /dev/null
++++ b/features/complete-todo.feature
+@@ -0,0 +1,27 @@
++Feature: Complete todo
++  As someone with things to do
++  I want to mark todos as complete or incomplete
++  So that I can track my progress
++
++  Scenario: Mark a todo complete
++    Given the page is loaded with a todo "Buy milk" that is not completed
++    When I click the checkbox for the todo "Buy milk"
++    Then the todo "Buy milk" has the class "completed"
++    And the checkbox for the todo "Buy milk" is checked
++
++  Scenario: Mark a completed todo as active
++    Given the page is loaded with a todo "Buy milk" that is completed
++    When I click the checkbox for the todo "Buy milk"
++    Then the todo "Buy milk" does not have the class "completed"
++    And the checkbox for the todo "Buy milk" is not checked
++
++  Scenario: Mark all as complete
++    Given the page is loaded with the todos "Buy milk" and "Walk the dog" both not completed
++    When I click the toggle all checkbox
++    Then the todo "Buy milk" has the class "completed"
++    And the todo "Walk the dog" has the class "completed"
++
++  Scenario: Mark all checkbox reflects individual state
++    Given the page is loaded with the todos "Buy milk" and "Walk the dog" both completed and the toggle all checkbox checked
++    When I click the checkbox for the todo "Buy milk" to make it not completed
++    Then the toggle all checkbox is not checked
+diff --git a/features/counter.feature b/features/counter.feature
+new file mode 100644
+index 0000000..be89aef
+--- /dev/null
++++ b/features/counter.feature
+@@ -0,0 +1,17 @@
++Feature: Todo counter
++  As someone with things to do
++  I want to see how many active todos remain
++  So that I know how much is left to do
++
++  Scenario: Display active count with correct pluralization
++    Given the page is loaded with two active todos and one completed todo
++    Then the counter displays "2 items left"
++
++  Scenario: Display singular for one active todo
++    Given the page is loaded with one active todo and no completed todos
++    Then the counter displays "1 item left"
++
++  Scenario: Counter updates when a todo is completed
++    Given the page is loaded with two active todos
++    When I complete one of the active todos
++    Then the counter displays "1 item left"
+diff --git a/features/delete-todo.feature b/features/delete-todo.feature
+new file mode 100644
+index 0000000..0683da6
+--- /dev/null
++++ b/features/delete-todo.feature
+@@ -0,0 +1,24 @@
++Feature: Delete todo
++  As someone with things to do
++  I want to remove individual todos and clear completed ones
++  So that I can keep my list tidy
++
++  Scenario: Delete a todo with the destroy button
++    Given the page is loaded with a todo "Buy milk" that is not completed
++    When I click the destroy button for the todo "Buy milk"
++    Then the todo list does not contain a todo titled "Buy milk"
++
++  Scenario: Clear completed removes all completed todos
++    Given the page is loaded with a completed todo "Buy milk" and an active todo "Walk the dog"
++    When I click the clear completed button
++    Then the todo list does not contain a todo titled "Buy milk"
++    And the todo list contains a todo titled "Walk the dog"
++
++  Scenario: Clear completed button is hidden when no completed todos
++    Given the page is loaded with an active todo "Walk the dog" and no completed todos
++    Then the clear completed button is not visible
++
++  Scenario: Hide main and footer when no todos remain
++    Given the page is loaded with no todos
++    Then the main section is hidden
++    And the footer is hidden
+diff --git a/features/edit-todo.feature b/features/edit-todo.feature
+new file mode 100644
+index 0000000..af5eb11
+--- /dev/null
++++ b/features/edit-todo.feature
+@@ -0,0 +1,33 @@
++Feature: Edit todo
++  As someone with things to do
++  I want to edit the title of an existing todo
++  So that I can correct or update task descriptions
++
++  Scenario: Enter edit mode by double-clicking the label
++    Given the page is loaded with a todo "Buy milk" that is not completed
++    When I double-click the label for the todo "Buy milk"
++    Then the todo "Buy milk" has the class "editing"
++    And the edit input for the todo "Buy milk" is focused
++
++  Scenario: Save edit on Enter
++    Given the page is loaded with a todo "Buy milk" in edit mode
++    When I change the edit input value to "Buy eggs" and press Enter
++    Then the todo list contains a todo titled "Buy eggs"
++    And the todo "Buy eggs" does not have the class "editing"
++
++  Scenario: Save edit on blur
++    Given the page is loaded with a todo "Buy milk" in edit mode
++    When I change the edit input value to "Buy eggs" and move focus away
++    Then the todo list contains a todo titled "Buy eggs"
++    And the todo "Buy eggs" does not have the class "editing"
++
++  Scenario: Discard edit on Escape
++    Given the page is loaded with a todo "Buy milk" in edit mode
++    When I change the edit input value to "Buy eggs" and press Escape
++    Then the todo list contains a todo titled "Buy milk"
++    And the todo "Buy milk" does not have the class "editing"
++
++  Scenario: Empty edit destroys the todo
++    Given the page is loaded with a todo "Buy milk" in edit mode
++    When I change the edit input value to "" and press Enter
++    Then the todo list does not contain a todo titled "Buy milk"
+diff --git a/features/filter-todos.feature b/features/filter-todos.feature
+new file mode 100644
+index 0000000..8bbdf90
+--- /dev/null
++++ b/features/filter-todos.feature
+@@ -0,0 +1,28 @@
++Feature: Filter todos
++  As someone with things to do
++  I want to filter my todos by status
++  So that I can focus on what matters
++
++  Scenario: Show all todos by default
++    Given the page is loaded with a completed todo "Buy milk" and an active todo "Walk the dog"
++    Then the todo list shows both "Buy milk" and "Walk the dog"
++    And the "All" filter link has the class "selected"
++
++  Scenario: Filter to active todos
++    Given the page is loaded with a completed todo "Buy milk" and an active todo "Walk the dog"
++    When I navigate to the active filter
++    Then the todo list shows only "Walk the dog"
++    And the "Active" filter link has the class "selected"
++
++  Scenario: Filter to completed todos
++    Given the page is loaded with a completed todo "Buy milk" and an active todo "Walk the dog"
++    When I navigate to the completed filter
++    Then the todo list shows only "Buy milk"
++    And the "Completed" filter link has the class "selected"
++
++  Scenario: Filter persists on reload
++    Given the page is loaded with a completed todo "Buy milk" and an active todo "Walk the dog"
++    When I navigate to the active filter
++    And I reload the page
++    Then the todo list shows only "Walk the dog"
++    And the "Active" filter link has the class "selected"
+diff --git a/features/new-todo.feature b/features/new-todo.feature
+new file mode 100644
+index 0000000..e4dee24
+--- /dev/null
++++ b/features/new-todo.feature
+@@ -0,0 +1,20 @@
++Feature: New todo
++  As someone with things to do
++  I want to add new todos by typing in the input
++  So that I can track tasks
++
++  Scenario: Create a new todo
++    Given the page is loaded with no todos
++    When I type "Buy milk" in the new todo input and press Enter
++    Then the todo list contains a todo titled "Buy milk"
++    And the new todo input is empty
++
++  Scenario: Reject empty input
++    Given the page is loaded with no todos
++    When I press Enter in the new todo input without typing
++    Then the todo list is still empty
++
++  Scenario: Reject whitespace-only input
++    Given the page is loaded with no todos
++    When I type "   " in the new todo input and press Enter
++    Then the todo list is still empty
+diff --git a/features/persist-todos.feature b/features/persist-todos.feature
+new file mode 100644
+index 0000000..98ae33d
+--- /dev/null
++++ b/features/persist-todos.feature
+@@ -0,0 +1,21 @@
++Feature: Persist todos
++  As someone with things to do
++  I want my todos to persist across page reloads
++  So that I do not lose my list
++
++  Scenario: Todos persist to localStorage
++    Given the page is loaded with no todos
++    When I type "Buy milk" in the new todo input and press Enter
++    And I reload the page
++    Then the todo list contains a todo titled "Buy milk"
++    And the todo has the key "id", the key "title" with value "Buy milk", and the key "completed"
++
++  Scenario: Completed state persists
++    Given the page is loaded with a completed todo "Buy milk"
++    When I reload the page
++    Then the todo "Buy milk" has the class "completed"
++
++  Scenario: Editing mode is not persisted
++    Given the page is loaded with a todo "Buy milk" in edit mode
++    When I reload the page
++    Then the todo "Buy milk" does not have the class "editing"
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..8a22de6
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,60 @@
++{
++  "watches": [
++    {
++      "description": "Create, counter, and basic display",
++      "targets": [
++        "new-todo.feature:Create a new todo",
++        "new-todo.feature:Reject empty input",
++        "new-todo.feature:Reject whitespace-only input",
++        "counter.feature:Display active count with correct pluralization",
++        "counter.feature:Display singular for one active todo",
++        "counter.feature:Counter updates when a todo is completed"
++      ]
++    },
++    {
++      "description": "Complete and toggle todo state",
++      "targets": [
++        "complete-todo.feature:Mark a todo complete",
++        "complete-todo.feature:Mark a completed todo as active",
++        "complete-todo.feature:Mark all as complete",
++        "complete-todo.feature:Mark all checkbox reflects individual state"
++      ]
++    },
++    {
++      "description": "Delete todos and empty-state visibility",
++      "targets": [
++        "delete-todo.feature:Delete a todo with the destroy button",
++        "delete-todo.feature:Clear completed removes all completed todos",
++        "delete-todo.feature:Clear completed button is hidden when no completed todos",
++        "delete-todo.feature:Hide main and footer when no todos remain"
++      ]
++    },
++    {
++      "description": "Edit todo lifecycle",
++      "targets": [
++        "edit-todo.feature:Enter edit mode by double-clicking the label",
++        "edit-todo.feature:Save edit on Enter",
++        "edit-todo.feature:Save edit on blur",
++        "edit-todo.feature:Discard edit on Escape",
++        "edit-todo.feature:Empty edit destroys the todo"
++      ]
++    },
++    {
++      "description": "Persist todos across reloads",
++      "targets": [
++        "persist-todos.feature:Todos persist to localStorage",
++        "persist-todos.feature:Completed state persists",
++        "persist-todos.feature:Editing mode is not persisted"
++      ]
++    },
++    {
++      "description": "Filter todos by route",
++      "targets": [
++        "filter-todos.feature:Show all todos by default",
++        "filter-todos.feature:Filter to active todos",
++        "filter-todos.feature:Filter to completed todos",
++        "filter-todos.feature:Filter persists on reload"
++      ]
++    }
++  ]
++}

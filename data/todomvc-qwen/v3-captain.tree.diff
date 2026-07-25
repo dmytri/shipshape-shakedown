@@ -1,0 +1,197 @@
+diff --git a/css/app.css b/css/app.css
+new file mode 100644
+index 0000000..d2828e5
+--- /dev/null
++++ b/css/app.css
+@@ -0,0 +1,4 @@
++/* Hide checkbox and delete button while a row is being edited */
++.todo-list li.editing .view {
++	display: none;
++}
+diff --git a/features/durable-dom.feature b/features/durable-dom.feature
+new file mode 100644
+index 0000000..59463db
+--- /dev/null
++++ b/features/durable-dom.feature
+@@ -0,0 +1,21 @@
++Feature: Durable DOM
++  As a real browser user
++  I want DOM elements to stay stable when I interact with the app
++  So that the UI doesn't flicker and my context is preserved
++
++  Scenario: Toggling a checkbox preserves the same li element
++    Given the page is loaded with a todo "Buy milk" that is not completed
++    And I remember the li element for the todo "Buy milk"
++    When I click the checkbox for the todo "Buy milk"
++    Then the remembered li element is still in the DOM
++
++  Scenario: Mark all preserves the same li elements
++    Given the page is loaded with the todos "Buy milk" and "Walk the dog" both not completed
++    And I remember the li elements for todos "Buy milk" and "Walk the dog"
++    When I click the toggle all checkbox
++    Then the remembered li elements are still in the DOM
++
++  Scenario: Editing hides the checkbox and delete button via CSS
++    Given the page is loaded with a todo "Buy milk" that is not completed
++    When I double-click the label for the todo "Buy milk"
++    Then the view area for the todo "Buy milk" is hidden by CSS
+diff --git a/features/support/steps.js b/features/support/steps.js
+index 981826c..b9e142b 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -356,3 +356,42 @@ Then('the todo has the key {string}, the key {string} with value {string}, and t
+   assert.strictEqual(todo[key2], value, `Expected "${key2}" to be "${value}" but got "${todo[key2]}"`);
+   assert(key3 in todo, `Expected todo to have key "${key3}"`);
+ });
++
++// --- Durable DOM steps ---
++
++When('I remember the li element for the todo {string}', function (title) {
++  const li = this.findTodoLiByTitle(title);
++  assert(li, `Todo "${title}" not found`);
++  this._rememberedLis = { [title]: li };
++});
++
++When('I remember the li elements for todos {string} and {string}', function (title1, title2) {
++  const li1 = this.findTodoLiByTitle(title1);
++  const li2 = this.findTodoLiByTitle(title2);
++  assert(li1, `Todo "${title1}" not found`);
++  assert(li2, `Todo "${title2}" not found`);
++  this._rememberedLis = { [title1]: li1, [title2]: li2 };
++});
++
++Then('the remembered li element is still in the DOM', function () {
++  for (const [title, li] of Object.entries(this._rememberedLis)) {
++    assert(this.document.contains(li), `Expected the original <li> for "${title}" to still be in the DOM after the action`);
++    assert.strictEqual(li.parentElement.className, 'todo-list', `Expected the original <li> for "${title}" to still be a child of .todo-list`);
++  }
++});
++
++Then('the remembered li elements are still in the DOM', function () {
++  for (const [title, li] of Object.entries(this._rememberedLis)) {
++    assert(this.document.contains(li), `Expected the original <li> for "${title}" to still be in the DOM after the action`);
++    assert.strictEqual(li.parentElement.className, 'todo-list', `Expected the original <li> for "${title}" to still be a child of .todo-list`);
++  }
++});
++
++Then('the view area for the todo {string} is hidden by CSS', function (title) {
++  const li = this.findTodoLiByTitle(title);
++  assert(li, `Todo "${title}" not found`);
++  const viewEl = li.querySelector('.view');
++  assert(viewEl, `Expected .view element inside li for "${title}"`);
++  const computed = this.window.getComputedStyle(viewEl);
++  assert.strictEqual(computed.display, 'none', `Expected .view to have display:none when editing, got "${computed.display}"`);
++});
+diff --git a/features/support/world.js b/features/support/world.js
+index 21dcf73..986a105 100644
+--- a/features/support/world.js
++++ b/features/support/world.js
+@@ -49,6 +49,12 @@ class TodoWorld {
+       this.window.localStorage.setItem('todos-todomvc', this.savedTodos);
+     }
+ 
++    // Inject app CSS so computedStyle reflects it
++    const appCss = fs.readFileSync(path.join(__dirname, '..', '..', 'css', 'app.css'), 'utf-8');
++    const styleEl = this.document.createElement('style');
++    styleEl.textContent = appCss;
++    this.document.head.appendChild(styleEl);
++
+     // Load and execute the app
+     const appCode = fs.readFileSync(path.join(__dirname, '..', '..', 'js', 'app.js'), 'utf-8');
+     this.window.eval(appCode);
+diff --git a/index.html b/index.html
+index 5b32afd..a6c2de4 100644
+--- a/index.html
++++ b/index.html
+@@ -6,6 +6,7 @@
+ 		<title>TodoMVC</title>
+ 		<link rel="stylesheet" href="node_modules/todomvc-common/base.css">
+ 		<link rel="stylesheet" href="node_modules/todomvc-app-css/index.css">
++		<link rel="stylesheet" href="css/app.css">
+ 	</head>
+ 	<body>
+ 		<section class="todoapp">
+diff --git a/js/app.js b/js/app.js
+index 2213a2a..2c88de9 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -76,30 +76,61 @@
+     var toggleAllCb = document.querySelector('.toggle-all');
+     toggleAllCb.checked = allCompleted();
+ 
+-    // Render todo list
++    // Render todo list — update existing DOM nodes in place, keyed by todo id
+     var visible = getVisibleTodos();
+-    var html = '';
+-    for (var i = 0; i < visible.length; i++) {
+-      var todo = visible[i];
++
++    // Map of existing <li> elements by data-id
++    var existingLis = {};
++    var currentLiNodes = todoList.children;
++    for (var i = currentLiNodes.length - 1; i >= 0; i--) {
++      var id = currentLiNodes[i].getAttribute('data-id');
++      if (id) existingLis[id] = currentLiNodes[i];
++    }
++
++    var seenIds = {};
++    for (var v = 0; v < visible.length; v++) {
++      var todo = visible[v];
++      var idStr = String(todo.id);
++      seenIds[idStr] = true;
++
++      var li = existingLis[idStr];
++      if (!li) {
++        li = document.createElement('li');
++        li.setAttribute('data-id', todo.id);
++        li.innerHTML = '<div class="view">' +
++          '<input class="toggle" type="checkbox">' +
++          '<label></label>' +
++          '<button class="destroy"></button>' +
++          '</div>' +
++          '<input class="edit">';
++        li.querySelector('.edit').addEventListener('keydown', handleEditKeydown);
++        li.querySelector('.edit').addEventListener('blur', handleEditBlur);
++      }
++
++      // Update classes
+       var liClass = '';
+       if (todo.completed) liClass += 'completed';
+       if (todo.id === editingTodoId) liClass += (liClass ? ' ' : '') + 'editing';
+-      html += '<li data-id="' + todo.id + '"' + (liClass ? ' class="' + liClass + '"' : '') + '>';
+-      html += '<div class="view">';
+-      html += '<input class="toggle" type="checkbox"' + (todo.completed ? ' checked' : '') + '>';
+-      html += '<label>' + escapeHtml(todo.title) + '</label>';
+-      html += '<button class="destroy"></button>';
+-      html += '</div>';
+-      html += '<input class="edit" value="' + escapeHtml(todo.title) + '">';
+-      html += '</li>';
++      li.className = liClass;
++
++      // Update toggle checkbox
++      li.querySelector('.toggle').checked = todo.completed;
++
++      // Update label text
++      li.querySelector('.view label').textContent = todo.title;
++
++      // Update edit input value
++      li.querySelector('.edit').value = todo.title;
++
++      // Append (moves existing node into correct order if already present)
++      todoList.appendChild(li);
+     }
+-    todoList.innerHTML = html;
+ 
+-    // Attach edit event listeners
+-    var editInputs = todoList.querySelectorAll('li .edit');
+-    for (var j = 0; j < editInputs.length; j++) {
+-      editInputs[j].addEventListener('keydown', handleEditKeydown);
+-      editInputs[j].addEventListener('blur', handleEditBlur);
++    // Remove <li> elements that are no longer visible
++    for (var eid in existingLis) {
++      if (!seenIds[eid]) {
++        todoList.removeChild(existingLis[eid]);
++      }
+     }
+ 
+     // Update counter

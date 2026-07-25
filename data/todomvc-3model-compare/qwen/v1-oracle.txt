@@ -1,0 +1,29 @@
+# oracle grade: framework=shakedown  runner_exit=1
+tests=None passing=None failing=None pending=None
+all_specs_passed=False
+GRADE: UNPARSEABLE (see tail below)
+
+## failing tests
+  (none parsed)
+
+## cypress summary tail
+npm notice run todomvc@2.0.0 npx
+npm notice run 'start-server-and-test' node tests/server.js http://localhost:8874/examples/shakedown/index.html npx cypress run --env framework=shakedown --spec cypress/e2e/spec.cy.js --config baseUrl=http://localhost:8874/examples/,screenshotOnRunFailure=false,video=false
+1: starting server using command "node tests/server.js"
+and when url "[ 'http://localhost:8874/examples/shakedown/index.html' ]" is responding with HTTP status code 200
+WAIT_ON_TIMEOUT is set to 90000
+running tests using command "npx cypress run --env framework=shakedown --spec cypress/e2e/spec.cy.js --config baseUrl=http://localhost:8874/examples/,screenshotOnRunFailure=false,video=false"
+
+todomvc test server listening on http://localhost:8874
+Error: Timed out waiting for: http://localhost:8874/examples/shakedown/index.html
+    at /home/exedev/shipshape-shakedown/.eval-scratch/oracle-clone-qwen/node_modules/wait-on/lib/wait-on.js:131:31
+    at doInnerSub (/home/exedev/shipshape-shakedown/.eval-scratch/oracle-clone-qwen/node_modules/rxjs/dist/cjs/internal/operators/mergeInternals.js:22:31)
+    at outerNext (/home/exedev/shipshape-shakedown/.eval-scratch/oracle-clone-qwen/node_modules/rxjs/dist/cjs/internal/operators/mergeInternals.js:17:70)
+    at OperatorSubscriber._this._next (/home/exedev/shipshape-shakedown/.eval-scratch/oracle-clone-qwen/node_modules/rxjs/dist/cjs/internal/operators/OperatorSubscriber.js:33:21)
+    at Subscriber.next (/home/exedev/shipshape-shakedown/.eval-scratch/oracle-clone-qwen/node_modules/rxjs/dist/cjs/internal/Subscriber.js:51:18)
+    at AsyncAction.<anonymous> (/home/exedev/shipshape-shakedown/.eval-scratch/oracle-clone-qwen/node_modules/rxjs/dist/cjs/internal/observable/timer.js:28:28)
+    at AsyncAction._execute (/home/exedev/shipshape-shakedown/.eval-scratch/oracle-clone-qwen/node_modules/rxjs/dist/cjs/internal/scheduler/AsyncAction.js:79:18)
+    at AsyncAction.execute (/home/exedev/shipshape-shakedown/.eval-scratch/oracle-clone-qwen/node_modules/rxjs/dist/cjs/internal/scheduler/AsyncAction.js:67:26)
+    at AsyncScheduler.flush (/home/exedev/shipshape-shakedown/.eval-scratch/oracle-clone-qwen/node_modules/rxjs/dist/cjs/internal/scheduler/AsyncScheduler.js:38:33)
+    at listOnTimeout (node:internal/timers:605:17)
+    at process.processTimers (node:internal/timers:541:7)
