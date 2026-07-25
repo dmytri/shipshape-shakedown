@@ -74,6 +74,16 @@ BEFORE watching, never `head -1` of a fuzzy pattern. -->
 
 
 <!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
+## >>> DEFAULT MODEL for single-model pilot runs: z-ai/glm-4.7 (dk, 2026-07-25). <<<
+
+The 3-model TodoMVC comparison (all reached 28/29 on current 0.13.65) made **glm-4.7 the all-round
+champ**: fastest (~31 min), fewest round-trips (166), mid cost ($0.67). deepseek-v4-flash is the
+cost champ ($0.58) but slowest (~48 min, ~11 voyages); qwen3.7-plus was slower AND pricier than
+glm-4.7 ($0.96 / ~40 min). So default a 1-model run to **`z-ai/glm-4.7`** unless it specifically
+wants the cheapest (deepseek-v4-flash) or a frontier tier. Data: `data/todomvc-3model-compare/`.
+CAVEAT: functional 28/29 ≠ doctrine-conformant — planking was non-conformant across all three;
+the pilot now invokes Shipwright (harbour leg + plank-placement audit) to evaluate that properly.
+
 ## >>> SHIPPED 0.13.65 (2026-07-25): Shipwright conformance-skeleton enforcement. Yoink reverted from the candidate. <<<
 
 **dk ruled (2026-07-25): step back from yoink for now, keep the other since-upstream candidate
