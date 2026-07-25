@@ -136,7 +136,8 @@ print(f"planks={len(planks)} on-seam={onseam} hoisted={hoisted} | @captain={cap}
 PY
 }
 run_shipwright(){ # $1=label
-  local label="$1" out="$BASE/sw-$label.out" t0 t1 committed=no prehead
+  local label="$1"
+  local out="$BASE/sw-$label.out" t0 t1 committed=no prehead
   prehead="$(git -C "$SIM" rev-parse HEAD 2>/dev/null)"
   t0=$(date +%s)
   sed "s#PROJECT_ROOT_PLACEHOLDER#$SIM#g" "$HERE/tasks/pilot/shipwright.task.md" > "$BASE/sw-$label.task"
@@ -170,7 +171,8 @@ else
   # discard any dirty tree left by an interrupted voyage — grade only the last committed state
   git -C "$SIM" reset --hard HEAD >/dev/null 2>&1 || true
   git -C "$SIM" clean -fd >/dev/null 2>&1 || true
-  say "RESUME: grading current sim as baseline (voyage $((RESUME_FROM-1)), HEAD=$(git -C "$SIM" rev-parse --short HEAD 2>/dev/null))"
+  say "RESUME: Shipwright harbour pass #1 (before oracle), then grade baseline (voyage $((RESUME_FROM-1)))"
+  run_shipwright prebuild
   read -r p t <<<"$(grade v$((RESUME_FROM-1)))"
   say "resume baseline oracle ${p}/${t} | failing:"; titles v$((RESUME_FROM-1)) | sed 's/^/    /' | tee -a "$LOG" >/dev/null
   START=$RESUME_FROM
