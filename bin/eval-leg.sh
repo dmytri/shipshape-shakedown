@@ -172,12 +172,18 @@ if command -v bwrap >/dev/null 2>&1; then
   # Retry the transient bwrap overlay-mount failure ("Can't make overlay mount"), which hits
   # intermittently when several parallel legs overlay the same shared node_modules lowerdir
   # (2026-07-25). The failure means the leg never started, so a retry is safe and usually wins.
-  for attempt in 1 2 3 4; do
+  # Also retry a transient provider RATE-LIMIT (429): the leg produced no useful work, so
+  # back off and retry (upstream throttling, e.g. minimax-m3 via Parasail, 2026-07-25).
+  for attempt in 1 2 3 4 5 6; do
     timeout "${TIMEOUT_S}s" "${BW[@]}" "$PI" "${PI_ARGS[@]}" >"$OUT/pi.stdout" 2>"$OUT/pi.stderr"
     EXIT=$?
-    grep -q "Can't make overlay mount\|Unable to create overlay" "$OUT/pi.stderr" 2>/dev/null || break
-    echo "eval-leg[$NAME]: overlay mount failed (attempt $attempt/4) — retrying in ${attempt}s" >&2
-    sleep "$attempt"
+    if grep -q "Can't make overlay mount\|Unable to create overlay" "$OUT/pi.stderr" 2>/dev/null; then
+      echo "eval-leg[$NAME]: overlay mount failed (attempt $attempt) — retrying in ${attempt}s" >&2; sleep "$attempt"; continue
+    fi
+    if grep -q '"stopReason":"error"' "$OUT/pi.stdout" 2>/dev/null && grep -qiE '429|rate-?limit|temporarily rate|Provider returned error' "$OUT/pi.stdout" 2>/dev/null; then
+      echo "eval-leg[$NAME]: provider rate-limited/error (attempt $attempt) — backing off $((attempt*15))s" >&2; sleep $((attempt*15)); continue
+    fi
+    break
   done
 else
   echo "eval-leg[$NAME]: WARN bwrap missing — running UNCONTAINED (repo-damage risk)" >&2
