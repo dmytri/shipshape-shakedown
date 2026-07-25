@@ -169,8 +169,16 @@ if command -v bwrap >/dev/null 2>&1; then
   fi
   BW+=(--share-net --chdir "$WORKSPACE" --clearenv)
   for kv in "${ENVV[@]}"; do BW+=(--setenv "${kv%%=*}" "${kv#*=}"); done
-  timeout "${TIMEOUT_S}s" "${BW[@]}" "$PI" "${PI_ARGS[@]}" >"$OUT/pi.stdout" 2>"$OUT/pi.stderr"
-  EXIT=$?
+  # Retry the transient bwrap overlay-mount failure ("Can't make overlay mount"), which hits
+  # intermittently when several parallel legs overlay the same shared node_modules lowerdir
+  # (2026-07-25). The failure means the leg never started, so a retry is safe and usually wins.
+  for attempt in 1 2 3 4; do
+    timeout "${TIMEOUT_S}s" "${BW[@]}" "$PI" "${PI_ARGS[@]}" >"$OUT/pi.stdout" 2>"$OUT/pi.stderr"
+    EXIT=$?
+    grep -q "Can't make overlay mount\|Unable to create overlay" "$OUT/pi.stderr" 2>/dev/null || break
+    echo "eval-leg[$NAME]: overlay mount failed (attempt $attempt/4) — retrying in ${attempt}s" >&2
+    sleep "$attempt"
+  done
 else
   echo "eval-leg[$NAME]: WARN bwrap missing — running UNCONTAINED (repo-damage risk)" >&2
   env -i "${ENVV[@]}" timeout "${TIMEOUT_S}s" "$PI" "${PI_ARGS[@]}" >"$OUT/pi.stdout" 2>"$OUT/pi.stderr"

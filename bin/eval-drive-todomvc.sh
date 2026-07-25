@@ -34,8 +34,10 @@ mkdir -p "$BASE"
 I="$HERE/tasks/pilot/intents"
 say(){ echo "[$(date -u +%FT%TZ)] $*" | tee -a "$LOG"; }
 
-# Toolkit (cucumber + happy-dom + yoink) — same store the other pilots use.
-SHARED_NM="$SCRATCH/.shared-nm"
+# Toolkit (cucumber + happy-dom + yoink + skills). DRIVER_SHARED_NM overrides the store so
+# parallel pilots can use DEDICATED node_modules copies — concurrent bwrap --tmp-overlay on a
+# single shared lowerdir intermittently fails "Can't make overlay mount" (glm, 2026-07-25).
+SHARED_NM="${DRIVER_SHARED_NM:-$SCRATCH/.shared-nm}"
 if [ ! -e "$SHARED_NM/node_modules/@cucumber" ] || [ ! -e "$SHARED_NM/node_modules/happy-dom" ] || [ ! -e "$SHARED_NM/node_modules/.bin/skills" ]; then
   ( cd "$SHARED_NM" && [ -f package.json ] || npm init -y >/dev/null 2>&1
     npm install --no-fund --no-audit --save-dev @cucumber/cucumber @dk/yoink happy-dom skills c8 jsdoc knip @biomejs/biome >/dev/null 2>&1 \
