@@ -25,7 +25,7 @@ while [ $# -gt 0 ]; do
     *) echo "eval-drive-todomvc.sh: unknown arg '$1'" >&2; exit 2;;
   esac
 done
-[ -n "$WAVE" ] && [ -n "$MODEL" ] && [ -n "$SKILLS_DIR" ] && [ -n "$YOINK" ] && [ -n "$CLONE" ] || {
+[ -n "$WAVE" ] && [ -n "$MODEL" ] && [ -n "$SKILLS_DIR" ] && [ -n "$CLONE" ] || {
   echo "usage: eval-drive-todomvc.sh --wave <d> --model <id> --skills-dir <root> --yoink-skill <dir> --clone <oracle-clone> [--port N] [--max-voyages N]" >&2; exit 2; }
 
 BASE="$SCRATCH/$WAVE"; SIM="$BASE/sim"; LOG="$BASE/driver.log"

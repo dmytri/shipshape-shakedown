@@ -31,8 +31,10 @@ while [ $# -gt 0 ]; do
     *) echo "eval-voyage.sh: unknown arg '$1'" >&2; exit 2;;
   esac
 done
-[ -n "$WAVE" ] && [ -n "$SIM" ] && [ -n "$MODEL" ] && [ -n "$SKILLS_DIR" ] && [ -n "$YOINK" ] && [ -n "$VOYAGE" ] && [ -n "$CAP_TASK" ] || {
-  echo "usage: eval-voyage.sh --wave <d> --sim <dir> --model <id> --skills-dir <root> --yoink-skill <dir> --voyage <N> --captain-task <file>" >&2; exit 2; }
+[ -n "$WAVE" ] && [ -n "$SIM" ] && [ -n "$MODEL" ] && [ -n "$SKILLS_DIR" ] && [ -n "$VOYAGE" ] && [ -n "$CAP_TASK" ] || {
+  echo "usage: eval-voyage.sh --wave <d> --sim <dir> --model <id> --skills-dir <root> [--yoink-skill <dir>] --voyage <N> --captain-task <file>" >&2; exit 2; }
+# --yoink-skill is OPTIONAL: omit it to test a doctrine that does not use yoink (0.13.65+).
+YEXTRA=(); [ -n "$YOINK" ] && YEXTRA=("$YOINK")
 [ -d "$SIM/.git" ] || { echo "eval-voyage.sh: sim '$SIM' is not a git repo" >&2; exit 2; }
 [ -f "$CAP_TASK" ] || { echo "eval-voyage.sh: captain-task '$CAP_TASK' missing" >&2; exit 2; }
 export EVAL_SHARED_NM="${EVAL_SHARED_NM:-$SCRATCH/.shared-nm/node_modules}"
@@ -78,7 +80,7 @@ PY
 
 # --- Captain (operator-directed intent) ---
 sed "s#PROJECT_ROOT_PLACEHOLDER#$SIM#g" "$CAP_TASK" > "$BASE/$V-captain.task"
-run_leg "$V-captain" "$BASE/$V-captain.task" "$SKILLS_DIR/shipshape" "$SKILLS_DIR/captain" "$YOINK"
+run_leg "$V-captain" "$BASE/$V-captain.task" "$SKILLS_DIR/shipshape" "$SKILLS_DIR/captain" "${YEXTRA[@]}"
 git -C "$SIM" add -A >/dev/null 2>&1 || true
 if [ -n "$(git -C "$SIM" status --porcelain)" ]; then
   git -C "$SIM" -c user.name="Sim Operator" -c user.email="sim@example.test" commit -qm "$V captain: specs + watchbill" || true
@@ -88,7 +90,7 @@ echo "eval-voyage[$WAVE/$V]: captain base $(git -C "$SIM" rev-parse --short HEAD
 
 # --- QM-assumes-rest ---
 sed -e "s#PROJECT_ROOT_PLACEHOLDER#$SIM#g" -e "s#BASE_COMMIT_PLACEHOLDER#$BASE_COMMIT#g" "$QM_TASK" > "$BASE/$V-qm.task"
-run_leg "$V-qm" "$BASE/$V-qm.task" "$SKILLS_DIR/shipshape" "$SKILLS_DIR/qm" "$SKILLS_DIR/crew" "$SKILLS_DIR/boatswain" "$YOINK"
+run_leg "$V-qm" "$BASE/$V-qm.task" "$SKILLS_DIR/shipshape" "$SKILLS_DIR/qm" "$SKILLS_DIR/crew" "$SKILLS_DIR/boatswain" "${YEXTRA[@]}"
 
 # --- operator custody: preserve the post-QM build verbatim ---
 git -C "$SIM" add -A >/dev/null 2>&1 || true
