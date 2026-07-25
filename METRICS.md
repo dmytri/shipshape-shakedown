@@ -1,5 +1,17 @@
 # Metrics: how to read a shakedown
 
+## BASELINE MOVED: 0.13.64 -> 0.13.65 (2026-07-25) — shipped the Shipwright conformance-skeleton enforcement
+
+**`0.13.65` (`596fbf1`) is the installed/doctrine baseline now.** One change, textual footing:
+Shipwright work-loop step 8 writes the two required `@conformance` methodology skeletons
+(watchbill-shape conformance + perturbation-quiescence) FIRST and unconditionally, and the Final
+report ledger lists them — closing a gap where the Methodology-checks policy (shipwright 110-111)
+already required both checks but the work-loop didn't enforce writing them. Ships on close read +
+green `tests/*.sh` (no behavioural probe owed; the defect was a form not requiring an already-
+mandated act). NOT the seam-disposition "no-gap-ledger" (Candidate A / `eval-candidateA`), which
+its own probe says DO NOT SHIP without repeat draws. Yoink reverted from the candidate the same day
+(deferred). Any future pilot baseline compares against 0.13.65.
+
 ## NEW-WAY TodoMVC PILOT #2 — deepseek-v4-flash, candidate yoink-settle (2026-07-25) — PASSED 28/29, REPRODUCED, and it caught the bff21ad headless regression on its first real run
 
 **28/29 is REPRODUCIBLE the new way — reached on a FRESH build for ~$0.50 in 4 productive voyages** (vs newsim-01's $1.33/16 voyages), answering the primed open question. Same instrument (`scaffold-todomvc.sh`/`eval-voyage.sh`/`oracle-grade.sh`), same upstream Cypress oracle (pinned + 2 patches + `framework=shakedown`), so directly comparable. Run under the **token-economy lens** (dk's focus this run). Banked `data/todomvc-newsim-02/`.

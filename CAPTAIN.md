@@ -74,6 +74,28 @@ BEFORE watching, never `head -1` of a fuzzy pattern. -->
 
 
 <!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
+## >>> SHIPPED 0.13.65 (2026-07-25): Shipwright conformance-skeleton enforcement. Yoink reverted from the candidate. <<<
+
+**dk ruled (2026-07-25): step back from yoink for now, keep the other since-upstream candidate
+changes, and ship the conformance edit.** Done:
+- **SHIPPED `0.13.65` (`596fbf1`, pushed + reinstalled, tests/*.sh green).** Shipwright work-loop
+  step 8 now writes the two required `@conformance` methodology skeletons (watchbill-shape
+  conformance + perturbation-quiescence) FIRST, unconditionally, and the Final report ledger
+  lists them. **Textual footing** (per the commit): the Methodology-checks policy (Fitting out,
+  shipwright lines 110-111) already REQUIRED both checks, but step 8 didn't enforce writing them
+  and the report form didn't list them — a work-loop/report gap against stated policy, visible in
+  the artifact, so it ships on close read + green tests, no behavioural probe owed. This is the
+  "prompt clearer, structural — make the form require the act" pattern. NOTE: this is a DIFFERENT
+  edit from Candidate A / the seam-disposition "no-gap-ledger" (`eval-candidateA`), whose own probe
+  verdict is explicit **DO NOT SHIP without repeat draws** — that one stays unshipped.
+- **Yoink REVERTED from the candidate** (`experiments/yoink-settle/skills`, gitignored working
+  tree): the `### Batched retrieval` Article (shipshape) and all shipwright yoink rewrites are gone;
+  candidate is now upstream + the conformance edit only (zero yoink residue, verified). **"We'll do
+  yoink later"** — yoink stays an unshipped direction; the newsim-01 role-asymmetry finding (Captain
+  ignored the shared Batched-retrieval Article; carry the point-of-action rule into every role
+  work-loop) is the open lead for that later pass. Candidate is now effectively 0.13.65 content.
+
+<!-- prior milestone this session -->
 ## >>> DONE 2026-07-25: NEW-WAY PILOT #2 PASSED 28/29 (reproduced), and caught the bff21ad headless regression. <<<
 
 **The primed mission is COMPLETE.** Fresh new-way TodoMVC pilot (`todomvc-newsim-02`,
