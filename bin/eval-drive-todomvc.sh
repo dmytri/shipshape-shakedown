@@ -119,7 +119,10 @@ if [ "$RESUME_FROM" -eq 0 ]; then
   say "V1 build ${w}s | self-suite: ${ss:-?} | oracle ${p}/${t} | failing:"; titles v1 | sed 's/^/    /' | tee -a "$LOG" >/dev/null
   START=2
 else
-  say "RESUME: grading current sim as baseline (voyage $((RESUME_FROM-1)))"
+  # discard any dirty tree left by an interrupted voyage — grade only the last committed state
+  git -C "$SIM" reset --hard HEAD >/dev/null 2>&1 || true
+  git -C "$SIM" clean -fd >/dev/null 2>&1 || true
+  say "RESUME: grading current sim as baseline (voyage $((RESUME_FROM-1)), HEAD=$(git -C "$SIM" rev-parse --short HEAD 2>/dev/null))"
   read -r p t <<<"$(grade v$((RESUME_FROM-1)))"
   say "resume baseline oracle ${p}/${t} | failing:"; titles v$((RESUME_FROM-1)) | sed 's/^/    /' | tee -a "$LOG" >/dev/null
   START=$RESUME_FROM
