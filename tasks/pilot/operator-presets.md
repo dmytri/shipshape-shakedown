@@ -27,10 +27,17 @@ Three hard rules that hold for EVERY intent:
       `‹the product intent — what a user needs / what is broken›.`
   QM is leaner still — the doctrine dispatch surface is role + base commit, full stop:
       `You are the Shipshape Quartermaster. Project root: ‹path›. Base commit: ‹sha›.`
-- **Oracle quarantine.** Never mention the oracle, its tests, selectors, framework name,
-  or a reference implementation. Re-phrase every failure as a USER-observable symptom in
-  product language. (A raw runtime ERROR the app throws — e.g. a browser `NotFoundError` —
-  is legal to quote; it is the app's behaviour, not the test.)
+- **Give the EXACT error — do not rephrase (dk, 2026-07-25).** A real user pastes what they
+  see; they do not translate a failing assertion into "product language." So on an
+  oracle-correction voyage, COPY-PASTE the failing assertion text verbatim into the Captain
+  intent — the failing-test description IS the bug report ("should allow me to mark all items
+  as completed"). Rephrasing is operator craft that adds distortion and cost for no gain, and
+  earlier lessons that spent effort translating symptoms are superseded here. The one thing a
+  real user never has is the REFERENCE IMPLEMENTATION (the oracle's own solution source) — that
+  stays quarantined; never paste or describe it. Drop only the pure oracle-identifying label
+  (the `TodoMVC - <framework> --` prefix) if it is trivially separable; the behavioural
+  assertion text itself goes in verbatim. A raw runtime error the app throws (e.g. a browser
+  `NotFoundError`) is likewise pasted as-is.
 - **Short, concrete, action-first.** Open-ended "investigate and figure it out" prompts make
   a cheap model read endlessly and author nothing (tree-proven v10/v11). Give it the artifact
   to write. This is about the INTENT being concrete — not about re-explaining doctrine.
@@ -51,10 +58,10 @@ is fully green (phase-1 gate). Then Preset B for every voyage after.
 This is the operator's core craft. Run it every time a grade comes back below 28/29.
 
 **Step 1 — get the failing test titles** from `oracle-grade.sh`'s "## failing tests".
-If you need the assertion detail (to root-cause), capture the full cypress run once and
-read the `N) … : AssertionError …` blocks. Reading the oracle spec to understand WHAT
-failed is legitimate (you must know it to translate it); acting on it as anything but
-product intent is not.
+These are pasted VERBATIM into the Captain intent (see the exact-error rule above) — no
+translation step. If you need the assertion detail to root-cause, capture the full cypress
+run once and read the `N) … : AssertionError …` blocks; paste those verbatim too. The only
+thing you never pass on is the reference implementation's source.
 
 **Step 2 — GROUP failures by shared root cause.** Several failing titles are usually one
 bug (e.g. 4 checkbox/mark-all failures = one DOM-identity render; 3 edit failures = one
@@ -78,18 +85,18 @@ not symptoms — one cause per voyage.
 stay green (a cheap model over-reaches and breaks the app on big rewrites — v15). The
 `eval-voyage.sh` guard reverts a voyage that leaves the self-suite red, protecting the base.
 
-### Template (fill the ‹brackets›) — lean; no doctrine priming
+### Template (fill the ‹brackets›) — lean; paste the exact failures; headless proceed line
 
 ```
 You are the Shipshape Captain. Project root: PROJECT_ROOT_PLACEHOLDER.
 
-The app works except: ‹symptom in product language — what a user sees; quote any error the
-app itself throws›. ‹one sentence of mechanism from reading js/app.js, if it helps›.
+These behaviours are failing:
+‹paste the failing assertion lines VERBATIM from the grade, one per line›
 
-Prove and fix it: ‹the observable acceptance, e.g. "editing the middle todo keeps it in
-place"›. Cover it with a scenario that fails on the current code — for a real-browser-only /
-structural defect the executing tests can't catch, a @conformance check over the js/app.js
-source instead. Make the SMALLEST change; keep every existing behaviour working.
+Proceed now without waiting for confirmation. Prove and fix these: cover each with a scenario
+that fails on the current code — for a real-browser-only / structural defect the executing
+tests can't catch, a @conformance check over the js/app.js source instead. Make the SMALLEST
+change; keep every existing behaviour working. Then stop; do not commit or dispatch.
 ```
 
 Keep it to those few lines. Everything about authoring specs, the watchbill, stop-lines, and
