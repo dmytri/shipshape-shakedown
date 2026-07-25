@@ -14,7 +14,7 @@
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")/.." && pwd)"
 SCRATCH="${EVAL_SCRATCH:-$HERE/.eval-scratch}"
-WAVE=""; SIM=""; MODEL=""; SKILLS_DIR=""; YOINK=""; VOYAGE=""; CAP_TASK=""; TIMEOUT_S=1500
+WAVE=""; SIM=""; MODEL=""; SKILLS_DIR=""; YOINK=""; VOYAGE=""; CAP_TASK=""; TIMEOUT_S=1500; NO_REVERT=0
 QM_TASK="$HERE/tasks/pilot/qm.task.md"
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -27,6 +27,7 @@ while [ $# -gt 0 ]; do
     --captain-task) CAP_TASK="$2"; shift 2;;
     --qm-task) QM_TASK="$2"; shift 2;;
     --timeout-s) TIMEOUT_S="$2"; shift 2;;
+    --no-revert) NO_REVERT=1; shift;;   # voyage 1 build: a partial build is not a regression
     *) echo "eval-voyage.sh: unknown arg '$1'" >&2; exit 2;;
   esac
 done
@@ -105,8 +106,9 @@ rm -rf "$SIM/node_modules"; ln -s "$EVAL_SHARED_NM" "$SIM/node_modules"
 rm -f "$SIM/node_modules"; mkdir -p "$SIM/node_modules"
 
 # Phase-1 gate as a REGRESSION guard: a red self-suite means this voyage broke the roles'
-# own watchbill — revert the whole voyage so the base stays at the last green build.
-if grep -qE '[1-9][0-9]* failed' "$BASE/$V-selfsuite.txt"; then
+# own watchbill — revert the whole voyage so the base stays at the last green build. Skipped
+# on --no-revert (voyage 1: a still-incomplete build is progress, not a regression to wipe).
+if [ "$NO_REVERT" = "0" ] && grep -qE '[1-9][0-9]* failed' "$BASE/$V-selfsuite.txt"; then
   echo "eval-voyage[$WAVE/$V]: SELF-SUITE RED — reverting voyage to $PREHEAD (base not poisoned)"
   git -C "$SIM" reset --hard "$PREHEAD" >/dev/null 2>&1 || true
   echo "eval-voyage[$WAVE/$V]: VOYAGE-REGRESSED"
