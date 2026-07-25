@@ -1,0 +1,74 @@
+diff --git a/js/app.js b/js/app.js
+index 7b6071e..2968159 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -275,33 +275,49 @@
+       filtered = todos;
+     }
+ 
+-    // Build list HTML
+-    var html = '';
++    // Build list — reuse existing <li> elements by data-id to preserve element identity
++    var existing = {};
++    Array.from(this.$todoList.children).forEach(function (li) {
++      existing[li.dataset.id] = li;
++    });
++
++    var fragment = document.createDocumentFragment();
+     filtered.forEach(function (todo) {
++      var li = existing[todo.id];
++      if (li) {
++        delete existing[todo.id];
++      } else {
++        li = document.createElement('li');
++        li.innerHTML = '<div class="view"><input class="toggle" type="checkbox"><label></label><button class="destroy"></button></div><input class="edit" style="display:none">';
++      }
++
++      li.dataset.id = todo.id;
++
+       var liClass = '';
+       if (todo.completed) liClass += 'completed ';
+       if (this.editingId === todo.id) liClass += 'editing';
++      li.className = liClass.trim();
+ 
+-      html += '<li data-id="' + todo.id + '"';
+-      if (liClass) html += ' class="' + liClass.trim() + '"';
+-      html += '>';
+-      html += '<div class="view">';
+-      html += '<input class="toggle" type="checkbox"';
+-      if (todo.completed) html += ' checked';
+-      html += '>';
+-      html += '<label>' + this._escapeHtml(todo.title) + '</label>';
+-      html += '<button class="destroy"></button>';
+-      html += '</div>';
+-
+-      if (this.editingId === todo.id) {
+-        html += '<input class="edit" value="' + this._escapeHtml(todo.title) + '">';
+-      } else {
+-        html += '<input class="edit" value="' + this._escapeHtml(todo.title) + '" style="display:none">';
+-      }
+-      html += '</li>';
++      var toggle = li.querySelector('.toggle');
++      toggle.checked = !!todo.completed;
++
++      var label = li.querySelector('label');
++      label.textContent = todo.title;
++
++      var edit = li.querySelector('.edit');
++      edit.value = todo.title;
++      edit.style.display = this.editingId === todo.id ? '' : 'none';
++
++      fragment.appendChild(li);
+     }, this);
+ 
+-    this.$todoList.innerHTML = html;
++    // Remove stale items no longer in the filtered list
++    Object.keys(existing).forEach(function (id) {
++      existing[id].parentNode.removeChild(existing[id]);
++    });
++
++    this.$todoList.innerHTML = '';
++    this.$todoList.appendChild(fragment);
+ 
+     // Focus edit input if editing
+     if (this.editingId !== null) {

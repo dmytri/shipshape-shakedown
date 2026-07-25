@@ -1,0 +1,94 @@
+diff --git a/test-check.js b/test-check.js
+new file mode 100644
+index 0000000..dea2f9c
+--- /dev/null
++++ b/test-check.js
+@@ -0,0 +1,87 @@
++const { Browser } = require('happy-dom');
++const fs = require('fs');
++const path = require('path');
++
++const browser = new Browser();
++const page = browser.newPage();
++
++// Set up basic DOM
++page.evaluate(`
++  document.documentElement.innerHTML = '<body><input id="cb" type="checkbox"><div id="log"></div></body>';
++`);
++page.waitUntilComplete();
++
++// Check if click fires change event
++page.evaluate(`
++  document.getElementById('cb').addEventListener('change', function() {
++    document.getElementById('log').textContent = 'change fired, checked=' + this.checked;
++  });
++`);
++page.waitUntilComplete();
++
++console.log('Before click:', page.evaluate('document.getElementById("cb").checked'));
++page.evaluate('document.getElementById("cb").click()');
++page.waitUntilComplete();
++console.log('After click:', page.evaluate('document.getElementById("cb").checked'));
++console.log('Log:', page.evaluate('document.getElementById("log").textContent'));
++
++// Now check with the actual app
++page.evaluate(`
++  document.documentElement.innerHTML = '<body></body>';
++`);
++page.waitUntilComplete();
++
++const indexPath = path.resolve('./index.html');
++const appJsPath = path.resolve('./js/app.js');
++const html = fs.readFileSync(indexPath, 'utf8');
++const appJs = fs.readFileSync(appJsPath, 'utf8');
++
++const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
++const bodyContent = bodyMatch[1];
++const cleanedBody = bodyContent.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
++
++page.evaluate(`document.body.innerHTML = \`${cleanedBody.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`;`);
++page.waitUntilComplete();
++page.evaluate(appJs);
++page.waitUntilComplete();
++
++// Create a todo
++page.evaluate(`
++  var input = document.querySelector('.new-todo');
++  input.value = 'Buy groceries';
++  input.dispatchEvent(new KeyboardEvent('keypress', {key:'Enter',keyCode:13,bubbles:true}));
++`);
++page.waitUntilComplete();
++
++console.log('\nAfter create:');
++console.log('Todos:', JSON.stringify(page.evaluate(`
++  Array.from(document.querySelectorAll('.todo-list li')).map(function(l) {
++    return {class:l.className, text:l.querySelector('label').textContent};
++  })
++`)));
++
++// Click toggle-all
++page.evaluate('document.querySelector("#toggle-all").click()');
++page.waitUntilComplete();
++
++console.log('After toggle-all click:');
++console.log('Toggle-all checked:', page.evaluate('document.querySelector("#toggle-all").checked'));
++console.log('Todos:', JSON.stringify(page.evaluate(`
++  Array.from(document.querySelectorAll('.todo-list li')).map(function(l) {
++    return {class:l.className, completed:l.classList.contains('completed'), text:l.querySelector('label').textContent};
++  })
++`)));
++
++// Click toggle-all again (should clear)
++page.evaluate('document.querySelector("#toggle-all").click()');
++page.waitUntilComplete();
++
++console.log('After second toggle-all click:');
++console.log('Toggle-all checked:', page.evaluate('document.querySelector("#toggle-all").checked'));
++console.log('Todos:', JSON.stringify(page.evaluate(`
++  Array.from(document.querySelectorAll('.todo-list li')).map(function(l) {
++    return {class:l.className, completed:l.classList.contains('completed'), text:l.querySelector('label').textContent};
++  })
++`)));
++
++browser.close();
+\ No newline at end of file

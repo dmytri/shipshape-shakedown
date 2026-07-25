@@ -1,0 +1,50 @@
+diff --git a/features/support/steps.js b/features/support/steps.js
+index cdc3152..5cba3ef 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -129,3 +129,13 @@ Then('the todo {string} is not visible in the list', function(t){assert.strictEq
+ Then('the app is still at route {string}', function(r){assert.strictEqual(this.page.evaluate('window.location.hash'),r,'Expected "'+r+'"');});
+ Then('only active todos are visible in the list', function(){});
+ Given('only active todos are visible', function(){});
++
++Then('the view element of {string} is hidden', function(t){
++  var v=this.page.evaluate("(function(){var li="+findLi(t)+";if(!li)return false;var v=li.querySelector('div.view');if(!v)return false;return v.style.display==='none';})()");
++  assert.strictEqual(v,true,'Expected view of "'+t+'" to be hidden');
++});
++
++Then('the view element of {string} is visible', function(t){
++  var v=this.page.evaluate("(function(){var li="+findLi(t)+";if(!li)return false;var v=li.querySelector('div.view');if(!v)return false;return v.style.display!=='none';})()");
++  assert.strictEqual(v,true,'Expected view of "'+t+'" to be visible');
++});
+diff --git a/features/todo-management.feature b/features/todo-management.feature
+index e418c13..4273ac0 100644
+--- a/features/todo-management.feature
++++ b/features/todo-management.feature
+@@ -106,6 +106,13 @@ Feature: Todo Management
+     When I clear the edit input and press Enter
+     Then the todo "Buy groceries" does not exist in the list
+ 
++  Scenario: Should hide other controls when editing
++    Given todo items "Buy groceries" and "Walk dog" exist
++    When I double-click the label of "Buy groceries"
++    Then the "Buy groceries" list item has the "editing" class
++    And the view element of "Buy groceries" is hidden
++    And the view element of "Walk dog" is visible
++
+   Scenario: Cancel editing with Escape restores the original title
+     Given a todo item "Buy groceries" exists
+     And the todo "Buy groceries" is being edited
+diff --git a/js/app.js b/js/app.js
+index 2968159..bd85080 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -308,6 +308,9 @@
+       edit.value = todo.title;
+       edit.style.display = this.editingId === todo.id ? '' : 'none';
+ 
++      var view = li.querySelector('.view');
++      view.style.display = this.editingId === todo.id ? 'none' : '';
++
+       fragment.appendChild(li);
+     }, this);
+ 

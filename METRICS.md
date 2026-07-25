@@ -1,5 +1,40 @@
 # Metrics: how to read a shakedown
 
+## NEW-WAY TodoMVC PILOT #2 — deepseek-v4-flash, candidate yoink-settle (2026-07-25) — PASSED 28/29, REPRODUCED, and it caught the bff21ad headless regression on its first real run
+
+**28/29 is REPRODUCIBLE the new way — reached on a FRESH build for ~$0.50 in 4 productive voyages** (vs newsim-01's $1.33/16 voyages), answering the primed open question. Same instrument (`scaffold-todomvc.sh`/`eval-voyage.sh`/`oracle-grade.sh`), same upstream Cypress oracle (pinned + 2 patches + `framework=shakedown`), so directly comparable. Run under the **token-economy lens** (dk's focus this run). Banked `data/todomvc-newsim-02/`.
+
+**Token-economy results (productive legs; latency proxy = inv/round-trips):**
+
+| Leg | inv | wall | fresh tok_in | cache hit% | tok_out | cost |
+|---|---|---|---|---|---|---|
+| v1 captain | 13 | 80s | 88.5k | 73% | 8.3k | $0.014 |
+| v1 QM (build+Crew+Bosun) | 132 | 1073s | 470k | 96% | 87.5k | $0.300 |
+| v2 captain | 14 | 96s | 97.4k | 59% | 13.3k | $0.014 |
+| v2 QM | 17 | 64s | 147k | 70% | 5.2k | $0.021 |
+| v3 captain | 17 | 102s | 70.8k | 75% | 9.9k | $0.013 |
+| v3 QM (DOM-identity fix) | 40 | 233s | 188k | 91% | 17.4k | $0.057 |
+| v5 captain | 15 | 86s | 154.5k | 66% | 3.9k | $0.021 |
+| v5 QM (editing fix) | 28 | 229s | 344k | 76% | 12.5k | $0.056 |
+| **Total** | **276** | **~33min** | **1.56M** | **~92%** | **158k** | **~$0.50** |
+
+Grade trajectory: **23 → 23 (v2 no-op) → 27 → (v4 void) → 28/29.** Economy shape: the **v1 QM build leg IS the cost center — 132 inv / $0.30 / 18min = ~60% of cost, ~55% of wall** (it carries Crew+Boatswain building the whole app in one leg); every other leg is 13–40 inv. Overall cache hit **~92%**, well ABOVE the ~58% deepseek baseline note — the long QM leg reuses context heavily and deepseek cached well this run; the hit-rate is a function of leg length, not just provider.
+
+**HEADLINE FINDING (tree-evidenced, isolated) — the intent-stripping commit bff21ad regressed the headless pilot, and this run was its first validation.** newsim-01's 28/29 (13:18Z 07-24) ran with PRIMED intents + `--skill` force-load. AFTER it, three unvalidated changes landed: bff21ad (19:24, stripped operator intents to bare "trust the doctrine"), 6ff3889 (19:47, dropped `--skill` → install+discovery), efeeb10 (19:57, canonical `skills` CLI). On the first real run of that stack, **both kickoff legs flailed: Captain stated a plan and ended with "Shall I proceed?" (0 artifacts, 0/2 draws); QM did its slice then stopped at the Crew hand-off.** Root cause: the Captain skill says *"tell them what you will do and wait for confirmation"* — a headless `pi -p` leg has no human to confirm, so the turn ends. **Isolation proof:** the same lean discovery-launch + skills-CLI 1.5.20 + the OLD PRIMED task authored 9 features + watchbill; the bare task authored nothing. So discovery-launch and skills-CLI 1.5.20 are INNOCENT; the intent-stripping alone is the regression. **Fix (dk Option A):** the operator IS the absent human in a headless pilot, so the kickoff intents carry the confirmation — Captain "proceed without waiting; author specs+watchbill, then stop; don't commit/dispatch"; QM "assume downstream roles in place, carry to a green self-suite; don't push/tag." Committed `6d7f3e8`; validated (full Captain→QM-assumes-rest build, 23/29 on v1). This is the shakedown doing its job: a "prompt clearer, trust the doctrine" tightening that read well but broke headless operation, caught only by running it.
+
+**PLAYBOOK CHANGE (dk, 2026-07-25): oracle-correction voyages paste the EXACT failure, no rephrase** (`6d7...`+`<oracle-exact>` commit). A real user copy-pastes the error they see; they don't translate a failing assertion into "product language." Rephrasing is operator craft that adds distortion for no gain. Quarantine narrows to the one thing a user never has — the reference implementation's source. operator-presets.md rule #2 / Step 1 / the template rewritten accordingly.
+
+**OPERATOR-CRAFT finding, reconfirmed and sharpened: a scenario that PASSES on buggy code is a no-op, and BOTH remaining bugs were tier-invisible to naive happy-dom scenarios.** v2 pasted the exact failing titles only and NO-OP'd (js/app.js untouched, tree-proven) — the roles wrote happy-dom scenarios that pass on the bug, so QM had no red target. The two causes:
+1. **DOM-identity / full-teardown render** (4 failures: Item + Mark-all toggles). The oracle aliases the `<li>` element, toggles it, asserts the SAME element gains `completed`; the app's `render()` rebuilt via `innerHTML`, discarding the held reference. Invisible to fresh-query happy-dom scenarios. **v3 reddened it by giving Captain the exact assertion MECHANISM** (capture a row element, toggle, assert the same element updates) → deepseek coded keyed reconciliation (+36/−20) → **27/29**.
+2. **Edit mode doesn't hide the item's controls** (1 failure). `render()` showed the `.edit` input but never hid the `.view` (toggle+label); standard TodoMVC hides it via a stylesheet rule the app lacked. happy-dom can't compute stylesheet visibility, so a visibility scenario passed on the broken app (v4/v5 no-op — though v4 and v5-first ALSO hit the provider hang, see below). **v5 reddened it by naming the reddable mechanism** (hide `.view` via INLINE display in render, which the self-suite CAN check) → deepseek coded +3 lines → **28/29**. Lesson holds: for a tier-invisible bug the exact TITLE is insufficient; the exact ASSERTION MECHANISM (or a scantling) is the red-able channel — and it must be checkable in the roles' own tier (inline style, not stylesheet computation).
+
+**INSTRUMENT FINDINGS this run (all handled; none are doctrine):**
+1. **npx cache wiped → `skills` CLI absent → every leg exited 3 before the model.** VM churn cleared `~/.npm/_npx` (dir mtime 07-25 03:30). `eval-leg.sh:100` resolved an empty `SKILLS_BIN`. Fixed by re-caching (`npx -y skills --help`; now v1.5.20). **Sub-finding (observability):** that exit-3 produced an EMPTY `captain.leg.log` — the failure was silent; worth an explicit echo before exit in eval-leg.sh's SKILLS_BIN guard. Also: skills-CLI 1.5.20 `git clone`s the local source, so a RELATIVE `--out`/skillsrc path fails ("Failed to clone … does not exist"); the pilot's absolute paths are fine, but ad-hoc eval-leg calls must pass absolute paths.
+2. **Transient OpenRouter provider hang for deepseek-v4-flash** after v3: 4 legs (v4-captain/qm, v5-captain/qm-first) TIMED OUT at 1500s with NO session produced (pi hung on the first, large/tool-use/streaming call; a direct 60s non-stream call succeeded throughout). ~100min wall wasted, ~$0 billed. Recovered on retry with a 600s fail-fast timeout. **The 1500s default timeout makes a provider hang very expensive in wall-clock — a shorter default (or a first-token watchdog) would fail fast.** This is the same "a stalled leg's outcome is a function of when you look" family, provider-side.
+3. **Disk pressure: each QM leg's raw `pi.stdout` is ~430–605MB** (json-mode streaming); 2 legs dropped free disk 7.9G→3.6G. Pruned raw stdout per-leg (kept session.jsonl/map/diff; raw belongs on BorgBase per the durability rule). A pilot must prune raw between voyages or budget disk.
+
+**Nothing shipped to `~/shipshape`.** Candidate yoink-settle held across all productive legs (Captain ran yoink retrieval; QM built via yoink+bash) as the doctrine under test; no doctrine text finding this run. All fixes were to the cockpit playbook/instrument (`tasks/pilot/*`), routed nowhere but here.
+
 ## NEW-WAY TodoMVC PILOT — deepseek-v4-flash, candidate yoink-settle (2026-07-24) — PASSED 28/29
 
 **The acceptance-tier TodoMVC pilot, run the NEW way (pi baseline agents, not sonnet subagents),

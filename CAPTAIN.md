@@ -74,6 +74,47 @@ BEFORE watching, never `head -1` of a fuzzy pattern. -->
 
 
 <!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
+## >>> DONE 2026-07-25: NEW-WAY PILOT #2 PASSED 28/29 (reproduced), and caught the bff21ad headless regression. <<<
+
+**The primed mission is COMPLETE.** Fresh new-way TodoMVC pilot (`todomvc-newsim-02`,
+deepseek-v4-flash, candidate yoink-settle) reached **28/29 for ~$0.50 in 4 productive
+voyages** — 28/29 IS reproducible the new way. Run under the **token-economy lens** (dk's
+pick this run). Full account + results table + findings: **METRICS.md top entry**; banked
+`data/todomvc-newsim-02/` (voyage intents, per-voyage oracle grades, final build, maps).
+Grade path 23→23→27→28.
+
+**HEADLINE (why the run mattered): the pilot caught a real regression on its FIRST run.**
+newsim-01's 28/29 ran with PRIMED intents + `--skill` force-load (13:18Z 07-24). Three
+commits landed AFTER it, unvalidated — **bff21ad** (stripped operator intents bare), 6ff3889
+(dropped `--skill` → discovery), efeeb10 (canonical `skills` CLI). First run of that stack
+FLAILED: headless Captain hit the skill's "wait for confirmation" clause, stated a plan, and
+ended with 0 artifacts (0/2 draws); QM stopped at the Crew hand-off. **Isolated tree-evidenced:
+same lean launch + the OLD primed task authored 9 features+watchbill; the bare task authored
+nothing → discovery-launch and skills-CLI 1.5.20 are INNOCENT, intent-stripping alone is the
+regression.** Fix (dk Option A, committed `6d7f3e8`): the operator IS the absent human in a
+headless pilot, so the kickoff intents carry the confirmation (Captain proceed-and-stop; QM
+assume-downstream-and-drive). operator-presets.md rule #1 got a HEADLESS EXCEPTION carve-out.
+
+**dk STANDING PLAYBOOK CHANGE (2026-07-25): oracle-correction voyages paste the EXACT failure,
+no rephrase** — a real user copy-pastes the error, they don't translate it to "product
+language." Quarantine narrows to the one thing a user never has: the reference implementation's
+source. Preset B / quarantine rule / template rewritten. (Committed with the playbook fix.)
+
+**Open findings routed to dk (none are doctrine; all cockpit instrument):**
+- **npx cache is VM-mortal** — a wipe removes the `skills` CLI and every leg exits 3 SILENTLY
+  (empty leg.log). Re-cache with `npx -y skills --help` at bootstrap; add an explicit echo to
+  eval-leg.sh's SKILLS_BIN guard. skills-CLI 1.5.20 `git clone`s the source → ad-hoc eval-leg
+  calls need ABSOLUTE `--out`/skill paths (the pilot scripts already use absolute).
+- **The 1500s leg timeout is too long for a provider hang** — a transient deepseek-v4-flash
+  hang void-timed-out 4 legs (~100min wall, ~$0). A shorter default or a first-token watchdog
+  would fail fast; retry with `--timeout-s 600` recovered cleanly.
+- **Raw `pi.stdout` is ~430–605MB per QM leg** — prune between voyages (kept the durable
+  session.jsonl/map/diff; raw belongs on BorgBase) or a pilot fills disk (~25G VM).
+- **For a tier-invisible bug the exact TITLE is a no-op** (v2, tree-proven); the exact
+  ASSERTION MECHANISM checkable in the roles' own tier (inline style, not stylesheet
+  visibility) is the red-able channel. deepseek codes every fix given a real red target.
+
+<!-- prior mission, reference -->
 ## >>> FRESH-SESSION MISSION (primed 2026-07-24): run a NEW pilot the new way. <<<
 
 The new-way pilot instrument and the operator playbook are BOTH proven (28/29 reached last
