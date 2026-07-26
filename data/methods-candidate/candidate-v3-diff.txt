@@ -529,7 +529,7 @@ diff -ru experiments/yoink-settle/skills/shipshape/SKILL.md experiments/methods-
  
 diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods-candidate/skills/shipwright/SKILL.md
 --- experiments/yoink-settle/skills/shipwright/SKILL.md	2026-07-25 13:45:47.464641515 +0000
-+++ experiments/methods-candidate/skills/shipwright/SKILL.md	2026-07-26 20:05:57.766860405 +0000
++++ experiments/methods-candidate/skills/shipwright/SKILL.md	2026-07-26 20:08:32.532903573 +0000
 @@ -36,38 +36,84 @@
  
  ## Discovery tools
@@ -638,93 +638,87 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
  - `## Perturbation`: the stable `message` and project-specific `perturb` statement. The `message` MUST contain the literal token `PERTURBATION` so a role can detect a live perturbation in the tree.
  - `## Tiers`: the `default` tier tag, any `sandbox` tier tag, one `policy` line per tier naming that tier's credential source or provisioning policy, such as the custodian CLI or the variable name, never a secret value or a check command, an optional `budget` wall-clock ceiling for the full regression with tier-suffixed variants such as `budget-sandbox` per tier, enforced by the derived budget check under Methodology checks, an optional `weather` path naming the wake's weather record so the next run finds it, and an optional `runrecord` path naming the wake's voyage run record per the Transient output policy.
  - `## Dependencies`: the dependency `policy` and one `dependency` line per selected or installed name. Recording routes with installation: the fitting role writes a line for each dependency the fit installs, the runner and the quality tooling included, so `none` stands only where nothing is installed.
-@@ -75,13 +121,79 @@
+@@ -75,13 +121,73 @@
  
  ### Derivation notes
  
 -#### Commands
 +#### Methods
-+
-+Derive one method per job the Methods section names. Each method's plan is a Yoink plan whose parts
-+are what this stack needs for that job, every part carrying a `--label` and a `--timeout`, and the
-+plan carrying one `--max-bytes` bound. REGISTER each plan as an entry in the project's own task
-+runner, named for its method, its body the plan, deriving the runner the stack already uses: npm scripts in
-+`package.json` on Node and TypeScript, Poe the Poet tasks in `pyproject.toml` on Python, Cargo
-+aliases in `.cargo/config.toml` on Rust, and a Just recipe or a Make target where the project
-+already keeps one. The method
-+VALUE is that entry's invocation, so what a role reads is one short token. This is what makes a
-+method copied rather than retyped, and a retyped plan is drift wearing the right clothes. A parameter rides as an inline
-+environment value the plan reads: write `$SS_SCENARIO` where the target set belongs and
-+`$SS_DEPENDENCY` where the package does, so a role prefixes the assignment and copies the value
-+exactly as it stands. Where the stack carries no task runner, the
-+plan itself is the value and that cost is accepted. The entry's body IS the plan, and a plan's part is an invocation of the project's own tooling: never a script the fit wrote. A fit that puts the work in a shell script and points a part at it has built a wrapper the doctrine forbids, and it hides from every later role what the method actually runs, which the plan exists to show. The one thing a fit writes beside the entries is a tool's own config or rule file, because a tool needs its rules; a tool needs no script. Each plan is self-contained, so a stack's runner
-+appears in every plan that runs it and repairing that invocation is a refit across the plans carrying
-+it; reuse is by method, one method several roles run, never a plan embedded in other plans. What each method needs from a stack:
-+
-+- `prove`: the runner, selecting the canonical `<spec>.feature:<Scenario Name>` references `$SS_SCENARIO` carries. Split the reference with shell parameter expansion, never a subshell or a stream editor: `${SS_SCENARIO%%:*}` is the spec and `${SS_SCENARIO#*:}` is the scenario name, so a cucumber-style runner reads `npx cucumber-js "${SS_SCENARIO%%:*}" --name "^${SS_SCENARIO#*:}$"` and a cargo-style one reads `cargo test --test cucumber -- -i "${SS_SCENARIO%%:*}" --name "^${SS_SCENARIO#*:}$"`. That form survives the quoting a plan inside a task-runner entry already carries; a `$(echo ... | sed ...)` does not, and a method that gave up on the split runs the whole tier under `prove`'s name, which is the fault this idiom exists to prevent. The runner selects verbatim, wrapping the runner where its native selector differs, so no role translates a reference by hand. Where the runner accepts a list, `$SS_SCENARIO` is that list; where it accepts one target at a time, the plan carries one part per target and that limit lives here rather than in a role's improvised loop.
-+- `verify`: the `prove` run over `$SS_SCENARIO`, joined with the plank parts `plank-join` carries, so one invocation answers a watch's targets and its planks together.
-+- `sweep`: the tier unfiltered, without stop-on-first-failure, at normal concurrency, with a tier-suffixed variant per tier under `## Tiers`, such as `sweep-sandbox`. QM lists a tier's whole failing set from one sweep rather than restarting the tier per fix, so derive no fail-fast form.
-+- `plank-join`: the JOIN, not its inputs. Derive a check that reads the annotations over exactly the `implementation` paths and the runner's step-definition patterns, correlates them, and returns a verdict: a compact mapping of step pattern to source declaration to the scenarios that bind it, and a non-zero exit on any of three faults, a behaviour-bearing seam with no plank, a plank matching no current pattern, and a `@planks-provisional` naming a scenario that no longer carries `@captain`. A method that emits the annotation dump and the usage report and leaves the role to correlate them has not joined anything: it exits green whenever both halves ran, which is exactly the state a malformed plank survives in, and on a large project it also floods the role with an AST dump nobody can read. Where the stack's structural query engine expresses the join, derive it as a rule set that engine runs, per the Scantling agreement's catalog. Where no engine expresses it, the join is a bespoke conformance checker, owned as verification support per the Scantling agreement, and until that checker exists the method reads `none` and the report names the gap: an unjoined plank surface is a finding, never a silent pass. On plain JavaScript the annotation side is `jsdoc -X`, on TypeScript and Rust a structural query, and on any stack the check reports the mapping rather than the raw inventory.
-+- `hygiene`: the plank join's verdict, the type checker, and the linter, so one run answers every deck-hygiene check and each part carries its own status.
-+- `static`: the runner's static dry-run form, which lists undefined and unimplemented steps and executes nothing, with the type checker and the linter. They redden on a broken load or import, which is what a non-executable hunk needs proven.
-+- `discovery`: that same static form alone, as a proof gate, and a gate returns a verdict: it exits non-zero where a scenario's steps no longer bind. A discovery that prints undefined steps and exits green is a list, and the gate it was derived to be never fires.
-+- `regression`: real per-line and per-branch coverage native to the stack, such as c8 for Node and TypeScript, coverage.py for Python, `cargo llvm-cov` for Rust, SimpleCov for Ruby, or `go test -cover` for Go, over every configured tier, cheapest tier first, each tier composed with its tier tag. Record a gap for Captain where the stack has no such tool, and record it the same way where the tool exists but this environment cannot install it, such as an install needing system libraries or privileges the fit does not hold. A fit spends its session deriving the rigging, never on an install that will not land: the gap is a line in the report and `none` in the method, and Captain decides. A fit that burns its turn on a package manager writes no rigging at all, which is the one outcome worse than a named gap. Derive it without stop-on-first-failure: harbour reads the whole picture.
-+- `condemnation`: the type checker, the linter, and the `prove` run over `$SS_SCENARIO`, the scenarios whose steps plank the touched seams.
-+- `spec-lint`: the Gherkin linter and any Markdown lint for Captain-authored specs and assets, the Gherkin lint first, so one gate reddens on either fault. gplint is the default on every stack: it runs through `npx` exactly as Yoink does, so it is always available and this method is never `none` and specs are never fitted out unlinted. The one exception is a stack whose own Gherkin runner ships a well-maintained linter paired with that runner; derive that one where it exists, and gplint everywhere else. A Gherkin linter needs its rule file, and gplint fails without one, so fitting out writes it alongside the method. Copy the rule file from `templates.md`, which carries the maximal set already: every rule that encodes a Scenario-writing agreement requirement, each at error, needing only this project's own tier tags added to `allowed-tags`. A fit that enumerates a linter's rules to rebuild that list spends its session on what the template already holds. The set covers: the agreement's rules are already binding, and a rule the linter decides is a rule no role spends a read on. That includes the closed tag vocabulary through `allowed-tags`, carrying the tags this skill's Tags table names plus the project's own tier tags from `## Tiers`; the hedging and placeholder words the agreement's Avoid list bans, through `no-restricted-patterns`; kebab-case feature file names; strict `Given`, `When`, `Then` order; the step ceiling a scenario stays within; `And` for a repeated keyword; unnamed features and scenarios; outlines without examples; unused example variables; duplicate names; and the whitespace and indentation shape. Captain owns and tunes that file thereafter, per the Project configuration section, and relaxes a rule that gets in a project's way rather than dropping the file. A method whose config the fit did not write is a method proven by nothing, because its first run fails on the missing file. Prove the rule set red once at adoption, per the Verification policy's planted-red rule: a bare comment is the one Avoid-list item a Gherkin linter cannot see, since comments leave the syntax tree, so it stays Captain's own discipline and the conformance rule set's to catch.
-+- `dead-code`: the stack's own unused-code reporter over the implementation paths, reporting unused files, unused exports, and unused dependencies. Derive knip on a JavaScript or TypeScript project, vulture on Python, and `cargo-machete` on Rust, which reads the manifest and needs no nightly toolchain. Its non-zero exit means findings exist, not that the voyage is blocked: unreachable code is harbour work, so Shipwright triages the report and the finding rides to the next harbour. This is the reference analysis behind an unreachable-code finding: a reporter reads the resolved module graph, which a text search cannot, so derive the tool wherever the ecosystem has one and record a gap for Captain where it does not.
-+- `install`: the project's package manager installing or upgrading `$SS_DEPENDENCY`, writing the manifest and lockfile as that manager writes them. On Python, derive uv against `pyproject.toml`, which resolves, locks and runs from one manifest; a `requirements.txt` and a hand-managed virtualenv are the older shape, and a fit that finds them records the gap for Captain rather than building new methods on them. The Python runner is pytest with pytest-bdd, which rides the ecosystem the language settled on: its fixtures, its markers from Gherkin tags, its coverage plugin, and its own selection. It reports no step usage and has no dry-run form, so `plank-join` reads the step decorators with a structural query and `discovery` collects without executing; deriving those two is the price of the runner every other Python tool already works with.
-+- `ship` and `ship-verify`: per outbound target, the command that ships it and the check that reads the live artifact its users consume. `ship-verify` returns its verdict from that artifact, never from the ship command's exit: a publish that exited zero and a package a user can install are different claims, and only the second is the check. A runbook longer than a plan lives in `AGENTS.md` and `ship-verify` points at it.
-+
-+One worked `hygiene` per stack shape, registered in that stack's own runner and invoked by its short
-+value. The plan is the entry's body; the value is what `RIGGING.md` carries:
-+
-+```jsonc
-+// package.json, Node and TypeScript.  Value: `npm run ss:hygiene --silent`
-+"ss:hygiene": "npx @dk/yoink --max-bytes 200000 --run 'npx jsdoc -X src' --label plank-inventory --timeout 60 --run 'npx cucumber-js --dry-run --format usage-json --tags \"not @captain and not @shipwright\"' --label step-usage --timeout 300 --run 'npx tsc --noEmit' --label typecheck --timeout 300 --run 'npx biome check src features' --label lint --timeout 300"
-+```
-+
-+```toml
-+# pyproject.toml, Python: uv resolves, locks and runs; pytest-bdd binds the features; Poe the Poet
-+# holds the tasks. A task carries both quote kinds, so its value is a TOML literal string.
-+# Value: `uv run poe ss:hygiene`
-+[tool.poe.tasks]
-+"ss:hygiene" = { shell = '''npx @dk/yoink --max-bytes 200000 --run 'npx ast-grep scan --rule .shipshape/planks.yml src' --label plank-inventory --timeout 120 --run 'npx ast-grep scan --rule .shipshape/steps.yml tests' --label step-usage --timeout 120 --run 'uv run mypy src' --label typecheck --timeout 300 --run 'uv run ruff check src tests' --label lint --timeout 300''' }
-+```
-+
-+```toml
-+# .cargo/config.toml, Rust.  Value: `cargo ss-hygiene`
-+[alias]
-+ss-hygiene = "!npx @dk/yoink --max-bytes 200000 --run 'ast-grep scan --inline-rules \'{id: planks, language: rust, rule: {kind: line_comment, regex: \"@planks\"}}\' src' --label plank-inventory --timeout 60 --run 'cargo test --test cucumber -- --dry-run' --label step-usage --timeout 300 --run 'cargo check --all-targets' --label typecheck --timeout 300 --run 'cargo clippy --all-targets -- -D warnings' --label lint --timeout 300"
-+```
-+
-+Derive the quality gates the hygiene methods carry from tooling the project already runs, and record a
-+gap for Captain where it runs none, naming candidates in the gap so Captain's resolution proposes
-+rather than asks. Two biases decide which candidate to name. Prefer tooling native to the project's
-+stack: a gate imported from another ecosystem for its popularity is a dependency the project did not
-+need. And prefer the MODERN tool the ecosystem has converged on over the older one it replaced, such
-+as uv over pip with a hand-managed virtualenv, ruff over flake8 and pylint, biome over a separate
-+linter and formatter pair, knip over an unmaintained unused-dependency scanner, and a maintained
-+coverage tool over an abandoned one. A tool the ecosystem has moved past is slower, thinner, and
-+unmaintained where it matters, and a method built on it inherits all three. Where the project itself
-+carries the older tool, the method derives what the project runs and the report names the gap: a fit
-+does not re-tool a project behind Captain's back, and it does not quietly bless a dead dependency
-+either.
-+
-+No part carries a flag that turns a red into a pass. A soft-fail switch such as a runner non-strict mode, an exit-zero option, or a trailing || true makes the method report green over a failure, and every role downstream then reads a pass that never happened; a sweep with undefined steps suppressed is the sharpest case, because enumerating the red list is the whole job. A method reports what ran and returns what happened. EVERY part that runs the verification runner carries the tag exclusions: `--tags "not @captain and not @shipwright"` where the runner takes a flag, and the runner's own equivalent where it does not, such as `CUCUMBER_FILTER_TAGS="not @captain and not @shipwright"` in front of a cargo test invocation, without exception: `prove`, `verify`, `sweep`, `static`, `discovery`, `regression` and `condemnation` alike. A part missing them runs skeletons and condemned scenarios, which is the one fault no later role can see, because the run is green either way. A fit that derives a runner invocation writes the exclusions into the same part in the same act. A method whose job this stack offers nothing for
-+reads `none` and the report names it. The rigging is the first durable act: write it complete as soon as the values are derived, and prove afterwards as a repair pass over a file that already exists. Prove each method ONCE. Where a proof fails, repair the method once and prove that repair; where it fails again, the method reads `none` and the report names the gap. A fit that retries a failing tool spends the session it owed the rigging, and three fits have now ended with no rigging at all for exactly that reason, per the
-+Rigging read contract. Proving is the longest part of a fit, and a fit that proves method by method
-+before it writes leaves nothing behind when its session ends mid-proof: an unproven rigging names its
-+unproven methods and is usable, an unwritten one strands every role behind it.
  
 -- Verification commands: derive every command with the tag exclusions per the Rigging read contract, so QM never runs a skeleton or a condemned scenario.
 -- `discover`: derive the runner's static dry-run form. Per the Verification policy's run shapes, it lists undefined and unimplemented steps and executes nothing.
 -- `focused`: derive `focused` to accept the canonical `<spec>.feature:<Scenario Name>` reference form verbatim, wrapping the runner where its native selector differs, so no role translates references by hand. Where the runner accepts several references in one invocation, derive `focused` to accept a list, so a batch of targets amortizes ambient setup into one run.
 -- `step-usage`: derive a machine-readable format that does not truncate step text, such as Cucumber's `usage-json`. Truncated usage output produces false stale-plank reports.
 -- Implementation and plank inventory: list every directory that can hold a planked seam under `implementation`, including entry-point directories such as `bin`. Derive the `plank-inventory` command to scan exactly the `implementation` paths, and to report `@planks` and `@planks-provisional` alike, so every planked seam is inventoried and every seam still waiting on promotion is visible.
++Derive the methods in this order. Each step names what to write; the shapes and rule files are given
++here and in `templates.md`, so the fit writes them rather than researching them.
++
++**1. Choose this stack's tools.** One row per stack; a project already running a different tool keeps
++its own, and a tool this environment cannot install is a gap for Captain and `none` in its method.
++
++| Stack | runner | type check | lint | coverage | planks and step usage | unused code |
++|---|---|---|---|---|---|---|
++| JavaScript | cucumber-js | `tsc --noEmit --allowJs` | biome | c8 | `jsdoc -X` | knip |
++| TypeScript | cucumber-js through tsx | `tsc --noEmit` | biome | c8 | ast-grep, rule from `templates.md` | knip |
++| Python | pytest with pytest-bdd, run through uv | mypy | ruff | coverage.py | ast-grep, rule from `templates.md` | vulture |
++| Rust | `cargo test --test cucumber` | `cargo check --all-targets` | clippy and `cargo fmt --check` | `cargo llvm-cov` | ast-grep, rule from `templates.md` | cargo-machete |
++
++The Gherkin linter is gplint on every stack, run through npx, with the rule file copied from
++`templates.md`.
++
++**2. Write one task-runner entry per method**, named `ss:<method>`, in the runner this stack uses:
++npm scripts in `package.json`, Poe tasks in `pyproject.toml`, aliases in `.cargo/config.toml`, or a
++Just recipe. Each entry's body is one Yoink plan:
++
++```sh
++npx @dk/yoink --max-bytes 200000 --run '<first part>' --label <name> --timeout <seconds> --run '<next part>' --label <name> --timeout <seconds>
++```
++
++Give every part its own `--label` and `--timeout`. Compose each part from the tools in step 1, and
++carry the tag exclusions in every part that runs the verification runner: `--tags "not @captain and
++not @shipwright"` where the runner takes a flag, or `CUCUMBER_FILTER_TAGS="not @captain and not
++@shipwright"` in front of a cargo invocation.
++
++Take a target set with shell parameter expansion, so the reference survives the quoting:
++
++```sh
++npx cucumber-js "${SS_SCENARIO%%:*}" --name "^${SS_SCENARIO#*:}$"
++cargo test --test cucumber -- -i "${SS_SCENARIO%%:*}" --name "^${SS_SCENARIO#*:}$"
++```
++
++**3. Give each method the parts its job needs.**
++
++| Method | Its parts |
++|---|---|
++| `prove` | the runner over `$SS_SCENARIO` |
++| `verify` | `prove`'s run, then the plank join |
++| `sweep` | the tier unfiltered, at normal concurrency, reporting every failure it finds; one variant per tier under `## Tiers`, such as `sweep-sandbox` |
++| `plank-join` | the join itself: a check correlating annotations with step-definition patterns, returning a mapping of pattern to declaration to scenarios, and exiting non-zero where a behaviour-bearing seam has no plank, a plank matches no pattern, or a provisional plank names a scenario that lost its `@captain` tag |
++| `hygiene` | the plank join's verdict, the type check, the lint |
++| `static` | static discovery, the type check, the lint |
++| `discovery` | static discovery alone, exiting non-zero where a scenario's steps no longer bind |
++| `regression` | coverage over every configured tier, cheapest first, each with its tier tag, reporting every failure |
++| `condemnation` | the type check, the lint, `prove`'s run over `$SS_SCENARIO` |
++| `dead-code` | the unused-code reporter over the implementation paths; its non-zero means findings exist, which is harbour work |
++| `spec-lint` | gplint over the specs directory with the copied rule file |
++| `install` | the package manager adding `$SS_DEPENDENCY`, writing the manifest and lockfile as it writes them |
++| `ship`, `ship-verify` | per outbound target: the command that ships it, and a check reading the live artifact its users consume |
++
++A method whose stack offers nothing for its job reads `none`, and the report names the gap.
++
++**4. Copy the rule files from `templates.md`**: the Gherkin lint rule file to `.gplintrc`, adding this
++project's tier tags to `allowed-tags`, and the plank query where this stack reads planks with a
++structural engine.
++
++**5. Write `RIGGING.md` complete**, with all fourteen method values, before running any of them.
++
++**6. Run each method once.** Where one fails, repair it once and run that repair; where it fails
++again, write `none` and name it in the report. Report the ledger: each method unchanged, repaired,
++migrated, added, or `none` with its reason.
  
  #### Tiers and weather
  
-@@ -98,25 +210,34 @@
+@@ -98,25 +204,34 @@
  #### Gates and coverage
  
  - Quality gates: derive `lint` and `typecheck` from the tooling the project already runs, and record a gap for the Captain where the project runs none, naming stack-native candidates in the gap, such as biome or eslint for lint and tsc for typecheck on a TypeScript stack, so Captain's resolution proposes rather than asks. Prefer tooling native to the project's stack; a gate imported from another ecosystem for its popularity is weight, not fit. Name the command; the project owns the tool.
@@ -764,7 +758,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
  1. Load the `shipshape` skill (`shipshape:shipshape` under the plugin channel).
  2. **Retrieve the rigging and the deck. One pass.** Nothing here depends on anything else here:
  
-@@ -124,25 +245,25 @@
+@@ -124,25 +239,25 @@
     cat RIGGING.md && cat AGENTS.md && git status
     ```
  
@@ -797,7 +791,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
  11. Refresh the golden captures. Harbour is the cadence the Verification agreement names, and a canned response stands only while it still matches what the real dependency returns. For each `@exceptional-double` justified as a golden capture, re-record the response from the real dependency and compare it against the stored capture: a capture that still matches is refreshed by that act, and one that differs is drift, so restore the capture from the recording and report any scenario whose expectation the new response changes. A capture is not judged current by its age or by eye, per the check-precedence rule: it is judged by the recording. Where the real dependency cannot be reached at harbour, report it as a Captain blocker naming the double, because an unrefreshable capture is a fake by the same agreement's terms.
  12. Complete the full inventory. Do not stop until every module in scope has been analysed and all `@shipwright`-condemned scenarios and code have been processed.
  13. Confirm harbour left nothing unproven. Planks and `@captain` skeletons change nothing executable and need no rerun. Condemnation batches carry their scoped proofs from step 10, which stand as the proof for the removals that followed step 4. Step 4's full regression is harbour's one full-suite run, and the only full regression Shipshape runs; do not rerun it.
-@@ -156,6 +277,7 @@
+@@ -156,6 +271,7 @@
  - modules analysed,
  - `@captain` scenarios written, total and by finding type,
  - the two required `@conformance` methodology skeletons, each named with its feature file and scenario, watchbill-shape conformance and perturbation-quiescence, both owed on every fitting-out,
