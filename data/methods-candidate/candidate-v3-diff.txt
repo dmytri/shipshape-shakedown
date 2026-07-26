@@ -574,7 +574,7 @@ diff -ru experiments/yoink-settle/skills/shipshape/SKILL.md experiments/methods-
  
 diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods-candidate/skills/shipwright/SKILL.md
 --- experiments/yoink-settle/skills/shipwright/SKILL.md	2026-07-25 13:45:47.464641515 +0000
-+++ experiments/methods-candidate/skills/shipwright/SKILL.md	2026-07-26 20:50:14.358553534 +0000
++++ experiments/methods-candidate/skills/shipwright/SKILL.md	2026-07-26 20:53:06.793005631 +0000
 @@ -36,38 +36,80 @@
  
  ## Discovery tools
@@ -679,7 +679,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
  - `## Perturbation`: the stable `message` and project-specific `perturb` statement. The `message` MUST contain the literal token `PERTURBATION` so a role can detect a live perturbation in the tree.
  - `## Tiers`: the `default` tier tag, any `sandbox` tier tag, one `policy` line per tier naming that tier's credential source or provisioning policy, such as the custodian CLI or the variable name, never a secret value or a check command, an optional `budget` wall-clock ceiling for the full regression with tier-suffixed variants such as `budget-sandbox` per tier, enforced by the derived budget check under Methodology checks, an optional `weather` path naming the wake's weather record so the next run finds it, and an optional `runrecord` path naming the wake's voyage run record per the Transient output policy.
  - `## Dependencies`: the dependency `policy` and one `dependency` line per selected or installed name. Recording routes with installation: the fitting role writes a line for each dependency the fit installs, the runner and the quality tooling included, so `none` stands only where nothing is installed.
-@@ -75,13 +117,96 @@
+@@ -75,13 +117,74 @@
  
  ### Derivation notes
  
@@ -691,37 +691,38 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
 -- `focused`: derive `focused` to accept the canonical `<spec>.feature:<Scenario Name>` reference form verbatim, wrapping the runner where its native selector differs, so no role translates references by hand. Where the runner accepts several references in one invocation, derive `focused` to accept a list, so a batch of targets amortizes ambient setup into one run.
 -- `step-usage`: derive a machine-readable format that does not truncate step text, such as Cucumber's `usage-json`. Truncated usage output produces false stale-plank reports.
 -- Implementation and plank inventory: list every directory that can hold a planked seam under `implementation`, including entry-point directories such as `bin`. Derive the `plank-inventory` command to scan exactly the `implementation` paths, and to report `@planks` and `@planks-provisional` alike, so every planked seam is inventoried and every seam still waiting on promotion is visible.
-+Derive the methods in this order. Each step names what to write; the shapes and rule files are given
-+here and in `templates.md`, so the fit writes them rather than researching them.
++Derive the methods in this order. A complete JavaScript example follows; every other stack is the
++same shape with its own tools, and the deltas table gives them.
 +
-+**1. Choose this stack's tools.** One row per stack; a project already running a different tool keeps
-+its own, and a tool this environment cannot install is a gap for Captain and `none` in its method.
++**1. Write one task-runner entry per method**, named `ss:<method>`, whose body is a Yoink plan: one
++`--run` per part, each part with its own `--label` and `--timeout`, and one `--max-bytes` on the plan.
++This is the whole set for a JavaScript project running cucumber-js, in `package.json`:
 +
-+| Stack | runner, with the exclusions | type check | lint | coverage | planks and step usage | unused code |
-+|---|---|---|---|---|---|---|
-+| JavaScript | `npx cucumber-js --tags "not @captain and not @shipwright"` | `tsc --noEmit --allowJs` | biome | c8 | `jsdoc -X` | knip |
-+| TypeScript | `NODE_OPTIONS="--import tsx" npx cucumber-js --tags "not @captain and not @shipwright"` | `tsc --noEmit` | biome | c8 | ast-grep, rule from `templates.md` | knip |
-+| Python | `uv run pytest -m "not captain and not shipwright"` | mypy | ruff | coverage.py | ast-grep, rule from `templates.md` | vulture |
-+| Rust | `CUCUMBER_FILTER_TAGS="not @captain and not @shipwright" cargo test --test cucumber` | `cargo check --all-targets` | clippy and `cargo fmt --check` | `cargo llvm-cov` | ast-grep, rule from `templates.md` | cargo-machete |
++```json
++"ss:prove":        "npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js \"${SS_SCENARIO%%:*}\" --name \"^${SS_SCENARIO#*:}$\" --tags \"not @captain and not @shipwright\"' --label prove --timeout 600",
++"ss:verify":       "npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js \"${SS_SCENARIO%%:*}\" --name \"^${SS_SCENARIO#*:}$\" --tags \"not @captain and not @shipwright\"' --label prove --timeout 600 --run 'node .shipshape/plank-join.mjs' --label plank-join --timeout 120",
++"ss:sweep":        "npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js --tags \"not @captain and not @shipwright\"' --label sweep --timeout 900",
++"ss:plank-join":   "npx @dk/yoink --max-bytes 200000 --run 'node .shipshape/plank-join.mjs' --label plank-join --timeout 120",
++"ss:hygiene":      "npx @dk/yoink --max-bytes 200000 --run 'node .shipshape/plank-join.mjs' --label plank-join --timeout 120 --run 'npx tsc --noEmit --allowJs src/*.js' --label typecheck --timeout 300 --run 'npx biome check src features' --label lint --timeout 300",
++"ss:static":       "npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js --dry-run --tags \"not @captain and not @shipwright\"' --label discovery --timeout 300 --run 'npx tsc --noEmit --allowJs src/*.js' --label typecheck --timeout 300 --run 'npx biome check src features' --label lint --timeout 300",
++"ss:discovery":    "npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js --dry-run --tags \"not @captain and not @shipwright\"' --label discovery --timeout 300",
++"ss:regression":   "npx @dk/yoink --max-bytes 200000 --run 'npx c8 --reporter=text npx cucumber-js --tags \"not @captain and not @shipwright\"' --label coverage --timeout 900",
++"ss:condemnation": "npx @dk/yoink --max-bytes 200000 --run 'npx tsc --noEmit --allowJs src/*.js' --label typecheck --timeout 300 --run 'npx biome check src features' --label lint --timeout 300 --run 'npx cucumber-js \"${SS_SCENARIO%%:*}\" --name \"^${SS_SCENARIO#*:}$\" --tags \"not @captain and not @shipwright\"' --label prove --timeout 600",
++"ss:dead-code":    "npx @dk/yoink --max-bytes 200000 --run 'npx knip' --label dead-code --timeout 300",
++"ss:spec-lint":    "npx @dk/yoink --max-bytes 200000 --run 'npx gplint -c .gplintrc features/' --label gherkin-lint --timeout 300",
++"ss:install":      "npx @dk/yoink --max-bytes 200000 --run 'npm install --save-dev \"$SS_DEPENDENCY\"' --label install --timeout 600"
++```
 +
-+Each runner cell carries this project's tag exclusions already, so a part built from it excludes
-+skeletons and condemned scenarios by construction. The static form of the same runner carries them
-+too, and it is what `static` and `discovery` run:
++Read four things off that example. The target arrives as `$SS_SCENARIO` and splits with shell
++parameter expansion, so the reference survives the quoting. Every part that runs the runner carries
++the tag exclusions, executing and static forms alike. `plank-join` runs a check that returns the
++join, a mapping of step pattern to declaration to scenarios, exiting non-zero where a
++behaviour-bearing seam has no plank, a plank matches no pattern, or a provisional plank names a
++scenario that lost its `@captain` tag; where the stack's structural engine expresses that, it is a
++rule set that engine runs. And each part returns the tool's own exit code, so a gate can fail.
 +
-+| Stack | static form, with the exclusions |
-+|---|---|
-+| JavaScript, TypeScript | `npx cucumber-js --dry-run --tags "not @captain and not @shipwright"` |
-+| Python | `uv run pytest --collect-only -q -m "not captain and not shipwright"` |
-+| Rust | `CUCUMBER_FILTER_TAGS="not @captain and not @shipwright" cargo test --test cucumber -- --dry-run` |
-+
-+Each part returns its own exit code as the tool gave it. Where a tool's own output needs reading, the
-+plan's label and the part's status carry that, so the part stays one invocation of the tool.
-+
-+The Gherkin linter is gplint on every stack, run through npx, with the rule file copied from
-+`templates.md`.
-+
-+**2. Write one task-runner entry per method**, named `ss:<method>`, in the runner this stack uses, and
-+write the value that invokes it exactly as this stack invokes it:
++**2. Write the value that invokes each entry**, exactly as this stack invokes it, and run one from the
++project root to confirm it resolves there:
 +
 +| Runner | entry lives in | the value `RIGGING.md` carries |
 +|---|---|---|
@@ -730,59 +731,36 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
 +| Cargo | `.cargo/config.toml` under `[alias]` | `cargo ss-<method>` |
 +| Just | `justfile` | `just ss-<method>` |
 +
-+Run the value once from the project root to confirm it resolves there: a value naming a program that
-+lives only inside an environment manager, such as `poe` outside `uv run`, resolves for the fit and
-+for nobody else. Each entry's body is one Yoink plan:
++**3. Swap in this stack's tools.** Everything else in the example stays as it is.
 +
-+```sh
-+npx @dk/yoink --max-bytes 200000 --run '<first part>' --label <name> --timeout <seconds> --run '<next part>' --label <name> --timeout <seconds>
-+```
++| | TypeScript | Python | Rust |
++|---|---|---|---|
++| runner, executing | `NODE_OPTIONS="--import tsx" npx cucumber-js … --tags "not @captain and not @shipwright"` | `uv run pytest -k "$SS_SCENARIO" -m "not captain and not shipwright"` | `CUCUMBER_FILTER_TAGS="not @captain and not @shipwright" cargo test --test cucumber -- -i "${SS_SCENARIO%%:*}" --name "^${SS_SCENARIO#*:}$"` |
++| runner, static | the same with `--dry-run` | `uv run pytest --collect-only -q -m "not captain and not shipwright"` | the same with `-- --dry-run` |
++| type check | `tsc --noEmit` | `uv run mypy src` | `cargo check --all-targets` |
++| lint | biome | `uv run ruff check src tests` | `cargo clippy --all-targets -- -D warnings` and `cargo fmt --check` |
++| coverage | c8 | `uv run pytest --cov=src` | `cargo llvm-cov` |
++| planks and steps | ast-grep, rules from `templates.md` | ast-grep, rules from `templates.md` | ast-grep, rules from `templates.md` |
++| unused code | knip | `uv run vulture src tests --min-confidence 80` | cargo-machete |
 +
-+Give every part its own `--label` and `--timeout`. Compose each part from the tools in step 1, and
-+carry the tag exclusions in every part that runs the verification runner: `--tags "not @captain and
-+not @shipwright"` where the runner takes a flag, or `CUCUMBER_FILTER_TAGS="not @captain and not
-+@shipwright"` in front of a cargo invocation.
-+
-+Take a target set with shell parameter expansion, so the reference survives the quoting:
-+
-+```sh
-+npx cucumber-js "${SS_SCENARIO%%:*}" --name "^${SS_SCENARIO#*:}$"
-+cargo test --test cucumber -- -i "${SS_SCENARIO%%:*}" --name "^${SS_SCENARIO#*:}$"
-+```
-+
-+**3. Give each method the parts its job needs.**
-+
-+| Method | Its parts |
-+|---|---|
-+| `prove` | the runner over `$SS_SCENARIO` |
-+| `verify` | `prove`'s run, then the plank join |
-+| `sweep` | the tier unfiltered, at normal concurrency, reporting every failure it finds; one variant per tier under `## Tiers`, such as `sweep-sandbox` |
-+| `plank-join` | the join itself: a check correlating annotations with step-definition patterns, returning a mapping of pattern to declaration to scenarios, and exiting non-zero where a behaviour-bearing seam has no plank, a plank matches no pattern, or a provisional plank names a scenario that lost its `@captain` tag |
-+| `hygiene` | the plank join's verdict, the type check, the lint |
-+| `static` | static discovery, the type check, the lint |
-+| `discovery` | static discovery alone, exiting non-zero where a scenario's steps no longer bind |
-+| `regression` | coverage over every configured tier, cheapest first, each with its tier tag, reporting every failure |
-+| `condemnation` | the type check, the lint, `prove`'s run over `$SS_SCENARIO` |
-+| `dead-code` | the unused-code reporter over the implementation paths; its non-zero means findings exist, which is harbour work |
-+| `spec-lint` | gplint over the specs directory with the copied rule file |
-+| `install` | the package manager adding `$SS_DEPENDENCY`, writing the manifest and lockfile as it writes them |
-+| `ship`, `ship-verify` | per outbound target: the command that ships it, and a check reading the live artifact its users consume |
-+
-+A method whose stack offers nothing for its job reads `none`, and the report names the gap.
++gplint is the Gherkin linter on every stack, run through npx. A project already running a different
++tool for a job keeps its own; a tool this environment cannot install is a gap for Captain and `none`
++in its method, named in the report.
 +
 +**4. Copy the rule files from `templates.md`**: the Gherkin lint rule file to `.gplintrc`, adding this
-+project's tier tags to `allowed-tags`, and the plank query where this stack reads planks with a
-+structural engine.
++project's tier tags to `allowed-tags`, and the plank and step queries where this stack reads them with
++a structural engine.
 +
-+**5. Write `RIGGING.md` complete**, with all fourteen method values, before running any of them.
++**5. Write `RIGGING.md` complete**, all fourteen values, before running any method. `ship` and
++`ship-verify` read `none` where the project has no outbound target.
 +
 +**6. Run each method once.** Where one fails, repair it once and run that repair; where it fails
-+again, write `none` and name it in the report. Report the ledger: each method unchanged, repaired,
-+migrated, added, or `none` with its reason.
++again, write `none` and name it. Report the ledger: each method unchanged, repaired, migrated, added,
++or `none` with its reason.
  
  #### Tiers and weather
  
-@@ -98,25 +223,34 @@
+@@ -98,25 +201,34 @@
  #### Gates and coverage
  
  - Quality gates: derive `lint` and `typecheck` from the tooling the project already runs, and record a gap for the Captain where the project runs none, naming stack-native candidates in the gap, such as biome or eslint for lint and tsc for typecheck on a TypeScript stack, so Captain's resolution proposes rather than asks. Prefer tooling native to the project's stack; a gate imported from another ecosystem for its popularity is weight, not fit. Name the command; the project owns the tool.
@@ -822,7 +800,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
  1. Load the `shipshape` skill (`shipshape:shipshape` under the plugin channel).
  2. **Retrieve the rigging and the deck. One pass.** Nothing here depends on anything else here:
  
-@@ -124,25 +258,25 @@
+@@ -124,25 +236,25 @@
     cat RIGGING.md && cat AGENTS.md && git status
     ```
  
@@ -855,7 +833,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
  11. Refresh the golden captures. Harbour is the cadence the Verification agreement names, and a canned response stands only while it still matches what the real dependency returns. For each `@exceptional-double` justified as a golden capture, re-record the response from the real dependency and compare it against the stored capture: a capture that still matches is refreshed by that act, and one that differs is drift, so restore the capture from the recording and report any scenario whose expectation the new response changes. A capture is not judged current by its age or by eye, per the check-precedence rule: it is judged by the recording. Where the real dependency cannot be reached at harbour, report it as a Captain blocker naming the double, because an unrefreshable capture is a fake by the same agreement's terms.
  12. Complete the full inventory. Do not stop until every module in scope has been analysed and all `@shipwright`-condemned scenarios and code have been processed.
  13. Confirm harbour left nothing unproven. Planks and `@captain` skeletons change nothing executable and need no rerun. Condemnation batches carry their scoped proofs from step 10, which stand as the proof for the removals that followed step 4. Step 4's full regression is harbour's one full-suite run, and the only full regression Shipshape runs; do not rerun it.
-@@ -156,6 +290,7 @@
+@@ -156,6 +268,7 @@
  - modules analysed,
  - `@captain` scenarios written, total and by finding type,
  - the two required `@conformance` methodology skeletons, each named with its feature file and scenario, watchbill-shape conformance and perturbation-quiescence, both owed on every fitting-out,
