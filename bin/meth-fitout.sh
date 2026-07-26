@@ -14,13 +14,14 @@
 set -uo pipefail
 HERE="$(cd "$(dirname "$0")/.." && pwd)"
 SCRATCH="${EVAL_SCRATCH:-$HERE/.eval-scratch}"
-WAVE=""; MODEL="xiaomi/mimo-v2.5"; SKILLS_DIR=""; TIMEOUT_S=1200
+WAVE=""; MODEL="xiaomi/mimo-v2.5"; SKILLS_DIR=""; TIMEOUT_S=1200; STACK="js"
 while [ $# -gt 0 ]; do
   case "$1" in
     --wave) WAVE="$2"; shift 2;;
     --model) MODEL="$2"; shift 2;;
     --skills-dir) SKILLS_DIR="$2"; shift 2;;
     --timeout-s) TIMEOUT_S="$2"; shift 2;;
+    --stack) STACK="$2"; shift 2;;   # js|ts|py — the derivation must differ per stack
     *) echo "meth-fitout.sh: unknown arg '$1'" >&2; exit 2;;
   esac
 done
@@ -30,12 +31,19 @@ BASE="$SCRATCH/$WAVE"; SIM="$BASE/sim"; LOG="$BASE/fitout.log"
 rm -rf "$BASE"; mkdir -p "$BASE"
 say(){ echo "[$(date -u +%FT%TZ)] $*" | tee -a "$LOG"; }
 
-NM="$SCRATCH/.shared-nm-$WAVE"
-[ -d "$NM/node_modules" ] || { mkdir -p "$NM"; cp -a "$SCRATCH/.shared-nm/node_modules" "$NM/"; }
-export EVAL_SHARED_NM="$NM/node_modules"
+# A non-Node stack gets an EMPTY toolkit overlay. bwrap creates the node_modules mountpoint itself,
+# so overlaying the JS toolkit into a Python sim would show the leg 160 JS packages and hand it a
+# false stack signal — the one thing a per-stack derivation test must not do.
+if [ "$STACK" = "py" ]; then
+  mkdir -p "$SCRATCH/.empty-nm/node_modules"; export EVAL_SHARED_NM="$SCRATCH/.empty-nm/node_modules"
+else
+  NM="$SCRATCH/.shared-nm-$WAVE"
+  [ -d "$NM/node_modules" ] || { mkdir -p "$NM"; cp -a "$SCRATCH/.shared-nm/node_modules" "$NM/"; }
+  export EVAL_SHARED_NM="$NM/node_modules"
+fi
 
-say "FITOUT START wave=$WAVE model=$MODEL skills=$SKILLS_DIR"
-"$HERE/bin/scaffold.sh" "$SIM" >"$BASE/scaffold.log" 2>&1 || { say "SCAFFOLD FAILED"; exit 4; }
+say "FITOUT START wave=$WAVE stack=$STACK model=$MODEL skills=$SKILLS_DIR"
+"$HERE/bin/scaffold-stack.sh" "$STACK" "$SIM" >"$BASE/scaffold.log" 2>&1 || { say "SCAFFOLD FAILED"; exit 4; }
 [ -f "$SIM/RIGGING.md" ] && { say "sim already fitted out — not a fitting-out draw"; exit 4; }
 
 cat > "$BASE/task.md" <<EOF
@@ -51,35 +59,8 @@ t0=$(date +%s)
   --skill "$SKILLS_DIR/shipshape" --skill "$SKILLS_DIR/shipwright" \
   --task-file "$BASE/task.md" --name "fitout" --timeout-s "$TIMEOUT_S" >"$BASE/fitout.leg.log" 2>&1
 rc=$?; t1=$(date +%s)
-say "FITOUT LEG ${t1-t0}s rc=$rc"
+say "FITOUT LEG $((t1-t0))s rc=$rc"
 
-R="$SIM/RIGGING.md"
-if [ ! -f "$R" ]; then say "RESULT: no RIGGING.md written — fitting out produced no rigging"; echo FITOUT-DONE; exit 0; fi
-say "RIGGING.md written ($(wc -l <"$R") lines)"
-if ! grep -q '^## Methods' "$R"; then
-  say "RESULT: NO ## Methods SECTION — methods were not derived"
-  echo FITOUT-DONE; exit 0
-fi
-
-# Every derived method, run in the sim. A method is a claim until it runs.
-rmdir "$SIM/node_modules" 2>/dev/null; ln -sfn "$EVAL_SHARED_NM" "$SIM/node_modules"
-n=0; ran=0
-while IFS= read -r line; do
-  name=$(printf '%s' "$line" | sed -n 's/^- \([a-z-]*\):.*/\1/p')
-  val=$(printf '%s' "$line" | sed -n 's/^- [a-z-]*: *`\(.*\)`$/\1/p')
-  [ -n "$name" ] || continue
-  if [ -z "$val" ] || printf '%s' "$line" | grep -q ': *none'; then say "  method $name: none"; continue; fi
-  n=$((n+1))
-  # {scenario} is a placeholder: substitute the sim's own spec so the run is real.
-  run=${val//\{scenario\}/features/tides.feature}
-  out="$BASE/method-$name.out"
-  ( cd "$SIM" && timeout 300 bash -c "$run" ) >"$out" 2>&1
-  mrc=$?
-  parts=$(grep -cE '^(== |--yoink|Content-Disposition)' "$out" 2>/dev/null)
-  if [ "$mrc" -le 1 ] && [ -s "$out" ]; then ran=$((ran+1)); say "  method $name: RAN (exit $mrc, $(wc -c <"$out") bytes, $parts part markers)"
-  else say "  method $name: FAILED (exit $mrc) -> $out"; fi
-done < <(sed -n '/^## Methods/,/^## /p' "$R" | grep '^- ')
-rm -f "$SIM/node_modules"; mkdir -p "$SIM/node_modules"
-say "RESULT: ${ran}/${n} derived methods run clean; mechanism: $(grep -c 'yoink' "$R" || true) yoink refs in rigging"
+"$HERE/bin/meth-fitout-audit.sh" "$BASE" 2>&1 | tee -a "$LOG"
 say "FITOUT END wave=$WAVE"
 echo FITOUT-DONE
