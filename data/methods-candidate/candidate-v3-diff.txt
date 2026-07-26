@@ -529,7 +529,7 @@ diff -ru experiments/yoink-settle/skills/shipshape/SKILL.md experiments/methods-
  
 diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods-candidate/skills/shipwright/SKILL.md
 --- experiments/yoink-settle/skills/shipwright/SKILL.md	2026-07-25 13:45:47.464641515 +0000
-+++ experiments/methods-candidate/skills/shipwright/SKILL.md	2026-07-26 19:35:24.646861262 +0000
++++ experiments/methods-candidate/skills/shipwright/SKILL.md	2026-07-26 19:55:50.034854137 +0000
 @@ -36,38 +36,84 @@
  
  ## Discovery tools
@@ -585,7 +585,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
 +| 2 | Derive every value from the repository: language, runtime, package manager, directories, dependency policy, perturbation syntax, docblock style, tiers | the rigging's values |
 +| 3 | Derive a method per job the Methods section names, register each plan in the project's own task runner, and write the invocation as the value | `## Methods`, and the task-runner entries behind it |
 +| 4 | Write each derived tool's config the methods need, such as the Gherkin lint rule file and a structural query's rule file | the tool configs, without which a method fails on its config rather than on the code |
-+| 5 | Write `RIGGING.md` and `AGENTS.md` ONCE, complete | the durable configuration, never read mid-write |
++| 5 | Write `RIGGING.md` and `AGENTS.md` ONCE, complete, BEFORE proving anything | the durable configuration, never read mid-write |
 +| 6 | THEN prove each method by running it, repair what fails, and name any it could not prove | the proof that no value is a claim |
 +| 7 | Write the derived search-exclusion artifact and the verification-conformance rule set | the derived artifacts |
 +
@@ -710,8 +710,8 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
 +does not re-tool a project behind Captain's back, and it does not quietly bless a dead dependency
 +either.
 +
-+No part carries a flag that turns a red into a pass. A soft-fail switch such as a runner non-strict mode, an exit-zero option, or a trailing || true makes the method report green over a failure, and every role downstream then reads a pass that never happened; a sweep with undefined steps suppressed is the sharpest case, because enumerating the red list is the whole job. A method reports what ran and returns what happened. EVERY part that runs the verification runner carries the tag exclusions, `--tags "not @captain and not @shipwright"` or that runner's equivalent, without exception: `prove`, `verify`, `sweep`, `static`, `discovery`, `regression` and `condemnation` alike. A part missing them runs skeletons and condemned scenarios, which is the one fault no later role can see, because the run is green either way. A fit that derives a runner invocation writes the exclusions into the same part in the same act. A method whose job this stack offers nothing for
-+reads `none` and the report names it. Write the rigging complete first, then prove each method by running it and repair what fails, per the
++No part carries a flag that turns a red into a pass. A soft-fail switch such as a runner non-strict mode, an exit-zero option, or a trailing || true makes the method report green over a failure, and every role downstream then reads a pass that never happened; a sweep with undefined steps suppressed is the sharpest case, because enumerating the red list is the whole job. A method reports what ran and returns what happened. EVERY part that runs the verification runner carries the tag exclusions: `--tags "not @captain and not @shipwright"` where the runner takes a flag, and the runner's own equivalent where it does not, such as `CUCUMBER_FILTER_TAGS="not @captain and not @shipwright"` in front of a cargo test invocation, without exception: `prove`, `verify`, `sweep`, `static`, `discovery`, `regression` and `condemnation` alike. A part missing them runs skeletons and condemned scenarios, which is the one fault no later role can see, because the run is green either way. A fit that derives a runner invocation writes the exclusions into the same part in the same act. A method whose job this stack offers nothing for
++reads `none` and the report names it. The rigging is the first durable act: write it complete as soon as the values are derived, and prove afterwards as a repair pass over a file that already exists. Prove each method ONCE. Where a proof fails, repair the method once and prove that repair; where it fails again, the method reads `none` and the report names the gap. A fit that retries a failing tool spends the session it owed the rigging, and three fits have now ended with no rigging at all for exactly that reason, per the
 +Rigging read contract. Proving is the longest part of a fit, and a fit that proves method by method
 +before it writes leaves nothing behind when its session ends mid-proof: an unproven rigging names its
 +unproven methods and is usable, an unwritten one strands every role behind it.
