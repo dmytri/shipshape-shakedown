@@ -364,7 +364,7 @@ diff -ru experiments/yoink-settle/skills/qm/SKILL.md experiments/methods-candida
  ## Final report
 diff -ru experiments/yoink-settle/skills/shipshape/SKILL.md experiments/methods-candidate/skills/shipshape/SKILL.md
 --- experiments/yoink-settle/skills/shipshape/SKILL.md	2026-07-25 13:44:14.511373308 +0000
-+++ experiments/methods-candidate/skills/shipshape/SKILL.md	2026-07-26 19:09:26.117996687 +0000
++++ experiments/methods-candidate/skills/shipshape/SKILL.md	2026-07-26 19:29:56.934489032 +0000
 @@ -211,12 +211,19 @@
  Attestation:
  
@@ -450,7 +450,7 @@ diff -ru experiments/yoink-settle/skills/shipshape/SKILL.md experiments/methods-
 +| `prove` | prove a named scenario set, and nothing wider | Crew, Boatswain | `SS_SCENARIO` |
 +| `verify` | verify a watch's whole target set and join its planks | QM | `SS_SCENARIO` |
 +| `sweep` | enumerate one whole tier, unfiltered, without stop-on-first-failure | QM, Boatswain | tier suffix |
-+| `plank-join` | join every plank to a current step-definition pattern | Shipwright | |
++| `plank-join` | join every plank to a current step-definition pattern, and redden where the join fails | Shipwright | |
 +| `hygiene` | answer every deck-hygiene check in one run | Boatswain | |
 +| `static` | prove a non-executable hunk, a deletion, or configuration | Boatswain | |
 +| `discovery` | list undefined and unimplemented steps, executing nothing | Shipwright | |
@@ -529,7 +529,7 @@ diff -ru experiments/yoink-settle/skills/shipshape/SKILL.md experiments/methods-
  
 diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods-candidate/skills/shipwright/SKILL.md
 --- experiments/yoink-settle/skills/shipwright/SKILL.md	2026-07-25 13:45:47.464641515 +0000
-+++ experiments/methods-candidate/skills/shipwright/SKILL.md	2026-07-26 19:28:27.225291556 +0000
++++ experiments/methods-candidate/skills/shipwright/SKILL.md	2026-07-26 19:29:56.930488978 +0000
 @@ -36,38 +36,84 @@
  
  ## Discovery tools
@@ -664,8 +664,8 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
 +- `prove`: the runner, selecting the canonical `<spec>.feature:<Scenario Name>` references `$SS_SCENARIO` carries, verbatim, wrapping the runner where its native selector differs, so no role translates a reference by hand. Where the runner accepts a list, `$SS_SCENARIO` is that list; where it accepts one target at a time, the plan carries one part per target and that limit lives here rather than in a role's improvised loop.
 +- `verify`: the `prove` run over `$SS_SCENARIO`, joined with the plank parts `plank-join` carries, so one invocation answers a watch's targets and its planks together.
 +- `sweep`: the tier unfiltered, without stop-on-first-failure, at normal concurrency, with a tier-suffixed variant per tier under `## Tiers`, such as `sweep-sandbox`. QM lists a tier's whole failing set from one sweep rather than restarting the tier per fix, so derive no fail-fast form.
-+- `plank-join`: the annotation scan over exactly the `implementation` paths, reporting `@planks` and `@planks-provisional` alike, joined with the runner's machine-readable step-usage form, one that does not truncate step text, such as Cucumber's `usage-json`. Truncated usage output produces false stale-plank reports. On plain JavaScript the scan is `jsdoc -X`, machine-readable doclets from one line; on TypeScript jsdoc reads no `.ts` input and silently yields an empty inventory, a false clean, so derive a parser-backed reader instead. Where the project derives its plank rules into a conformance rule set, the conformance check is the part that runs in place of a bare scan.
-+- `hygiene`: the plank join, the type checker, and the linter, so one run answers every deck-hygiene check.
++- `plank-join`: the JOIN, not its inputs. Derive a check that reads the annotations over exactly the `implementation` paths and the runner's step-definition patterns, correlates them, and returns a verdict: a compact mapping of step pattern to source declaration to the scenarios that bind it, and a non-zero exit on any of three faults, a behaviour-bearing seam with no plank, a plank matching no current pattern, and a `@planks-provisional` naming a scenario that no longer carries `@captain`. A method that emits the annotation dump and the usage report and leaves the role to correlate them has not joined anything: it exits green whenever both halves ran, which is exactly the state a malformed plank survives in, and on a large project it also floods the role with an AST dump nobody can read. Where the stack's structural query engine expresses the join, derive it as a rule set that engine runs, per the Scantling agreement's catalog. Where no engine expresses it, the join is a bespoke conformance checker, owned as verification support per the Scantling agreement, and until that checker exists the method reads `none` and the report names the gap: an unjoined plank surface is a finding, never a silent pass. On plain JavaScript the annotation side is `jsdoc -X`, on TypeScript and Rust a structural query, and on any stack the check reports the mapping rather than the raw inventory.
++- `hygiene`: the plank join's verdict, the type checker, and the linter, so one run answers every deck-hygiene check and each part carries its own status.
 +- `static`: the runner's static dry-run form, which lists undefined and unimplemented steps and executes nothing, with the type checker and the linter. They redden on a broken load or import, which is what a non-executable hunk needs proven.
 +- `discovery`: that same dry-run form alone, as a proof gate.
 +- `regression`: real per-line and per-branch coverage native to the stack, such as c8 for Node and TypeScript, coverage.py for Python, `cargo llvm-cov` for Rust, SimpleCov for Ruby, or `go test -cover` for Go, over every configured tier, cheapest tier first, each tier composed with its tier tag. Record a gap for Captain where the stack has no such tool, and record it the same way where the tool exists but this environment cannot install it, such as an install needing system libraries or privileges the fit does not hold. A fit spends its session deriving the rigging, never on an install that will not land: the gap is a line in the report and `none` in the method, and Captain decides. A fit that burns its turn on a package manager writes no rigging at all, which is the one outcome worse than a named gap. Derive it without stop-on-first-failure: harbour reads the whole picture.
