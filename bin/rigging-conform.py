@@ -117,10 +117,13 @@ def score(path):
             viol.append(f"{name}: {runs} parts but {timeouts} --timeout")
         if "--max-bytes" not in b:
             viol.append(f"{name}: no --max-bytes bound")
-        if name in TAKES_SCENARIO and "{scenario}" not in b:
-            viol.append(f"{name}: missing the {{scenario}} placeholder")
-        if name in TAKES_DEPENDENCY and "{dependency}" not in b:
-            viol.append(f"{name}: missing the {{dependency}} placeholder")
+        # Parameters ride as inline environment values now, so the reference is $SS_SCENARIO in the
+        # plan; the older {scenario} placeholder is accepted for a rigging written before that.
+        raw = meth[name]
+        if name in TAKES_SCENARIO and not any(t in b + raw for t in ("SS_SCENARIO", "{scenario}")):
+            viol.append(f"{name}: takes a target set but names neither $SS_SCENARIO nor a placeholder")
+        if name in TAKES_DEPENDENCY and not any(t in b + raw for t in ("SS_DEPENDENCY", "{dependency}")):
+            viol.append(f"{name}: takes a package but names neither $SS_DEPENDENCY nor a placeholder")
         if name in VERIFYING and "not @captain" not in b:
             viol.append(f"{name}: a verifying part without the tag exclusions")
     extras = [k for k in meth if k not in METHODS and not re.match(r"(sweep|regression)-", k)]

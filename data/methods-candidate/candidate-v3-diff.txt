@@ -529,8 +529,8 @@ diff -ru experiments/yoink-settle/skills/shipshape/SKILL.md experiments/methods-
  
 diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods-candidate/skills/shipwright/SKILL.md
 --- experiments/yoink-settle/skills/shipwright/SKILL.md	2026-07-25 13:45:47.464641515 +0000
-+++ experiments/methods-candidate/skills/shipwright/SKILL.md	2026-07-26 18:07:00.692273490 +0000
-@@ -36,38 +36,82 @@
++++ experiments/methods-candidate/skills/shipwright/SKILL.md	2026-07-26 18:10:04.930587299 +0000
+@@ -36,38 +36,84 @@
  
  ## Discovery tools
  
@@ -601,6 +601,8 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
 +| A method missing, or a job the Methods section names with no value at all | Derives it, registers its entry, writes its value |
 +| A method whose entry is gone, whose config is missing, or which no longer executes | Repairs the entry or the config and proves it again |
 +| A method whose stack tooling has been replaced | Rederives it from what the project now runs, and names the change in the report |
++| A rigging in a superseded shape: a section this doctrine no longer names, an inline plan where the stack has a task runner, a retired placeholder, a job with no method | MIGRATES it to the current shape. A project that updates Shipshape gets the current rigging with it, and is never left stuck on the shape it was fitted with |
++| Tooling the ecosystem has moved past, or a dependency that is unmaintained, duplicated or out of date | Rederives the method on what the project should run now, and names the dependency finding for Captain. Current design only applies to the rigging as it does to the code |
 +| A value another role owns: a lint rule file Captain tuned, a dependency Captain selected, the perturbation message | Leaves it. A refit never reverts a tuning to its default |
 +| A required value it cannot derive | Writes every value it can and raises one Captain blocker naming the value, so the rigging is usable and the gap is legible |
 +
@@ -610,8 +612,8 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
 +refit touched by running it, and leave every method it did not touch alone: a proof spent on an
 +unchanged method buys nothing.
 +
-+Report the fit as a ledger, one line per method, each marked unchanged, repaired, added, or `none`
-+with its reason. A human reading that ledger sees exactly what moved, and a role reading it knows
++Report the fit as a ledger, one line per method, each marked unchanged, repaired, migrated, added, or
++`none` with its reason. A human reading that ledger sees exactly what moved, and a role reading it knows
 +whether its own method changed under it.
 +
 +Where the stack has no Gherkin runner, `prove`, `verify`, `sweep`, `discovery` and `plank-join` are
@@ -636,7 +638,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
  - `## Perturbation`: the stable `message` and project-specific `perturb` statement. The `message` MUST contain the literal token `PERTURBATION` so a role can detect a live perturbation in the tree.
  - `## Tiers`: the `default` tier tag, any `sandbox` tier tag, one `policy` line per tier naming that tier's credential source or provisioning policy, such as the custodian CLI or the variable name, never a secret value or a check command, an optional `budget` wall-clock ceiling for the full regression with tier-suffixed variants such as `budget-sandbox` per tier, enforced by the derived budget check under Methodology checks, an optional `weather` path naming the wake's weather record so the next run finds it, and an optional `runrecord` path naming the wake's voyage run record per the Transient output policy.
  - `## Dependencies`: the dependency `policy` and one `dependency` line per selected or installed name. Recording routes with installation: the fitting role writes a line for each dependency the fit installs, the runner and the quality tooling included, so `none` stands only where nothing is installed.
-@@ -75,13 +119,78 @@
+@@ -75,13 +121,77 @@
  
  ### Derivation notes
  
@@ -655,7 +657,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
 +environment value the plan reads: write `$SS_SCENARIO` where the target set belongs and
 +`$SS_DEPENDENCY` where the package does, so a role prefixes the assignment and copies the value
 +exactly as it stands. Where the stack carries no task runner, the
-+plan itself is the value and that cost is accepted. Each plan is self-contained, so a stack's runner
++plan itself is the value and that cost is accepted. The entry's body IS the plan, and a plan's part is an invocation of the project's own tooling: never a script the fit wrote. A fit that puts the work in a shell script and points a part at it has built a wrapper the doctrine forbids, and it hides from every later role what the method actually runs, which the plan exists to show. The one thing a fit writes beside the entries is a tool's own config or rule file, because a tool needs its rules; a tool needs no script. Each plan is self-contained, so a stack's runner
 +appears in every plan that runs it and repairing that invocation is a refit across the plans carrying
 +it; reuse is by method, one method several roles run, never a plan embedded in other plans. What each method needs from a stack:
 +
@@ -708,8 +710,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
 +does not re-tool a project behind Captain's back, and it does not quietly bless a dead dependency
 +either.
 +
-+Every part that runs verification carries the tag exclusions per the Rigging read contract, so no
-+role ever runs a skeleton or a condemned scenario. A method whose job this stack offers nothing for
++EVERY part that runs the verification runner carries the tag exclusions, `--tags "not @captain and not @shipwright"` or that runner's equivalent, without exception: `prove`, `verify`, `sweep`, `static`, `discovery`, `regression` and `condemnation` alike. A part missing them runs skeletons and condemned scenarios, which is the one fault no later role can see, because the run is green either way. A fit that derives a runner invocation writes the exclusions into the same part in the same act. A method whose job this stack offers nothing for
 +reads `none` and the report names it. Prove every derived method by running it before writing
 +`RIGGING.md`, per the Rigging read contract.
  
@@ -721,7 +722,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
  
  #### Tiers and weather
  
-@@ -98,25 +207,34 @@
+@@ -98,25 +208,34 @@
  #### Gates and coverage
  
  - Quality gates: derive `lint` and `typecheck` from the tooling the project already runs, and record a gap for the Captain where the project runs none, naming stack-native candidates in the gap, such as biome or eslint for lint and tsc for typecheck on a TypeScript stack, so Captain's resolution proposes rather than asks. Prefer tooling native to the project's stack; a gate imported from another ecosystem for its popularity is weight, not fit. Name the command; the project owns the tool.
@@ -761,7 +762,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
  1. Load the `shipshape` skill (`shipshape:shipshape` under the plugin channel).
  2. **Retrieve the rigging and the deck. One pass.** Nothing here depends on anything else here:
  
-@@ -124,25 +242,25 @@
+@@ -124,25 +243,25 @@
     cat RIGGING.md && cat AGENTS.md && git status
     ```
  
@@ -794,7 +795,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
  11. Refresh the golden captures. Harbour is the cadence the Verification agreement names, and a canned response stands only while it still matches what the real dependency returns. For each `@exceptional-double` justified as a golden capture, re-record the response from the real dependency and compare it against the stored capture: a capture that still matches is refreshed by that act, and one that differs is drift, so restore the capture from the recording and report any scenario whose expectation the new response changes. A capture is not judged current by its age or by eye, per the check-precedence rule: it is judged by the recording. Where the real dependency cannot be reached at harbour, report it as a Captain blocker naming the double, because an unrefreshable capture is a fake by the same agreement's terms.
  12. Complete the full inventory. Do not stop until every module in scope has been analysed and all `@shipwright`-condemned scenarios and code have been processed.
  13. Confirm harbour left nothing unproven. Planks and `@captain` skeletons change nothing executable and need no rerun. Condemnation batches carry their scoped proofs from step 10, which stand as the proof for the removals that followed step 4. Step 4's full regression is harbour's one full-suite run, and the only full regression Shipshape runs; do not rerun it.
-@@ -156,6 +274,7 @@
+@@ -156,6 +275,7 @@
  - modules analysed,
  - `@captain` scenarios written, total and by finding type,
  - the two required `@conformance` methodology skeletons, each named with its feature file and scenario, watchbill-shape conformance and perturbation-quiescence, both owed on every fitting-out,
