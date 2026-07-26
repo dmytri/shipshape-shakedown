@@ -12,13 +12,14 @@ import os
 import re
 import sys
 
-METHODS = ["verify", "hygiene", "static", "regression", "rigging-proof"]
+METHODS = ["verify", "hygiene", "static", "regression", "condemnation", "rigging-proof"]
 # Which `## Commands` values each method composes, per the Methods table.
 PARTS = {
     "verify": ["focused", "plank-inventory", "step-usage"],
     "hygiene": ["plank-inventory", "step-usage", "typecheck", "lint"],
     "static": ["discover", "typecheck", "lint"],
     "regression": ["coverage"],
+    "condemnation": ["typecheck", "lint", "focused"],
     "rigging-proof": ["discover", "focused", "broad", "coverage", "step-usage", "plank-inventory", "typecheck", "lint"],
 }
 
@@ -43,7 +44,7 @@ def score(path):
     meth = {k: v[0] for k, v in kv(section(text, "Methods")).items()}
     viol, notes = [], []
     if not section(text, "Methods"):
-        return ["no ## Methods section at all"], [], 0, 0
+        return ["no ## Methods section at all (every method is a required value)"], [], 0, 0
 
     def bare(v):
         return v.strip().strip("`").strip()
@@ -91,8 +92,8 @@ def score(path):
             probe = core[0] if core else p
             if probe and probe not in b:
                 viol.append(f"{name}: part {p} not composed verbatim (looked for '{probe}')")
-        if name == "verify" and "{scenario}" not in b:
-            viol.append("verify: lost the {scenario} placeholder")
+        if name in ("verify", "condemnation") and "{scenario}" not in b:
+            viol.append(f"{name}: lost the {{scenario}} placeholder")
     return viol, notes, len(meth), sum(1 for v in meth.values() if not is_none(v))
 
 
