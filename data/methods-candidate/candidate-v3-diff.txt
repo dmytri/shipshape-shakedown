@@ -574,7 +574,7 @@ diff -ru experiments/yoink-settle/skills/shipshape/SKILL.md experiments/methods-
  
 diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods-candidate/skills/shipwright/SKILL.md
 --- experiments/yoink-settle/skills/shipwright/SKILL.md	2026-07-25 13:45:47.464641515 +0000
-+++ experiments/methods-candidate/skills/shipwright/SKILL.md	2026-07-26 20:27:04.975882671 +0000
++++ experiments/methods-candidate/skills/shipwright/SKILL.md	2026-07-26 20:31:25.927375721 +0000
 @@ -36,38 +36,80 @@
  
  ## Discovery tools
@@ -679,7 +679,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
  - `## Perturbation`: the stable `message` and project-specific `perturb` statement. The `message` MUST contain the literal token `PERTURBATION` so a role can detect a live perturbation in the tree.
  - `## Tiers`: the `default` tier tag, any `sandbox` tier tag, one `policy` line per tier naming that tier's credential source or provisioning policy, such as the custodian CLI or the variable name, never a secret value or a check command, an optional `budget` wall-clock ceiling for the full regression with tier-suffixed variants such as `budget-sandbox` per tier, enforced by the derived budget check under Methodology checks, an optional `weather` path naming the wake's weather record so the next run finds it, and an optional `runrecord` path naming the wake's voyage run record per the Transient output policy.
  - `## Dependencies`: the dependency `policy` and one `dependency` line per selected or installed name. Recording routes with installation: the fitting role writes a line for each dependency the fit installs, the runner and the quality tooling included, so `none` stands only where nothing is installed.
-@@ -75,13 +117,73 @@
+@@ -75,13 +117,86 @@
  
  ### Derivation notes
  
@@ -697,19 +697,32 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
 +**1. Choose this stack's tools.** One row per stack; a project already running a different tool keeps
 +its own, and a tool this environment cannot install is a gap for Captain and `none` in its method.
 +
-+| Stack | runner | type check | lint | coverage | planks and step usage | unused code |
++| Stack | runner, with the exclusions | type check | lint | coverage | planks and step usage | unused code |
 +|---|---|---|---|---|---|---|
-+| JavaScript | cucumber-js | `tsc --noEmit --allowJs` | biome | c8 | `jsdoc -X` | knip |
-+| TypeScript | cucumber-js through tsx | `tsc --noEmit` | biome | c8 | ast-grep, rule from `templates.md` | knip |
-+| Python | pytest with pytest-bdd, run through uv | mypy | ruff | coverage.py | ast-grep, rule from `templates.md` | vulture |
-+| Rust | `cargo test --test cucumber` | `cargo check --all-targets` | clippy and `cargo fmt --check` | `cargo llvm-cov` | ast-grep, rule from `templates.md` | cargo-machete |
++| JavaScript | `npx cucumber-js --tags "not @captain and not @shipwright"` | `tsc --noEmit --allowJs` | biome | c8 | `jsdoc -X` | knip |
++| TypeScript | `NODE_OPTIONS="--import tsx" npx cucumber-js --tags "not @captain and not @shipwright"` | `tsc --noEmit` | biome | c8 | ast-grep, rule from `templates.md` | knip |
++| Python | `uv run pytest -m "not captain and not shipwright"` | mypy | ruff | coverage.py | ast-grep, rule from `templates.md` | vulture |
++| Rust | `CUCUMBER_FILTER_TAGS="not @captain and not @shipwright" cargo test --test cucumber` | `cargo check --all-targets` | clippy and `cargo fmt --check` | `cargo llvm-cov` | ast-grep, rule from `templates.md` | cargo-machete |
++
++Each runner cell carries this project's tag exclusions already, so a part built from it excludes
++skeletons and condemned scenarios by construction.
 +
 +The Gherkin linter is gplint on every stack, run through npx, with the rule file copied from
 +`templates.md`.
 +
-+**2. Write one task-runner entry per method**, named `ss:<method>`, in the runner this stack uses:
-+npm scripts in `package.json`, Poe tasks in `pyproject.toml`, aliases in `.cargo/config.toml`, or a
-+Just recipe. Each entry's body is one Yoink plan:
++**2. Write one task-runner entry per method**, named `ss:<method>`, in the runner this stack uses, and
++write the value that invokes it exactly as this stack invokes it:
++
++| Runner | entry lives in | the value `RIGGING.md` carries |
++|---|---|---|
++| npm | `package.json` scripts | `npm run ss:<method> --silent` |
++| Poe the Poet | `pyproject.toml` under `[tool.poe.tasks]`, as a TOML literal string | `uv run poe ss:<method>` |
++| Cargo | `.cargo/config.toml` under `[alias]` | `cargo ss-<method>` |
++| Just | `justfile` | `just ss-<method>` |
++
++Run the value once from the project root to confirm it resolves there: a value naming a program that
++lives only inside an environment manager, such as `poe` outside `uv run`, resolves for the fit and
++for nobody else. Each entry's body is one Yoink plan:
 +
 +```sh
 +npx @dk/yoink --max-bytes 200000 --run '<first part>' --label <name> --timeout <seconds> --run '<next part>' --label <name> --timeout <seconds>
@@ -759,7 +772,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
  
  #### Tiers and weather
  
-@@ -98,25 +200,34 @@
+@@ -98,25 +213,34 @@
  #### Gates and coverage
  
  - Quality gates: derive `lint` and `typecheck` from the tooling the project already runs, and record a gap for the Captain where the project runs none, naming stack-native candidates in the gap, such as biome or eslint for lint and tsc for typecheck on a TypeScript stack, so Captain's resolution proposes rather than asks. Prefer tooling native to the project's stack; a gate imported from another ecosystem for its popularity is weight, not fit. Name the command; the project owns the tool.
@@ -799,7 +812,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
  1. Load the `shipshape` skill (`shipshape:shipshape` under the plugin channel).
  2. **Retrieve the rigging and the deck. One pass.** Nothing here depends on anything else here:
  
-@@ -124,25 +235,25 @@
+@@ -124,25 +248,25 @@
     cat RIGGING.md && cat AGENTS.md && git status
     ```
  
@@ -832,7 +845,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
  11. Refresh the golden captures. Harbour is the cadence the Verification agreement names, and a canned response stands only while it still matches what the real dependency returns. For each `@exceptional-double` justified as a golden capture, re-record the response from the real dependency and compare it against the stored capture: a capture that still matches is refreshed by that act, and one that differs is drift, so restore the capture from the recording and report any scenario whose expectation the new response changes. A capture is not judged current by its age or by eye, per the check-precedence rule: it is judged by the recording. Where the real dependency cannot be reached at harbour, report it as a Captain blocker naming the double, because an unrefreshable capture is a fake by the same agreement's terms.
  12. Complete the full inventory. Do not stop until every module in scope has been analysed and all `@shipwright`-condemned scenarios and code have been processed.
  13. Confirm harbour left nothing unproven. Planks and `@captain` skeletons change nothing executable and need no rerun. Condemnation batches carry their scoped proofs from step 10, which stand as the proof for the removals that followed step 4. Step 4's full regression is harbour's one full-suite run, and the only full regression Shipshape runs; do not rerun it.
-@@ -156,6 +267,7 @@
+@@ -156,6 +280,7 @@
  - modules analysed,
  - `@captain` scenarios written, total and by finding type,
  - the two required `@conformance` methodology skeletons, each named with its feature file and scenario, watchbill-shape conformance and perturbation-quiescence, both owed on every fitting-out,
