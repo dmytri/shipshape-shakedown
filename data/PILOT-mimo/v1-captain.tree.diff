@@ -1,0 +1,283 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..6ab2b39
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,13 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
++
++## Voyage 1 — TodoMVC
++
++- Product: vanilla JS TodoMVC app per `assets/app-spec.md`
++- Base template: `assets/app-template.index.html`
++- Persistence: localStorage key `todos-vanillajs`
++- Routing: hash-based `#/`, `#/active`, `#/completed`
++- Tier: @logic (no browser needed; happy-dom covers DOM assertions)
+diff --git a/features/todo-crud.feature b/features/todo-crud.feature
+new file mode 100644
+index 0000000..0f90fac
+--- /dev/null
++++ b/features/todo-crud.feature
+@@ -0,0 +1,97 @@
++Feature: Todo CRUD operations
++  As a user
++  I want to add, edit, and remove todos
++  So that I can manage my task list
++
++  Rule: Adding todos
++
++    Scenario: Pressing Enter adds a todo to the list
++      Given the app is open
++      When the user types "Buy milk" in the new todo input and presses Enter
++      Then the todo list contains 1 item
++      And the todo at position 1 has title "Buy milk"
++      And the todo at position 1 is not completed
++      And the new todo input is empty
++
++    Scenario: Whitespace-only input is rejected
++      Given the app is open
++      When the user types "   " in the new todo input and presses Enter
++      Then the todo list contains 0 items
++
++    Scenario: Input is trimmed before creating a todo
++      Given the app is open
++      When the user types "  Buy milk  " in the new todo input and presses Enter
++      Then the todo at position 1 has title "Buy milk"
++
++  Rule: Completing todos
++
++    Scenario: Clicking the checkbox marks a todo as completed
++      Given the app has a todo "Buy milk"
++      When the user clicks the checkbox on todo "Buy milk"
++      Then the todo "Buy milk" is completed
++      And the todo list shows 0 items left
++
++    Scenario: Unchecking a completed todo makes it active
++      Given the app has a completed todo "Buy milk"
++      When the user clicks the checkbox on todo "Buy milk"
++      Then the todo "Buy milk" is not completed
++      And the todo list shows 1 item left
++
++  Rule: Editing todos
++
++    Scenario: Double-clicking a todo label activates edit mode
++      Given the app has a todo "Buy milk"
++      When the user double-clicks the label of todo "Buy milk"
++      Then the todo "Buy milk" is in editing mode
++      And the edit input for todo "Buy milk" contains "Buy milk"
++      And the edit input for todo "Buy milk" is focused
++
++    Scenario: Pressing Enter while editing saves the new title
++      Given the app has a todo "Buy milk"
++      And the todo "Buy milk" is in editing mode
++      When the user types "Buy eggs" in the edit input and presses Enter
++      Then the todo at position 1 has title "Buy eggs"
++      And the todo "Buy eggs" is not in editing mode
++
++    Scenario: Blurring the edit input saves the new title
++      Given the app has a todo "Buy milk"
++      And the todo "Buy milk" is in editing mode
++      When the user types "Buy eggs" in the edit input and blurs
++      Then the todo at position 1 has title "Buy eggs"
++
++    Scenario: Editing to an empty string removes the todo
++      Given the app has a todo "Buy milk"
++      And the todo "Buy milk" is in editing mode
++      When the user clears the edit input and presses Enter
++      Then the todo list contains 0 items
++
++    Scenario: Pressing Escape discards edit changes
++      Given the app has a todo "Buy milk"
++      And the todo "Buy milk" is in editing mode
++      When the user types "Buy eggs" in the edit input and presses Escape
++      Then the todo at position 1 has title "Buy milk"
++      And the todo "Buy milk" is not in editing mode
++
++  Rule: Removing todos
++
++    Scenario: Clicking destroy button removes a todo
++      Given the app has a todo "Buy milk"
++      When the user clicks the destroy button on todo "Buy milk"
++      Then the todo list contains 0 items
++
++  Rule: Clear completed button
++
++    Scenario: Clear completed removes all completed todos
++      Given the app has a completed todo "Buy milk"
++      And the app has a todo "Buy eggs"
++      When the user clicks the Clear completed button
++      Then the todo list contains 1 item
++      And the todo at position 1 has title "Buy eggs"
++
++    Scenario: Clear completed button is hidden when no todos are completed
++      Given the app has a todo "Buy milk"
++      Then the Clear completed button is hidden
++
++    Scenario: Clear completed button is visible when todos are completed
++      Given the app has a completed todo "Buy milk"
++      Then the Clear completed button is visible
+diff --git a/features/todo-empty-state.feature b/features/todo-empty-state.feature
+new file mode 100644
+index 0000000..95db321
+--- /dev/null
++++ b/features/todo-empty-state.feature
+@@ -0,0 +1,16 @@
++Feature: Todo empty state
++  As a user visiting the TodoMVC app
++  I want to see a clean initial state
++  So that I understand how to begin adding todos
++
++  Rule: Empty app shows no todo list or footer
++
++    Scenario: Main section and footer are hidden when no todos exist
++      Given the app has no todos
++      Then the main section is hidden
++      And the footer is hidden
++
++    Scenario: New todo input is visible and focused on load
++      Given the app has no todos
++      Then the new todo input is visible
++      And the new todo input is focused
+diff --git a/features/todo-persistence-and-routing.feature b/features/todo-persistence-and-routing.feature
+new file mode 100644
+index 0000000..438e796
+--- /dev/null
++++ b/features/todo-persistence-and-routing.feature
+@@ -0,0 +1,72 @@
++Feature: Todo persistence and routing
++  As a user
++  I want my todos to persist across page reloads and to filter by status
++  So that I can track my tasks over time and focus on what matters
++
++  Rule: LocalStorage persistence
++
++    Scenario: Todos survive page reload
++      Given the app has a todo "Buy milk"
++      And the app has a completed todo "Buy eggs"
++      When the page is reloaded
++      Then the todo list contains 2 items
++      And the todo "Buy milk" is not completed
++      And the todo "Buy eggs" is completed
++
++    Scenario: Completed state survives page reload
++      Given the app has a completed todo "Buy milk"
++      When the page is reloaded
++      Then the todo "Buy milk" is completed
++
++  Rule: Active items counter
++
++    Scenario: Counter shows number of active items
++      Given the app has a todo "Buy milk"
++      And the app has a completed todo "Buy eggs"
++      Then the todo list shows 1 item left
++
++    Scenario: Counter uses plural form for multiple items
++      Given the app has a todo "Buy milk"
++      And the app has a todo "Buy eggs"
++      Then the todo list shows 2 items left
++
++    Scenario: Counter uses zero plural form
++      Given the app has a completed todo "Buy milk"
++      Then the todo list shows 0 items left
++
++  Rule: Route filtering
++
++    Scenario: All route shows all todos
++      Given the app has a todo "Buy milk"
++      And the app has a completed todo "Buy eggs"
++      When the user navigates to "#/"
++      Then the todo list contains 2 items
++      And the "All" filter is selected
++
++    Scenario: Active route shows only active todos
++      Given the app has a todo "Buy milk"
++      And the app has a completed todo "Buy eggs"
++      When the user navigates to "#/active"
++      Then the todo list contains 1 item
++      And the todo at position 1 has title "Buy milk"
++      And the "Active" filter is selected
++
++    Scenario: Completed route shows only completed todos
++      Given the app has a todo "Buy milk"
++      And the app has a completed todo "Buy eggs"
++      When the user navigates to "#/completed"
++      Then the todo list contains 1 item
++      And the todo at position 1 has title "Buy eggs"
++      And the "Completed" filter is selected
++
++    Scenario: Completing a todo hides it from the Active route
++      Given the user navigates to "#/active"
++      And the app has a todo "Buy milk"
++      When the user clicks the checkbox on todo "Buy milk"
++      Then the todo list contains 0 items
++
++    Scenario: Uncompleting a todo hides it from the Completed route
++      Given the user navigates to "#/completed"
++      And the app has a completed todo "Buy milk"
++      When the user clicks the checkbox on todo "Buy milk"
++      Then the todo list contains 0 items
+diff --git a/features/todo-toggle-all.feature b/features/todo-toggle-all.feature
+new file mode 100644
+index 0000000..4a4e689
+--- /dev/null
++++ b/features/todo-toggle-all.feature
+@@ -0,0 +1,35 @@
++Feature: Toggle all todos
++  As a user
++  I want to mark all todos as complete or active at once
++  So that I can batch-manage my task list
++
++  Rule: Mark all as complete
++
++    Scenario: Toggle-all checks all todos when activated
++      Given the app has a todo "Buy milk"
++      And the app has a todo "Buy eggs"
++      When the user clicks the toggle-all checkbox
++      Then the todo "Buy milk" is completed
++      And the todo "Buy eggs" is completed
++      And the toggle-all checkbox is checked
++
++    Scenario: Toggle-all unchecks all todos when deactivated
++      Given the app has a completed todo "Buy milk"
++      And the app has a completed todo "Buy eggs"
++      When the user clicks the toggle-all checkbox
++      Then the todo "Buy milk" is not completed
++      And the todo "Buy eggs" is not completed
++      And the toggle-all checkbox is not checked
++
++  Rule: Toggle-all reflects individual todo state
++
++    Scenario: Toggle-all becomes checked when all todos are individually checked
++      Given the app has a completed todo "Buy milk"
++      And the app has a completed todo "Buy eggs"
++      Then the toggle-all checkbox is checked
++
++    Scenario: Toggle-all becomes unchecked when a todo is unchecked
++      Given the app has a completed todo "Buy milk"
++      And the app has a completed todo "Buy eggs"
++      When the user clicks the checkbox on todo "Buy milk"
++      Then the toggle-all checkbox is not checked
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..c617020
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,14 @@
++{
++  "watches": [
++    {
++      "id": "w1",
++      "label": "implement-todomvc",
++      "targets": [
++        "features/todo-empty-state.feature",
++        "features/todo-crud.feature",
++        "features/todo-toggle-all.feature",
++        "features/todo-persistence-and-routing.feature"
++      ]
++    }
++  ]
++}

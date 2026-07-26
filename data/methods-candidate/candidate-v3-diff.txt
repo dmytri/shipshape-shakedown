@@ -156,7 +156,7 @@ diff -ru experiments/yoink-settle/skills/boatswain/SKILL.md experiments/methods-
 +- next role/blocker.
 diff -ru experiments/yoink-settle/skills/captain/SKILL.md experiments/methods-candidate/skills/captain/SKILL.md
 --- experiments/yoink-settle/skills/captain/SKILL.md	2026-07-24 06:40:41.252197510 +0000
-+++ experiments/methods-candidate/skills/captain/SKILL.md	2026-07-26 17:35:23.411642659 +0000
++++ experiments/methods-candidate/skills/captain/SKILL.md	2026-07-26 18:07:00.728273939 +0000
 @@ -51,55 +51,69 @@
  - If Boatswain reports passing verification, clean working tree, and local commit, summarize and offer outbound options. Outbound ships on the voyage's own focused and enumeration evidence. Captain never orders a full regression: it is a harbour action and harbour is its only trigger, per the Verification policy. Where a whole sweep before shipping is wanted, the route is harbour, which pairs the run with coverage triage and the economy audit; offer harbour, not a bare rerun.
  - Outbound actions such as push, PR, publish, release, and deploy require a clean Boatswain report and explicit user approval, nothing else. Credentials and environment are assumed fitted, never pre-checked, per the Verification policy: run the target's `ship` command from `RIGGING.md` under `## Outbound`, and an observed authentication failure is a fitting-out blocker resolved by refit. Then run that target's `verify` line against the live artifact and read the answer from that output, per the Outbound verification policy: shipping reports that the command exited, not that the artifact a user consumes is good, and an artifact judged good by eye is unchecked. Where the project policy states that local verification is sufficient, that statement is the check and no live verification is owed. Report what `verify` returned. Outbound runs in the human-facing main session per the Outbound verification policy; a Captain spawned as a subagent reports outbound options and performs none.
@@ -174,7 +174,7 @@ diff -ru experiments/yoink-settle/skills/captain/SKILL.md experiments/methods-ca
 -  - Where a feature lint and a code lint are both confirmed they share the one `lint` slot as a chained command, feature lint first, so one gate reddens on either fault and the shape grows no second key.
 -  - The tag exclusions ride every verification command however it is recomposed: weaving an environment prefix or a runner option never drops `--tags "not @captain and not @shipwright"`.
 +  - A confirmed tool installs at bootstrap and becomes a part of every method whose job it serves, but only where the tool's own CLI yields the invocation; a library with no CLI is never glue-scripted, and the methods that would have carried it name the gap. A part the stack itself answers, such as a type checker on a TypeScript stack, is offered rather than silently dropped, and a value the user states in the bootstrap conversation is a discovered value: writing `none` over what the user just said discards the discovery the fast path exists to capture.
-+  - Derive and register every method the Methods section names, per the Shipwright skill's Methods derivation notes, and write each derived tool's config with it. Prove each method by running it before writing `RIGGING.md`.
++  - Derive and register every method the Methods section names, per the Shipwright skill's Methods derivation notes, and write each derived tool's config with it. Prove each method by running it, then write `RIGGING.md` once, complete: a role that arrives mid-bootstrap finds either the rigging it expects or a named blocker, never a half-written file. A later fit or refit repairs this bootstrap rather than replacing it, and leaves every value Captain tuned with the user alone.
 +  - The feature lint is `spec-lint`, Captain's own gate at write time, and the code lint is a part of the hygiene methods, so each gate sits in the method whose job it serves. gplint is the default feature lint on any stack without a well-maintained one of its own, and the bootstrap writes its rule file with the method, since gplint fails without one. Write the maximal rule set, every rule that encodes a Scenario-writing agreement requirement, each at error; Captain tunes a rule that gets in the way rather than dropping the file.
 +  - On a repository with no commits, commit the initial state first, Captain's own bootstrap action, with harness-install artifacts ignored or folded in. Install the harness, the rigging's own dependencies included, and confirm the runner executes before writing minimal `RIGGING.md`; then author specs and the watchbill and dispatch QM. The first voyage sails without methodology checks; the first harbour completes fitting out before its inventory.
 +  - Voyage 1 verifies at the cheapest tier sufficient to observe the specified behaviour. A real-browser tier is adopted only when the user names it or a specified behaviour cannot be observed below it, and then as a named decision recorded in `RIGGING.md`. Where the product renders a DOM the candidates are named cheapest first, as the toolchain offer names its own: happy-dom, then jsdom, then a real-browser tier. A tier chosen by forecast is a tier no method has tested.
@@ -529,8 +529,8 @@ diff -ru experiments/yoink-settle/skills/shipshape/SKILL.md experiments/methods-
  
 diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods-candidate/skills/shipwright/SKILL.md
 --- experiments/yoink-settle/skills/shipwright/SKILL.md	2026-07-25 13:45:47.464641515 +0000
-+++ experiments/methods-candidate/skills/shipwright/SKILL.md	2026-07-26 17:34:16.654741488 +0000
-@@ -36,38 +36,57 @@
++++ experiments/methods-candidate/skills/shipwright/SKILL.md	2026-07-26 18:07:00.692273490 +0000
+@@ -36,38 +36,82 @@
  
  ## Discovery tools
  
@@ -586,8 +586,33 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
 +| 3 | Derive a method per job the Methods section names, register each plan in the project's own task runner, and write the invocation as the value | `## Methods`, and the task-runner entries behind it |
 +| 4 | Write each derived tool's config the methods need, such as the Gherkin lint rule file and a structural query's rule file | the tool configs, without which a method fails on its config rather than on the code |
 +| 5 | Prove every derived method by running it | the proof that no value is a claim |
-+| 6 | Write `RIGGING.md` and `AGENTS.md` from `templates.md`, and append the README block without overwriting | the durable configuration |
++| 6 | Write `RIGGING.md` and `AGENTS.md` ONCE, after the derivation is complete in hand, from `templates.md`, and append the README block without overwriting | the durable configuration, never read mid-write |
 +| 7 | Write the derived search-exclusion artifact and the verification-conformance rule set | the derived artifacts |
++
++### Refit
++
++A refit is this same derivation run again against the current repository. It repairs; it does not
++rebuild. Both passes are smooth because a role that arrives mid-fit, or after one, finds either the
++rigging it expects or a named blocker, never a half-written file.
++
++| The refit finds | It does |
++|---|---|
++| A method correct and executing | Leaves it byte-identical. An unchanged value is not rewritten, so no diff appears where nothing moved |
++| A method missing, or a job the Methods section names with no value at all | Derives it, registers its entry, writes its value |
++| A method whose entry is gone, whose config is missing, or which no longer executes | Repairs the entry or the config and proves it again |
++| A method whose stack tooling has been replaced | Rederives it from what the project now runs, and names the change in the report |
++| A value another role owns: a lint rule file Captain tuned, a dependency Captain selected, the perturbation message | Leaves it. A refit never reverts a tuning to its default |
++| A required value it cannot derive | Writes every value it can and raises one Captain blocker naming the value, so the rigging is usable and the gap is legible |
++
++Registration is by name, never by addition: a refit replaces the entry a method already has and adds
++no second one, so a task runner cannot accumulate two entries for one method. Write the rigging once,
++after the derivation is complete in hand, so no role reads a file mid-write. Prove every method the
++refit touched by running it, and leave every method it did not touch alone: a proof spent on an
++unchanged method buys nothing.
++
++Report the fit as a ledger, one line per method, each marked unchanged, repaired, added, or `none`
++with its reason. A human reading that ledger sees exactly what moved, and a role reading it knows
++whether its own method changed under it.
 +
 +Where the stack has no Gherkin runner, `prove`, `verify`, `sweep`, `discovery` and `plank-join` are
 +underivable: raise a Captain blocker naming the runner as a dependency decision for Captain and the
@@ -611,7 +636,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
  - `## Perturbation`: the stable `message` and project-specific `perturb` statement. The `message` MUST contain the literal token `PERTURBATION` so a role can detect a live perturbation in the tree.
  - `## Tiers`: the `default` tier tag, any `sandbox` tier tag, one `policy` line per tier naming that tier's credential source or provisioning policy, such as the custodian CLI or the variable name, never a secret value or a check command, an optional `budget` wall-clock ceiling for the full regression with tier-suffixed variants such as `budget-sandbox` per tier, enforced by the derived budget check under Methodology checks, an optional `weather` path naming the wake's weather record so the next run finds it, and an optional `runrecord` path naming the wake's voyage run record per the Transient output policy.
  - `## Dependencies`: the dependency `policy` and one `dependency` line per selected or installed name. Recording routes with installation: the fitting role writes a line for each dependency the fit installs, the runner and the quality tooling included, so `none` stands only where nothing is installed.
-@@ -75,13 +94,78 @@
+@@ -75,13 +119,78 @@
  
  ### Derivation notes
  
@@ -696,7 +721,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
  
  #### Tiers and weather
  
-@@ -98,25 +182,34 @@
+@@ -98,25 +207,34 @@
  #### Gates and coverage
  
  - Quality gates: derive `lint` and `typecheck` from the tooling the project already runs, and record a gap for the Captain where the project runs none, naming stack-native candidates in the gap, such as biome or eslint for lint and tsc for typecheck on a TypeScript stack, so Captain's resolution proposes rather than asks. Prefer tooling native to the project's stack; a gate imported from another ecosystem for its popularity is weight, not fit. Name the command; the project owns the tool.
@@ -736,7 +761,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
  1. Load the `shipshape` skill (`shipshape:shipshape` under the plugin channel).
  2. **Retrieve the rigging and the deck. One pass.** Nothing here depends on anything else here:
  
-@@ -124,25 +217,25 @@
+@@ -124,25 +242,25 @@
     cat RIGGING.md && cat AGENTS.md && git status
     ```
  
@@ -769,7 +794,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
  11. Refresh the golden captures. Harbour is the cadence the Verification agreement names, and a canned response stands only while it still matches what the real dependency returns. For each `@exceptional-double` justified as a golden capture, re-record the response from the real dependency and compare it against the stored capture: a capture that still matches is refreshed by that act, and one that differs is drift, so restore the capture from the recording and report any scenario whose expectation the new response changes. A capture is not judged current by its age or by eye, per the check-precedence rule: it is judged by the recording. Where the real dependency cannot be reached at harbour, report it as a Captain blocker naming the double, because an unrefreshable capture is a fake by the same agreement's terms.
  12. Complete the full inventory. Do not stop until every module in scope has been analysed and all `@shipwright`-condemned scenarios and code have been processed.
  13. Confirm harbour left nothing unproven. Planks and `@captain` skeletons change nothing executable and need no rerun. Condemnation batches carry their scoped proofs from step 10, which stand as the proof for the removals that followed step 4. Step 4's full regression is harbour's one full-suite run, and the only full regression Shipshape runs; do not rerun it.
-@@ -156,6 +249,7 @@
+@@ -156,6 +274,7 @@
  - modules analysed,
  - `@captain` scenarios written, total and by finding type,
  - the two required `@conformance` methodology skeletons, each named with its feature file and scenario, watchbill-shape conformance and perturbation-quiescence, both owed on every fitting-out,

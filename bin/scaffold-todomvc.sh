@@ -52,6 +52,20 @@ printf 'node_modules\n' > .gitignore
 if [ -n "${RIGGING_TEMPLATE:-}" ]; then
   [ -f "$RIGGING_TEMPLATE" ] || { echo "SCAFFOLD: RIGGING_TEMPLATE not found: $RIGGING_TEMPLATE"; exit 1; }
   cp "$RIGGING_TEMPLATE" RIGGING.md
+  # A registered rigging invokes task-runner entries, so the entries and the tool configs they need
+  # ship with it: a method whose entry or config is missing fails on that, not on the code.
+  if grep -q 'npm run ss:' RIGGING.md; then
+    python3 - package.json "$HERE/assets/methods/todomvc.json" <<'PYX'
+import json, sys
+pkg = json.load(open(sys.argv[1])); pkg.setdefault("scripts", {}).update(json.load(open(sys.argv[2])))
+json.dump(pkg, open(sys.argv[1], "w"), indent=2)
+PYX
+    mkdir -p .shipshape
+    cp "$HERE/assets/methods/planks-typescript.yml" .shipshape/planks.yml
+    sed -i 's/language: typescript/language: javascript/' .shipshape/planks.yml
+    cp "$HERE/assets/gplintrc-default.json" .gplintrc
+    printf '{\n  "files": { "includes": ["js/**", "features/**"] },\n  "linter": { "enabled": true }\n}\n' > biome.json
+  fi
   echo "scaffold-todomvc: fitted out with vendored rigging $(basename "$RIGGING_TEMPLATE")"
 fi
 
