@@ -1,0 +1,407 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..71efbb1
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,24 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
++
++## Voyage 1 Intent
++
++Build a vanilla-JavaScript TodoMVC app per the TodoMVC spec at `assets/app-spec.md`. Use the base markup from `assets/app-template.index.html`. No preprocessors. Persist to localStorage under the key `todos-vanillajs`.
++
++## Key Decisions
++
++- **localStorage key**: `todos-vanillajs` per spec guidance.
++- **Routing**: hash-based (`#/`, `#/active`, `#/completed`) using `window.addEventListener('hashchange', ...)`. No external routing library required for this scope.
++- **IDs**: `Date.now()` is sufficient for unique IDs in a single-user local app. No UUID library needed.
++- **Step definitions**: will use happy-dom to render the app markup into a DOM for step definitions, so scenarios exercise real DOM events against real markup.
++
++## Specs Written
++
++10 feature files covering: creating, completing, toggle-all, editing, deleting, clear-completed, counter, visibility, routing, persistence.
++
++## Blockers
++
++None.
+diff --git a/features/clear-completed.feature b/features/clear-completed.feature
+new file mode 100644
+index 0000000..4d6a122
+--- /dev/null
++++ b/features/clear-completed.feature
+@@ -0,0 +1,19 @@
++Feature: Clear completed
++  As a user
++  I want to remove all completed todos at once
++  So that my list only shows active tasks
++
++  Background:
++    Given the TodoMVC app is loaded
++
++  Scenario: Clear completed removes all completed todos
++    Given the user has added a completed todo "Buy groceries"
++    And the user has added a todo "Walk the dog"
++    When the user clicks the Clear completed button
++    Then the todo list does not contain "Buy groceries"
++    And the todo list contains "Walk the dog"
++    And the todo count shows 1 item left
++
++  Scenario: Clear completed is hidden when no todos are completed
++    Given the user has added a todo "Buy groceries"
++    Then the Clear completed button is hidden
+diff --git a/features/completing-todos.feature b/features/completing-todos.feature
+new file mode 100644
+index 0000000..71e1130
+--- /dev/null
++++ b/features/completing-todos.feature
+@@ -0,0 +1,23 @@
++Feature: Completing todos
++  As a user
++  I want to mark todos as complete
++  So that I can track which tasks are done
++
++  Background:
++    Given the TodoMVC app is loaded
++
++  Scenario: Clicking the checkbox completes a todo
++    Given the user has added a todo "Buy groceries"
++    When the user clicks the checkbox on "Buy groceries"
++    Then the todo "Buy groceries" is completed
++    And the todo count shows 0 items left
++
++  Scenario: Unchecking a completed todo makes it active
++    Given the user has added a completed todo "Buy groceries"
++    When the user clicks the checkbox on "Buy groceries"
++    Then the todo "Buy groceries" is not completed
++    And the todo count shows 1 item left
++
++  Scenario: Completed todos are styled differently
++    Given the user has added a completed todo "Buy groceries"
++    Then the todo "Buy groceries" has the completed class
+diff --git a/features/counter.feature b/features/counter.feature
+new file mode 100644
+index 0000000..1f94a20
+--- /dev/null
++++ b/features/counter.feature
+@@ -0,0 +1,30 @@
++Feature: Active todo counter
++  As a user
++  I want to see how many todos remain
++  So that I know my progress
++
++  Background:
++    Given the TodoMVC app is loaded
++
++  Scenario: Counter shows zero with no todos
++    Then the todo count shows 0 items left
++
++  Scenario: Counter shows singular for one item
++    Given the user has added a todo "Buy groceries"
++    Then the todo count shows 1 item left
++
++  Scenario: Counter shows plural for multiple items
++    Given the user has added a todo "Buy groceries"
++    And the user has added a todo "Walk the dog"
++    Then the todo count shows 2 items left
++
++  Scenario: Counter decrements when a todo is completed
++    Given the user has added a todo "Buy groceries"
++    And the user has added a todo "Walk the dog"
++    When the user clicks the checkbox on "Buy groceries"
++    Then the todo count shows 1 item left
++
++  Scenario: Counter increments when a completed todo is unchecked
++    Given the user has added a completed todo "Buy groceries"
++    When the user clicks the checkbox on "Buy groceries"
++    Then the todo count shows 1 item left
+diff --git a/features/creating-todos.feature b/features/creating-todos.feature
+new file mode 100644
+index 0000000..8616bb6
+--- /dev/null
++++ b/features/creating-todos.feature
+@@ -0,0 +1,32 @@
++Feature: Creating todos
++  As a user
++  I want to add new todos
++  So that I can track tasks I need to complete
++
++  Background:
++    Given the TodoMVC app is loaded
++
++  Scenario: A new todo is added when pressing Enter
++    When the user types "Buy groceries" in the new todo input and presses Enter
++    Then the todo list contains "Buy groceries"
++    And the new todo input is empty
++    And the todo count shows 1 item left
++
++  Scenario: Empty input is ignored
++    When the user presses Enter with an empty input
++    Then the todo list is empty
++
++  Scenario: Whitespace-only input is ignored
++    When the user types "   " in the new todo input and presses Enter
++    Then the todo list is empty
++
++  Scenario: Multiple todos can be added
++    When the user types "Buy groceries" in the new todo input and presses Enter
++    And the user types "Walk the dog" in the new todo input and presses Enter
++    Then the todo list contains "Buy groceries"
++    And the todo list contains "Walk the dog"
++    And the todo count shows 2 items left
++
++  Scenario: Input is trimmed before creating a todo
++    When the user types "  Buy groceries  " in the new todo input and presses Enter
++    Then the todo list contains "Buy groceries"
+diff --git a/features/deleting-todos.feature b/features/deleting-todos.feature
+new file mode 100644
+index 0000000..341ae4e
+--- /dev/null
++++ b/features/deleting-todos.feature
+@@ -0,0 +1,13 @@
++Feature: Deleting todos
++  As a user
++  I want to remove todos I no longer need
++  So that my list stays clean and relevant
++
++  Background:
++    Given the TodoMVC app is loaded
++
++  Scenario: Clicking the destroy button removes a todo
++    Given the user has added a todo "Buy groceries"
++    When the user clicks the destroy button on "Buy groceries"
++    Then the todo "Buy groceries" is removed
++    And the todo count shows 0 items left
+diff --git a/features/editing-todos.feature b/features/editing-todos.feature
+new file mode 100644
+index 0000000..10a9ba8
+--- /dev/null
++++ b/features/editing-todos.feature
+@@ -0,0 +1,40 @@
++Feature: Editing todos
++  As a user
++  I want to edit existing todos
++  So that I can correct mistakes or update tasks
++
++  Background:
++    Given the TodoMVC app is loaded
++
++  Scenario: Double-clicking a todo activates editing mode
++    Given the user has added a todo "Buy groceries"
++    When the user double-clicks on "Buy groceries"
++    Then the todo "Buy groceries" is in editing mode
++    And the edit input contains "Buy groceries"
++
++  Scenario: Editing a todo and pressing Enter saves changes
++    Given the user has added a todo "Buy groceries"
++    When the user double-clicks on "Buy groceries"
++    And the user types "Buy food" in the edit input and presses Enter
++    Then the todo list contains "Buy food"
++    And the todo list does not contain "Buy groceries"
++
++  Scenario: Editing a todo and pressing Escape discards changes
++    Given the user has added a todo "Buy groceries"
++    When the user double-clicks on "Buy groceries"
++    And the user types "Buy food" in the edit input and presses Escape
++    Then the todo list contains "Buy groceries"
++    And the todo list does not contain "Buy food"
++
++  Scenario: Empty edit saves and trims input
++    Given the user has added a todo "Buy groceries"
++    When the user double-clicks on "Buy groceries"
++    And the user clears the edit input and presses Enter
++    Then the todo "Buy groceries" is removed
++
++  Scenario: Editing a todo and clicking elsewhere saves changes
++    Given the user has added a todo "Buy groceries"
++    When the user double-clicks on "Buy groceries"
++    And the user types "Buy food" in the edit input
++    And the user clicks outside the todo
++    Then the todo list contains "Buy food"
+diff --git a/features/persistence.feature b/features/persistence.feature
+new file mode 100644
+index 0000000..3624ae1
+--- /dev/null
++++ b/features/persistence.feature
+@@ -0,0 +1,21 @@
++Feature: Persistence
++  As a user
++  I want my todos saved across page reloads
++  So that I do not lose my work
++
++  Background:
++    Given the TodoMVC app is loaded
++
++  Scenario: Todos persist after page reload
++    Given the user has added a todo "Buy groceries"
++    And the user has added a completed todo "Walk the dog"
++    When the page is reloaded
++    Then the todo list contains "Buy groceries"
++    And the todo list contains "Walk the dog"
++    And the todo "Buy groceries" is not completed
++    And the todo "Walk the dog" is completed
++
++  Scenario: The active filter persists after page reload
++    When the user navigates to "#/completed"
++    And the page is reloaded
++    Then the "Completed" filter is selected
+diff --git a/features/routing.feature b/features/routing.feature
+new file mode 100644
+index 0000000..e3e60f9
+--- /dev/null
++++ b/features/routing.feature
+@@ -0,0 +1,51 @@
++Feature: Routing
++  As a user
++  I want to filter my todo list by status
++  So that I can focus on active or completed todos
++
++  Background:
++    Given the TodoMVC app is loaded
++
++  Scenario: Default route shows all todos
++    Given the user has added a todo "Buy groceries"
++    And the user has added a completed todo "Walk the dog"
++    When the user navigates to "#/"
++    Then the todo "Buy groceries" is visible
++    And the todo "Walk the dog" is visible
++    And the "All" filter is selected
++
++  Scenario: Active route shows only active todos
++    Given the user has added a todo "Buy groceries"
++    And the user has added a completed todo "Walk the dog"
++    When the user navigates to "#/active"
++    Then the todo "Buy groceries" is visible
++    And the todo "Walk the dog" is not visible
++    And the "Active" filter is selected
++
++  Scenario: Completed route shows only completed todos
++    Given the user has added a todo "Buy groceries"
++    And the user has added a completed todo "Walk the dog"
++    When the user navigates to "#/completed"
++    Then the todo "Buy groceries" is not visible
++    And the todo "Walk the dog" is visible
++    And the "Completed" filter is selected
++
++  Scenario: Completing a todo in active filter hides it
++    Given the user navigates to "#/active"
++    And the user has added a todo "Buy groceries"
++    When the user clicks the checkbox on "Buy groceries"
++    Then the todo "Buy groceries" is not visible
++
++  Scenario: Unchecking a todo in completed filter hides it
++    Given the user navigates to "#/completed"
++    And the user has added a completed todo "Buy groceries"
++    When the user clicks the checkbox on "Buy groceries"
++    Then the todo "Buy groceries" is not visible
++
++  Scenario: Clearing completed while in active filter removes completed todos from model
++    Given the user has added a completed todo "Walk the dog"
++    And the user has added a todo "Buy groceries"
++    When the user navigates to "#/active"
++    And the user clicks the Clear completed button
++    Then the todo "Walk the dog" is not visible
++    And the todo "Buy groceries" is visible
+diff --git a/features/toggle-all.feature b/features/toggle-all.feature
+new file mode 100644
+index 0000000..d086ed6
+--- /dev/null
++++ b/features/toggle-all.feature
+@@ -0,0 +1,29 @@
++Feature: Toggle all todos
++  As a user
++  I want to mark all todos as complete at once
++  So that I can quickly complete multiple tasks
++
++  Background:
++    Given the TodoMVC app is loaded
++
++  Scenario: Clicking toggle-all marks all todos as complete
++    Given the user has added a todo "Buy groceries"
++    And the user has added a todo "Walk the dog"
++    When the user clicks the toggle-all checkbox
++    Then all todos are completed
++    And the todo count shows 0 items left
++    And the toggle-all checkbox is checked
++
++  Scenario: Clicking toggle-all when all are complete marks all as active
++    Given the user has added a completed todo "Buy groceries"
++    And the user has added a completed todo "Walk the dog"
++    When the user clicks the toggle-all checkbox
++    Then no todos are completed
++    And the todo count shows 2 items left
++    And the toggle-all checkbox is unchecked
++
++  Scenario: Toggle-all reflects the state of individual todos
++    Given the user has added a todo "Buy groceries"
++    And the user has added a todo "Walk the dog"
++    When the user clicks the checkbox on "Buy groceries"
++    Then the toggle-all checkbox is unchecked
+diff --git a/features/visibility.feature b/features/visibility.feature
+new file mode 100644
+index 0000000..27abb1f
+--- /dev/null
++++ b/features/visibility.feature
+@@ -0,0 +1,22 @@
++Feature: Main section and footer visibility
++  As a user
++  I want the main section and footer hidden when there are no todos
++  So that I see a clean interface
++
++  Background:
++    Given the TodoMVC app is loaded
++
++  Scenario: Main and footer are hidden when no todos exist
++    Then the main section is hidden
++    And the footer is hidden
++
++  Scenario: Main and footer appear when a todo is added
++    When the user types "Buy groceries" in the new todo input and presses Enter
++    Then the main section is visible
++    And the footer is visible
++
++  Scenario: Main and footer hide when the last todo is deleted
++    Given the user has added a todo "Buy groceries"
++    When the user clicks the destroy button on "Buy groceries"
++    Then the main section is hidden
++    And the footer is hidden
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..01c2cfc
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,31 @@
++{
++  "voyage": 1,
++  "base": "HEAD",
++  "watches": [
++    {
++      "name": "core-functionality",
++      "targets": [
++        "features/creating-todos.feature",
++        "features/completing-todos.feature",
++        "features/deleting-todos.feature",
++        "features/counter.feature",
++        "features/visibility.feature"
++      ]
++    },
++    {
++      "name": "advanced-functionality",
++      "targets": [
++        "features/toggle-all.feature",
++        "features/editing-todos.feature",
++        "features/clear-completed.feature"
++      ]
++    },
++    {
++      "name": "persistence-and-routing",
++      "targets": [
++        "features/routing.feature",
++        "features/persistence.feature"
++      ]
++    }
++  ]
++}

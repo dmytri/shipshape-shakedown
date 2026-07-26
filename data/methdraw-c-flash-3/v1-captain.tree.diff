@@ -1,0 +1,337 @@
+diff --git a/features/todo-editing.feature b/features/todo-editing.feature
+new file mode 100644
+index 0000000..9a9d8ad
+--- /dev/null
++++ b/features/todo-editing.feature
+@@ -0,0 +1,53 @@
++Feature: Todo item editing
++  As a user
++  I want to edit existing todo items
++  So that I can update my task descriptions
++
++  Background:
++    Given the app has loaded
++    And a todo with title "Buy groceries" exists
++
++  Scenario: User enters edit mode by double-clicking a todo label
++    When the user double-clicks the label for "Buy groceries"
++    Then the todo item "Buy groceries" has class "editing"
++    And the edit input is visible and focused
++    And the edit input contains "Buy groceries"
++
++  Scenario: User saves an edit by pressing Enter
++    When the user double-clicks the label for "Buy groceries"
++    And the user types "Buy organic groceries" into the edit input
++    And presses Enter
++    Then the todo item "Buy groceries" is updated to "Buy organic groceries"
++    And the todo item "Buy groceries" does not have class "editing"
++
++  Scenario: User saves an edit by blurring the input
++    When the user double-clicks the label for "Buy groceries"
++    And the user types "Buy organic groceries" into the edit input
++    And the edit input loses focus
++    Then the todo item "Buy groceries" is updated to "Buy organic groceries"
++    And the todo item "Buy groceries" does not have class "editing"
++
++  Scenario: User discards an edit by pressing Escape
++    When the user double-clicks the label for "Buy groceries"
++    And the user types "Buy organic groceries" into the edit input
++    And presses Escape
++    Then the todo item title remains "Buy groceries"
++    And the todo item "Buy groceries" does not have class "editing"
++
++  Scenario: User clears an item by editing to empty text
++    When the user double-clicks the label for "Buy groceries"
++    And the user clears the edit input
++    And presses Enter
++    Then the todo list does not contain "Buy groceries"
++
++  Scenario: User clears an item by editing to whitespace-only text
++    When the user double-clicks the label for "Buy groceries"
++    And the user types "   " into the edit input
++    And presses Enter
++    Then the todo list does not contain "Buy groceries"
++
++  Scenario: Todo title is trimmed on save
++    When the user double-clicks the label for "Buy groceries"
++    And the user types "  Buy organic groceries  " into the edit input
++    And presses Enter
++    Then the todo item "Buy groceries" is updated to "Buy organic groceries"
+\ No newline at end of file
+diff --git a/features/todo-management.feature b/features/todo-management.feature
+new file mode 100644
+index 0000000..e84efe5
+--- /dev/null
++++ b/features/todo-management.feature
+@@ -0,0 +1,58 @@
++Feature: Todo item management
++  As a user
++  I want to add, view, and track todo items
++  So that I can manage my task list
++
++  Background:
++    Given the app is loaded fresh
++
++  Scenario: App shows input field and hides main and footer when there are no todos
++    Given the app has loaded
++    Then the new-todo input field is visible
++    And the main section is not visible
++    And the footer is not visible
++
++  Scenario: User adds a new todo by pressing Enter
++    Given the app has loaded
++    When the user types "Buy groceries" into the new-todo input
++    And presses Enter
++    Then the todo list contains 1 item
++    And the new-todo input is cleared
++    And the main section is visible
++    And the footer is visible
++
++  Scenario: User adds a todo with whitespace-only text
++    Given the app has loaded
++    When the user types "   " into the new-todo input
++    And presses Enter
++    Then the todo list is empty
++
++  Scenario: User adds a todo with trimmed text
++    Given the app has loaded
++    When the user types "  Buy groceries  " into the new-todo input
++    And presses Enter
++    Then the todo list contains 1 item with title "Buy groceries"
++
++  Scenario: Counter shows the number of active todos with correct pluralization
++    Given the app has loaded
++    When the user adds 1 active todo with title "Item one"
++    Then the todo-count shows "1 item left"
++    When the user adds 1 active todo with title "Item two"
++    Then the todo-count shows "2 items left"
++    When the user marks "Item one" as completed
++    Then the todo-count shows "1 item left"
++
++  Scenario: Clear completed button removes all completed todos
++    Given the app has loaded
++    When the user adds 2 active todos with titles "Task A" and "Task B"
++    And the user marks "Task A" as completed
++    Then the clear-completed button is visible
++    When the user clicks the clear-completed button
++    Then the todo list contains 1 item
++    And the todo list does not contain "Task A"
++    And the clear-completed button is not visible
++
++  Scenario: Clear completed button is hidden when there are no completed todos
++    Given the app has loaded
++    When the user adds 1 active todo with title "Only task"
++    Then the clear-completed button is not visible
+\ No newline at end of file
+diff --git a/features/todo-persistence.feature b/features/todo-persistence.feature
+new file mode 100644
+index 0000000..8076e79
+--- /dev/null
++++ b/features/todo-persistence.feature
+@@ -0,0 +1,39 @@
++Feature: Todo persistence
++  As a user
++  I want my todos to persist across page reloads
++  So that I do not lose my task list
++
++  Background:
++    Given the app is loaded fresh
++
++  Scenario: Todos are saved to localStorage
++    Given the app has loaded
++    When the user adds 1 active todo with title "Buy groceries"
++    Then localStorage contains a key matching "todos-"
++    And the stored value includes an item with title "Buy groceries"
++    And the stored value includes an item with id
++    And the stored item with title "Buy groceries" has completed set to false
++
++  Scenario: Completed state is persisted to localStorage
++    Given the app has loaded
++    When the user adds 1 active todo with title "Buy groceries"
++    And the user marks "Buy groceries" as completed
++    Then the stored item with title "Buy groceries" has completed set to true
++
++  Scenario: Todos are restored from localStorage on page load
++    Given that localStorage contains a saved todo with title "Buy groceries" that is not completed
++    When the page is reloaded
++    Then the todo list contains 1 item with title "Buy groceries"
++    And the todo item "Buy groceries" does not have class "completed"
++
++  Scenario: Editing state is not persisted
++    Given the app has loaded
++    When the user adds 1 active todo with title "Buy groceries"
++    And the user double-clicks the label for "Buy groceries"
++    And the page is reloaded immediately
++    Then the todo item "Buy groceries" does not have class "editing"
++
++  Scenario: Todos use correct data format
++    Given the app has loaded
++    When the user adds 1 active todo with title "Buy groceries"
++    Then the stored todo has keys "id", "title", and "completed"
+\ No newline at end of file
+diff --git a/features/todo-routing.feature b/features/todo-routing.feature
+new file mode 100644
+index 0000000..560e744
+--- /dev/null
++++ b/features/todo-routing.feature
+@@ -0,0 +1,39 @@
++Feature: Todo routing and filtering
++  As a user
++  I want to filter todos by completion status
++  So that I can focus on active or completed items
++
++  Background:
++    Given the app has loaded
++    When the user adds 3 active todos with titles "Alpha", "Beta", and "Gamma"
++    And the user marks "Beta" as completed
++
++  Scenario: Default route shows all todos
++    Given the app is at the default route "#/"
++    Then the todo list shows 3 items
++    And the "All" filter link has class "selected"
++
++  Scenario: Active route shows only active todos
++    When the user navigates to "#/active"
++    Then the todo list shows 2 items
++    And the "Active" filter link has class "selected"
++    And the displayed items are "Alpha" and "Gamma"
++
++  Scenario: Completed route shows only completed todos
++    When the user navigates to "#/completed"
++    Then the todo list shows 1 item
++    And the "Completed" filter link has class "selected"
++    And the displayed items are "Beta"
++
++  Scenario: Filter selection is persisted on reload
++    When the user navigates to "#/active"
++    And the page is reloaded
++    Then the "Active" filter link has class "selected"
++    And the todo list shows 2 items
++
++  Scenario: Toggling an item in a filtered view hides it
++    When the user navigates to "#/active"
++    Then the todo list shows 2 items
++    When the user marks "Alpha" as completed
++    Then the todo list shows 1 item
++    And the displayed items are "Gamma"
+\ No newline at end of file
+diff --git a/features/todo-toggling.feature b/features/todo-toggling.feature
+new file mode 100644
+index 0000000..c3e3b8b
+--- /dev/null
++++ b/features/todo-toggling.feature
+@@ -0,0 +1,43 @@
++Feature: Todo item toggling
++  As a user
++  I want to mark todos as complete or incomplete
++  So that I can track my progress
++
++  Background:
++    Given the app has loaded
++
++  Scenario: User marks a todo as completed by clicking its checkbox
++    Given the app has loaded
++    When the user adds 1 active todo with title "Buy groceries"
++    And the user clicks the toggle checkbox for "Buy groceries"
++    Then the todo item "Buy groceries" has class "completed"
++    And the todo item "Buy groceries" shows as checked
++
++  Scenario: Mark all as complete checkbox toggles all todos
++    Given the app has loaded
++    When the user adds 3 active todos with titles "A", "B", and "C"
++    And the user clicks the toggle-all checkbox
++    Then every todo item has class "completed"
++    And the toggle-all checkbox is checked
++
++  Scenario: Mark all as complete checkbox reflects individual toggles
++    Given the app has loaded
++    When the user adds 3 active todos with titles "A", "B", and "C"
++    And the user clicks the toggle checkbox for "A"
++    And the user clicks the toggle checkbox for "B"
++    And the user clicks the toggle checkbox for "C"
++    Then the toggle-all checkbox is checked
++
++  Scenario: Toggle-all checkbox is unchecked when not all todos are completed
++    Given the app has loaded
++    When the user adds 3 active todos with titles "A", "B", and "C"
++    And the user clicks the toggle checkbox for "A"
++    Then the toggle-all checkbox is not checked
++
++  Scenario: Clear completed resets toggle-all checkbox state
++    Given the app has loaded
++    When the user adds 3 active todos with titles "A", "B", and "C"
++    And the user clicks the toggle-all checkbox
++    And the user clicks the clear-completed button
++    Then the todo list is empty
++    And the toggle-all checkbox is not checked
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..bb15345
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,63 @@
++{
++  "watches": [
++    {
++      "name": "todo-management-basics",
++      "scenarios": [
++        "features/todo-management.feature:App shows input field and hides main and footer when there are no todos",
++        "features/todo-management.feature:User adds a new todo by pressing Enter",
++        "features/todo-management.feature:User adds a todo with whitespace-only text",
++        "features/todo-management.feature:User adds a todo with trimmed text"
++      ]
++    },
++    {
++      "name": "todo-management-counters",
++      "scenarios": [
++        "features/todo-management.feature:Counter shows the number of active todos with correct pluralization",
++        "features/todo-management.feature:Clear completed button removes all completed todos",
++        "features/todo-management.feature:Clear completed button is hidden when there are no completed todos"
++      ]
++    },
++    {
++      "name": "todo-toggling",
++      "scenarios": [
++        "features/todo-toggling.feature:User marks a todo as completed by clicking its checkbox",
++        "features/todo-toggling.feature:Mark all as complete checkbox toggles all todos",
++        "features/todo-toggling.feature:Mark all as complete checkbox reflects individual toggles",
++        "features/todo-toggling.feature:Toggle-all checkbox is unchecked when not all todos are completed",
++        "features/todo-toggling.feature:Clear completed resets toggle-all checkbox state"
++      ]
++    },
++    {
++      "name": "todo-editing",
++      "scenarios": [
++        "features/todo-editing.feature:User enters edit mode by double-clicking a todo label",
++        "features/todo-editing.feature:User saves an edit by pressing Enter",
++        "features/todo-editing.feature:User saves an edit by blurring the input",
++        "features/todo-editing.feature:User discards an edit by pressing Escape",
++        "features/todo-editing.feature:User clears an item by editing to empty text",
++        "features/todo-editing.feature:User clears an item by editing to whitespace-only text",
++        "features/todo-editing.feature:Todo title is trimmed on save"
++      ]
++    },
++    {
++      "name": "todo-persistence",
++      "scenarios": [
++        "features/todo-persistence.feature:Todos are saved to localStorage",
++        "features/todo-persistence.feature:Completed state is persisted to localStorage",
++        "features/todo-persistence.feature:Todos are restored from localStorage on page load",
++        "features/todo-persistence.feature:Editing state is not persisted",
++        "features/todo-persistence.feature:Todos use correct data format"
++      ]
++    },
++    {
++      "name": "todo-routing",
++      "scenarios": [
++        "features/todo-routing.feature:Default route shows all todos",
++        "features/todo-routing.feature:Active route shows only active todos",
++        "features/todo-routing.feature:Completed route shows only completed todos",
++        "features/todo-routing.feature:Filter selection is persisted on reload",
++        "features/todo-routing.feature:Toggling an item in a filtered view hides it"
++      ]
++    }
++  ]
++}
+\ No newline at end of file

@@ -1,0 +1,86 @@
+diff --git a/js/app.js b/js/app.js
+index f2edbce..317d972 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -94,26 +94,63 @@
+     main.hidden = !hasTodos;
+     footer.hidden = !hasTodos;
+ 
+-    // Render todo list
+-    todoList.innerHTML = '';
+-    filtered.forEach(function (todo) {
+-      var li = document.createElement('li');
+-      if (todo.completed) li.classList.add('completed');
+-      if (todo.id === editingId) li.classList.add('editing');
+-
+-      li.setAttribute('data-id', todo.id);
+-
+-      li.innerHTML =
+-        '<div class="view">' +
+-          '<input class="toggle" type="checkbox" ' + (todo.completed ? 'checked' : '') + '>' +
+-          '<label>' + escapeHtml(todo.title) + '</label>' +
+-          '<button class="destroy"></button>' +
+-        '</div>' +
+-        '<input class="edit" value="' + escapeHtml(todo.title) + '">';
+-
+-      todoList.appendChild(li);
++    // Build a map of existing li elements by data-id for DOM identity preservation
++    var existingMap = {};
++    var currentChildren = Array.prototype.slice.call(todoList.children);
++    currentChildren.forEach(function (li) {
++      var id = li.getAttribute('data-id');
++      if (id) existingMap[id] = li;
+     });
+ 
++    // Track which ids are in the filtered set
++    var newIds = {};
++    filtered.forEach(function (todo) { newIds[todo.id] = true; });
++
++    // Remove items that should no longer be shown
++    currentChildren.forEach(function (li) {
++      var id = li.getAttribute('data-id');
++      if (id && !newIds[id]) {
++        todoList.removeChild(li);
++        delete existingMap[id];
++      }
++    });
++
++    // Reconcile the list: reuse existing li or create new, and reorder in place
++    var refNode = null;
++    for (var i = filtered.length - 1; i >= 0; i--) {
++      var todo = filtered[i];
++      var li = existingMap[todo.id];
++      if (li) {
++        // Update existing li in place — preserves DOM identity
++        li.classList.toggle('completed', todo.completed);
++        li.classList.toggle('editing', todo.id === editingId);
++        var checkbox = li.querySelector('.toggle');
++        if (checkbox) checkbox.checked = todo.completed;
++        var label = li.querySelector('label');
++        if (label) label.textContent = todo.title;
++        var editInput = li.querySelector('.edit');
++        if (editInput) editInput.value = todo.title;
++        // Move to correct position (insertBefore with null appends)
++        todoList.insertBefore(li, refNode);
++      } else {
++        // Create new li
++        li = document.createElement('li');
++        if (todo.completed) li.classList.add('completed');
++        if (todo.id === editingId) li.classList.add('editing');
++        li.setAttribute('data-id', todo.id);
++        li.innerHTML =
++          '<div class="view">' +
++            '<input class="toggle" type="checkbox" ' + (todo.completed ? 'checked' : '') + '>' +
++            '<label>' + escapeHtml(todo.title) + '</label>' +
++            '<button class="destroy"></button>' +
++          '</div>' +
++          '<input class="edit" value="' + escapeHtml(todo.title) + '">';
++        todoList.insertBefore(li, refNode);
++        existingMap[todo.id] = li;
++      }
++      refNode = li;
++    }
++
+     // Update count
+     var itemWord = activeCount === 1 ? 'item' : 'items';
+     todoCount.innerHTML = '<strong>' + activeCount + '</strong> ' + itemWord + ' left';

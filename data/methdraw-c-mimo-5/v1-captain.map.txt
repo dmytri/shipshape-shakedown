@@ -1,0 +1,19 @@
+# banked: 2026-07-26T13:25:49Z
+# verdict: PENDING
+# leg: {  "name": "v1-captain",  "model": "xiaomi/mimo-v2.5",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/methdraw-c-mimo-5/sim",  "timeout_s": 1200,  "skills": [    "/home/exedev/shipshape-shakedown/experiments/methods-candidate/skills/shipshape",    "/home/exedev/shipshape-shakedown/experiments/methods-candidate/skills/captain"  ]}
+
+
+=== v1-captain.session.jsonl ===
+  turns=8  wall=43.8s  in=31991  out=5537  cache_read=140288  cost=$0.0064
+  role reads: captain@t0 -> shipshape@t1
+  roles loaded: captain, shipshape
+  ~ repeated tool signature at turns [1] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    1475/167      512 $0.0003  read, read, read
+    t1    7720/391     1984 $0.0012  read, bash, bash
+    t2   13356/358     9664 $0.0020  bash
+    t3     428/514    22976 $0.0003  bash
+    t4     571/2551   23360 $0.0009  write, write, write, write, write, write, write, write, write
+    t5    2992/107    23872 $0.0005  bash
+    t6    4312/1024   26816 $0.0010  write, write
+    t7    1137/425    31104 $0.0004  -

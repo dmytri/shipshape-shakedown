@@ -141,6 +141,66 @@ directions, with a 157-call control outlier doing most of the work). Batch 2 add
 | control | methflash-b1 | 24 → 26 → 26 → 26 → 26 | 5 (stopped) | flat under contaminated correction voyages; Captain wrote production on 2/2 |
 | candidate | methflash-c1 | 0 (no page) → 23 | in progress | rescued by the `page`-intent fallback fix |
 
+### 3. The full 20-draw A/B (medians, so no single draw drives it)
+
+QM build leg, `bin/meth-ab.py`. `adopt` = draws running at least one composite as a real plan.
+
+| arm/model | n | adopt | PLAN med | JOIN med | foc1 med | focN med | shell calls med | **turns med** | cost med |
+|---|---|---|---|---|---|---|---|---|---|
+| candidate/mimo | 6 | **5/6** | 3.5 | **4.0** | 7.0 | 0.0 | 61.5 | **116** | $0.0565 |
+| control/mimo | 6 | 0/6 | 0.0 | 1.0 | 12.5 | 3.0 | 70.5 | **102** | $0.0487 |
+| candidate/flash | 4 | 2/4 | 0.5 | 2.0 | 7.0 | 4.0 | 70.0 | **109** | $0.1988 |
+| control/flash | 4 | 0/4 | 0.0 | 1.0 | 2.0 | 7.0 | 53.5 | **100** | $0.1859 |
+
+Per-draw plank joins, mimo: candidate `[0, 3, 4, 4, 5, 29]` vs control `[0, 1, 1, 1, 1, 2]`.
+Per-draw turns (both legs), mimo: candidate `[73, 97, 100, 132, 135, 149]` vs control
+`[66, 88, 96, 109, 132, 218]`.
+
 ## Verdict
 
-(to be filled — batch 2 pending)
+**The mechanism WORKS and the latency thesis is NOT earned. v1's real value is CONFORMANCE, not
+round-trips — the opposite sign from the plan's hypothesis, and the free baseline audit predicted
+exactly that before any leg ran.**
+
+1. **Composite methods are run verbatim from the rigging at the point of action — ESTABLISHED.**
+   5/6 mimo draws, 2/4 flash draws, 0/10 control draws (correct: no `## Methods` in their rigging).
+   The role substitutes `{scenario}` sensibly, including as a tier selector. This is the candidate's
+   central mechanical claim and it holds on the default model.
+2. **CONFORMANCE WIN, clean separation on mimo: the plank join runs ~4x per build leg against ~1x
+   for control (medians; distributions barely overlap), and every candidate join arrives in ONE
+   invocation.** This is the checkpoint the corpus showed was mostly never performed at all
+   (`step-usage` 0 runs across both banked mimo waves, plank join 0 in 5 of 8 waves). Naming it as a
+   composite makes the act happen — "make the form require the act", now with numbers.
+3. **LATENCY: NULL, trending slightly NEGATIVE. Do not sell this as a latency win.** Round-trips
+   (turns — dk's #1 latency proxy) are median 116 vs 102 on mimo and 109 vs 100 on flash, with
+   heavily overlapping ranges; cost is +16% (mimo) and +7% (flash). Shell calls do fall on mimo
+   (61.5 vs 70.5), but turns do not follow, and by this corpus's own rule a difference this size at
+   n=6 is not a result.
+4. **Why latency could not move, mechanistically:** the plan's premise was that a checkpoint costs N
+   calls that a bundle turns into 1. The baseline audit had already falsified that premise — the
+   hygiene cluster was not 4 calls, it was ~0, because the checkpoint was skipped. There was nothing
+   to collapse. Making the checkpoint happen correctly ADDS work, and the candidate also imposes two
+   new costs: a `yoink --help` discovery probe (3 of 6 adopting draws spent a round trip learning
+   the tool), and ROTE over-use — one mimo draw ran the composite **29 times**, using it as its
+   general-purpose command runner, the same "a concrete copyable example gets run rote" behaviour
+   CAPTAIN.md already records for yoink.
+5. **The fan-out lead survives and is NOT what this candidate fixed.** Candidate mimo draws do show
+   fewer single-scenario focused runs (median 7 vs 12.5), but the same draws also run more `broad`
+   whole-suite runs, so this is a route substitution, not a batching win. The real fan-out prize
+   (mimo2's 77 single-scenario runs) remains open.
+
+**RECOMMENDATION: do NOT ship v1 as a latency change. It is a candidate CONFORMANCE change with a
+small round-trip cost, and it owes a v2 before any ship decision:**
+- Kill the discovery probe: the composite's value should not require the role to learn a new tool.
+  Either specify the composite in a form the role already knows (a plain `&&` chain is one
+  invocation too and needs no bundler), or state in the rigging what the value returns. **A plain
+  chained composite would test the CONCEPT — named, fitting-out-fixed composition — without the
+  bundler's cost, and that is the cleaner v1.**
+- Bound rote use: one draw ran the composite 29 times. A composite is for a named checkpoint, not a
+  general runner.
+- The conformance claim is the one worth probing further, with repeat draws, because it is the one
+  the data supports.
+
+**Probe-first footing:** every claim above is behavioural and rests on 20 arm-matched draws with a
+control on the current text, rubric fixed before the legs reported (adoption = a plan actually run;
+collapse = the join in one call; latency = turns). Nothing was shipped to `~/shipshape`.

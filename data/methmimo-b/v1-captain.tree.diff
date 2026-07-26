@@ -1,0 +1,292 @@
+diff --git a/features/todomvc.feature b/features/todomvc.feature
+new file mode 100644
+index 0000000..cdbd40c
+--- /dev/null
++++ b/features/todomvc.feature
+@@ -0,0 +1,195 @@
++Feature: TodoMVC
++  As a user managing tasks
++  I want a single-page todo application
++  So that I can track, complete, and organise my work
++
++  Background:
++    Given the app is loaded
++
++  Scenario: No todos hides the main section and footer
++    Then the main section is not visible
++    And the footer is not visible
++
++  Scenario: Adding a new todo by pressing Enter
++    When the user types "Buy milk" in the new-todo input and presses Enter
++    Then the todo list contains 1 item
++    And the todo at position 1 has title "Buy milk"
++    And the todo at position 1 is not completed
++    And the new-todo input is empty
++
++  Scenario: Empty or whitespace input is not added
++    When the user types "   " in the new-todo input and presses Enter
++    Then the todo list contains 0 items
++
++  Scenario: The new-todo input is focused on load
++    Then the new-todo input has focus
++
++  Scenario: Mark all todos as complete
++    Given the user has added todos "Buy milk" and "Walk the dog"
++    When the user toggles the mark-all checkbox
++    Then the todo at position 1 is completed
++    And the todo at position 2 is completed
++    And the mark-all checkbox is checked
++
++  Scenario: Unmark all todos via mark-all checkbox
++    Given the user has added todos "Buy milk" and "Walk the dog"
++    When the user toggles the mark-all checkbox
++    And the user toggles the mark-all checkbox
++    Then the todo at position 1 is not completed
++    And the todo at position 2 is not completed
++    And the mark-all checkbox is not checked
++
++  Scenario: Mark-all reflects individual todo states
++    Given the user has added todos "Buy milk" and "Walk the dog"
++    When the user completes the todo at position 1
++    Then the mark-all checkbox is not checked
++    When the user completes the todo at position 2
++    Then the mark-all checkbox is checked
++
++  Scenario: Toggle a single todo complete
++    Given the user has added a todo "Buy milk"
++    When the user completes the todo at position 1
++    Then the todo at position 1 is completed
++
++  Scenario: Toggle a completed todo back to active
++    Given the user has added a todo "Buy milk"
++    When the user completes the todo at position 1
++    And the user completes the todo at position 1
++    Then the todo at position 1 is not completed
++
++  Scenario: Double-click enters editing mode
++    Given the user has added a todo "Buy milk"
++    When the user double-clicks the todo at position 1
++    Then the todo at position 1 is in editing mode
++    And the edit input at position 1 has value "Buy milk"
++
++  Scenario: Editing saves on Enter
++    Given the user has added a todo "Buy milk"
++    When the user double-clicks the todo at position 1
++    And the user types "Buy bread" in the edit input at position 1 and presses Enter
++    Then the todo at position 1 has title "Buy bread"
++    And the todo at position 1 is not in editing mode
++
++  Scenario: Editing saves on blur
++    Given the user has added a todo "Buy milk"
++    When the user double-clicks the todo at position 1
++    And the user types "Buy bread" in the edit input at position 1 and blurs
++    Then the todo at position 1 has title "Buy bread"
++    And the todo at position 1 is not in editing mode
++
++  Scenario: Editing discards on Escape
++    Given the user has added a todo "Buy milk"
++    When the user double-clicks the todo at position 1
++    And the user types "Buy bread" in the edit input at position 1 and presses Escape
++    Then the todo at position 1 has title "Buy milk"
++    And the todo at position 1 is not in editing mode
++
++  Scenario: Editing with empty input destroys the todo
++    Given the user has added a todo "Buy milk"
++    When the user double-clicks the todo at position 1
++    And the user clears the edit input at position 1 and presses Enter
++    Then the todo list contains 0 items
++
++  Scenario: Editing with whitespace-only input destroys the todo
++    Given the user has added a todo "Buy milk"
++    When the user double-clicks the todo at position 1
++    And the user types "   " in the edit input at position 1 and presses Enter
++    Then the todo list contains 0 items
++
++  Scenario: Editing trims the input value
++    Given the user has added a todo "Buy milk"
++    When the user double-clicks the todo at position 1
++    And the user types "  Buy bread  " in the edit input at position 1 and presses Enter
++    Then the todo at position 1 has title "Buy bread"
++
++  Scenario: Remove a todo by clicking its destroy button
++    Given the user has added todos "Buy milk" and "Walk the dog"
++    When the user clicks the destroy button on the todo at position 1
++    Then the todo list contains 1 item
++    And the todo at position 1 has title "Walk the dog"
++
++  Scenario: Counter shows correct count for active todos
++    Given the user has added todos "Buy milk" and "Walk the dog" and "Call dentist"
++    When the user completes the todo at position 1
++    Then the counter shows "2 items left"
++
++  Scenario: Counter pluralizes correctly for one item
++    Given the user has added a todo "Buy milk"
++    Then the counter shows "1 item left"
++
++  Scenario: Counter pluralizes correctly for zero items
++    Given the user has added todos "Buy milk" and "Walk the dog"
++    When the user completes the todo at position 1
++    And the user completes the todo at position 2
++    Then the counter shows "0 items left"
++
++  Scenario: Clear completed button removes completed todos
++    Given the user has added todos "Buy milk" and "Walk the dog"
++    When the user completes the todo at position 1
++    And the user clicks the clear-completed button
++    Then the todo list contains 1 item
++    And the todo at position 1 has title "Walk the dog"
++
++  Scenario: Clear completed button is hidden when no todos are completed
++    Given the user has added a todo "Buy milk"
++    Then the clear-completed button is not visible
++
++  Scenario: Clear completed button is visible when todos are completed
++    Given the user has added a todo "Buy milk"
++    When the user completes the todo at position 1
++    Then the clear-completed button is visible
++
++  Scenario: Filter shows all todos
++    Given the user has added todos "Buy milk" and "Walk the dog"
++    When the user completes the todo at position 1
++    And the user navigates to the "All" filter
++    Then the todo list contains 2 items
++
++  Scenario: Filter shows only active todos
++    Given the user has added todos "Buy milk" and "Walk the dog"
++    When the user completes the todo at position 1
++    And the user navigates to the "Active" filter
++    Then the todo list contains 1 item
++    And the todo at position 1 has title "Walk the dog"
++
++  Scenario: Filter shows only completed todos
++    Given the user has added todos "Buy milk" and "Walk the dog"
++    When the user completes the todo at position 1
++    And the user navigates to the "Completed" filter
++    Then the todo list contains 1 item
++    And the todo at position 1 has title "Buy milk"
++
++  Scenario: Active filter link is selected when viewing active todos
++    When the user navigates to the "Active" filter
++    Then the "Active" filter link is selected
++    And the "All" filter link is not selected
++    And the "Completed" filter link is not selected
++
++  Scenario: Completing a todo while on Active filter hides it immediately
++    Given the user has added todos "Buy milk" and "Walk the dog"
++    When the user navigates to the "Active" filter
++    And the user completes the todo at position 1
++    Then the todo list contains 1 item
++
++  Scenario: Completing a todo while on Completed filter shows it immediately
++    Given the user has added todos "Buy milk" and "Walk the dog"
++    When the user navigates to the "Completed" filter
++    When the user completes the todo at position 1
++    Then the todo list contains 1 item
++    And the todo at position 1 has title "Buy milk"
++
++  Scenario: Todos persist to localStorage
++    Given the user has added todos "Buy milk" and "Walk the dog"
++    When the user completes the todo at position 1
++    And the app is reloaded
++    Then the todo list contains 2 items
++    And the todo at position 1 has title "Buy milk"
++    And the todo at position 1 is completed
++    And the todo at position 2 has title "Walk the dog"
++    And the todo at position 2 is not completed
++
++  Scenario: Active filter persists across reload
++    Given the user has added a todo "Buy milk"
++    When the user navigates to the "Active" filter
++    And the app is reloaded
++    Then the "Active" filter link is selected
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..537dada
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,85 @@
++{
++  "watches": [
++    {
++      "name": "core-visibility",
++      "targets": [
++        "features/todomvc.feature:No todos hides the main section and footer"
++      ]
++    },
++    {
++      "name": "add-todo",
++      "targets": [
++        "features/todomvc.feature:Adding a new todo by pressing Enter",
++        "features/todomvc.feature:Empty or whitespace input is not added",
++        "features/todomvc.feature:The new-todo input is focused on load"
++      ]
++    },
++    {
++      "name": "toggle-all",
++      "targets": [
++        "features/todomvc.feature:Mark all todos as complete",
++        "features/todomvc.feature:Unmark all todos via mark-all checkbox",
++        "features/todomvc.feature:Mark-all reflects individual todo states"
++      ]
++    },
++    {
++      "name": "toggle-single",
++      "targets": [
++        "features/todomvc.feature:Toggle a single todo complete",
++        "features/todomvc.feature:Toggle a completed todo back to active"
++      ]
++    },
++    {
++      "name": "editing",
++      "targets": [
++        "features/todomvc.feature:Double-click enters editing mode",
++        "features/todomvc.feature:Editing saves on Enter",
++        "features/todomvc.feature:Editing saves on blur",
++        "features/todomvc.feature:Editing discards on Escape",
++        "features/todomvc.feature:Editing with empty input destroys the todo",
++        "features/todomvc.feature:Editing with whitespace-only input destroys the todo",
++        "features/todomvc.feature:Editing trims the input value"
++      ]
++    },
++    {
++      "name": "destroy",
++      "targets": [
++        "features/todomvc.feature:Remove a todo by clicking its destroy button"
++      ]
++    },
++    {
++      "name": "counter",
++      "targets": [
++        "features/todomvc.feature:Counter shows correct count for active todos",
++        "features/todomvc.feature:Counter pluralizes correctly for one item",
++        "features/todomvc.feature:Counter pluralizes correctly for zero items"
++      ]
++    },
++    {
++      "name": "clear-completed",
++      "targets": [
++        "features/todomvc.feature:Clear completed button removes completed todos",
++        "features/todomvc.feature:Clear completed button is hidden when no todos are completed",
++        "features/todomvc.feature:Clear completed button is visible when todos are completed"
++      ]
++    },
++    {
++      "name": "routing",
++      "targets": [
++        "features/todomvc.feature:Filter shows all todos",
++        "features/todomvc.feature:Filter shows only active todos",
++        "features/todomvc.feature:Filter shows only completed todos",
++        "features/todomvc.feature:Active filter link is selected when viewing active todos",
++        "features/todomvc.feature:Completing a todo while on Active filter hides it immediately",
++        "features/todomvc.feature:Completing a todo while on Completed filter shows it immediately"
++      ]
++    },
++    {
++      "name": "persistence",
++      "targets": [
++        "features/todomvc.feature:Todos persist to localStorage",
++        "features/todomvc.feature:Active filter persists across reload"
++      ]
++    }
++  ]
++}
