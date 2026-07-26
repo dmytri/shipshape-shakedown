@@ -1,0 +1,18 @@
+# banked: 2026-07-26T12:58:28Z
+# verdict: PENDING
+# leg: {  "name": "v3-qm",  "model": "deepseek/deepseek-v4-flash",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/methflash-b1/sim",  "timeout_s": 900,  "skills": [    "/home/exedev/shipshape-shakedown/experiments/yoink-settle/skills/shipshape",    "/home/exedev/shipshape-shakedown/experiments/yoink-settle/skills/qm",    "/home/exedev/shipshape-shakedown/experiments/yoink-settle/skills/crew",    "/home/exedev/shipshape-shakedown/experiments/yoink-settle/skills/boatswain"  ]}
+
+
+=== v3-qm.session.jsonl ===
+  turns=7  wall=27.3s  in=64791  out=2774  cache_read=98560  cost=$0.0084
+  role reads: qm@t0 -> shipshape@t0
+  roles loaded: qm, shipshape
+  ~ repeated tool signature at turns [1] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    2430/243        0 $0.0003  read, read, read
+    t1   17055/311        0 $0.0017  read, bash
+    t2   25866/652        0 $0.0025  bash
+    t3   10389/290    16896 $0.0013  read, read, read, read
+    t4    2503/483    27136 $0.0008  bash
+    t5    1493/430    28672 $0.0008  read, read
+    t6    5055/365    25856 $0.0010  -

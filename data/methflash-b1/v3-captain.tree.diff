@@ -1,0 +1,47 @@
+diff --git a/js/app.js b/js/app.js
+index fdef94c..6de91cc 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -86,22 +86,32 @@
+       return t;
+     });
+     this.save();
+-    // Update DOM in-place to preserve element identity across the interaction
++    var todo = todos.find(function (t) { return t.id === id; });
++    // Update DOM in-place to preserve element identity across the interaction,
++    // unless the item would be hidden by the current filter.
+     var todoList = document.querySelector('.todo-list');
+     var li = todoList ? todoList.querySelector('li[data-id="' + id + '"]') : null;
+     if (li) {
+-      var todo = todos.find(function (t) { return t.id === id; });
+-      if (todo.completed) {
+-        li.classList.add('completed');
++      // Check if the item is still visible under the current filter
++      var stillVisible = (filter === 'all' ||
++        (filter === 'active' && !todo.completed) ||
++        (filter === 'completed' && todo.completed));
++      if (stillVisible) {
++        if (todo.completed) {
++          li.classList.add('completed');
++        } else {
++          li.classList.remove('completed');
++        }
++        var checkbox = li.querySelector('.toggle');
++        if (checkbox) {
++          checkbox.checked = todo.completed;
++        }
+       } else {
+-        li.classList.remove('completed');
+-      }
+-      var checkbox = li.querySelector('.toggle');
+-      if (checkbox) {
+-        checkbox.checked = todo.completed;
++        // Item is hidden by filter — remove its element from the DOM
++        li.parentNode.removeChild(li);
+       }
+     }
+-    this.render();
++    this.renderUI();
+   };
+ 
+   /**
