@@ -29,6 +29,7 @@ Procedure lives in the skills. Every role reads this on open.
 - discovery: `npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js --dry-run --tags "not @captain and not @shipwright"' --label discovery --timeout 300`
 - regression: `npx @dk/yoink --max-bytes 200000 --run 'npx c8 npx cucumber-js --tags "not @captain and not @shipwright"' --label coverage --timeout 900`
 - condemnation: `npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js {scenario} --tags "not @captain and not @shipwright"' --label prove --timeout 900`
+- dead-code: `npx @dk/yoink --max-bytes 200000 --run 'npx knip --no-exit-code' --label dead-code --timeout 300`
 - spec-lint: none
 - install: `npx @dk/yoink --max-bytes 200000 --run 'npm install --save-dev {dependency}' --label install --timeout 600`
 - ship: none

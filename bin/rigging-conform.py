@@ -13,7 +13,7 @@ import re
 import sys
 
 METHODS = ["prove", "verify", "sweep", "plank-join", "hygiene", "static", "discovery",
-           "regression", "condemnation", "spec-lint", "install", "ship", "ship-verify"]
+           "regression", "condemnation", "dead-code", "spec-lint", "install", "ship", "ship-verify"]
 TAKES_SCENARIO = {"prove", "verify", "condemnation"}
 TAKES_DEPENDENCY = {"install"}
 # Methods whose parts run verification and therefore carry the tag exclusions.
