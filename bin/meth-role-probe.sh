@@ -114,14 +114,11 @@ JSON
     cat > "$BASE/task.md" <<EOF
 You are the Shipshape Quartermaster. Project root: $SIM. Base commit: $BASE_COMMIT.
 
-You operate without a subagent spawn tool: where your role would dispatch another role, assume that
-role in place by reading its skill and following it.
-
 Proceed now without waiting for confirmation. Do not push or tag.
 EOF
     ;;
   crew)
-    ( cd "$SIM" && git checkout -- src/tide.js features/support/steps.js 2>/dev/null )
+    ( cd "$SIM" && git checkout -- src/tide.js 2>/dev/null )
     python3 - "$SIM/src/tide.js" <<'PYX'
 import sys
 p=sys.argv[1]; s=open(p).read()
@@ -150,7 +147,7 @@ t0=$(date +%s)
   --skill "$SKILLS_DIR/shipshape" --skill "$SKILLS_DIR/$ROLE" \
   --task-file "$BASE/task.md" --name "$ROLE" --timeout-s "$TIMEOUT_S" >"$BASE/probe.leg.log" 2>&1
 rc=$?; t1=$(date +%s)
-say "PROBE LEG $((t1-t0))s rc=$rc"
+say "PROBE LEG $((t1-t0))s rc=$rc base=$BASE_COMMIT"
 "$HERE/bin/meth-use-audit.py" "$BASE" 2>&1 | tee -a "$LOG"
 say "PROBE END wave=$WAVE"
 echo PROBE-DONE

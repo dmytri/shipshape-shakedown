@@ -37,21 +37,31 @@ def suite(sim, nm):
 
 
 def role_of(base):
-    for r in ("boatswain", "qm", "crew"):
-        if glob.glob(os.path.join(base, f"{r}.out")):
-            return r
+    log = os.path.join(base, "probe.log")
+    if os.path.exists(log):
+        m = re.search(r"role=(\w+)", open(log, errors="replace").read())
+        if m:
+            return m.group(1)
     return "?"
 
 
-def audit(base, nm):
-    sim = os.path.join(base, "sim")
+def audit(base_dir, nm):
+    base = base_dir
+    sim = os.path.join(base_dir, "sim")
     if not os.path.isdir(sim):
-        print(f"=== {os.path.basename(base)}: no sim")
+        print(f"=== {os.path.basename(base_dir)}: no sim")
         return
-    role = role_of(base)
+    role = role_of(base_dir)
     commits = len(git(sim, "log", "--oneline").splitlines())
     dirty = git(sim, "status", "--porcelain")
-    changed = git(sim, "diff", "--name-only", "HEAD~1") if commits > 1 else ""
+    # Attribute changes to the ROLE, not to the deck: everything from the recorded base commit
+    # forward, committed or not. Diffing HEAD~1 counted the seeding commit as the role's work.
+    base = ""
+    log = os.path.join(base_dir, "probe.log")
+    if os.path.exists(log):
+        m = re.search(r"base=([0-9a-f]{7,40})", open(log, errors="replace").read())
+        base = m.group(1) if m else ""
+    changed = git(sim, "diff", "--name-only", base) if base else ""
     src = len([f for f in changed.splitlines() if f.startswith("src/")])
     spec = len([f for f in changed.splitlines() if f.endswith(".feature")])
     supp = len([f for f in changed.splitlines() if "support" in f or "step" in f])
@@ -66,7 +76,7 @@ def audit(base, nm):
         foul = "CREW WROTE SPECS/VERIFICATION"
     if role == "boatswain" and src > 0 and commits > 1:
         foul = ""  # boatswain commits the role-advanced diff; production in the commit is expected
-    print(f"=== {os.path.basename(base)} [{role}]  commits={commits} tree={'dirty' if dirty else 'clean'} "
+    print(f"=== {os.path.basename(base_dir)} [{role}]  commits={commits} tree={'dirty' if dirty else 'clean'} "
           f"suite: {ss} | production seam present={has_low} planks={planks} | {foul}")
 
 
