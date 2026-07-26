@@ -100,12 +100,18 @@ def score(path):
         derived += 1
         if not val.startswith("`"):
             viol.append(f"{name}: value not in backticks")
-        body = b if "yoink" in b else task_runner_body(sim, b)
+        body = b if "yoink" in b else (task_runner_body(sim, b) or b)
+        # SCORING ONLY, deliberately not doctrine (dk, 2026-07-26): a single-command method is
+        # accepted, since the wrapper separates parts and one part has nothing to separate from. The
+        # TEXT still states the plan flat, because naming the exception primes roles to take it.
+        # Two or more commands chained without a plan is still a violation: statuses collapse.
         if "yoink" not in body:
-            where = "the value" if "yoink" not in b else "its task-runner entry"
-            viol.append(f"{name}: no Yoink plan in {where} (a value that is not a Yoink plan is not a method)")
-            continue
-        b = body
+            chained = len(re.findall(r"&&|;\s*\S|\|\|", body))
+            if chained:
+                viol.append(f"{name}: {chained + 1} commands chained without a Yoink plan; their statuses collapse")
+            b = body
+        else:
+            b = body
         runs = len(re.findall(r"--run\b", b))
         labels = len(re.findall(r"--label\b", b))
         timeouts = len(re.findall(r"--timeout\b", b))

@@ -42,7 +42,9 @@ while IFS= read -r line; do
   # and requiring two scored every one of them as failed. A non-zero
   # exit is not failure per se: a part like plank-inventory greps and legitimately exits 1 on no
   # match, which is exactly why doctrine wants per-part status rather than one collapsed code.
-  if [ "$mrc" -lt 124 ] && [ -s "$out" ] && [ "${parts:-0}" -ge 1 ]; then
+  # A one-part method may be the bare tool invocation, so it emits no plan markers: a run that
+  # completed with output is a run, whether or not the bundle format appears.
+  if [ "$mrc" -lt 124 ] && [ -s "$out" ]; then
     ran=$((ran+1)); say "  $name: RAN ($parts parts legible, exit $mrc, $(wc -c <"$out") bytes)"
   else
     say "  $name: FAILED (exit $mrc, $parts parts, $(wc -c <"$out") bytes) -> $out"
