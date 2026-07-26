@@ -93,8 +93,54 @@ oracle clone / port / toolkit copy each.
 
 ## Results
 
-(to be filled)
+### 1. Adoption is real and near-total, and it needed the RIGHT instrument to see
+
+The first look was misleading. On the two full flash pilots the candidate QM ran **zero** composites
+— but that arm's build leg never took the focused route at all (it ran `broad` whole-suite runs),
+and its correction voyages barely reach a QM checkpoint, because under the current playbook Captain
+patches the app itself and QM opens to an empty watchbill (see the headline finding in
+`instrument-findings.md`). So the pilot is the wrong instrument for a per-checkpoint question.
+
+`bin/meth-draw.sh` is the right one: scaffold + Captain + QM-assumes-rest + audit, no oracle, cents
+per draw, parallel. Build-voyage draws, QM leg (batch 1, n=2 per cell):
+
+| wave | arm | model | self-suite | QM calls | PLAN | probe | foc1 | focN | broad | plnk | usage | JOIN |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| methdraw-c-flash-1 | candidate | flash | 43 (43 passed) | 38 | **3** | 1 | 0 | 0 | 10 | 3 | 3 | **3** |
+| methdraw-c-flash-2 | candidate | flash | ? | 103 | **1** | 1 | 13 | 0 | 18 | 2 | 2 | 1 |
+| methdraw-c-mimo-1 | candidate | mimo | ? | 78 | **3** | 0 | 9 | 5 | 27 | 7 | 3 | 3 |
+| methdraw-c-mimo-2 | candidate | mimo | 33 (33 passed) | 53 | **3** | 1 | 18 | 0 | 4 | 4 | 6 | **4** |
+| methdraw-b-flash-1 | control | flash | 28 (28 passed) | 55 | 0 | 0 | 4 | 14 | 7 | 3 | 3 | 2 |
+| methdraw-b-flash-2 | control | flash | 40 (40 FAILED) | 44 | 0 | 0 | 0 | 0 | 9 | 7 | 7 | 3 |
+| methdraw-b-mimo-1 | control | mimo | ? | 64 | 0 | 0 | 17 | 5 | 14 | 5 | 4 | 1 |
+| methdraw-b-mimo-2 | control | mimo | 32 (32 passed) | 157 | 0 | 0 | 27 | 15 | 26 | 1 | 1 | 0 |
+
+`PLAN` counts composites run as real plans; `probe` counts `yoink --help` calls (a discovery cost the
+candidate imposes — 3 of 4 candidate draws spent one round trip learning the tool before using it).
+
+**ADOPTION: 4/4 candidate draws ran at least one composite method verbatim; 0/4 control (correct —
+their rigging has no `## Methods`).** The role substitutes `{scenario}` sensibly, including as a
+whole-tier selector (`--tags @logic`) where it wanted the tier rather than a list. So a composite
+specified at fitting-out IS run verbatim at the point of action — the candidate's central
+mechanical claim holds.
+
+**COLLAPSE, plank join (`plank-inventory` + `step-usage` in ONE call): mimo 0.5/draw control →
+3.5/draw candidate.** This is the checkpoint the baseline audit showed was mostly never performed at
+all (`step-usage` 0x across both banked mimo waves). Naming it as one composite makes it happen —
+the conformance win, exactly the "make the form require the act" pattern.
+
+**Round-trip effect is UNRESOLVED at n=2 and the variance is larger than the effect** (candidate
+mimo 65.5 QM calls/draw vs control 110.5; candidate flash 70.5 vs control 49.5 — opposite
+directions, with a 157-call control outlier doing most of the work). Batch 2 adds 12 draws
+(n=6 mimo, n=4 flash per arm) to settle it. **A difference of one draw is not a result.**
+
+### 2. Full flash pilots (secondary — and they mostly measured the playbook, not the candidate)
+
+| arm | wave | trajectory | voyages | note |
+|---|---|---|---|---|
+| control | methflash-b1 | 24 → 26 → 26 → 26 → 26 | 5 (stopped) | flat under contaminated correction voyages; Captain wrote production on 2/2 |
+| candidate | methflash-c1 | 0 (no page) → 23 | in progress | rescued by the `page`-intent fallback fix |
 
 ## Verdict
 
-(to be filled)
+(to be filled — batch 2 pending)

@@ -1,0 +1,363 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..becba0a
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,20 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
++
++## Open questions
++
++None.
++
++## Decisions
++
++- Vanilla JavaScript, no preprocessors. Use `todos-vanilla` as the localStorage key per the framework convention.
++- Routing via hashchange event and manual DOM filter (no Director library; vanilla JS per spec allowance).
++- No package.json changes needed beyond what's installed (todomvc-common, todomvc-app-css already in node_modules).
++- Step definitions use happy-dom for DOM-level verification in Cucumber.
++
++## Watchbill status
++
++Written. Dispatched QM next (after user confirmation / context clear).
+\ No newline at end of file
+diff --git a/features/todo-editing.feature b/features/todo-editing.feature
+new file mode 100644
+index 0000000..e37b9d1
+--- /dev/null
++++ b/features/todo-editing.feature
+@@ -0,0 +1,58 @@
++@logic
++Feature: Todo editing
++  As a user
++  I want to edit existing todos
++  So that I can correct or update task descriptions
++
++  Background:
++    Given the todo app is loaded
++    And the todo list contains "Buy milk"
++
++  Rule: Entering edit mode
++
++  Scenario: Activate editing mode on double-click
++    When I double-click the label for "Buy milk"
++    Then the li for "Buy milk" should have the editing class
++    And the edit input should be focused
++
++  Scenario: Hide todo controls during editing
++    When I double-click the label for "Buy milk"
++    Then the view controls for "Buy milk" should be hidden
++    And the edit input for "Buy milk" should be visible
++
++  Rule: Saving edits
++
++  Scenario: Save edit on Enter key
++    When I double-click the label for "Buy milk"
++    And I change the edit input value to "Buy organic milk" and press Enter
++    Then I should see "Buy organic milk" in the todo list
++    And the li for "Buy organic milk" should not have the editing class
++
++  Scenario: Save edit on blur
++    When I double-click the label for "Buy milk"
++    And I change the edit input value to "Buy organic milk" and blur
++    Then I should see "Buy organic milk" in the todo list
++    And the li for "Buy organic milk" should not have the editing class
++
++  Scenario: Trim whitespace on save
++    When I double-click the label for "Buy milk"
++    And I change the edit input value to "  Buy organic milk  " and press Enter
++    Then I should see "Buy organic milk" in the todo list
++
++  Scenario: Destroy todo when edit value is empty
++    When I double-click the label for "Buy milk"
++    And I change the edit input value to "" and press Enter
++    Then the todo list should be empty
++
++  Scenario: Destroy todo when edit value is whitespace only
++    When I double-click the label for "Buy milk"
++    And I change the edit input value to "   " and press Enter
++    Then the todo list should be empty
++
++  Rule: Cancelling edits
++
++  Scenario: Cancel edit on Escape key
++    When I double-click the label for "Buy milk"
++    And I change the edit input value to "Buy organic milk" and press Escape
++    Then I should see "Buy milk" in the todo list
++    And the li for "Buy milk" should not have the editing class
+\ No newline at end of file
+diff --git a/features/todo-management.feature b/features/todo-management.feature
+new file mode 100644
+index 0000000..c870907
+--- /dev/null
++++ b/features/todo-management.feature
+@@ -0,0 +1,124 @@
++@logic
++Feature: Todo management
++  As a user
++  I want to manage a list of todos
++  So that I can keep track of tasks
++
++  Background:
++    Given the todo app is loaded
++
++  Rule: Adding todos
++
++  Scenario: Create a new todo by pressing Enter
++    Given the input field is empty
++    When I type "Buy milk" into the new-todo input and press Enter
++    Then I should see "Buy milk" in the todo list
++    And the input field should be cleared
++
++  Scenario: Trim whitespace from new todo title
++    Given the input field is empty
++    When I type "   Learn TodoMVC   " into the new-todo input and press Enter
++    Then I should see "Learn TodoMVC" in the todo list
++
++  Scenario: Reject empty todo on Enter
++    Given the input field is empty
++    When I press Enter on the new-todo input
++    Then the todo list should be empty
++
++  Scenario: Reject whitespace-only todo on Enter
++    Given the input field is empty
++    When I type "   " into the new-todo input and press Enter
++    Then the todo list should be empty
++
++  Rule: Listing todos
++
++  Scenario: Hide main and footer when there are no todos
++    Given the todo list is empty
++    Then the main section should be hidden
++    And the footer should be hidden
++
++  Scenario: Show main and footer when a todo exists
++    Given the todo list is empty
++    When I add a todo "Walk the dog"
++    Then the main section should be visible
++    And the footer should be visible
++
++  Rule: Completing todos
++
++  Scenario: Mark a todo as complete
++    Given the todo list contains "Buy milk"
++    When I check the toggle for "Buy milk"
++    Then "Buy milk" should have the completed class
++
++  Scenario: Unmark a completed todo
++    Given "Buy milk" is completed
++    When I uncheck the toggle for "Buy milk"
++    Then "Buy milk" should not have the completed class
++
++  Rule: Deleting todos
++
++  Scenario: Delete a todo via destroy button
++    Given the todo list contains "Buy milk"
++    When I click the destroy button for "Buy milk"
++    Then I should not see "Buy milk" in the todo list
++
++  Rule: Toggling all todos
++
++  Scenario: Mark all todos as complete
++    Given the todo list contains "Buy milk" and "Walk the dog"
++    When I click the toggle-all checkbox
++    Then all todos should be completed
++
++  Scenario: Mark all todos as active when toggle-all is unchecked
++    Given all todos are completed
++    When I click the toggle-all checkbox
++    Then all todos should be active
++
++  Scenario: Update toggle-all checkbox when individual toggles complete all
++    Given the todo list contains "Buy milk" and "Walk the dog"
++    When I check the toggle for "Buy milk"
++    And I check the toggle for "Walk the dog"
++    Then the toggle-all checkbox should be checked
++
++  Scenario: Update toggle-all checkbox when individual uncheck leaves incomplete
++    Given all todos are completed
++    When I uncheck the toggle for "Buy milk"
++    Then the toggle-all checkbox should not be checked
++
++  Rule: Counter
++
++  Scenario: Display count of active todos with pluralization
++    Given the todo list contains "Buy milk"
++    And "Walk the dog" is completed
++    Then the todo-count should show "1 item left"
++
++  Scenario: Display pluralized count for zero active todos
++    Given "Buy milk" and "Walk the dog" are completed
++    Then the todo-count should show "0 items left"
++
++  Scenario: Display pluralized count for multiple active todos
++    Given the todo list contains "Buy milk" and "Walk the dog"
++    Then the todo-count should show "2 items left"
++
++  Rule: Clear completed
++
++  Scenario: Remove completed todos on clear completed
++    Given the todo list contains "Buy milk" and "Walk the dog"
++    And "Buy milk" is completed
++    When I click the clear-completed button
++    Then I should not see "Buy milk" in the todo list
++    And I should see "Walk the dog" in the todo list
++
++  Scenario: Hide clear-completed button when no completed todos exist
++    Given the todo list contains "Buy milk"
++    When the page loads
++    Then the clear-completed button should be hidden
++
++  Scenario: Show clear-completed button when a completed todo exists
++    Given "Buy milk" is completed
++    Then the clear-completed button should be visible
++
++  Scenario: Clear checked state of toggle-all after clear completed
++    Given all todos are completed
++    When I click the clear-completed button
++    Then the toggle-all checkbox should not be checked
+\ No newline at end of file
+diff --git a/features/todo-persistence.feature b/features/todo-persistence.feature
+new file mode 100644
+index 0000000..de9045e
+--- /dev/null
++++ b/features/todo-persistence.feature
+@@ -0,0 +1,54 @@
++@logic
++Feature: Todo persistence
++  As a user
++  I want my todos to persist across page reloads
++  So that I do not lose my task list
++
++  Background:
++    Given the todo app is loaded
++
++  Rule: Saving todos to localStorage
++
++  Scenario: Persist todos in localStorage after adding
++    Given the todo list is empty
++    When I add a todo "Buy milk"
++    Then localStorage should contain a todo with title "Buy milk"
++    And the todo should have keys "id", "title", and "completed"
++
++  Scenario: Persist completed state in localStorage
++    Given the todo list contains "Buy milk"
++    When I check the toggle for "Buy milk"
++    Then the todo "Buy milk" in localStorage should have completed set to true
++
++  Scenario: Persist active state in localStorage
++    Given the todo list contains "Buy milk"
++    Then the todo "Buy milk" in localStorage should have completed set to false
++
++  Scenario: Remove todo from localStorage on delete
++    Given the todo list contains "Buy milk"
++    When I click the destroy button for "Buy milk"
++    Then localStorage should not contain a todo with title "Buy milk"
++
++  Rule: Restoring todos from localStorage
++
++  Scenario: Restore todos after page reload
++    Given the todo list contains "Buy milk" and "Walk the dog"
++    When the page is reloaded
++    Then I should see "Buy milk" in the todo list
++    And I should see "Walk the dog" in the todo list
++
++  Scenario: Restore completion state after page reload
++    Given "Buy milk" is completed
++    When the page is reloaded
++    Then "Buy milk" should have the completed class
++
++  Rule: Editing state
++
++  Scenario: Do not persist editing state
++    Given the todo list contains "Buy milk"
++    When I double-click the label for "Buy milk"
++    And the page is reloaded
++    Then no todo should have the editing class
++
++  Scenario: Use correct localStorage key
++    Then the localStorage key should be "todos-vanilla"
+\ No newline at end of file
+diff --git a/features/todo-routing.feature b/features/todo-routing.feature
+new file mode 100644
+index 0000000..22a929f
+--- /dev/null
++++ b/features/todo-routing.feature
+@@ -0,0 +1,60 @@
++@logic
++Feature: Todo routing and filtering
++  As a user
++  I want to filter todos by completion state
++  So that I can focus on active or completed tasks
++
++  Background:
++    Given the todo app is loaded
++    And the todo list contains "Buy milk" and "Walk the dog"
++    And "Buy milk" is completed
++
++  Rule: All route
++
++  Scenario: Show all todos on #/ route
++    Given the URL hash is "#/"
++    Then I should see "Buy milk" in the filtered list
++    And I should see "Walk the dog" in the filtered list
++    And the All filter link should have the selected class
++
++  Rule: Active route
++
++  Scenario: Show only active todos on #/active route
++    Given the URL hash is "#/active"
++    Then I should see "Walk the dog" in the filtered list
++    And I should not see "Buy milk" in the filtered list
++    And the Active filter link should have the selected class
++
++  Rule: Completed route
++
++  Scenario: Show only completed todos on #/completed route
++    Given the URL hash is "#/completed"
++    Then I should see "Buy milk" in the filtered list
++    And I should not see "Walk the dog" in the filtered list
++    And the Completed filter link should have the selected class
++
++  Rule: Default route
++
++  Scenario: Default to all route on no hash
++    Given the URL hash is ""
++    Then I should see "Buy milk" in the filtered list
++    And I should see "Walk the dog" in the filtered list
++
++  Rule: Filtered state updates
++
++  Scenario: Hide completed todo when checked in active filter
++    Given the URL hash is "#/active"
++    When I check the toggle for "Walk the dog"
++    Then I should not see "Walk the dog" in the filtered list
++
++  Scenario: Hide active todo when unchecked in completed filter
++    Given the URL hash is "#/completed"
++    When I uncheck the toggle for "Buy milk"
++    Then I should not see "Buy milk" in the filtered list
++
++  Rule: Persisting filter on reload
++
++  Scenario: Restore active filter on page reload
++    Given the URL hash is "#/active"
++    When the page is reloaded
++    Then the Active filter link should have the selected class
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..e96f159
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,5 @@
++{
++  "watch1": {
++    "scenarios": ["@logic"]
++  }
++}
+\ No newline at end of file

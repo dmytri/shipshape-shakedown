@@ -1,0 +1,510 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..f2fe331
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,22 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
++
++## Voyage: TodoMVC Implementation
++
++**Goal:** Build a TodoMVC app per `assets/app-spec.md`, using `assets/app-template.index.html` as base markup. Vanilla JavaScript, no preprocessors, localStorage persistence.
++
++**Specs authored:**
++- `features/todos.feature` — 21 scenarios: CRUD, editing, delete, clear-completed
++- `features/visibility.feature` — 12 scenarios: section show/hide, counter, button visibility
++- `features/routing.feature` — 11 scenarios: hash routing, filtering, filter persistence
++- `features/persistence.feature` — 7 scenarios: localStorage round-trip, key format
++
++**Watchbill:** 6 watches, 51 targets. All scenarios covered.
++
++**Outstanding decisions:**
++- None. User directed execution without ambiguity.
++
++**Next:** QM to run the 6 watches against implementation. Boatswain custody after.
+diff --git a/features/persistence.feature b/features/persistence.feature
+new file mode 100644
+index 0000000..33f9e09
+--- /dev/null
++++ b/features/persistence.feature
+@@ -0,0 +1,51 @@
++Feature: LocalStorage persistence
++  As a user
++  I want my todos to survive page reloads
++  So that I don't lose my work
++
++  Background:
++    Given the app is loaded
++
++  Scenario: Todos persist after page reload
++    Given a todo "Buy milk"
++    And a todo "Walk dog"
++    When the page is reloaded
++    Then the todo list contains 2 items
++    And the first todo has title "Buy milk" and is not completed
++
++  Scenario: Completed state persists after page reload
++    Given a completed todo "Buy milk"
++    When the page is reloaded
++    Then the first todo has title "Buy milk" and is completed
++
++  Scenario: Edited title persists after page reload
++    Given a todo "Buy milk"
++    When the user double-clicks the first todo label
++    And the first todo edit input is changed to "Buy eggs"
++    And the user presses Enter on the edit input
++    And the page is reloaded
++    Then the first todo has title "Buy eggs" and is not completed
++
++  Scenario: Deleted todo stays deleted after page reload
++    Given a todo "Buy milk"
++    And a todo "Walk dog"
++    When the user clicks the first todo destroy button
++    And the page is reloaded
++    Then the todo list contains 1 item
++    And the first todo has title "Walk dog" and is not completed
++
++  Scenario: localStorage key uses the correct format
++    Given a todo "Buy milk"
++    Then localStorage contains a key "todos-todomvc"
++
++  Scenario: localStorage value contains an array of todo objects
++    Given a todo "Buy milk"
++    Then localStorage["todos-todomvc"] is a JSON array
++    And each todo has keys "id", "title", "completed"
++
++  Scenario: Empty list after all todos are deleted persists as empty
++    Given a todo "Buy milk"
++    When the user clicks the first todo destroy button
++    And the page is reloaded
++    Then the main section is hidden
++    And the footer section is hidden
+diff --git a/features/routing.feature b/features/routing.feature
+new file mode 100644
+index 0000000..9a9c967
+--- /dev/null
++++ b/features/routing.feature
+@@ -0,0 +1,92 @@
++Feature: Routing and filtering
++  As a user
++  I want to filter my todo list by All, Active, or Completed
++  So that I can focus on the subset of todos I care about
++
++  Background:
++    Given the app is loaded
++
++  # ── Route defaults ──
++
++  Scenario: Default route shows all todos
++    Given a todo "Buy milk"
++    And a completed todo "Walk dog"
++    When the route is "#/"
++    Then the todo list shows 2 items
++
++  Scenario: Hash change to #/active shows only active todos
++    Given a todo "Buy milk"
++    And a completed todo "Walk dog"
++    When the route is "#/active"
++    Then the todo list shows 1 item
++    And the first todo has title "Buy milk" and is not completed
++
++  Scenario: Hash change to #/completed shows only completed todos
++    Given a todo "Buy milk"
++    And a completed todo "Walk dog"
++    When the route is "#/completed"
++    Then the todo list shows 1 item
++    And the first todo has title "Walk dog" and is completed
++
++  # ── Filter link highlighting ──
++
++  Scenario: All link is selected on #/
++    Given a todo "Buy milk"
++    When the route is "#/"
++    Then the filter link "All" is selected
++    And the filter link "Active" is not selected
++    And the filter link "Completed" is not selected
++
++  Scenario: Active link is selected on #/active
++    Given a todo "Buy milk"
++    When the route is "#/active"
++    Then the filter link "Active" is selected
++    And the filter link "All" is not selected
++    And the filter link "Completed" is not selected
++
++  Scenario: Completed link is selected on #/completed
++    Given a completed todo "Buy milk"
++    When the route is "#/completed"
++    Then the filter link "Completed" is selected
++    And the filter link "All" is not selected
++    And the filter link "Active" is not selected
++
++  # ── Filtering interaction ──
++
++  Scenario: Completing a todo hides it in Active filter
++    Given a todo "Buy milk"
++    And a todo "Walk dog"
++    When the route is "#/active"
++    And the user toggles the first todo checkbox
++    Then the todo list shows 1 item
++
++  Scenario: Uncompleting a todo hides it in Completed filter
++    Given a completed todo "Buy milk"
++    When the route is "#/completed"
++    And the user toggles the first todo checkbox
++    Then the todo list shows 0 items
++
++  Scenario: Adding a todo while on Active filter shows it
++    Given a completed todo "Buy milk"
++    When the route is "#/active"
++    And the user types "Walk dog" and presses Enter
++    Then the todo list shows 1 item
++    And the first todo has title "Walk dog" and is not completed
++
++  Scenario: Deleting a todo while filtered updates the list
++    Given a todo "Buy milk"
++    And a todo "Walk dog"
++    When the route is "#/active"
++    And the user clicks the first todo destroy button
++    Then the todo list shows 1 item
++    And the first todo has title "Walk dog" and is not completed
++
++  # ── Route persistence ──
++
++  Scenario: Active filter persists across page reload
++    Given a todo "Buy milk"
++    And a completed todo "Walk dog"
++    When the route is "#/active"
++    And the page is reloaded
++    Then the filter link "Active" is selected
++    And the todo list shows 1 item
+diff --git a/features/todos.feature b/features/todos.feature
+new file mode 100644
+index 0000000..e075843
+--- /dev/null
++++ b/features/todos.feature
+@@ -0,0 +1,149 @@
++Feature: Todo CRUD
++  As a user
++  I want to create, complete, edit, and delete todos
++  So that I can manage my task list
++
++  Background:
++    Given the app is loaded
++
++  # ── Adding ──
++
++  Scenario: Adding a todo via Enter
++    Given the new-todo input is focused
++    When the user types "Buy milk" and presses Enter
++    Then the todo list contains 1 item
++    And the first todo has title "Buy milk" and is not completed
++    And the new-todo input is empty
++
++  Scenario: Trims whitespace from new todo titles
++    When the user types "  Buy milk  " and presses Enter
++    Then the first todo has title "Buy milk" and is not completed
++
++  Scenario: Does not create a todo from blank input
++    When the user types "   " and presses Enter
++    Then the todo list contains 0 items
++
++  Scenario: New-todo input is focused on page load
++    Then the new-todo input is focused
++
++  # ── Completing ──
++
++  Scenario: Clicking the checkbox completes a todo
++    Given a todo "Buy milk"
++    When the user toggles the first todo checkbox
++    Then the first todo has title "Buy milk" and is completed
++
++  Scenario: Clicking the checkbox again uncompletes a todo
++    Given a completed todo "Buy milk"
++    When the user toggles the first todo checkbox
++    Then the first todo has title "Buy milk" and is not completed
++
++  Scenario: Completed todo has the completed class
++    Given a completed todo "Buy milk"
++    Then the first todo has class "completed"
++
++  # ── Mark all ──
++
++  Scenario: Toggle-all completes every todo
++    Given a todo "Buy milk"
++    And a todo "Walk dog"
++    When the user toggles the toggle-all checkbox on
++    Then every todo is completed
++    And the toggle-all checkbox is checked
++
++  Scenario: Toggle-all uncompletes every todo
++    Given a completed todo "Buy milk"
++    And a completed todo "Walk dog"
++    When the user toggles the toggle-all checkbox on
++    Then every todo is not completed
++    And the toggle-all checkbox is not checked
++
++  Scenario: Toggle-all becomes checked when all todos are completed individually
++    Given a todo "Buy milk"
++    And a todo "Walk dog"
++    When the user toggles the first todo checkbox
++    And the user toggles the second todo checkbox
++    Then the toggle-all checkbox is checked
++
++  Scenario: Toggle-all becomes unchecked when a todo is uncompleted
++    Given a completed todo "Buy milk"
++    And a completed todo "Walk dog"
++    When the user toggles the first todo checkbox
++    Then the toggle-all checkbox is not checked
++
++  # ── Editing ──
++
++  Scenario: Double-clicking a label enters editing mode
++    Given a todo "Buy milk"
++    When the user double-clicks the first todo label
++    Then the first todo has class "editing"
++    And the first todo edit input has value "Buy milk"
++    And the first todo edit input is focused
++
++  Scenario: Editing saves on Enter
++    Given a todo "Buy milk"
++    When the user double-clicks the first todo label
++    And the first todo edit input is changed to "Buy eggs"
++    And the user presses Enter on the edit input
++    Then the first todo has title "Buy eggs" and is not completed
++    And the first todo does not have class "editing"
++
++  Scenario: Editing saves on blur
++    Given a todo "Buy milk"
++    When the user double-clicks the first todo label
++    And the first todo edit input is changed to "Buy eggs"
++    And the edit input loses focus
++    Then the first todo has title "Buy eggs" and is not completed
++
++  Scenario: Editing with empty text destroys the todo
++    Given a todo "Buy milk"
++    When the user double-clicks the first todo label
++    And the first todo edit input is changed to ""
++    And the user presses Enter on the edit input
++    Then the todo list contains 0 items
++
++  Scenario: Editing with blank-only text destroys the todo
++    Given a todo "Buy milk"
++    When the user double-clicks the first todo label
++    And the first todo edit input is changed to "   "
++    And the user presses Enter on the edit input
++    Then the todo list contains 0 items
++
++  Scenario: Escape discards editing changes
++    Given a todo "Buy milk"
++    When the user double-clicks the first todo label
++    And the first todo edit input is changed to "Buy eggs"
++    And the user presses Escape on the edit input
++    Then the first todo has title "Buy milk" and is not completed
++    And the first todo does not have class "editing"
++
++  Scenario: Trims whitespace during edit save
++    Given a todo "Buy milk"
++    When the user double-clicks the first todo label
++    And the first todo edit input is changed to "  Buy eggs  "
++    And the user presses Enter on the edit input
++    Then the first todo has title "Buy eggs" and is not completed
++
++  # ── Deleting ──
++
++  Scenario: Clicking the destroy button removes a todo
++    Given a todo "Buy milk"
++    And a todo "Walk dog"
++    When the user clicks the first todo destroy button
++    Then the todo list contains 1 item
++    And the first todo has title "Walk dog" and is not completed
++
++  # ── Clear completed ──
++
++  Scenario: Clear completed removes all completed todos
++    Given a completed todo "Buy milk"
++    And a todo "Walk dog"
++    And a completed todo "Read book"
++    When the user clicks the clear-completed button
++    Then the todo list contains 1 item
++    And the first todo has title "Walk dog" and is not completed
++
++  Scenario: Clear completed resets the toggle-all checkbox
++    Given a completed todo "Buy milk"
++    When the user clicks the clear-completed button
++    Then the toggle-all checkbox is not checked
+diff --git a/features/visibility.feature b/features/visibility.feature
+new file mode 100644
+index 0000000..1034f1b
+--- /dev/null
++++ b/features/visibility.feature
+@@ -0,0 +1,69 @@
++Feature: Section visibility and counter
++  As a user
++  I want the app to show and hide sections appropriately
++  So that I see only what is relevant to the current state
++
++  Background:
++    Given the app is loaded
++
++  # ── Empty state ──
++
++  Scenario: Main and footer are hidden when there are no todos
++    Then the main section is hidden
++    And the footer section is hidden
++
++  Scenario: Main and footer appear after adding a todo
++    When the user types "Buy milk" and presses Enter
++    Then the main section is visible
++    And the footer section is visible
++
++  Scenario: Main and footer disappear when all todos are deleted
++    Given a todo "Buy milk"
++    When the user clicks the first todo destroy button
++    Then the main section is hidden
++    And the footer section is hidden
++
++  # ── Counter ──
++
++  Scenario: Counter shows the number of active todos
++    Given a todo "Buy milk"
++    And a todo "Walk dog"
++    Then the counter text is "2 items left"
++
++  Scenario: Counter counts only active (not completed) todos
++    Given a todo "Buy milk"
++    And a completed todo "Walk dog"
++    Then the counter text is "1 item left"
++
++  Scenario: Counter uses singular form for one item
++    Given a todo "Buy milk"
++    Then the counter text is "1 item left"
++
++  Scenario: Counter uses plural form for zero items
++    Then the counter text is "0 items left"
++
++  Scenario: Counter updates when a todo is completed
++    Given a todo "Buy milk"
++    And a todo "Walk dog"
++    When the user toggles the first todo checkbox
++    Then the counter text is "1 item left"
++
++  Scenario: Counter updates when a completed todo is uncompleted
++    Given a completed todo "Buy milk"
++    When the user toggles the first todo checkbox
++    Then the counter text is "1 item left"
++
++  # ── Clear completed visibility ──
++
++  Scenario: Clear-completed button is hidden when no todos are completed
++    Given a todo "Buy milk"
++    Then the clear-completed button is hidden
++
++  Scenario: Clear-completed button is visible when a todo is completed
++    Given a completed todo "Buy milk"
++    Then the clear-completed button is visible
++
++  Scenario: Clear-completed button hides after all completed todos are removed
++    Given a completed todo "Buy milk"
++    When the user clicks the clear-completed button
++    Then the clear-completed button is hidden
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..b9f5977
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,91 @@
++{
++  "watches": [
++    {
++      "id": "core-crud",
++      "description": "Core todo CRUD operations",
++      "targets": [
++        "features/todos.feature:Adding a todo via Enter",
++        "features/todos.feature:Trims whitespace from new todo titles",
++        "features/todos.feature:Does not create a todo from blank input",
++        "features/todos.feature:New-todo input is focused on page load",
++        "features/todos.feature:Clicking the checkbox completes a todo",
++        "features/todos.feature:Clicking the checkbox again uncompletes a todo",
++        "features/todos.feature:Completed todo has the completed class",
++        "features/todos.feature:Toggle-all completes every todo",
++        "features/todos.feature:Toggle-all uncompletes every todo",
++        "features/todos.feature:Toggle-all becomes checked when all todos are completed individually",
++        "features/todos.feature:Toggle-all becomes unchecked when a todo is uncompleted"
++      ]
++    },
++    {
++      "id": "editing",
++      "description": "Todo editing operations",
++      "targets": [
++        "features/todos.feature:Double-clicking a label enters editing mode",
++        "features/todos.feature:Editing saves on Enter",
++        "features/todos.feature:Editing saves on blur",
++        "features/todos.feature:Editing with empty text destroys the todo",
++        "features/todos.feature:Editing with blank-only text destroys the todo",
++        "features/todos.feature:Escape discards editing changes",
++        "features/todos.feature:Trims whitespace during edit save"
++      ]
++    },
++    {
++      "id": "deletion",
++      "description": "Todo deletion and clear completed",
++      "targets": [
++        "features/todos.feature:Clicking the destroy button removes a todo",
++        "features/todos.feature:Clear completed removes all completed todos",
++        "features/todos.feature:Clear completed resets the toggle-all checkbox"
++      ]
++    },
++    {
++      "id": "visibility",
++      "description": "Section visibility and counter",
++      "targets": [
++        "features/visibility.feature:Main and footer are hidden when there are no todos",
++        "features/visibility.feature:Main and footer appear after adding a todo",
++        "features/visibility.feature:Main and footer disappear when all todos are deleted",
++        "features/visibility.feature:Counter shows the number of active todos",
++        "features/visibility.feature:Counter counts only active (not completed) todos",
++        "features/visibility.feature:Counter uses singular form for one item",
++        "features/visibility.feature:Counter uses plural form for zero items",
++        "features/visibility.feature:Counter updates when a todo is completed",
++        "features/visibility.feature:Counter updates when a completed todo is uncompleted",
++        "features/visibility.feature:Clear-completed button is hidden when no todos are completed",
++        "features/visibility.feature:Clear-completed button is visible when a todo is completed",
++        "features/visibility.feature:Clear-completed button hides after all completed todos are removed"
++      ]
++    },
++    {
++      "id": "routing",
++      "description": "URL routing and filtering",
++      "targets": [
++        "features/routing.feature:Default route shows all todos",
++        "features/routing.feature:Hash change to #/active shows only active todos",
++        "features/routing.feature:Hash change to #/completed shows only completed todos",
++        "features/routing.feature:All link is selected on #/",
++        "features/routing.feature:Active link is selected on #/active",
++        "features/routing.feature:Completed link is selected on #/completed",
++        "features/routing.feature:Completing a todo hides it in Active filter",
++        "features/routing.feature:Uncompleting a todo hides it in Completed filter",
++        "features/routing.feature:Adding a todo while on Active filter shows it",
++        "features/routing.feature:Deleting a todo while filtered updates the list",
++        "features/routing.feature:Active filter persists across page reload"
++      ]
++    },
++    {
++      "id": "persistence",
++      "description": "LocalStorage persistence",
++      "targets": [
++        "features/persistence.feature:Todos persist after page reload",
++        "features/persistence.feature:Completed state persists after page reload",
++        "features/persistence.feature:Edited title persists after page reload",
++        "features/persistence.feature:Deleted todo stays deleted after page reload",
++        "features/persistence.feature:localStorage key uses the correct format",
++        "features/persistence.feature:localStorage value contains an array of todo objects",
++        "features/persistence.feature:Empty list after all todos are deleted persists as empty"
++      ]
++    }
++  ]
++}

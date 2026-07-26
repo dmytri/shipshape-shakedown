@@ -1,0 +1,1502 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..da2f3b8
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,24 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
++
++## Dependencies to install
++
++- `todomvc-common` and `todomvc-app-css` added to `package.json` but not yet installed. Run `npm install` before verifying.
++- `happy-dom` already in devDependencies for headless DOM verification; verify it is installed.
++
++## Watchbill
++
++- `watchbill.json` orders 5 watches: CRUD, completion, editing, routing, persistence+counter.
++- QM should process watches in order.
++
++## Next role
++
++- Dispatch QM after `npm install` and Cucumber step definitions are authored (QM's own job).
++- QM reads features, writes step definitions, dispatches Crew per failing target.
++
++## Open questions
++
++- None. App spec is complete and the template gives the base markup.
+\ No newline at end of file
+diff --git a/css/app.css b/css/app.css
+new file mode 100644
+index 0000000..3fbed36
+--- /dev/null
++++ b/css/app.css
+@@ -0,0 +1,2 @@
++/* app.css -- TodoMVC style overrides */
++/* Keep overrides minimal per spec */
+\ No newline at end of file
+diff --git a/features/todo-completion.feature b/features/todo-completion.feature
+new file mode 100644
+index 0000000..57e4799
+--- /dev/null
++++ b/features/todo-completion.feature
+@@ -0,0 +1,56 @@
++Feature: Todo Completion
++  As a user
++  I want to mark todos as complete or active
++  So that I can track my progress
++
++  Background:
++    Given the app is loaded
++
++  Rule: Toggle individual todo completion
++
++  Scenario: Mark a todo as completed by clicking its checkbox
++    Given the todo list contains "Buy milk"
++    When I click the checkbox on "Buy milk"
++    Then "Buy milk" gains the completed class
++    And its checkbox becomes checked
++
++  Scenario: Re-activate a completed todo
++    Given "Buy milk" is marked as completed
++    When I click the checkbox on "Buy milk"
++    Then "Buy milk" loses the completed class
++    And its checkbox becomes unchecked
++
++  Rule: Toggle all todos
++
++  Scenario: Mark all todos as completed via toggle-all
++    Given the todo list contains "Buy milk" and "Write specs"
++    When I click the toggle-all checkbox
++    Then all todos gain the completed class
++
++  Scenario: Mark all todos as active when toggle-all is unchecked
++    Given all todos are marked as completed
++    When I click the toggle-all checkbox
++    Then all todos lose the completed class
++
++  Scenario: Toggle-all reflects individual completion state
++    Given the todo list contains "Buy milk" and "Write specs"
++    When I click the checkbox on "Buy milk"
++    Then the toggle-all checkbox becomes unchecked
++    When I click the checkbox on "Write specs"
++    Then the toggle-all checkbox becomes checked
++
++  Rule: Clear completed todos
++
++  Scenario: Clear completed removes all completed todos
++    Given the todo list contains "Buy milk" completed and "Write specs" active
++    When I click the clear-completed button
++    Then "Buy milk" is removed from the todo list
++    And "Write specs" remains in the todo list
++
++  Scenario: Clear-completed button is hidden when no todos are completed
++    Given the todo list contains "Buy milk" and "Write specs" both active
++    Then the clear-completed button is hidden
++
++  Scenario: Clear-completed button is visible when completed todos exist
++    Given "Buy milk" is marked as completed
++    Then the clear-completed button is visible
+\ No newline at end of file
+diff --git a/features/todo-counter.feature b/features/todo-counter.feature
+new file mode 100644
+index 0000000..f8153b3
+--- /dev/null
++++ b/features/todo-counter.feature
+@@ -0,0 +1,31 @@
++Feature: Todo Counter
++  As a user
++  I want to see the count of active todos
++  So that I know how many tasks remain
++
++  Background:
++    Given the app is loaded
++
++  Rule: Active todo counter
++
++  Scenario: Counter shows number of active todos
++    Given the todo list contains "Buy milk" active and "Write specs" active and "Review code" completed
++    Then the todo-count shows "2"
++
++  Scenario: Counter is wrapped in a strong tag
++    Given the todo list contains "Buy milk"
++    Then the count is wrapped in a <strong> tag
++
++  Rule: Pluralization
++
++  Scenario: Counter uses plural "items" for zero
++    Given the todo list is empty
++    Then the todo-count reads "0 items left"
++
++  Scenario: Counter uses singular "item" for one
++    Given the todo list contains "Buy milk"
++    Then the todo-count reads "1 item left"
++
++  Scenario: Counter uses plural "items" for more than one
++    Given the todo list contains "Buy milk" and "Write specs"
++    Then the todo-count reads "2 items left"
+\ No newline at end of file
+diff --git a/features/todo-crud.feature b/features/todo-crud.feature
+new file mode 100644
+index 0000000..5b53205
+--- /dev/null
++++ b/features/todo-crud.feature
+@@ -0,0 +1,44 @@
++Feature: Todo CRUD
++  As a user
++  I want to create, view, and delete todos
++  So that I can manage my task list
++
++  Background:
++    Given the app is loaded
++
++  Rule: New todo creation
++
++  Scenario: Create a new todo by pressing Enter
++    Given the new-todo input is focused
++    When I type "Buy milk" into the new-todo input and press Enter
++    Then "Buy milk" appears in the todo list
++    And the new-todo input is cleared
++
++  Scenario: Trim whitespace from new todo title
++    Given the new-todo input is focused
++    When I type "   Write specs   " into the new-todo input and press Enter
++    Then "Write specs" appears in the todo list
++
++  Scenario: Ignore empty todo on Enter
++    Given the new-todo input is focused
++    When I press Enter with an empty new-todo input
++    Then no new todo is added to the list
++
++  Rule: Todo deletion
++
++  Scenario: Delete a todo by clicking the destroy button
++    Given the todo list contains "Buy milk"
++    When I click the destroy button on "Buy milk"
++    Then "Buy milk" is removed from the todo list
++
++  Rule: Visibility of main and footer sections
++
++  Scenario: Main and footer are hidden when no todos exist
++    Given the todo list is empty
++    Then the main section is hidden
++    And the footer section is hidden
++
++  Scenario: Main and footer are shown when todos exist
++    Given the todo list contains "Buy milk"
++    Then the main section is visible
++    And the footer section is visible
+\ No newline at end of file
+diff --git a/features/todo-editing.feature b/features/todo-editing.feature
+new file mode 100644
+index 0000000..856dc28
+--- /dev/null
++++ b/features/todo-editing.feature
+@@ -0,0 +1,51 @@
++Feature: Todo Editing
++  As a user
++  I want to edit existing todo titles
++  So that I can correct or update tasks
++
++  Background:
++    Given the app is loaded
++
++  Rule: Enter editing mode
++
++  Scenario: Double-click a todo label to start editing
++    Given the todo list contains "Buy milk"
++    When I double-click the label of "Buy milk"
++    Then "Buy milk" gains the editing class
++    And an edit input is shown containing "Buy milk"
++
++  Scenario: Edit input is focused when editing mode is activated
++    Given the todo list contains "Buy milk"
++    When I double-click the label of "Buy milk"
++    Then the edit input is focused
++
++  Rule: Save edits
++
++  Scenario: Save edit on Enter
++    Given I am editing "Buy milk"
++    When I change the edit input to "Buy oat milk" and press Enter
++    Then "Buy milk" is replaced by "Buy oat milk" in the todo list
++    And the editing class is removed
++
++  Scenario: Save edit on blur
++    Given I am editing "Buy milk"
++    When I change the edit input to "Buy oat milk" and click away
++    Then "Buy milk" is replaced by "Buy oat milk" in the todo list
++
++  Scenario: Trim whitespace on save
++    Given I am editing "Buy milk"
++    When I change the edit input to "   Buy oat milk   " and press Enter
++    Then "Buy oat milk" appears in the todo list
++
++  Rule: Discard edits
++
++  Scenario: Destroy todo when edit is emptied
++    Given I am editing "Buy milk"
++    When I clear the edit input and press Enter
++    Then "Buy milk" is removed from the todo list
++
++  Scenario: Discard changes on Escape
++    Given I am editing "Buy milk" and have changed it to "Buy oat milk"
++    When I press Escape
++    Then "Buy milk" remains in the todo list unchanged
++    And the editing class is removed
+\ No newline at end of file
+diff --git a/features/todo-persistence.feature b/features/todo-persistence.feature
+new file mode 100644
+index 0000000..92b8b4b
+--- /dev/null
++++ b/features/todo-persistence.feature
+@@ -0,0 +1,41 @@
++Feature: Todo Persistence
++  As a user
++  I want my todos to persist across page reloads
++  So that I do not lose my task list
++
++  Background:
++    Given the app is loaded
++
++  Rule: LocalStorage persistence
++
++  Scenario: Todos survive page reload
++    Given the todo list contains "Buy milk" and "Write specs"
++    When the page is reloaded
++    Then "Buy milk" and "Write specs" appear in the todo list
++
++  Scenario: Completion state persists across reload
++    Given "Buy milk" is marked as completed
++    When the page is reloaded
++    Then "Buy milk" has the completed class
++
++  Scenario: Active filter route persists across reload
++    Given the URL hash is "#/active"
++    When the page is reloaded
++    Then the URL hash remains "#/active"
++
++  Rule: LocalStorage key and format
++
++  Scenario: Todos are stored under the correct localStorage key
++    Given the todo list contains "Buy milk"
++    Then localStorage contains a key matching "todos-" with the todo data
++
++  Scenario: Each todo item has id, title, and completed fields
++    Given the todo list contains "Buy milk"
++    Then each stored todo has an id, a title, and a completed property
++
++  Rule: Editing state is not persisted
++
++  Scenario: Editing mode is not persisted
++    Given I am editing "Buy milk"
++    When the page is reloaded
++    Then no todo is in editing mode
+\ No newline at end of file
+diff --git a/features/todo-routing.feature b/features/todo-routing.feature
+new file mode 100644
+index 0000000..43a667c
+--- /dev/null
++++ b/features/todo-routing.feature
+@@ -0,0 +1,52 @@
++Feature: Todo Filtering and Routing
++  As a user
++  I want to filter todos by status using URL routes
++  So that I can focus on active or completed items
++
++  Background:
++    Given the app is loaded
++
++  Rule: Route filtering
++
++  Scenario: Default route shows all todos
++    Given the todo list contains "Buy milk" completed and "Write specs" active
++    When the URL hash is "#/"
++    Then both "Buy milk" and "Write specs" are displayed
++
++  Scenario: Active route shows only active todos
++    Given the todo list contains "Buy milk" completed and "Write specs" active
++    When the URL hash changes to "#/active"
++    Then only "Write specs" is displayed
++    And "Buy milk" is hidden
++
++  Scenario: Completed route shows only completed todos
++    Given the todo list contains "Buy milk" completed and "Write specs" active
++    When the URL hash changes to "#/completed"
++    Then only "Buy milk" is displayed
++    And "Write specs" is hidden
++
++  Rule: Selected filter link
++
++  Scenario: All filter link has selected class by default
++    Then the "All" filter link has the selected class
++
++  Scenario: Active filter link gets selected class
++    When the URL hash changes to "#/active"
++    Then the "Active" filter link has the selected class
++
++  Scenario: Completed filter link gets selected class
++    When the URL hash changes to "#/completed"
++    Then the "Completed" filter link has the selected class
++
++  Rule: Filter interaction with item updates
++
++  Scenario: Item checked while in Active filter is hidden
++    Given the todo list contains "Buy milk" and "Write specs"
++    And the URL hash is "#/active"
++    When I click the checkbox on "Buy milk"
++    Then "Buy milk" is hidden from the active view
++
++  Scenario: Active filter is persisted on reload
++    Given the URL hash is "#/active"
++    When the page is reloaded
++    Then the "Active" filter link has the selected class
+\ No newline at end of file
+diff --git a/index.html b/index.html
+new file mode 100644
+index 0000000..9a24463
+--- /dev/null
++++ b/index.html
+@@ -0,0 +1,46 @@
++<!doctype html>
++<html lang="en">
++  <head>
++    <meta charset="utf-8">
++    <meta name="viewport" content="width=device-width, initial-scale=1">
++    <title>TodoMVC</title>
++    <link rel="stylesheet" href="node_modules/todomvc-common/base.css">
++    <link rel="stylesheet" href="node_modules/todomvc-app-css/index.css">
++    <link rel="stylesheet" href="css/app.css">
++  </head>
++  <body>
++    <section class="todoapp">
++      <header class="header">
++        <h1>todos</h1>
++        <input class="new-todo" placeholder="What needs to be done?" autofocus>
++      </header>
++      <section class="main">
++        <input id="toggle-all" class="toggle-all" type="checkbox">
++        <label for="toggle-all">Mark all as complete</label>
++        <ul class="todo-list"></ul>
++      </section>
++      <footer class="footer">
++        <span class="todo-count"><strong>0</strong> item left</span>
++        <ul class="filters">
++          <li>
++            <a class="selected" href="#/">All</a>
++          </li>
++          <li>
++            <a href="#/active">Active</a>
++          </li>
++          <li>
++            <a href="#/completed">Completed</a>
++          </li>
++        </ul>
++        <button class="clear-completed">Clear completed</button>
++      </footer>
++    </section>
++    <footer class="info">
++      <p>Double-click to edit a todo</p>
++      <p>Created by <a href="http://todomvc.com">you</a></p>
++      <p>Part of <a href="http://todomvc.com">TodoMVC</a></p>
++    </footer>
++    <script src="node_modules/todomvc-common/base.js"></script>
++    <script src="js/app.js"></script>
++  </body>
++</html>
+\ No newline at end of file
+diff --git a/js/app.js b/js/app.js
+new file mode 100644
+index 0000000..65f01c8
+--- /dev/null
++++ b/js/app.js
+@@ -0,0 +1,8 @@
++/* app.js -- TodoMVC vanilla JavaScript implementation */
++
++var ENTER_KEY = 13;
++var ESCAPE_KEY = 27;
++
++(function () {
++  'use strict';
++})();
+\ No newline at end of file
+diff --git a/package-lock.json b/package-lock.json
+new file mode 100644
+index 0000000..180bc0a
+--- /dev/null
++++ b/package-lock.json
+@@ -0,0 +1,985 @@
++{
++  "name": "todomvc-shakedown",
++  "version": "0.1.0",
++  "lockfileVersion": 3,
++  "requires": true,
++  "packages": {
++    "": {
++      "name": "todomvc-shakedown",
++      "version": "0.1.0",
++      "dependencies": {
++        "todomvc-app-css": "^1.0.0",
++        "todomvc-common": "^1.0.1"
++      },
++      "devDependencies": {
++        "@cucumber/cucumber": "*",
++        "happy-dom": "*"
++      }
++    },
++    "node_modules/@babel/code-frame": {
++      "version": "7.29.7",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@babel/helper-validator-identifier": "^7.29.7",
++        "js-tokens": "^4.0.0",
++        "picocolors": "^1.1.1"
++      },
++      "engines": {
++        "node": ">=6.9.0"
++      }
++    },
++    "node_modules/@babel/helper-validator-identifier": {
++      "version": "7.29.7",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=6.9.0"
++      }
++    },
++    "node_modules/@colors/colors": {
++      "version": "1.5.0",
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "engines": {
++        "node": ">=0.1.90"
++      }
++    },
++    "node_modules/@cucumber/ci-environment": {
++      "version": "14.0.0",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/@cucumber/cucumber": {
++      "version": "13.2.0",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@cucumber/ci-environment": "14.0.0",
++        "@cucumber/cucumber-expressions": "20.0.0",
++        "@cucumber/gherkin": "41.0.0",
++        "@cucumber/gherkin-streams": "7.0.1",
++        "@cucumber/gherkin-utils": "12.0.1",
++        "@cucumber/html-formatter": "24.0.0",
++        "@cucumber/junit-xml-formatter": "0.14.0",
++        "@cucumber/message-streams": "5.0.1",
++        "@cucumber/messages": "34.0.1",
++        "@cucumber/pretty-formatter": "4.0.0",
++        "@cucumber/tag-expressions": "10.0.0",
++        "assertion-error-formatter": "^3.0.0",
++        "cli-table3": "0.6.5",
++        "commander": "^15.0.0",
++        "debug": "^4.3.4",
++        "error-stack-parser": "^2.1.4",
++        "figures": "^6.0.0",
++        "has-ansi": "^6.0.0",
++        "indent-string": "^5.0.0",
++        "is-installed-globally": "^1.0.0",
++        "knuth-shuffle-seeded": "^1.0.6",
++        "lodash.merge": "^4.6.2",
++        "lodash.mergewith": "^4.6.2",
++        "luxon": "3.7.2",
++        "read-package-up": "^12.0.0",
++        "semver": "7.8.5",
++        "string-argv": "0.3.2",
++        "supports-color": "^10.0.0",
++        "type-fest": "^5.0.0",
++        "util-arity": "^1.1.0",
++        "yaml": "^2.2.2",
++        "yup": "1.7.1"
++      },
++      "bin": {
++        "cucumber-js": "bin/cucumber.js"
++      },
++      "engines": {
++        "node": "22 || 24 || >=26"
++      },
++      "funding": {
++        "url": "https://opencollective.com/cucumber"
++      }
++    },
++    "node_modules/@cucumber/cucumber-expressions": {
++      "version": "20.0.0",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "regexp-match-indices": "1.0.2"
++      }
++    },
++    "node_modules/@cucumber/gherkin": {
++      "version": "41.0.0",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@cucumber/messages": ">=31.0.0 <34"
++      }
++    },
++    "node_modules/@cucumber/gherkin-streams": {
++      "version": "7.0.1",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "commander": "15.0.0",
++        "source-map-support": "0.5.21"
++      },
++      "bin": {
++        "gherkin-javascript": "bin/gherkin"
++      },
++      "peerDependencies": {
++        "@cucumber/gherkin": ">=22.0.0",
++        "@cucumber/message-streams": ">=4.0.0",
++        "@cucumber/messages": ">=17.1.1"
++      }
++    },
++    "node_modules/@cucumber/gherkin-utils": {
++      "version": "12.0.1",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@cucumber/gherkin": "^41.0.0",
++        "@cucumber/messages": "^33.0.0",
++        "@teppeis/multimaps": "3.0.0",
++        "commander": "15.0.0",
++        "source-map-support": "^0.5.21"
++      },
++      "bin": {
++        "gherkin-utils": "bin/gherkin-utils"
++      }
++    },
++    "node_modules/@cucumber/gherkin-utils/node_modules/@cucumber/messages": {
++      "version": "33.0.4",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/@cucumber/gherkin/node_modules/@cucumber/messages": {
++      "version": "33.0.4",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/@cucumber/html-formatter": {
++      "version": "24.0.0",
++      "dev": true,
++      "license": "MIT",
++      "peerDependencies": {
++        "@cucumber/messages": ">=18"
++      }
++    },
++    "node_modules/@cucumber/junit-xml-formatter": {
++      "version": "0.14.0",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@cucumber/query": "^16.0.0",
++        "@teppeis/multimaps": "^3.0.0",
++        "luxon": "^3.5.0",
++        "xmlbuilder": "^15.1.1"
++      },
++      "peerDependencies": {
++        "@cucumber/messages": "*"
++      }
++    },
++    "node_modules/@cucumber/message-streams": {
++      "version": "5.0.1",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "mime": "^4.0.0"
++      },
++      "peerDependencies": {
++        "@cucumber/messages": ">=17.1.1"
++      }
++    },
++    "node_modules/@cucumber/messages": {
++      "version": "34.0.1",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/@cucumber/pretty-formatter": {
++      "version": "4.0.0",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@cucumber/query": "16.0.0",
++        "luxon": "^3.7.2"
++      },
++      "peerDependencies": {
++        "@cucumber/messages": "*"
++      }
++    },
++    "node_modules/@cucumber/pretty-formatter/node_modules/@cucumber/query": {
++      "version": "16.0.0",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@teppeis/multimaps": "3.0.0",
++        "lodash.sortby": "^4.7.0"
++      },
++      "peerDependencies": {
++        "@cucumber/messages": "*"
++      }
++    },
++    "node_modules/@cucumber/query": {
++      "version": "16.0.1",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@teppeis/multimaps": "3.0.0",
++        "lodash.sortby": "^4.7.0"
++      },
++      "peerDependencies": {
++        "@cucumber/messages": "*"
++      }
++    },
++    "node_modules/@cucumber/tag-expressions": {
++      "version": "10.0.0",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/@teppeis/multimaps": {
++      "version": "3.0.0",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=14"
++      }
++    },
++    "node_modules/@types/node": {
++      "version": "26.1.1",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "undici-types": "~8.3.0"
++      }
++    },
++    "node_modules/@types/normalize-package-data": {
++      "version": "2.4.4",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/@types/whatwg-mimetype": {
++      "version": "3.0.2",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/@types/ws": {
++      "version": "8.18.1",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@types/node": "*"
++      }
++    },
++    "node_modules/ansi-regex": {
++      "version": "6.2.2",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=12"
++      },
++      "funding": {
++        "url": "https://github.com/chalk/ansi-regex?sponsor=1"
++      }
++    },
++    "node_modules/assertion-error-formatter": {
++      "version": "3.0.0",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "diff": "^4.0.1",
++        "pad-right": "^0.2.2",
++        "repeat-string": "^1.6.1"
++      }
++    },
++    "node_modules/buffer-from": {
++      "version": "1.1.2",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/buffer-image-size": {
++      "version": "0.6.4",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@types/node": "*"
++      },
++      "engines": {
++        "node": ">=4.0"
++      }
++    },
++    "node_modules/cli-table3": {
++      "version": "0.6.5",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "string-width": "^4.2.0"
++      },
++      "engines": {
++        "node": "10.* || >= 12.*"
++      },
++      "optionalDependencies": {
++        "@colors/colors": "1.5.0"
++      }
++    },
++    "node_modules/commander": {
++      "version": "15.0.0",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=22.12.0"
++      }
++    },
++    "node_modules/debug": {
++      "version": "4.4.3",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "ms": "^2.1.3"
++      },
++      "engines": {
++        "node": ">=6.0"
++      },
++      "peerDependenciesMeta": {
++        "supports-color": {
++          "optional": true
++        }
++      }
++    },
++    "node_modules/diff": {
++      "version": "4.0.4",
++      "dev": true,
++      "license": "BSD-3-Clause",
++      "engines": {
++        "node": ">=0.3.1"
++      }
++    },
++    "node_modules/emoji-regex": {
++      "version": "8.0.0",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/error-stack-parser": {
++      "version": "2.1.4",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "stackframe": "^1.3.4"
++      }
++    },
++    "node_modules/figures": {
++      "version": "6.1.0",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "is-unicode-supported": "^2.0.0"
++      },
++      "engines": {
++        "node": ">=18"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/find-up-simple": {
++      "version": "1.0.1",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=18"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/global-directory": {
++      "version": "4.0.1",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "ini": "4.1.1"
++      },
++      "engines": {
++        "node": ">=18"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/happy-dom": {
++      "version": "20.11.1",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@types/node": ">=20.0.0",
++        "@types/whatwg-mimetype": "^3.0.2",
++        "@types/ws": "^8.18.1",
++        "buffer-image-size": "^0.6.4",
++        "entities": "^7.0.1",
++        "whatwg-mimetype": "^3.0.0",
++        "ws": "^8.21.0"
++      },
++      "engines": {
++        "node": ">=20.0.0"
++      }
++    },
++    "node_modules/happy-dom/node_modules/entities": {
++      "version": "7.0.1",
++      "dev": true,
++      "license": "BSD-2-Clause",
++      "engines": {
++        "node": ">=0.12"
++      },
++      "funding": {
++        "url": "https://github.com/fb55/entities?sponsor=1"
++      }
++    },
++    "node_modules/has-ansi": {
++      "version": "6.0.2",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "ansi-regex": "^6.0.1"
++      },
++      "engines": {
++        "node": ">=18"
++      },
++      "funding": {
++        "url": "https://github.com/chalk/has-ansi?sponsor=1"
++      }
++    },
++    "node_modules/hosted-git-info": {
++      "version": "9.0.3",
++      "dev": true,
++      "license": "ISC",
++      "dependencies": {
++        "lru-cache": "^11.1.0"
++      },
++      "engines": {
++        "node": "^20.17.0 || >=22.9.0"
++      }
++    },
++    "node_modules/indent-string": {
++      "version": "5.0.0",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=12"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/index-to-position": {
++      "version": "1.2.0",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=18"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/ini": {
++      "version": "4.1.1",
++      "dev": true,
++      "license": "ISC",
++      "engines": {
++        "node": "^14.17.0 || ^16.13.0 || >=18.0.0"
++      }
++    },
++    "node_modules/is-fullwidth-code-point": {
++      "version": "3.0.0",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=8"
++      }
++    },
++    "node_modules/is-installed-globally": {
++      "version": "1.0.0",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "global-directory": "^4.0.1",
++        "is-path-inside": "^4.0.0"
++      },
++      "engines": {
++        "node": ">=18"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/is-path-inside": {
++      "version": "4.0.0",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=12"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/is-unicode-supported": {
++      "version": "2.1.0",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=18"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/js-tokens": {
++      "version": "4.0.0",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/knuth-shuffle-seeded": {
++      "version": "1.0.6",
++      "dev": true,
++      "license": "Apache-2.0",
++      "dependencies": {
++        "seed-random": "~2.2.0"
++      }
++    },
++    "node_modules/lodash.merge": {
++      "version": "4.6.2",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/lodash.mergewith": {
++      "version": "4.6.2",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/lodash.sortby": {
++      "version": "4.7.0",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/lru-cache": {
++      "version": "11.5.2",
++      "dev": true,
++      "license": "BlueOak-1.0.0",
++      "engines": {
++        "node": "20 || >=22"
++      }
++    },
++    "node_modules/luxon": {
++      "version": "3.7.2",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=12"
++      }
++    },
++    "node_modules/mime": {
++      "version": "4.1.0",
++      "dev": true,
++      "funding": [
++        "https://github.com/sponsors/broofa"
++      ],
++      "license": "MIT",
++      "bin": {
++        "mime": "bin/cli.js"
++      },
++      "engines": {
++        "node": ">=16"
++      }
++    },
++    "node_modules/ms": {
++      "version": "2.1.3",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/normalize-package-data": {
++      "version": "8.0.0",
++      "dev": true,
++      "license": "BSD-2-Clause",
++      "dependencies": {
++        "hosted-git-info": "^9.0.0",
++        "semver": "^7.3.5",
++        "validate-npm-package-license": "^3.0.4"
++      },
++      "engines": {
++        "node": "^20.17.0 || >=22.9.0"
++      }
++    },
++    "node_modules/pad-right": {
++      "version": "0.2.2",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "repeat-string": "^1.5.2"
++      },
++      "engines": {
++        "node": ">=0.10.0"
++      }
++    },
++    "node_modules/parse-json": {
++      "version": "8.3.0",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@babel/code-frame": "^7.26.2",
++        "index-to-position": "^1.1.0",
++        "type-fest": "^4.39.1"
++      },
++      "engines": {
++        "node": ">=18"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/parse-json/node_modules/type-fest": {
++      "version": "4.41.0",
++      "dev": true,
++      "license": "(MIT OR CC0-1.0)",
++      "engines": {
++        "node": ">=16"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/picocolors": {
++      "version": "1.1.1",
++      "dev": true,
++      "license": "ISC"
++    },
++    "node_modules/property-expr": {
++      "version": "2.0.6",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/read-package-up": {
++      "version": "12.0.0",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "find-up-simple": "^1.0.1",
++        "read-pkg": "^10.0.0",
++        "type-fest": "^5.2.0"
++      },
++      "engines": {
++        "node": ">=20"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/read-pkg": {
++      "version": "10.1.0",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@types/normalize-package-data": "^2.4.4",
++        "normalize-package-data": "^8.0.0",
++        "parse-json": "^8.3.0",
++        "type-fest": "^5.4.4",
++        "unicorn-magic": "^0.4.0"
++      },
++      "engines": {
++        "node": ">=20"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/regexp-match-indices": {
++      "version": "1.0.2",
++      "dev": true,
++      "license": "Apache-2.0",
++      "dependencies": {
++        "regexp-tree": "^0.1.11"
++      }
++    },
++    "node_modules/regexp-tree": {
++      "version": "0.1.27",
++      "dev": true,
++      "license": "MIT",
++      "bin": {
++        "regexp-tree": "bin/regexp-tree"
++      }
++    },
++    "node_modules/repeat-string": {
++      "version": "1.6.1",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=0.10"
++      }
++    },
++    "node_modules/seed-random": {
++      "version": "2.2.0",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/semver": {
++      "version": "7.8.5",
++      "dev": true,
++      "license": "ISC",
++      "bin": {
++        "semver": "bin/semver.js"
++      },
++      "engines": {
++        "node": ">=10"
++      }
++    },
++    "node_modules/source-map": {
++      "version": "0.6.1",
++      "dev": true,
++      "license": "BSD-3-Clause",
++      "engines": {
++        "node": ">=0.10.0"
++      }
++    },
++    "node_modules/source-map-support": {
++      "version": "0.5.21",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "buffer-from": "^1.0.0",
++        "source-map": "^0.6.0"
++      }
++    },
++    "node_modules/spdx-correct": {
++      "version": "3.2.0",
++      "dev": true,
++      "license": "Apache-2.0",
++      "dependencies": {
++        "spdx-expression-parse": "^3.0.0",
++        "spdx-license-ids": "^3.0.0"
++      }
++    },
++    "node_modules/spdx-exceptions": {
++      "version": "2.5.0",
++      "dev": true,
++      "license": "CC-BY-3.0"
++    },
++    "node_modules/spdx-expression-parse": {
++      "version": "3.0.1",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "spdx-exceptions": "^2.1.0",
++        "spdx-license-ids": "^3.0.0"
++      }
++    },
++    "node_modules/spdx-license-ids": {
++      "version": "3.0.23",
++      "dev": true,
++      "license": "CC0-1.0"
++    },
++    "node_modules/stackframe": {
++      "version": "1.3.4",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/string-argv": {
++      "version": "0.3.2",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=0.6.19"
++      }
++    },
++    "node_modules/string-width": {
++      "version": "4.2.3",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "emoji-regex": "^8.0.0",
++        "is-fullwidth-code-point": "^3.0.0",
++        "strip-ansi": "^6.0.1"
++      },
++      "engines": {
++        "node": ">=8"
++      }
++    },
++    "node_modules/strip-ansi": {
++      "version": "6.0.1",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "ansi-regex": "^5.0.1"
++      },
++      "engines": {
++        "node": ">=8"
++      }
++    },
++    "node_modules/strip-ansi/node_modules/ansi-regex": {
++      "version": "5.0.1",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=8"
++      }
++    },
++    "node_modules/supports-color": {
++      "version": "10.2.2",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=18"
++      },
++      "funding": {
++        "url": "https://github.com/chalk/supports-color?sponsor=1"
++      }
++    },
++    "node_modules/tagged-tag": {
++      "version": "1.0.0",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=20"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/tiny-case": {
++      "version": "1.0.3",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/todomvc-app-css": {
++      "version": "1.0.4",
++      "resolved": "https://registry.npmjs.org/todomvc-app-css/-/todomvc-app-css-1.0.4.tgz",
++      "integrity": "sha512-zJe8B69MvLlhb/vbYxe6aePCcN6ziWXVJ0neGEr+Aq9FygpWlHzb/td7+lL46PHP0YNtLVOdSPI08S0gYh3Abw==",
++      "license": "CC-BY-4.0"
++    },
++    "node_modules/todomvc-common": {
++      "version": "1.0.5",
++      "resolved": "https://registry.npmjs.org/todomvc-common/-/todomvc-common-1.0.5.tgz",
++      "integrity": "sha512-D8kEJmxVMQIWwztEdH+WeiAfXRbbSCpgXq4NkYi+gduJ2tr8CNq7sYLfJvjpQ10KD9QxJwig57rvMbV2QAESwQ==",
++      "license": "MIT"
++    },
++    "node_modules/toposort": {
++      "version": "2.0.2",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/type-fest": {
++      "version": "5.8.0",
++      "dev": true,
++      "license": "(MIT OR CC0-1.0)",
++      "dependencies": {
++        "tagged-tag": "^1.0.0"
++      },
++      "engines": {
++        "node": ">=20"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/undici-types": {
++      "version": "8.3.0",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/unicorn-magic": {
++      "version": "0.4.0",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=20"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/util-arity": {
++      "version": "1.1.0",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/validate-npm-package-license": {
++      "version": "3.0.4",
++      "dev": true,
++      "license": "Apache-2.0",
++      "dependencies": {
++        "spdx-correct": "^3.0.0",
++        "spdx-expression-parse": "^3.0.0"
++      }
++    },
++    "node_modules/whatwg-mimetype": {
++      "version": "3.0.0",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=12"
++      }
++    },
++    "node_modules/ws": {
++      "version": "8.21.1",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=10.0.0"
++      },
++      "peerDependencies": {
++        "bufferutil": "^4.0.1",
++        "utf-8-validate": ">=5.0.2"
++      },
++      "peerDependenciesMeta": {
++        "bufferutil": {
++          "optional": true
++        },
++        "utf-8-validate": {
++          "optional": true
++        }
++      }
++    },
++    "node_modules/xmlbuilder": {
++      "version": "15.1.1",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=8.0"
++      }
++    },
++    "node_modules/yaml": {
++      "version": "2.9.0",
++      "dev": true,
++      "license": "ISC",
++      "bin": {
++        "yaml": "bin.mjs"
++      },
++      "engines": {
++        "node": ">= 14.6"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/eemeli"
++      }
++    },
++    "node_modules/yup": {
++      "version": "1.7.1",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "property-expr": "^2.0.5",
++        "tiny-case": "^1.0.3",
++        "toposort": "^2.0.2",
++        "type-fest": "^2.19.0"
++      }
++    },
++    "node_modules/yup/node_modules/type-fest": {
++      "version": "2.19.0",
++      "dev": true,
++      "license": "(MIT OR CC0-1.0)",
++      "engines": {
++        "node": ">=12.20"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    }
++  }
++}
+diff --git a/package.json b/package.json
+index 25b5f68..ace3715 100644
+--- a/package.json
++++ b/package.json
+@@ -3,5 +3,12 @@
+   "version": "0.1.0",
+   "private": true,
+   "scripts": { "test": "cucumber-js" },
+-  "devDependencies": { "@cucumber/cucumber": "*", "happy-dom": "*" }
++  "devDependencies": {
++    "@cucumber/cucumber": "*",
++    "happy-dom": "*"
++  },
++  "dependencies": {
++    "todomvc-common": "^1.0.1",
++    "todomvc-app-css": "^1.0.0"
++  }
+ }
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..0776eca
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,61 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/todo-crud.feature:Create a new todo by pressing Enter",
++      "features/todo-crud.feature:Trim whitespace from new todo title",
++      "features/todo-crud.feature:Ignore empty todo on Enter",
++      "features/todo-crud.feature:Delete a todo by clicking the destroy button",
++      "features/todo-crud.feature:Main and footer are hidden when no todos exist",
++      "features/todo-crud.feature:Main and footer are shown when todos exist"
++    ]
++  },
++  "watch2": {
++    "scenarios": [
++      "features/todo-completion.feature:Mark a todo as completed by clicking its checkbox",
++      "features/todo-completion.feature:Re-activate a completed todo",
++      "features/todo-completion.feature:Mark all todos as completed via toggle-all",
++      "features/todo-completion.feature:Mark all todos as active when toggle-all is unchecked",
++      "features/todo-completion.feature:Toggle-all reflects individual completion state",
++      "features/todo-completion.feature:Clear completed removes all completed todos",
++      "features/todo-completion.feature:Clear-completed button is hidden when no todos are completed",
++      "features/todo-completion.feature:Clear-completed button is visible when completed todos exist"
++    ]
++  },
++  "watch3": {
++    "scenarios": [
++      "features/todo-editing.feature:Double-click a todo label to start editing",
++      "features/todo-editing.feature:Edit input is focused when editing mode is activated",
++      "features/todo-editing.feature:Save edit on Enter",
++      "features/todo-editing.feature:Save edit on blur",
++      "features/todo-editing.feature:Trim whitespace on save",
++      "features/todo-editing.feature:Destroy todo when edit is emptied",
++      "features/todo-editing.feature:Discard changes on Escape"
++    ]
++  },
++  "watch4": {
++    "scenarios": [
++      "features/todo-routing.feature:Default route shows all todos",
++      "features/todo-routing.feature:Active route shows only active todos",
++      "features/todo-routing.feature:Completed route shows only completed todos",
++      "features/todo-routing.feature:All filter link has selected class by default",
++      "features/todo-routing.feature:Active filter link gets selected class",
++      "features/todo-routing.feature:Completed filter link gets selected class",
++      "features/todo-routing.feature:Item checked while in Active filter is hidden",
++      "features/todo-routing.feature:Active filter is persisted on reload"
++    ]
++  },
++  "watch5": {
++    "scenarios": [
++      "features/todo-persistence.feature:Todos survive page reload",
++      "features/todo-persistence.feature:Completion state persists across reload",
++      "features/todo-persistence.feature:Todos are stored under the correct localStorage key",
++      "features/todo-persistence.feature:Each todo item has id, title, and completed fields",
++      "features/todo-persistence.feature:Editing mode is not persisted",
++      "features/todo-counter.feature:Counter shows number of active todos",
++      "features/todo-counter.feature:Counter is wrapped in a strong tag",
++      "features/todo-counter.feature:Counter uses plural \"items\" for zero",
++      "features/todo-counter.feature:Counter uses singular \"item\" for one",
++      "features/todo-counter.feature:Counter uses plural \"items\" for more than one"
++    ]
++  }
++}
+\ No newline at end of file

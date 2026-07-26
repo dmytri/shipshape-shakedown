@@ -1,0 +1,862 @@
+diff --git a/features/step_definitions/todomvc.steps.js b/features/step_definitions/todomvc.steps.js
+new file mode 100644
+index 0000000..decf474
+--- /dev/null
++++ b/features/step_definitions/todomvc.steps.js
+@@ -0,0 +1,296 @@
++const { Given, When, Then } = require('@cucumber/cucumber');
++const assert = require('assert');
++const fs = require('fs');
++const path = require('path');
++const { Window } = require('happy-dom');
++
++function wait(ms) {
++  return new Promise(resolve => setTimeout(resolve, ms));
++}
++
++// Background
++Given('the app is loaded with an empty todo list', async function () {
++  const htmlPath = path.resolve(__dirname, '../../index.html');
++  const html = fs.readFileSync(htmlPath, 'utf8');
++  this.window = new Window({
++    url: 'http://localhost',
++    settings: {
++      enableJavaScriptEvaluation: true,
++      suppressInsecureJavaScriptEnvironmentWarning: true
++    }
++  });
++  this.document = this.window.document;
++  this.document.write(html);
++  this.document.close();
++  await wait(50);
++});
++
++// Creating todos
++Given('the new todo input has focus', async function () {
++  const input = this.document.querySelector('.new-todo');
++  input.focus();
++});
++
++When('the user types {string} and presses Enter', async function (text) {
++  const input = this.document.querySelector('.new-todo');
++  input.value = text;
++  input.dispatchEvent(new this.window.KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, bubbles: true }));
++  await wait(50);
++});
++
++Then('a todo {string} appears in the list', async function (text) {
++  const items = await this.getTodoItems();
++  const found = items.some(item => {
++    const label = item.querySelector('label');
++    return label && label.textContent === text;
++  });
++  assert.ok(found, `Expected todo "${text}" to appear in the list`);
++});
++
++Then('todo {string} appears in the list', async function (text) {
++  const items = await this.getTodoItems();
++  const found = items.some(item => {
++    const label = item.querySelector('label');
++    return label && label.textContent === text;
++  });
++  assert.ok(found, `Expected todo "${text}" to appear in the list`);
++});
++
++Then('the new todo input is empty', async function () {
++  const input = this.document.querySelector('.new-todo');
++  assert.strictEqual(input.value, '', 'Expected new todo input to be empty');
++});
++
++Then('the main section is visible', async function () {
++  const main = this.document.querySelector('.main');
++  const style = this.window.getComputedStyle(main);
++  assert.notStrictEqual(style.display, 'none', 'Expected main section to be visible');
++});
++
++Then('the footer is visible', async function () {
++  const footer = this.document.querySelector('.footer');
++  const style = this.window.getComputedStyle(footer);
++  assert.notStrictEqual(style.display, 'none', 'Expected footer to be visible');
++});
++
++Then('the main section is not visible', async function () {
++  const main = this.document.querySelector('.main');
++  const style = this.window.getComputedStyle(main);
++  assert.strictEqual(style.display, 'none', 'Expected main section to be hidden');
++});
++
++Then('the footer is not visible', async function () {
++  const footer = this.document.querySelector('.footer');
++  const style = this.window.getComputedStyle(footer);
++  assert.strictEqual(style.display, 'none', 'Expected footer to be hidden');
++});
++
++Then('the todo list is empty', async function () {
++  const items = await this.getTodoItems();
++  assert.strictEqual(items.length, 0, 'Expected todo list to be empty');
++});
++
++// Toggle all
++Given('the user has created todos {string}, {string}, and {string}', async function (a, b, c) {
++  await this.createTodo(a);
++  await this.createTodo(b);
++  await this.createTodo(c);
++});
++
++When('the user clicks the toggle-all checkbox', async function () {
++  const toggleAll = this.document.querySelector('#toggle-all');
++  toggleAll.click();
++  await wait(50);
++});
++
++Then('every todo is marked completed', async function () {
++  const items = await this.getTodoItems();
++  items.forEach(item => {
++    assert.ok(item.classList.contains('completed'), `Expected todo to be completed`);
++  });
++});
++
++Then('the toggle-all checkbox is checked', async function () {
++  const toggleAll = this.document.querySelector('#toggle-all');
++  assert.ok(toggleAll.checked, 'Expected toggle-all to be checked');
++});
++
++Given('all todos are completed', async function () {
++  const toggleAll = this.document.querySelector('#toggle-all');
++  if (!toggleAll.checked) {
++    toggleAll.click();
++  }
++});
++
++Then('every todo is marked active', async function () {
++  const items = await this.getTodoItems();
++  items.forEach(item => {
++    assert.ok(!item.classList.contains('completed'), `Expected todo to be active`);
++  });
++});
++
++Then('the toggle-all checkbox is unchecked', async function () {
++  const toggleAll = this.document.querySelector('#toggle-all');
++  assert.ok(!toggleAll.checked, 'Expected toggle-all to be unchecked');
++});
++
++Given('the user has created a todo {string}', async function (text) {
++  await this.createTodo(text);
++});
++
++// Item interactions
++When('the user clicks the checkbox of todo {string}', async function (text) {
++  const item = await this.getTodoByText(text);
++  const checkbox = item.querySelector('.toggle');
++  checkbox.click();
++  await wait(50);
++});
++
++Then('todo {string} is marked completed', async function (text) {
++  const item = await this.getTodoByText(text);
++  assert.ok(item.classList.contains('completed'), `Expected todo "${text}" to be completed`);
++});
++
++When('the user double-clicks the label of todo {string}', async function (text) {
++  const item = await this.getTodoByText(text);
++  const label = item.querySelector('label');
++  label.dispatchEvent(new this.window.MouseEvent('dblclick', { bubbles: true }));
++  await wait(50);
++});
++
++Then('todo {string} is in editing mode', async function (text) {
++  const item = await this.getTodoByText(text);
++  assert.ok(item.classList.contains('editing'), `Expected todo "${text}" to be in editing mode`);
++});
++
++Then('the edit input for todo {string} contains {string}', async function (text, expectedValue) {
++  const item = await this.getTodoByText(text);
++  const editInput = item.querySelector('.edit');
++  assert.strictEqual(editInput.value, expectedValue, `Expected edit input to contain "${expectedValue}"`);
++});
++
++When('the user hovers over todo {string}', async function (text) {
++  const item = await this.getTodoByText(text);
++  item.dispatchEvent(new this.window.MouseEvent('mouseenter', { bubbles: true }));
++  await wait(50);
++});
++
++Then('the destroy button for todo {string} is visible', async function (text) {
++  const item = await this.getTodoByText(text);
++  const destroy = item.querySelector('.destroy');
++  assert.ok(destroy, 'Expected destroy button to exist');
++});
++
++When('the user clicks the destroy button of todo {string}', async function (text) {
++  const item = await this.getTodoByText(text);
++  const destroy = item.querySelector('.destroy');
++  destroy.click();
++  await wait(50);
++});
++
++// Editing
++Given('the user is editing todo {string}', async function (text) {
++  const item = await this.getTodoByText(text);
++  const label = item.querySelector('label');
++  label.dispatchEvent(new this.window.MouseEvent('dblclick', { bubbles: true }));
++});
++
++When('the user changes the edit to {string} and presses Enter', async function (text) {
++  const editingItems = await this.document.querySelectorAll('.todo-list li.editing');
++  const item = editingItems[0];
++  const editInput = item.querySelector('.edit');
++  editInput.value = text;
++  editInput.dispatchEvent(new this.window.KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, bubbles: true }));
++  await wait(50);
++});
++
++When('the user changes the edit to {string} and blurs', async function (text) {
++  const editingItems = await this.document.querySelectorAll('.todo-list li.editing');
++  const item = editingItems[0];
++  const editInput = item.querySelector('.edit');
++  editInput.value = text;
++  editInput.dispatchEvent(new this.window.Event('blur', { bubbles: true }));
++  await wait(50);
++});
++
++When('the user changes the edit to {string} and presses Escape', async function (text) {
++  const editingItems = await this.document.querySelectorAll('.todo-list li.editing');
++  const item = editingItems[0];
++  const editInput = item.querySelector('.edit');
++  editInput.value = text;
++  editInput.dispatchEvent(new this.window.KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, bubbles: true }));
++  await wait(50);
++});
++
++Then('todo {string} is not in the list', async function (text) {
++  const items = await this.getTodoItems();
++  const found = items.some(item => {
++    const label = item.querySelector('label');
++    return label && label.textContent === text;
++  });
++  assert.ok(!found, `Expected todo "${text}" to not be in the list`);
++});
++
++// Counter
++Then('the counter shows {string}', async function (expectedText) {
++  const counter = this.document.querySelector('.todo-count');
++  assert.ok(counter.textContent.includes(expectedText), `Expected counter to show "${expectedText}"`);
++});
++
++// Clear completed
++Given('the user has created todos {string} and {string}', async function (a, b) {
++  await this.createTodo(a);
++  await this.createTodo(b);
++});
++
++When('the user completes the todo {string}', async function (text) {
++  const item = await this.getTodoByText(text);
++  const checkbox = item.querySelector('.toggle');
++  checkbox.click();
++  await wait(50);
++});
++
++When('the user clicks Clear completed', async function () {
++  const clearButton = this.document.querySelector('.clear-completed');
++  clearButton.click();
++  await wait(50);
++});
++
++Then('the Clear completed button is not visible', async function () {
++  const clearButton = this.document.querySelector('.clear-completed');
++  const style = this.window.getComputedStyle(clearButton);
++  assert.strictEqual(style.display, 'none', 'Expected Clear completed button to be hidden');
++});
++
++Then('the Clear completed button is visible', async function () {
++  const clearButton = this.document.querySelector('.clear-completed');
++  const style = this.window.getComputedStyle(clearButton);
++  assert.notStrictEqual(style.display, 'none', 'Expected Clear completed button to be visible');
++});
++
++// Persistence
++When('the page is reloaded', async function () {
++  await this.reloadPage();
++  await wait(50);
++});
++
++// Routing
++When('the user navigates to {string}', async function (route) {
++  await this.navigateTo(route);
++  await wait(50);
++});
++
++Then('the {string} filter is selected', async function (filterName) {
++  const links = this.document.querySelectorAll('.filters a');
++  const selected = Array.from(links).find(a => a.textContent === filterName);
++  assert.ok(selected, `Expected filter "${filterName}" to exist`);
++  assert.ok(selected.classList.contains('selected'), `Expected filter "${filterName}" to be selected`);
++});
++
++Then('the {string} filter is not selected', async function (filterName) {
++  const links = this.document.querySelectorAll('.filters a');
++  const link = Array.from(links).find(a => a.textContent === filterName);
++  if (link) {
++    assert.ok(!link.classList.contains('selected'), `Expected filter "${filterName}" to not be selected`);
++  }
++});
+diff --git a/features/support/world.js b/features/support/world.js
+new file mode 100644
+index 0000000..b466d15
+--- /dev/null
++++ b/features/support/world.js
+@@ -0,0 +1,75 @@
++const { World, setWorldConstructor } = require('@cucumber/cucumber');
++const { Window } = require('happy-dom');
++const fs = require('fs');
++const path = require('path');
++
++class TodoWorld extends World {
++  constructor(options) {
++    super(options);
++    this.window = null;
++    this.document = null;
++    this.baseUrl = null;
++  }
++
++  async loadApp() {
++    const htmlPath = path.resolve(__dirname, '../../../index.html');
++    const html = fs.readFileSync(htmlPath, 'utf8');
++    
++    this.window = new Window({ url: 'http://localhost' });
++    this.document = this.window.document;
++    this.document.write(html);
++    this.document.close();
++  }
++
++  async createTodo(title) {
++    const input = this.document.querySelector('.new-todo');
++    input.value = title;
++    input.dispatchEvent(new this.window.KeyboardEvent('keydown', { key: 'Enter', keyCode: 13 }));
++  }
++
++  async getTodoItems() {
++    return Array.from(this.document.querySelectorAll('.todo-list li'));
++  }
++
++  async getTodoByText(text) {
++    const items = await this.getTodoItems();
++    return items.find(item => {
++      const label = item.querySelector('label');
++      return label && label.textContent === text;
++    });
++  }
++
++  async navigateTo(route) {
++    const hash = route.replace('#', '');
++    this.window.location.hash = hash;
++    this.window.dispatchEvent(new this.window.Event('hashchange'));
++  }
++
++  async reloadPage() {
++    const htmlPath = path.resolve(__dirname, '../../index.html');
++    const html = fs.readFileSync(htmlPath, 'utf8');
++    
++    // Preserve localStorage state
++    const localStorage = this.window.localStorage;
++    
++    this.window = new Window({
++      url: this.window.location.href,
++      settings: {
++        enableJavaScriptEvaluation: true,
++        suppressInsecureJavaScriptEnvironmentWarning: true
++      }
++    });
++    this.document = this.window.document;
++    
++    // Restore localStorage
++    const keys = Object.keys(localStorage);
++    for (const key of keys) {
++      this.window.localStorage.setItem(key, localStorage.getItem(key));
++    }
++    
++    this.document.write(html);
++    this.document.close();
++  }
++}
++
++setWorldConstructor(TodoWorld);
+diff --git a/index.html b/index.html
+new file mode 100644
+index 0000000..5044c7e
+--- /dev/null
++++ b/index.html
+@@ -0,0 +1,251 @@
++<!doctype html>
++<html lang="en">
++	<head>
++		<meta charset="utf-8">
++		<meta name="viewport" content="width=device-width, initial-scale=1">
++		<title>Template • TodoMVC</title>
++		<link rel="stylesheet" href="node_modules/todomvc-common/base.css">
++		<link rel="stylesheet" href="node_modules/todomvc-app-css/index.css">
++		<link rel="stylesheet" href="css/app.css">
++	</head>
++	<body>
++		<section class="todoapp">
++			<header class="header">
++				<h1>todos</h1>
++				<input class="new-todo" placeholder="What needs to be done?" autofocus>
++			</header>
++			<section class="main">
++				<input id="toggle-all" class="toggle-all" type="checkbox">
++				<label for="toggle-all">Mark all as complete</label>
++				<ul class="todo-list">
++				</ul>
++			</section>
++			<footer class="footer">
++				<span class="todo-count"><strong>0</strong> items left</span>
++				<ul class="filters">
++					<li>
++						<a class="selected" href="#/">All</a>
++					</li>
++					<li>
++						<a href="#/active">Active</a>
++					</li>
++					<li>
++						<a href="#/completed">Completed</a>
++					</li>
++				</ul>
++				<button class="clear-completed">Clear completed</button>
++			</footer>
++		</section>
++		<footer class="info">
++			<p>Double-click to edit a todo</p>
++		</footer>
++		<script>
++			console.log('Script started');
++			const STORAGE_KEY = 'todos-javascript-app';
++			let todos = [];
++			let currentFilter = '/';
++
++			function init() {
++				loadTodos();
++				currentFilter = window.location.hash.replace('#', '') || '/';
++				render();
++				setupEventListeners();
++			}
++
++			function loadTodos() {
++				const stored = localStorage.getItem(STORAGE_KEY);
++				if (stored) {
++					todos = JSON.parse(stored);
++				}
++			}
++
++			function saveTodos() {
++				localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
++			}
++
++			function render() {
++				const todoList = document.querySelector('.todo-list');
++				const main = document.querySelector('.main');
++				const footer = document.querySelector('.footer');
++				const toggleAll = document.querySelector('#toggle-all');
++				const todoCount = document.querySelector('.todo-count');
++				const clearCompleted = document.querySelector('.clear-completed');
++
++				if (todos.length === 0) {
++					main.style.display = 'none';
++					footer.style.display = 'none';
++					todoList.innerHTML = '';
++					return;
++				}
++
++				main.style.display = '';
++				footer.style.display = '';
++
++				let filteredTodos = todos;
++				if (currentFilter === '/active') {
++					filteredTodos = todos.filter(todo => !todo.completed);
++				} else if (currentFilter === '/completed') {
++					filteredTodos = todos.filter(todo => todo.completed);
++				}
++
++				todoList.innerHTML = filteredTodos.map(todo => `
++					<li class="${todo.completed ? 'completed' : ''}" data-id="${todo.id}">
++						<div class="view">
++							<input class="toggle" type="checkbox" ${todo.completed ? 'checked' : ''}>
++							<label>${escapeHtml(todo.title)}</label>
++							<button class="destroy"></button>
++						</div>
++						<input class="edit" value="${escapeHtml(todo.title)}">
++					</li>
++				`).join('');
++
++				const activeTodos = todos.filter(todo => !todo.completed);
++				const count = activeTodos.length;
++				todoCount.innerHTML = `<strong>${count}</strong> ${count === 1 ? 'item' : 'items'} left`;
++
++				toggleAll.checked = todos.length > 0 && activeTodos.length === 0;
++
++				const completedTodos = todos.filter(todo => todo.completed);
++				clearCompleted.style.display = completedTodos.length > 0 ? '' : 'none';
++
++				document.querySelectorAll('.filters a').forEach(link => {
++					const href = link.getAttribute('href');
++					link.classList.toggle('selected', href === '#' + currentFilter);
++				});
++			}
++
++			function escapeHtml(text) {
++				const div = document.createElement('div');
++				div.textContent = text;
++				return div.innerHTML;
++			}
++
++			function setupEventListeners() {
++				console.log('Setting up event listeners');
++				const newTodoInput = document.querySelector('.new-todo');
++				const toggleAll = document.querySelector('#toggle-all');
++				const clearCompleted = document.querySelector('.clear-completed');
++				const todoList = document.querySelector('.todo-list');
++
++				newTodoInput.addEventListener('keydown', function(e) {
++					if (e.key === 'Enter' || e.keyCode === 13) {
++						const title = newTodoInput.value.trim();
++						if (title) {
++							todos.push({
++								id: Date.now(),
++								title: title,
++								completed: false
++							});
++							saveTodos();
++							newTodoInput.value = '';
++							render();
++						}
++					}
++				});
++
++				toggleAll.addEventListener('change', function() {
++					const completed = toggleAll.checked;
++					todos.forEach(todo => {
++						todo.completed = completed;
++					});
++					saveTodos();
++					render();
++				});
++
++				clearCompleted.addEventListener('click', function() {
++					todos = todos.filter(todo => !todo.completed);
++					saveTodos();
++					render();
++				});
++
++				todoList.addEventListener('click', function(e) {
++					console.log('Click event on todoList:', e.target.className);
++					const target = e.target;
++					const li = target.closest('li');
++					if (!li) {
++						console.log('No li found');
++						return;
++					}
++					const id = parseInt(li.dataset.id);
++					console.log('Todo id:', id);
++
++					if (target.classList.contains('toggle')) {
++						const todo = todos.find(t => t.id === id);
++						if (todo) {
++							todo.completed = target.checked;
++							saveTodos();
++							render();
++						}
++					} else if (target.classList.contains('destroy')) {
++						console.log('Destroy clicked');
++						todos = todos.filter(t => t.id !== id);
++						saveTodos();
++						render();
++					}
++				});
++
++				todoList.addEventListener('dblclick', function(e) {
++					if (e.target.tagName === 'LABEL') {
++						const li = e.target.closest('li');
++						li.classList.add('editing');
++						const editInput = li.querySelector('.edit');
++						editInput.focus();
++					}
++				});
++
++				todoList.addEventListener('keydown', function(e) {
++					if (e.target.classList.contains('edit')) {
++						const li = e.target.closest('li');
++						const id = parseInt(li.dataset.id);
++						
++						if (e.key === 'Enter' || e.keyCode === 13) {
++							saveEdit(id, e.target.value, li);
++						} else if (e.key === 'Escape' || e.keyCode === 27) {
++							li.classList.remove('editing');
++							e.target.value = li.querySelector('label').textContent;
++						}
++					}
++				});
++
++				todoList.addEventListener('blur', function(e) {
++					if (e.target.classList.contains('edit')) {
++						const li = e.target.closest('li');
++						const id = parseInt(li.dataset.id);
++						saveEdit(id, e.target.value, li);
++					}
++				}, true);
++
++				window.addEventListener('hashchange', function() {
++					currentFilter = window.location.hash.replace('#', '') || '/';
++					render();
++				});
++
++				currentFilter = window.location.hash.replace('#', '') || '/';
++			}
++
++			function saveEdit(id, value, li) {
++				const trimmedValue = value.trim();
++				if (trimmedValue) {
++					const todo = todos.find(t => t.id === id);
++					if (todo) {
++						todo.title = trimmedValue;
++						saveTodos();
++					}
++				} else {
++					todos = todos.filter(t => t.id !== id);
++					saveTodos();
++				}
++				li.classList.remove('editing');
++				render();
++			}
++
++			if (typeof document !== 'undefined') {
++				if (document.readyState === 'loading') {
++					document.addEventListener('DOMContentLoaded', init);
++				} else {
++					init();
++				}
++			}
++		</script>
++	</body>
++</html>
+diff --git a/js/app.js b/js/app.js
+new file mode 100644
+index 0000000..815704b
+--- /dev/null
++++ b/js/app.js
+@@ -0,0 +1,216 @@
++console.log('Script loaded');
++const STORAGE_KEY = 'todos-javascript-app';
++let todos = [];
++let currentFilter = '/';
++
++function init() {
++    console.log('init called');
++    loadTodos();
++    render();
++    setupEventListeners();
++  }
++
++  function loadTodos() {
++    const stored = localStorage.getItem(STORAGE_KEY);
++    if (stored) {
++      todos = JSON.parse(stored);
++    }
++  }
++
++  function saveTodos() {
++    localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
++  }
++
++  function render() {
++    const todoList = document.querySelector('.todo-list');
++    const main = document.querySelector('.main');
++    const footer = document.querySelector('.footer');
++    const toggleAll = document.querySelector('#toggle-all');
++    const todoCount = document.querySelector('.todo-count');
++    const clearCompleted = document.querySelector('.clear-completed');
++
++    // Hide main and footer when no todos
++    if (todos.length === 0) {
++      main.style.display = 'none';
++      footer.style.display = 'none';
++      return;
++    }
++
++    main.style.display = '';
++    footer.style.display = '';
++
++    // Filter todos based on current route
++    let filteredTodos = todos;
++    if (currentFilter === '/active') {
++      filteredTodos = todos.filter(todo => !todo.completed);
++    } else if (currentFilter === '/completed') {
++      filteredTodos = todos.filter(todo => todo.completed);
++    }
++
++    // Render todo items
++    todoList.innerHTML = filteredTodos.map(todo => `
++      <li class="${todo.completed ? 'completed' : ''}" data-id="${todo.id}">
++        <div class="view">
++          <input class="toggle" type="checkbox" ${todo.completed ? 'checked' : ''}>
++          <label>${escapeHtml(todo.title)}</label>
++          <button class="destroy"></button>
++        </div>
++        <input class="edit" value="${escapeHtml(todo.title)}">
++      </li>
++    `).join('');
++
++    // Update counter
++    const activeTodos = todos.filter(todo => !todo.completed);
++    const count = activeTodos.length;
++    todoCount.innerHTML = `<strong>${count}</strong> ${count === 1 ? 'item' : 'items'} left`;
++
++    // Update toggle-all
++    toggleAll.checked = todos.length > 0 && activeTodos.length === 0;
++
++    // Show/hide clear completed
++    const completedTodos = todos.filter(todo => todo.completed);
++    clearCompleted.style.display = completedTodos.length > 0 ? '' : 'none';
++
++    // Update filter links
++    document.querySelectorAll('.filters a').forEach(link => {
++      const href = link.getAttribute('href');
++      link.classList.toggle('selected', href === '#' + currentFilter);
++    });
++  }
++
++  function escapeHtml(text) {
++    const div = document.createElement('div');
++    div.textContent = text;
++    return div.innerHTML;
++  }
++
++  function setupEventListeners() {
++    const newTodoInput = document.querySelector('.new-todo');
++    const toggleAll = document.querySelector('#toggle-all');
++    const clearCompleted = document.querySelector('.clear-completed');
++    const todoList = document.querySelector('.todo-list');
++
++    // New todo input
++    newTodoInput.addEventListener('keydown', function(e) {
++      if (e.key === 'Enter' || e.keyCode === 13) {
++        const title = newTodoInput.value.trim();
++        if (title) {
++          todos.push({
++            id: Date.now(),
++            title: title,
++            completed: false
++          });
++          saveTodos();
++          newTodoInput.value = '';
++          render();
++        }
++      }
++    });
++
++    // Toggle all
++    toggleAll.addEventListener('change', function() {
++      const completed = toggleAll.checked;
++      todos.forEach(todo => {
++        todo.completed = completed;
++      });
++      saveTodos();
++      render();
++    });
++
++    // Clear completed
++    clearCompleted.addEventListener('click', function() {
++      todos = todos.filter(todo => !todo.completed);
++      saveTodos();
++      render();
++    });
++
++    // Todo list interactions
++    todoList.addEventListener('click', function(e) {
++      const target = e.target;
++      const li = target.closest('li');
++      if (!li) return;
++      const id = parseInt(li.dataset.id);
++
++      if (target.classList.contains('toggle')) {
++        // Toggle todo completion
++        const todo = todos.find(t => t.id === id);
++        if (todo) {
++          todo.completed = target.checked;
++          saveTodos();
++          render();
++        }
++      } else if (target.classList.contains('destroy')) {
++        // Delete todo
++        todos = todos.filter(t => t.id !== id);
++        saveTodos();
++        render();
++      }
++    });
++
++    // Double-click to edit
++    todoList.addEventListener('dblclick', function(e) {
++      if (e.target.tagName === 'LABEL') {
++        const li = e.target.closest('li');
++        li.classList.add('editing');
++        const editInput = li.querySelector('.edit');
++        editInput.focus();
++      }
++    });
++
++    // Edit input events
++    todoList.addEventListener('keydown', function(e) {
++      if (e.target.classList.contains('edit')) {
++        const li = e.target.closest('li');
++        const id = parseInt(li.dataset.id);
++        
++        if (e.key === 'Enter' || e.keyCode === 13) {
++          saveEdit(id, e.target.value, li);
++        } else if (e.key === 'Escape' || e.keyCode === 27) {
++          li.classList.remove('editing');
++          e.target.value = li.querySelector('label').textContent;
++        }
++      }
++    });
++
++    todoList.addEventListener('blur', function(e) {
++      if (e.target.classList.contains('edit')) {
++        const li = e.target.closest('li');
++        const id = parseInt(li.dataset.id);
++        saveEdit(id, e.target.value, li);
++      }
++    }, true);
++
++    // Hash change for routing
++    window.addEventListener('hashchange', function() {
++      currentFilter = window.location.hash.replace('#', '') || '/';
++      render();
++    });
++
++    // Initialize filter from URL
++    currentFilter = window.location.hash.replace('#', '') || '/';
++  }
++
++  function saveEdit(id, value, li) {
++    const trimmedValue = value.trim();
++    if (trimmedValue) {
++      const todo = todos.find(t => t.id === id);
++      if (todo) {
++        todo.title = trimmedValue;
++        saveTodos();
++      }
++    } else {
++      todos = todos.filter(t => t.id !== id);
++      saveTodos();
++    }
++    li.classList.remove('editing');
++    render();
++  }
++
++// Initialize on DOM ready
++if (typeof document !== 'undefined') {
++  if (document.readyState === 'loading') {
++    document.addEventListener('DOMContentLoaded', init);
++  } else {
++    init();
++  }
++}

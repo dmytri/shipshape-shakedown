@@ -1,0 +1,313 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..a3d4cd0
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,29 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git.
++
++## Intent
++
++Build TodoMVC per `assets/app-spec.md` from `assets/app-template.index.html`. Vanilla JS, no preprocessors, localStorage persistence. Cucumber test runner with happy-dom for DOM-level scenarios.
++
++## Authored specs
++
++Four feature files written under `features/`:
++- `todo-management.feature` — add, display, toggle, delete, mark-all, clear-completed, counter, empty state
++- `todo-editing.feature` — inline edit, blur/enter save, empty destroy, escape cancel
++- `persistence.feature` — localStorage save/load, completed state, editing-not-persisted, filter selection
++- `routing.feature` — hash-based all/active/completed filtering, filter persistence
++
++## Watchbill
++
++`watchbill.json` orders verification at `features/todo-management.feature` first (core behaviour), then persistence, editing, routing.
++
++## Deck
++
++Clean tree. No production code exists yet. Next: QM on the watchbill scope.
++
++## Open questions
++
++None. User confirmed proceed without waiting.
+\ No newline at end of file
+diff --git a/features/persistence.feature b/features/persistence.feature
+new file mode 100644
+index 0000000..38ef2f3
+--- /dev/null
++++ b/features/persistence.feature
+@@ -0,0 +1,32 @@
++Feature: Persistence
++  As a user
++  I want my todos to persist across page reloads
++  So that I do not lose my tasks
++
++  Background:
++    Given the app is loaded
++
++  Scenario: Todos persist after page reload
++    Given I have added a todo titled "Persist this"
++    When the page is reloaded
++    Then I see a todo with the title "Persist this"
++
++  Scenario: Completed state persists after page reload
++    Given I have added a todo titled "Persist this"
++    And the todo "Persist this" is completed
++    When the page is reloaded
++    Then the todo "Persist this" has the completed class
++
++  Scenario: Editing mode is not persisted after page reload
++    Given I have added a todo titled "Persist this"
++    And the todo "Persist this" is in editing mode
++    When the page is reloaded
++    Then the todo "Persist this" does not have the editing class
++
++  Scenario: Active filter selection persists after page reload
++    Given I have added todos titled "Task A" and "Task B"
++    And "Task A" is completed
++    And I click the "Active" filter
++    When the page is reloaded
++    Then the "Active" filter link has the selected class
++    And I see only active todos in the list
+\ No newline at end of file
+diff --git a/features/routing.feature b/features/routing.feature
+new file mode 100644
+index 0000000..fbdc804
+--- /dev/null
++++ b/features/routing.feature
+@@ -0,0 +1,38 @@
++Feature: Routing
++  As a user
++  I want to filter my todos by their completion state
++  So that I can focus on active or completed tasks
++
++  Background:
++    Given the app is loaded
++    And I have added todos titled "Active task" and "Completed task"
++    And "Completed task" is completed
++
++  Scenario: Default route shows all todos
++    Given the URL hash is "#/"
++    Then I see a todo with the title "Active task"
++    And I see a todo with the title "Completed task"
++
++  Scenario: Active filter shows only active todos
++    When I click the "Active" filter link
++    Then I see a todo with the title "Active task"
++    And I do not see a todo with the title "Completed task"
++    And the "Active" filter link has the selected class
++
++  Scenario: Completed filter shows only completed todos
++    When I click the "Completed" filter link
++    Then I see a todo with the title "Completed task"
++    And I do not see a todo with the title "Active task"
++    And the "Completed" filter link has the selected class
++
++  Scenario: All filter shows all todos
++    Given I am viewing the active filter
++    When I click the "All" filter link
++    Then I see a todo with the title "Active task"
++    And I see a todo with the title "Completed task"
++    And the "All" filter link has the selected class
++
++  Scenario: Completing a todo hides it in active filter
++    Given I am viewing the active filter
++    When I toggle the todo "Active task" as completed
++    Then I do not see a todo with the title "Active task"
+\ No newline at end of file
+diff --git a/features/todo-editing.feature b/features/todo-editing.feature
+new file mode 100644
+index 0000000..4c7ca42
+--- /dev/null
++++ b/features/todo-editing.feature
+@@ -0,0 +1,46 @@
++Feature: Todo Editing
++  As a user
++  I want to edit my todo titles
++  So that I can correct mistakes or update tasks
++
++  Background:
++    Given the app is loaded
++    And I have added a todo titled "Original title"
++
++  Scenario: Double-clicking a todo label activates editing mode
++    When I double-click the label of todo "Original title"
++    Then the todo item has the editing class
++    And the edit input is focused and contains "Original title"
++
++  Scenario: Saving an edit on Enter key
++    When I double-click the label of todo "Original title"
++    And I change the edit input value to "Updated title"
++    And I press Enter in the edit input
++    Then the todo item no longer has the editing class
++    And the todo label shows "Updated title"
++
++  Scenario: Saving an edit on blur
++    When I double-click the label of todo "Original title"
++    And I change the edit input value to "Updated title"
++    And the edit input loses focus
++    Then the todo item no longer has the editing class
++    And the todo label shows "Updated title"
++
++  Scenario: Empty edit destroys the todo
++    When I double-click the label of todo "Original title"
++    And I change the edit input value to ""
++    And I press Enter in the edit input
++    Then I do not see a todo with the title "Original title"
++
++  Scenario: Whitespace-only edit destroys the todo
++    When I double-click the label of todo "Original title"
++    And I change the edit input value to "   "
++    And I press Enter in the edit input
++    Then I do not see a todo with the title "Original title"
++
++  Scenario: Escape key cancels editing and restores original title
++    When I double-click the label of todo "Original title"
++    And I change the edit input value to "Changed title"
++    And I press Escape in the edit input
++    Then the todo item no longer has the editing class
++    And the todo label shows "Original title"
+\ No newline at end of file
+diff --git a/features/todo-management.feature b/features/todo-management.feature
+new file mode 100644
+index 0000000..e6cada4
+--- /dev/null
++++ b/features/todo-management.feature
+@@ -0,0 +1,76 @@
++Feature: Todo Management
++  As a user
++  I want to manage my todo items
++  So that I can keep track of tasks
++
++  Background:
++    Given the app is loaded
++
++  Scenario: Adding a new todo creates an item in the list
++    When I type "Buy groceries" into the new-todo input
++    And I press Enter
++    Then I see a todo item with the title "Buy groceries"
++
++  Scenario: Main and footer are hidden when there are no todos
++    Given there are no todos in the list
++    Then the main section is hidden
++    And the footer section is hidden
++
++  Scenario: Main and footer are shown when a todo exists
++    When I add a todo titled "Walk the dog"
++    Then the main section is visible
++    And the footer section is visible
++
++  Scenario: Toggling a todo marks it as completed
++    Given I have added a todo titled "Finish report"
++    When I toggle the todo "Finish report" as completed
++    Then the todo "Finish report" has the completed class
++    And its checkbox is checked
++
++  Scenario: Toggling a completed todo marks it as active
++    Given I have a completed todo titled "Buy milk"
++    When I toggle the todo "Buy milk" as active
++    Then the todo "Buy milk" does not have the completed class
++    And its checkbox is not checked
++
++  Scenario: Deleting a todo removes it from the list
++    Given I have added a todo titled "Delete me"
++    When I click the destroy button for "Delete me"
++    Then I do not see a todo with the title "Delete me"
++
++  Scenario: Marking all todos as complete
++    Given I have added todos titled "Task A" and "Task B"
++    When I click the toggle-all checkbox
++    Then all todos have the completed class
++
++  Scenario: Clearing all completed todos
++    Given I have added todos titled "Task A" and "Task B"
++    And "Task A" is completed
++    When I click the clear-completed button
++    Then I do not see a todo with the title "Task A"
++    And I see a todo with the title "Task B"
++
++  Scenario: Clear completed button is hidden when no todos are completed
++    Given I have added a todo titled "Task A"
++    And "Task A" is not completed
++    Then the clear-completed button is hidden
++
++  Scenario: Clear completed button is visible when a todo is completed
++    Given I have added a todo titled "Task A"
++    And "Task A" is completed
++    Then the clear-completed button is visible
++
++  Scenario: Active item count displays correctly
++    Given I have added todos titled "Task A" and "Task B"
++    And "Task A" is completed
++    Then the todo-count shows "1 item left"
++
++  Scenario: Active item count is pluralized
++    Given I have added todos titled "Task A" and "Task B"
++    And neither todo is completed
++    Then the todo-count shows "2 items left"
++
++  Scenario: Empty input is ignored on Enter
++    When I type "   " into the new-todo input
++    And I press Enter
++    Then no new todo item is created
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..441b5ec
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,50 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/todo-management.feature:Adding a new todo creates an item in the list",
++      "features/todo-management.feature:Main and footer are hidden when there are no todos",
++      "features/todo-management.feature:Main and footer are shown when a todo exists",
++      "features/todo-management.feature:Toggling a todo marks it as completed",
++      "features/todo-management.feature:Toggling a completed todo marks it as active",
++      "features/todo-management.feature:Deleting a todo removes it from the list",
++      "features/todo-management.feature:Active item count displays correctly",
++      "features/todo-management.feature:Active item count is pluralized",
++      "features/todo-management.feature:Empty input is ignored on Enter"
++    ]
++  },
++  "watch2": {
++    "scenarios": [
++      "features/todo-management.feature:Marking all todos as complete",
++      "features/todo-management.feature:Clearing all completed todos",
++      "features/todo-management.feature:Clear completed button is hidden when no todos are completed",
++      "features/todo-management.feature:Clear completed button is visible when a todo is completed"
++    ]
++  },
++  "watch3": {
++    "scenarios": [
++      "features/persistence.feature:Todos persist after page reload",
++      "features/persistence.feature:Completed state persists after page reload",
++      "features/persistence.feature:Editing mode is not persisted after page reload",
++      "features/persistence.feature:Active filter selection persists after page reload"
++    ]
++  },
++  "watch4": {
++    "scenarios": [
++      "features/todo-editing.feature:Double-clicking a todo label activates editing mode",
++      "features/todo-editing.feature:Saving an edit on Enter key",
++      "features/todo-editing.feature:Saving an edit on blur",
++      "features/todo-editing.feature:Empty edit destroys the todo",
++      "features/todo-editing.feature:Whitespace-only edit destroys the todo",
++      "features/todo-editing.feature:Escape key cancels editing and restores original title"
++    ]
++  },
++  "watch5": {
++    "scenarios": [
++      "features/routing.feature:Default route shows all todos",
++      "features/routing.feature:Active filter shows only active todos",
++      "features/routing.feature:Completed filter shows only completed todos",
++      "features/routing.feature:All filter shows all todos",
++      "features/routing.feature:Completing a todo hides it in active filter"
++    ]
++  }
++}
+\ No newline at end of file

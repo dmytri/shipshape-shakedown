@@ -1,0 +1,133 @@
+diff --git a/features/step_definitions/todos.js b/features/step_definitions/todos.js
+index e9cf359..b4d6107 100644
+--- a/features/step_definitions/todos.js
++++ b/features/step_definitions/todos.js
+@@ -314,6 +314,54 @@ Then('the todo list shows {int} item', function (count) {
+   assert.strictEqual(getTodoItems(this.document).length, count);
+ });
+ 
++// ---- Servable page ----
++
++Given('the project root has an index.html', function () {
++  const fs = require('fs');
++  const path = require('path');
++  const indexPath = path.join(__dirname, '..', '..', 'index.html');
++  assert(fs.existsSync(indexPath), 'Expected index.html at project root');
++});
++
++When('the index.html is loaded in a browser', function () {
++  const fs = require('fs');
++  const path = require('path');
++  const { Window } = require('happy-dom');
++  const indexPath = path.join(__dirname, '..', '..', 'index.html');
++  const html = fs.readFileSync(indexPath, 'utf-8');
++  const win = new Window({ url: 'http://localhost/' });
++  win.document.write(html);
++  win.document.close();
++  const appPath = path.join(__dirname, '..', '..', 'js', 'app.js');
++  if (fs.existsSync(appPath)) {
++    const code = fs.readFileSync(appPath, 'utf-8');
++    try { win.eval(code); } catch (e) { /* verify structural not behavioural */ }
++  }
++  this.window = win;
++  this.document = win.document;
++});
++
++Then('the page has a new-todo input with placeholder {string}', function (expected) {
++  const input = qs(this.document, '.new-todo');
++  assert(input, 'Expected .new-todo input');
++  assert.strictEqual(input.placeholder, expected);
++});
++
++Then('the page has a section with class {string}', function (cls) {
++  const el = qs(this.document, '.' + cls);
++  assert(el, 'Expected element with class "' + cls + '"');
++});
++
++Then('the page has a footer with class {string}', function (cls) {
++  const el = qs(this.document, '.' + cls);
++  assert(el, 'Expected element with class "' + cls + '"');
++});
++
++Then('the page has a script tag loading {string}', function (src) {
++  const scripts = qsa(this.document, 'script[src="' + src + '"]');
++  assert(scripts.length > 0, 'Expected script tag with src="' + src + '"');
++});
++
+ Then('{string} is not shown in the todo list', function (text) {
+   assert(!Array.from(getTodoItems(this.document)).some(i => getTodoText(i) === text));
+ });
+\ No newline at end of file
+diff --git a/features/todos.feature b/features/todos.feature
+index 6ad5dd9..01f473e 100644
+--- a/features/todos.feature
++++ b/features/todos.feature
+@@ -106,4 +106,14 @@ Feature: Todo management
+     Given I type "Buy milk" into the new-todo input and press Enter
+     When I double-click the label of the todo
+     Then the todo item receives the class "editing"
+-    And the edit input is focused
+\ No newline at end of file
++    And the edit input is focused
++
++  Rule: Servable app page
++
++  Scenario: The app page is servable from index.html at the project root
++    Given the project root has an index.html
++    When the index.html is loaded in a browser
++    Then the page has a new-todo input with placeholder "What needs to be done?"
++    And the page has a section with class "main"
++    And the page has a footer with class "footer"
++    And the page has a script tag loading "js/app.js"
+\ No newline at end of file
+diff --git a/index.html b/index.html
+new file mode 100644
+index 0000000..2fb0f8c
+--- /dev/null
++++ b/index.html
+@@ -0,0 +1,44 @@
++<!doctype html>
++<html lang="en">
++<head>
++  <meta charset="utf-8">
++  <meta name="viewport" content="width=device-width, initial-scale=1">
++  <title>Template • TodoMVC</title>
++  <link rel="stylesheet" href="node_modules/todomvc-common/base.css">
++  <link rel="stylesheet" href="node_modules/todomvc-app-css/index.css">
++</head>
++<body>
++  <section class="todoapp">
++    <header class="header">
++      <h1>todos</h1>
++      <input class="new-todo" placeholder="What needs to be done?" autofocus>
++    </header>
++    <section class="main">
++      <input id="toggle-all" class="toggle-all" type="checkbox">
++      <label for="toggle-all">Mark all as complete</label>
++      <ul class="todo-list"></ul>
++    </section>
++    <footer class="footer">
++      <span class="todo-count"><strong>0</strong> item left</span>
++      <ul class="filters">
++        <li>
++          <a class="selected" href="#/">All</a>
++        </li>
++        <li>
++          <a href="#/active">Active</a>
++        </li>
++        <li>
++          <a href="#/completed">Completed</a>
++        </li>
++      </ul>
++      <button class="clear-completed">Clear completed</button>
++    </footer>
++  </section>
++  <footer class="info">
++    <p>Double-click to edit a todo</p>
++    <p>Created by <a href="http://todomvc.com">you</a></p>
++    <p>Part of <a href="http://todomvc.com">TodoMVC</a></p>
++  </footer>
++  <script src="js/app.js"></script>
++</body>
++</html>
+\ No newline at end of file

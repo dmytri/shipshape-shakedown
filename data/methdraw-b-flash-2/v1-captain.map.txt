@@ -1,0 +1,37 @@
+# banked: 2026-07-26T13:05:07Z
+# verdict: PENDING
+# leg: {  "name": "v1-captain",  "model": "deepseek/deepseek-v4-flash",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/methdraw-b-flash-2/sim",  "timeout_s": 1200,  "skills": [    "/home/exedev/shipshape-shakedown/experiments/yoink-settle/skills/shipshape",    "/home/exedev/shipshape-shakedown/experiments/yoink-settle/skills/captain"  ]}
+
+
+=== v1-captain.session.jsonl ===
+  turns=26  wall=123.7s  in=122095  out=9916  cache_read=752384  cost=$0.0274
+  role reads: captain@t0 -> shipshape@t0
+  roles loaded: captain, shipshape
+  ~ repeated tool signature at turns [1, 8, 9, 10, 11, 12] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    1430/198      512 $0.0002  read, read
+    t1   18146/246        0 $0.0017  read, read, read
+    t2   28220/207      512 $0.0027  bash
+    t3     436/90     28672 $0.0006  read
+    t4     881/442    28672 $0.0007  bash
+    t5   12222/579    17920 $0.0016  bash
+    t6    2259/404    28672 $0.0008  bash
+    t7    1908/516    29440 $0.0008  write
+    t8     684/560    31232 $0.0008  write
+    t9    2577/512    29952 $0.0009  write
+    t10   1350/528    31744 $0.0008  write
+    t11    651/400    33024 $0.0008  write
+    t12   3408/339    30720 $0.0010  write
+    t13   5846/894    28672 $0.0013  write
+    t14   2691/894    32768 $0.0010  write
+    t15   2095/106    34304 $0.0009  write
+    t16    200/124    36352 $0.0007  write
+    t17   1395/343    35328 $0.0009  edit
+    t18   3579/321    33536 $0.0010  write
+    t19   4716/149    32768 $0.0011  bash
+    t20   5365/132    32768 $0.0011  read
+    t21   2344/147    36352 $0.0009  bash
+    t22   7002/208    36864 $0.0014  read
+    t23   3192/684    40960 $0.0012  edit
+    t24   8027/188    36864 $0.0015  bash
+    t25   1471/705    43776 $0.0011  -
