@@ -4,7 +4,7 @@ from datetime import datetime
 
 
 def _parse(stamp: str) -> datetime:
-    return datetime.fromisoformat(stamp.replace("Z", "+00:00"))
+    return datetime.fromisoformat(stamp)
 
 
 def next_high_tide(tides: list[dict], after: str) -> dict:
