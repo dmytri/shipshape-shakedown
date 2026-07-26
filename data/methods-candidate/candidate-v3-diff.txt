@@ -529,7 +529,7 @@ diff -ru experiments/yoink-settle/skills/shipshape/SKILL.md experiments/methods-
  
 diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods-candidate/skills/shipwright/SKILL.md
 --- experiments/yoink-settle/skills/shipwright/SKILL.md	2026-07-25 13:45:47.464641515 +0000
-+++ experiments/methods-candidate/skills/shipwright/SKILL.md	2026-07-26 19:55:50.034854137 +0000
++++ experiments/methods-candidate/skills/shipwright/SKILL.md	2026-07-26 20:05:57.766860405 +0000
 @@ -36,38 +36,84 @@
  
  ## Discovery tools
@@ -670,7 +670,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
 +- `discovery`: that same static form alone, as a proof gate, and a gate returns a verdict: it exits non-zero where a scenario's steps no longer bind. A discovery that prints undefined steps and exits green is a list, and the gate it was derived to be never fires.
 +- `regression`: real per-line and per-branch coverage native to the stack, such as c8 for Node and TypeScript, coverage.py for Python, `cargo llvm-cov` for Rust, SimpleCov for Ruby, or `go test -cover` for Go, over every configured tier, cheapest tier first, each tier composed with its tier tag. Record a gap for Captain where the stack has no such tool, and record it the same way where the tool exists but this environment cannot install it, such as an install needing system libraries or privileges the fit does not hold. A fit spends its session deriving the rigging, never on an install that will not land: the gap is a line in the report and `none` in the method, and Captain decides. A fit that burns its turn on a package manager writes no rigging at all, which is the one outcome worse than a named gap. Derive it without stop-on-first-failure: harbour reads the whole picture.
 +- `condemnation`: the type checker, the linter, and the `prove` run over `$SS_SCENARIO`, the scenarios whose steps plank the touched seams.
-+- `spec-lint`: the Gherkin linter and any Markdown lint for Captain-authored specs and assets, the Gherkin lint first, so one gate reddens on either fault. gplint is the default on every stack: it runs through `npx` exactly as Yoink does, so it is always available and this method is never `none` and specs are never fitted out unlinted. The one exception is a stack whose own Gherkin runner ships a well-maintained linter paired with that runner; derive that one where it exists, and gplint everywhere else. A Gherkin linter needs its rule file, and gplint fails without one, so fitting out writes it alongside the method. Derive the MAXIMAL rule set, every rule the linter offers that encodes a Scenario-writing agreement requirement, each at error: the agreement's rules are already binding, and a rule the linter decides is a rule no role spends a read on. That includes the closed tag vocabulary through `allowed-tags`, carrying the tags this skill's Tags table names plus the project's own tier tags from `## Tiers`; the hedging and placeholder words the agreement's Avoid list bans, through `no-restricted-patterns`; kebab-case feature file names; strict `Given`, `When`, `Then` order; the step ceiling a scenario stays within; `And` for a repeated keyword; unnamed features and scenarios; outlines without examples; unused example variables; duplicate names; and the whitespace and indentation shape. Captain owns and tunes that file thereafter, per the Project configuration section, and relaxes a rule that gets in a project's way rather than dropping the file. A method whose config the fit did not write is a method proven by nothing, because its first run fails on the missing file. Prove the rule set red once at adoption, per the Verification policy's planted-red rule: a bare comment is the one Avoid-list item a Gherkin linter cannot see, since comments leave the syntax tree, so it stays Captain's own discipline and the conformance rule set's to catch.
++- `spec-lint`: the Gherkin linter and any Markdown lint for Captain-authored specs and assets, the Gherkin lint first, so one gate reddens on either fault. gplint is the default on every stack: it runs through `npx` exactly as Yoink does, so it is always available and this method is never `none` and specs are never fitted out unlinted. The one exception is a stack whose own Gherkin runner ships a well-maintained linter paired with that runner; derive that one where it exists, and gplint everywhere else. A Gherkin linter needs its rule file, and gplint fails without one, so fitting out writes it alongside the method. Copy the rule file from `templates.md`, which carries the maximal set already: every rule that encodes a Scenario-writing agreement requirement, each at error, needing only this project's own tier tags added to `allowed-tags`. A fit that enumerates a linter's rules to rebuild that list spends its session on what the template already holds. The set covers: the agreement's rules are already binding, and a rule the linter decides is a rule no role spends a read on. That includes the closed tag vocabulary through `allowed-tags`, carrying the tags this skill's Tags table names plus the project's own tier tags from `## Tiers`; the hedging and placeholder words the agreement's Avoid list bans, through `no-restricted-patterns`; kebab-case feature file names; strict `Given`, `When`, `Then` order; the step ceiling a scenario stays within; `And` for a repeated keyword; unnamed features and scenarios; outlines without examples; unused example variables; duplicate names; and the whitespace and indentation shape. Captain owns and tunes that file thereafter, per the Project configuration section, and relaxes a rule that gets in a project's way rather than dropping the file. A method whose config the fit did not write is a method proven by nothing, because its first run fails on the missing file. Prove the rule set red once at adoption, per the Verification policy's planted-red rule: a bare comment is the one Avoid-list item a Gherkin linter cannot see, since comments leave the syntax tree, so it stays Captain's own discipline and the conformance rule set's to catch.
 +- `dead-code`: the stack's own unused-code reporter over the implementation paths, reporting unused files, unused exports, and unused dependencies. Derive knip on a JavaScript or TypeScript project, vulture on Python, and `cargo-machete` on Rust, which reads the manifest and needs no nightly toolchain. Its non-zero exit means findings exist, not that the voyage is blocked: unreachable code is harbour work, so Shipwright triages the report and the finding rides to the next harbour. This is the reference analysis behind an unreachable-code finding: a reporter reads the resolved module graph, which a text search cannot, so derive the tool wherever the ecosystem has one and record a gap for Captain where it does not.
 +- `install`: the project's package manager installing or upgrading `$SS_DEPENDENCY`, writing the manifest and lockfile as that manager writes them. On Python, derive uv against `pyproject.toml`, which resolves, locks and runs from one manifest; a `requirements.txt` and a hand-managed virtualenv are the older shape, and a fit that finds them records the gap for Captain rather than building new methods on them. The Python runner is pytest with pytest-bdd, which rides the ecosystem the language settled on: its fixtures, its markers from Gherkin tags, its coverage plugin, and its own selection. It reports no step usage and has no dry-run form, so `plank-join` reads the step decorators with a structural query and `discovery` collects without executing; deriving those two is the price of the runner every other Python tool already works with.
 +- `ship` and `ship-verify`: per outbound target, the command that ships it and the check that reads the live artifact its users consume. `ship-verify` returns its verdict from that artifact, never from the ship command's exit: a publish that exited zero and a package a user can install are different claims, and only the second is the check. A runbook longer than a plan lives in `AGENTS.md` and `ship-verify` points at it.
@@ -805,3 +805,166 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
  - coverage summary, overall percent and uncovered module count,
  - policy violations found by category,
  - verification-economy findings, scenario and lens,
+diff -ru experiments/yoink-settle/skills/shipwright/templates.md experiments/methods-candidate/skills/shipwright/templates.md
+--- experiments/yoink-settle/skills/shipwright/templates.md	2026-07-23 19:59:25.231544194 +0000
++++ experiments/methods-candidate/skills/shipwright/templates.md	2026-07-26 20:05:57.766860405 +0000
+@@ -26,17 +26,22 @@
+ - assets: <one path per line, or none>
+ - scantlings: <machine-readable contract files in place, one path per line, or none>
+ 
+-## Commands
++## Methods
+ 
+-- discover: `<derived or none>`
+-- focused: `<derived command with {scenario}>`
+-- broad: `<derived enumeration sweep, without stop-on-first-failure, or none>`
+-- coverage: `<derived or none>`
+-- step-usage: `<derived or none>`
+-- plank-inventory: `<derived or none>`
+-- typecheck: `<derived or none>`
+-- lint: `<derived or none>`
+-- conformance: `<derived scantling check, or none>`
++- prove: `<short invocation of this project's task runner entry>`
++- verify: `<...>`
++- sweep: `<...>`
++- plank-join: `<...>`
++- hygiene: `<...>`
++- static: `<...>`
++- discovery: `<...>`
++- regression: `<...>`
++- condemnation: `<...>`
++- dead-code: `<...>`
++- spec-lint: `<...>`
++- install: `<...>`
++- ship: none
++- ship-verify: none
+ 
+ ## Perturbation
+ 
+@@ -108,3 +113,126 @@
+ 
+ This repository uses [Shipshape](https://github.com/dmytri/shipshape), a context-isolated spec-driven workflow for coding agents. Install with `npx skills add dmytri/shipshape --skill '*'`, or the experimental open-plugin build with `npx plugins add dmytri/shipshape`.
+ ````
++
++## Gherkin lint rule file
++
++Copy this to `.gplintrc` at fitting out. It is the maximal set: every rule that encodes a
++Scenario-writing agreement requirement, each at error. `allowed-tags` gains this project's own tier
++tags from `## Tiers`. Captain tunes it thereafter.
++
++```json
++{
++  "allowed-tags": [
++    "error",
++    {
++      "tags": [
++        "@logic",
++        "@sandbox",
++        "@contract",
++        "@conformance",
++        "@captain",
++        "@shipwright",
++        "@exceptional-double"
++      ]
++    }
++  ],
++  "file-name": [
++    "error",
++    {
++      "style": "kebab-case"
++    }
++  ],
++  "indentation": [
++    "error",
++    {
++      "Feature": 0,
++      "Background": 2,
++      "Rule": 2,
++      "Scenario": 2,
++      "Step": 4,
++      "Examples": 4,
++      "example": 6,
++      "given": 4,
++      "when": 4,
++      "then": 4,
++      "and": 4,
++      "but": 4
++    }
++  ],
++  "keywords-in-logical-order": "error",
++  "max-keywords": [
++    "error",
++    {
++      "given": 5,
++      "when": 3,
++      "then": 5,
++      "ignoreConjunctions": false
++    }
++  ],
++  "max-tags-lines": [
++    "error",
++    {
++      "feature": 1,
++      "scenario": 1
++    }
++  ],
++  "name-length": [
++    "error",
++    {
++      "Feature": 90,
++      "Rule": 90,
++      "Scenario": 90,
++      "Step": 120
++    }
++  ],
++  "new-line-at-eof": [
++    "error",
++    "yes"
++  ],
++  "no-background-only-scenario": "error",
++  "no-dupe-feature-names": "error",
++  "no-dupe-scenario-names": [
++    "error",
++    "anywhere"
++  ],
++  "no-duplicate-tags": "error",
++  "no-empty-background": "error",
++  "no-empty-file": "error",
++  "no-examples-in-scenarios": "error",
++  "no-files-without-scenarios": "error",
++  "no-homogenous-tags": "error",
++  "no-multiple-empty-lines": "error",
++  "no-partially-commented-tag-lines": "error",
++  "no-restricted-patterns": [
++    "error",
++    {
++      "Global": [
++        "^\\s*#",
++        "should probably",
++        "\\bmight\\b",
++        "\\bmaybe\\b",
++        "\\bTODO\\b",
++        "\\bTBD\\b"
++      ]
++    }
++  ],
++  "no-scenario-outlines-without-examples": "error",
++  "no-superfluous-tags": "error",
++  "no-trailing-spaces": "error",
++  "no-unnamed-features": "error",
++  "no-unnamed-scenarios": "error",
++  "no-unused-variables": "error",
++  "one-space-between-tags": "error",
++  "scenario-size": [
++    "error",
++    {
++      "steps-length": {
++        "Background": 5,
++        "Scenario": 10
++      }
++    }
++  ],
++  "table-align": "error",
++  "use-and": "error"
++}
++```
