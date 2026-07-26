@@ -48,6 +48,16 @@ if [ ! -e "$SHARED_NM/node_modules/@cucumber" ] || [ ! -e "$SHARED_NM/node_modul
 fi
 export EVAL_SHARED_NM="$SHARED_NM/node_modules"
 [ -x "$EVAL_SHARED_NM/.bin/skills" ] || { echo "eval-drive: 'skills' CLI missing from toolkit" >&2; exit 3; }
+# yoink CAPABILITY check, not mere presence (2026-07-26): a toolkit copy carrying @dk/yoink
+# 0.1.17 accepts only a JSON plan and dies "unknown option: --run" on the flag form that
+# composite rigging methods are written in — a silent per-command failure inside a leg, not a
+# launch error. Assert the flag form works, upgrading in place when it does not.
+if ! ( cd "$SHARED_NM" && node node_modules/@dk/yoink/dist/cli.js --run 'true' >/dev/null 2>&1 ); then
+  say_pre(){ echo "eval-drive: toolkit yoink lacks the --run flag form; upgrading" >&2; }; say_pre
+  ( cd "$SHARED_NM" && npm install --no-fund --no-audit @dk/yoink@latest >/dev/null 2>&1 ) || true
+  ( cd "$SHARED_NM" && node node_modules/@dk/yoink/dist/cli.js --run 'true' >/dev/null 2>&1 ) \
+    || { echo "eval-drive: yoink still cannot run a flag-form plan — composite methods would fail silently" >&2; exit 3; }
+fi
 
 # Disk preflight: a full disk (ENOSPC) silently corrupts everything downstream — legs die at
 # 0s, git commits fail, and oracle grades parse ENOSPC noise as a bogus low score (glm-5.2's
