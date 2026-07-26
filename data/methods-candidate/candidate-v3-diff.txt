@@ -156,8 +156,8 @@ diff -ru experiments/yoink-settle/skills/boatswain/SKILL.md experiments/methods-
 +- next role/blocker.
 diff -ru experiments/yoink-settle/skills/captain/SKILL.md experiments/methods-candidate/skills/captain/SKILL.md
 --- experiments/yoink-settle/skills/captain/SKILL.md	2026-07-24 06:40:41.252197510 +0000
-+++ experiments/methods-candidate/skills/captain/SKILL.md	2026-07-26 16:45:30.383818681 +0000
-@@ -51,16 +51,16 @@
++++ experiments/methods-candidate/skills/captain/SKILL.md	2026-07-26 17:35:23.411642659 +0000
+@@ -51,55 +51,69 @@
  - If Boatswain reports passing verification, clean working tree, and local commit, summarize and offer outbound options. Outbound ships on the voyage's own focused and enumeration evidence. Captain never orders a full regression: it is a harbour action and harbour is its only trigger, per the Verification policy. Where a whole sweep before shipping is wanted, the route is harbour, which pairs the run with coverage triage and the economy audit; offer harbour, not a bare rerun.
  - Outbound actions such as push, PR, publish, release, and deploy require a clean Boatswain report and explicit user approval, nothing else. Credentials and environment are assumed fitted, never pre-checked, per the Verification policy: run the target's `ship` command from `RIGGING.md` under `## Outbound`, and an observed authentication failure is a fitting-out blocker resolved by refit. Then run that target's `verify` line against the live artifact and read the answer from that output, per the Outbound verification policy: shipping reports that the command exited, not that the artifact a user consumes is good, and an artifact judged good by eye is unchecked. Where the project policy states that local verification is sufficient, that statement is the check and no live verification is owed. Report what `verify` returned. Outbound runs in the human-facing main session per the Outbound verification policy; a Captain spawned as a subagent reports outbound options and performs none.
  - **Fitting out:** Shipwright derives `RIGGING.md` and `AGENTS.md` from the repository during harbour. If Shipwright raises a rigging blocker for a required value it cannot derive, discover the missing tooling value with the user and write it into `RIGGING.md`; resolve a tooling gap by proposing named stack-native candidates from the quality-toolchain offer in the fast-path rule, never by an open-ended ask. If Shipwright raises a blocker for missing tooling, such as an uninitialized project or a package manager not installed, install what is needed. If Shipwright blocks on a repository with no commits, make the initial commit: it is Captain's own bootstrap action, never the operator's to be sent to run, because an initial state carries no role-advanced work for commit custody to protect. Commit the initial state directly and proceed. Toolchain setup is Captain's responsibility during harbour preparation; installation itself is Shipwright's, per the Rigging read contract, and reaches Captain only where the package manager cannot provide it.
@@ -168,20 +168,32 @@ diff -ru experiments/yoink-settle/skills/captain/SKILL.md experiments/methods-ca
 +  - After the required values, offer the stack's quality toolchain in one batched confirmation: feature lint, code lint and format, typecheck, coverage, plank-inventory, and an unused-code reporter, with stack-native candidates named. For a Node stack: gplint, biome, c8, and knip, plus tsc on TypeScript. For a Python stack: uv against `pyproject.toml` with Poe the Poet holding the methods, plus ruff, mypy, coverage.py, and vulture. Where the ecosystem carries a standard tool for a job, offer that tool rather than a hand-rolled scan, per the Methods section.
    - Plank inventory is `jsdoc -X` on plain JavaScript, and stays `none` at bootstrap on TypeScript, because jsdoc reads no TypeScript and an empty inventory is a false clean: the checker lands at first harbour, through QM's bespoke-checker route, and a library such as ts-morph, which reads a doc-comment's content rather than only its syntax shape, installs only when that checker needs it.
 -  - A confirmed tool installs at bootstrap and populates its command slot only where the tool's own CLI yields the one-line command; a library with no CLI is never glue-scripted at bootstrap, and its slot stays `none` with the gap named. The `none` rule in full: a declined or undecided slot keeps the literal `none`; a slot the stack itself answers, such as `typecheck` on a TypeScript stack, is offered, never silently `none`d; and a value the user states in the bootstrap conversation, such as the runtime or the package manager, is a discovered value that populates its own slot, so writing `none` over what the user just said discards the discovery the fast path exists to capture.
-+  - A confirmed tool installs at bootstrap and becomes a part of every method whose job it serves, but only where the tool's own CLI yields the invocation; a library with no CLI is never glue-scripted at bootstrap, and the methods that would have carried it name the gap. The `none` rule in full: a method whose parts a declined or undecided tool would have supplied keeps the literal `none`; a part the stack itself answers, such as a type checker on a TypeScript stack, is offered, never silently dropped; and a value the user states in the bootstrap conversation, such as the runtime or the package manager, is a discovered value that populates its own slot, so writing `none` over what the user just said discards the discovery the fast path exists to capture.
-   - On a repository with no commits, commit the initial state first, Captain's own bootstrap action per the fitting-out rule above, with harness-install artifacts ignored or folded in. Install the harness, the rigging's own dependencies included, and confirm the runner executes before writing minimal `RIGGING.md` under the write-scope exception, per the Rigging read contract; then author specs and the watchbill and dispatch QM. The first voyage sails without methodology checks; the first harbour completes fitting out before its inventory.
-   - Voyage 1 verifies at the cheapest tier sufficient to observe the specified behaviour; a real-browser tier is adopted only when the user names it or a specified behaviour cannot be observed below it, and then as a named decision recorded in `RIGGING.md`. Where the product renders a DOM, the tier candidates are named cheapest first, as the toolchain offer names its own: for a Node stack, happy-dom, then jsdom, then a real-browser tier such as Playwright. A tier the catalog names cheaper is the tier Voyage 1 opens on, because a tier chosen by forecast is a tier no command has tested.
+-  - On a repository with no commits, commit the initial state first, Captain's own bootstrap action per the fitting-out rule above, with harness-install artifacts ignored or folded in. Install the harness, the rigging's own dependencies included, and confirm the runner executes before writing minimal `RIGGING.md` under the write-scope exception, per the Rigging read contract; then author specs and the watchbill and dispatch QM. The first voyage sails without methodology checks; the first harbour completes fitting out before its inventory.
+-  - Voyage 1 verifies at the cheapest tier sufficient to observe the specified behaviour; a real-browser tier is adopted only when the user names it or a specified behaviour cannot be observed below it, and then as a named decision recorded in `RIGGING.md`. Where the product renders a DOM, the tier candidates are named cheapest first, as the toolchain offer names its own: for a Node stack, happy-dom, then jsdom, then a real-browser tier such as Playwright. A tier the catalog names cheaper is the tier Voyage 1 opens on, because a tier chosen by forecast is a tier no command has tested.
 -  - Minimal means exactly this shape: the five required values populated, the fixed perturbation message, dependency policy `locked`, every slot a discovered value or a confirmed tool answers populated, and literally `none` in every remaining slot; no wrapper scripts, and no config files beyond the harness install and a confirmed tool's own minimal config. Every dependency installed at bootstrap lands one `dependency` line under `## Dependencies` as it installs, the runner and each confirmed tool included, so `none` stands only where nothing is installed.
 -  - Where a feature lint and a code lint are both confirmed they share the one `lint` slot as a chained command, feature lint first, so one gate reddens on either fault and the shape grows no second key.
 -  - The tag exclusions ride every verification command however it is recomposed: weaving an environment prefix or a runner option never drops `--tags "not @captain and not @shipwright"`.
-+  - Minimal means exactly this shape: the required values populated, every method the Methods section names derived or reading `none`, the fixed perturbation message, dependency policy `locked`, and literally `none` in every remaining slot; no wrapper scripts, and no config files beyond the harness install and a confirmed tool's own minimal config. Every dependency installed at bootstrap lands one `dependency` line under `## Dependencies` as it installs, the runner and each confirmed tool included, so `none` stands only where nothing is installed.
++  - A confirmed tool installs at bootstrap and becomes a part of every method whose job it serves, but only where the tool's own CLI yields the invocation; a library with no CLI is never glue-scripted, and the methods that would have carried it name the gap. A part the stack itself answers, such as a type checker on a TypeScript stack, is offered rather than silently dropped, and a value the user states in the bootstrap conversation is a discovered value: writing `none` over what the user just said discards the discovery the fast path exists to capture.
++  - Derive and register every method the Methods section names, per the Shipwright skill's Methods derivation notes, and write each derived tool's config with it. Prove each method by running it before writing `RIGGING.md`.
 +  - The feature lint is `spec-lint`, Captain's own gate at write time, and the code lint is a part of the hygiene methods, so each gate sits in the method whose job it serves. gplint is the default feature lint on any stack without a well-maintained one of its own, and the bootstrap writes its rule file with the method, since gplint fails without one. Write the maximal rule set, every rule that encodes a Scenario-writing agreement requirement, each at error; Captain tunes a rule that gets in the way rather than dropping the file.
++  - On a repository with no commits, commit the initial state first, Captain's own bootstrap action, with harness-install artifacts ignored or folded in. Install the harness, the rigging's own dependencies included, and confirm the runner executes before writing minimal `RIGGING.md`; then author specs and the watchbill and dispatch QM. The first voyage sails without methodology checks; the first harbour completes fitting out before its inventory.
++  - Voyage 1 verifies at the cheapest tier sufficient to observe the specified behaviour. A real-browser tier is adopted only when the user names it or a specified behaviour cannot be observed below it, and then as a named decision recorded in `RIGGING.md`. Where the product renders a DOM the candidates are named cheapest first, as the toolchain offer names its own: happy-dom, then jsdom, then a real-browser tier. A tier chosen by forecast is a tier no method has tested.
++  - Minimal means exactly this shape: the required values populated, every method the Methods section names derived or reading `none`, the fixed perturbation message, dependency policy `locked`, and literally `none` in every remaining slot; no wrapper scripts, and no config files beyond the harness install and a confirmed tool's own minimal config. Every dependency installed at bootstrap lands one `dependency` line as it installs.
 +  - The tag exclusions ride every verifying part of every method: weaving an environment prefix or a runner option never drops `--tags "not @captain and not @shipwright"`.
  
    ```markdown
    # Rigging
-@@ -74,16 +74,20 @@
-   - verification: none
+   ## Stack
+   - language: JavaScript
+-  - runtime: none
+-  - packageManager: none
++  - runtime: Node.js
++  - packageManager: npm
+   ## Directories
+   - implementation: src
+   - specs: features
+-  - verification: none
++  - verification: features/support
    - assets: none
    - scantlings: none
 -  ## Commands
@@ -195,49 +207,85 @@ diff -ru experiments/yoink-settle/skills/captain/SKILL.md experiments/methods-ca
 -  - lint: none
 -  - conformance: none
 +  ## Methods
-+  - prove: `npx @dk/yoink --max-bytes 200000 --run 'ref="{scenario}"; npx cucumber-js "${ref%%:*}" --name "^${ref#*:}$" --tags "not @captain and not @shipwright"' --label prove --timeout 600`
-+  - verify: `npx @dk/yoink --max-bytes 200000 --run 'ref="{scenario}"; npx cucumber-js "${ref%%:*}" --name "^${ref#*:}$" --tags "not @captain and not @shipwright"' --label prove --timeout 600 --run 'npx cucumber-js --dry-run --format usage-json --tags "not @captain and not @shipwright"' --label step-usage --timeout 300`
-+  - sweep: `npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js --tags "not @captain and not @shipwright"' --label sweep --timeout 900`
-+  - plank-join: `npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js --dry-run --format usage-json --tags "not @captain and not @shipwright"' --label step-usage --timeout 300`
-+  - hygiene: `npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js --dry-run --format usage-json --tags "not @captain and not @shipwright"' --label step-usage --timeout 300`
-+  - static: `npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js --dry-run --tags "not @captain and not @shipwright"' --label discovery --timeout 300`
-+  - discovery: `npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js --dry-run --tags "not @captain and not @shipwright"' --label discovery --timeout 300`
-+  - regression: none
-+  - condemnation: none
-+  - spec-lint: none
-+  - install: `npx @dk/yoink --max-bytes 200000 --run 'npm install --save-dev {dependency}' --label install --timeout 600`
++  - prove: `SS_SCENARIO="<targets>" npm run ss:prove --silent`
++  - verify: `SS_SCENARIO="<targets>" npm run ss:verify --silent`
++  - sweep: `npm run ss:sweep --silent`
++  - plank-join: `npm run ss:plank-join --silent`
++  - hygiene: `npm run ss:hygiene --silent`
++  - static: `npm run ss:static --silent`
++  - discovery: `npm run ss:discovery --silent`
++  - regression: `npm run ss:regression --silent`
++  - condemnation: `SS_SCENARIO="<targets>" npm run ss:condemnation --silent`
++  - dead-code: `npm run ss:dead-code --silent`
++  - spec-lint: `npm run ss:spec-lint --silent`
++  - install: `SS_DEPENDENCY="<package>" npm run ss:install --silent`
 +  - ship: none
 +  - ship-verify: none
    ## Perturbation
    - message: `PERTURBATION: consider current durable context; remove when fixed`
    - perturb: `throw new Error("PERTURBATION: consider current durable context; remove when fixed");`
+   ## Tiers
+-  - default: none
++  - default: @logic
+   - sandbox: none
+-  - policy: none
++  - policy: @logic - no external credentials required
+   - weather: none
+   - runrecord: none
+   ## Dependencies
+   - policy: locked
+   - dependency: @cucumber/cucumber
++  - dependency: gplint
+   ## Outbound
+   - outbound: none
+   ```
+ 
++  Each value invokes a script that holds that method's Yoink plan, which the bootstrap writes with
++  the value. One script stands for the rest:
++
++  ```json
++  "ss:hygiene": "npx @dk/yoink --max-bytes 200000 --run 'npx jsdoc -X src' --label plank-inventory --timeout 120 --run 'npx cucumber-js --dry-run --format usage-json --tags \"not @captain and not @shipwright\"' --label step-usage --timeout 300 --run 'npx biome check src features' --label lint --timeout 300"
++  ```
++
+   The populated values above are one stack's derivation; yours come from the user conversation. The `none` slots are the rule.
+ - **Dependencies:** Dependency selection is a product decision. When a dependency is needed, research options with the user, confirm the selection, and write it into `RIGGING.md` under `## Dependencies`. Write only the dependency name. Do not pin a version unless the scenario or the dependency policy requires it. Installation is fitting out, per the Rigging read contract. When Crew blocks on a confirmed dependency that is not installed, confirm the selection, record it, and route the install to Shipwright.
+ - **Harbour:** If onboarding an existing codebase or between releases, invoke Shipwright. Enter harbour on a clean working tree: route uncommitted voyage work through Boatswain custody first. Pending outbound MAY wait through harbour: harbour work rides the next outbound, with the harbour full regression as its proof per the Verification policy. When Shipwright returns, run the Harbour review below.
 diff -ru experiments/yoink-settle/skills/crew/SKILL.md experiments/methods-candidate/skills/crew/SKILL.md
 --- experiments/yoink-settle/skills/crew/SKILL.md	2026-07-24 06:40:41.256197557 +0000
-+++ experiments/methods-candidate/skills/crew/SKILL.md	2026-07-26 16:03:48.910351541 +0000
-@@ -35,7 +35,7 @@
++++ experiments/methods-candidate/skills/crew/SKILL.md	2026-07-26 17:32:34.865367177 +0000
+@@ -34,19 +34,26 @@
+ 
  ## Opening
  
- 1. Verify the dispatch matches the contract: scenario references, observed failure evidence per target, a solo or parallel marker, and, for a perturbation target, the perturbed seam location. On content beyond that, stop and report contamination. Identify the dispatched failing target set. If no scenario reference is present: `No target. Crew stop.` If failure evidence is missing, report the missing evidence and stop. Observed failure evidence is runner output, observed tree facts, or a named custody foul on a seam the target's steps exercise.
+-1. Verify the dispatch matches the contract: scenario references, observed failure evidence per target, a solo or parallel marker, and, for a perturbation target, the perturbed seam location. On content beyond that, stop and report contamination. Identify the dispatched failing target set. If no scenario reference is present: `No target. Crew stop.` If failure evidence is missing, report the missing evidence and stop. Observed failure evidence is runner output, observed tree facts, or a named custody foul on a seam the target's steps exercise.
 -2. **First pass, one retrieval.** The dispatch's scenario references are repo-root-relative and already carry the specs directory, so the feature files are in hand without reading anything to find them. Retrieve together: `RIGGING.md`, for stack, the implementation, specs, and verification directories, the focused command with its `{scenario}` placeholder, and the `## Perturbation` message; every dispatched target's feature file, with its `Background` and `Rule:` context; and, for a perturbation target, `AGENTS.md` standards, which reimplementation draws on. Nothing in this set depends on another member of it.
-+2. **First pass, one retrieval.** The dispatch's scenario references are repo-root-relative and already carry the specs directory, so the feature files are in hand without reading anything to find them. Retrieve together: `RIGGING.md`, for stack, the implementation, specs, and verification directories, the `prove` method with its `{scenario}` placeholder, and the `## Perturbation` message; every dispatched target's feature file, with its `Background` and `Rule:` context; and, for a perturbation target, `AGENTS.md` standards, which reimplementation draws on. Nothing in this set depends on another member of it.
++1. Verify the dispatch matches the contract: scenario references, observed failure evidence per target, a solo or parallel marker, and, for a perturbation target, the perturbed seam location. On content beyond that, stop and report contamination. If no scenario reference is present: `No target. Crew stop.` If failure evidence is missing, report that and stop. Observed evidence is runner output, observed tree facts, or a named custody foul on a seam the target's steps exercise.
++
++2. **First pass, one retrieval.** The dispatch's references are repo-root-relative and carry the specs directory, so the feature files are in hand without reading anything to find them. Retrieve together: `RIGGING.md`, for the stack, the directories, the `prove` method and the `## Perturbation` message; every dispatched target's feature file with its `Background` and `Rule:` context; and, for a perturbation target, the `AGENTS.md` standards reimplementation draws on. Nothing here depends on anything else here.
  
  3. **Second pass, one retrieval.** The first pass names the steps and the directories, so this one is what genuinely depends on it: the step definitions and test support under the verification directory, the referenced durable spec or asset, and the directly related production files. Read only these. Note each step definition's pattern string, per the Planking agreement's Form.
  
-@@ -45,7 +45,13 @@
+-4. State target and durable source of expected behaviour.
++4. State the target and the durable source of expected behaviour.
+ 
+ ## Work loop
  
  1. Reproduce or inspect the failure. If the target passes before any edit, report the pass with the fresh run output and stop.
- 2. Edit minimum production code only. Add or update `@planks(...)` annotations on every changed seam per the Role contract; for a perturbation target, the perturbation statement leaves with the reimplemented seam. A changed seam whose behaviour now exceeds its planked steps stops the work: report to QM per the Role contract.
+-2. Edit minimum production code only. Add or update `@planks(...)` annotations on every changed seam per the Role contract; for a perturbation target, the perturbation statement leaves with the reimplemented seam. A changed seam whose behaviour now exceeds its planked steps stops the work: report to QM per the Role contract.
 -3. Run focused verification using the `focused` command from `RIGGING.md`.
-+3. Prove the target set. Substitute the `prove` method from `RIGGING.md` verbatim, with `{scenario}` as the dispatched target set, and run it:
+-4. If pass, return the final report to the caller.
++2. Edit minimum production code only. Add or update `@planks(...)` on every changed seam; for a perturbation target, the statement leaves with the reimplemented seam. A changed seam whose behaviour now exceeds its planked steps stops the work: report to QM.
++3. Prove the target set. Substitute the `prove` method from `RIGGING.md` verbatim, giving it the dispatched targets:
 +
 +   ```sh
-+   <prove>
++   SS_SCENARIO="<the dispatched target set>" <prove>
 +   ```
 +
 +   Its output is the green QM and Boatswain inherit, so it is run, never recalled.
- 4. If pass, return the final report to the caller.
++4. If it passes, return the final report to the caller.
  5. If blocked, or if the approach fails after one correction, report the blocker to QM and stop.
  
+ ## Final report
 diff -ru experiments/yoink-settle/skills/qm/SKILL.md experiments/methods-candidate/skills/qm/SKILL.md
 --- experiments/yoink-settle/skills/qm/SKILL.md	2026-07-24 06:40:41.256197557 +0000
 +++ experiments/methods-candidate/skills/qm/SKILL.md	2026-07-26 16:03:48.910351541 +0000
@@ -316,7 +364,7 @@ diff -ru experiments/yoink-settle/skills/qm/SKILL.md experiments/methods-candida
  ## Final report
 diff -ru experiments/yoink-settle/skills/shipshape/SKILL.md experiments/methods-candidate/skills/shipshape/SKILL.md
 --- experiments/yoink-settle/skills/shipshape/SKILL.md	2026-07-25 13:44:14.511373308 +0000
-+++ experiments/methods-candidate/skills/shipshape/SKILL.md	2026-07-26 16:39:24.158851198 +0000
++++ experiments/methods-candidate/skills/shipshape/SKILL.md	2026-07-26 17:34:16.654741488 +0000
 @@ -211,12 +211,19 @@
  Attestation:
  
@@ -367,7 +415,7 @@ diff -ru experiments/yoink-settle/skills/shipshape/SKILL.md experiments/methods-
  - A touched production hunk with no plank to follow is plank drift, judged per this agreement; static discovery and the derived `typecheck` and `lint` gates stand as its proof meanwhile.
  - Verification support code carries no planks, so the plank join does not reach it. It executes inside every scenario whose steps route through it, and its blast radius is the tier it serves, never the spec file the change was declared beside: a touched support hunk selects that tier's enumeration sweep. A focused run over a subset of that tier does not cover it, and neither does a green the caller carried from one: the scenarios such a run never reached are exactly where a support edit does its damage. A support edit that changes behaviour loads, imports, typechecks, and lints exactly as the old one did, so the static gates pass it through and the sweep is the only check that reaches it.
  
-@@ -379,11 +386,69 @@
+@@ -379,11 +386,78 @@
  
  ### Rigging read contract
  
@@ -414,22 +462,31 @@ diff -ru experiments/yoink-settle/skills/shipshape/SKILL.md experiments/methods-
 +| `ship` | ship one outbound target | Captain | per target |
 +| `ship-verify` | verify the live artifact that target's users consume | Captain | per target |
 +
-+A method value is one SHORT invocation, in backticks: the project's own task runner entry for that job, such as an npm script, a Make target, a Cargo alias, or a Just recipe. The Yoink plan is that entry's body, where the runner keeps it: one `npx @dk/yoink` invocation, one `--run` per part, a `--label` and a `--timeout` on every part, and one `--max-bytes` bound on the plan. Yoink returns each part's output and each part's own status separately, which is what a job needs: the role judges the parts one at a time, and a single collapsed status hides which part failed. A shell sequence carries the parts without their statuses, and a shell chain joined by `&&` is worse, because it stops at the first non-zero exit and hides every part behind it. Yoink is always available, so every stack can express every method.
++A method value is one SHORT invocation, in backticks: the project's own task runner entry for that
++job, such as an npm script, a Poe task, a Cargo alias, or a Just recipe. The Yoink plan is that
++entry's body, one part per command the job runs, each part labelled and given the time it needs, and
++the whole plan bounded. Yoink returns each part's output and each part's own status separately,
++which is what a job needs: the role judges the parts one at a time, and a single collapsed status
++hides which part failed. A shell sequence carries the parts without their statuses, and a shell chain
++joined by `&&` is worse, because it stops at the first non-zero exit and hides every part behind it.
++So a value whose entry is not a Yoink plan is not a method, whatever else it is. Yoink is always
++available, so every stack can express every method. The Shipwright skill carries how each method is
++derived, registered and proven; this section carries what a method is and how a role reads one.
 +
-+The value is short because a role copies what it can copy. A value long enough to retype is retyped, and a retyped plan is a plan the role composed: it runs, it looks right, and it is not the project's method, so the next role reading `RIGGING.md` gets the other one. Where a stack carries no task runner at all, the value is the plan itself and that cost is accepted. A parameter rides as an inline environment value the plan reads, never as text a role edits into the plan: `SS_SCENARIO` carries a target set and `SS_DEPENDENCY` carries an install's package. The plan names `$SS_SCENARIO` where the target belongs, and a role that runs a method taking one prefixes the assignment, `SS_SCENARIO="<targets>" <method>`. So the method value is copied exactly as it stands, and nothing inside it is rewritten: a value a role edits is a value a role has already started composing.
++A method returns one multipart bundle, and a role reads it without needing any other skill installed.
++The bundle carries three sections per part, each introduced by the plan's boundary line: a JSON
++metadata object under `name="metadata"`, then `name="stdout"`, then `name="stderr"`. The metadata
++names the part, `label` and `command`, and reports its own result: `exitCode`, `signal`, `timedOut`,
++`durationMs`, and `stdout_truncated` with `stderr_truncated` where a part outran the plan's byte
++bound. So a step judges each part by its own label and its own status, and a truncated part says so
++rather than reading as a short one. The parts appear in the plan's order, and the bundle ends with
++the boundary line followed by two dashes.
 +
 +A method's parts are independent by construction: no part reads another part's output, and no part is
 +chosen from another part's result. Where a job's next act depends on what the last one returned, that
 +job is two methods run in turn, never one plan. A method never adds an act either: it is the job its
 +role already does, so `prove` proves what it is given and no more, and a role that wants a gate its
 +job does not name is asking for a different job.
-+
-+Each method's plan is self-contained, so a stack's runner appears in every plan that runs it. Reuse
-+is by method, not by nesting: `prove` is one method three roles run, rather than a plan other plans
-+embed. Repairing a stack's invocation is therefore a refit across the plans that carry it, which is
-+Shipwright's job and is why the anti-drift rule binds methods rather than roles.
-+
-+Where the stack has a tool for a job, the method is that tool. Deriving a method by hand, or leaving it `none`, where the stack's ecosystem carries a standard tool for that job is a fitting-out fault: the tool reads what a hand-rolled scan cannot, and every project on that stack already knows it. `none` is for a job the stack genuinely offers nothing for, and the report names the gap so Captain can decide.
 +
 +Methods are Shipwright's to derive and repair. Captain derives them with the minimal values on the
 +greenfield fast path, where no fitting-out session exists to derive them, and MAY write a method when
@@ -440,7 +497,7 @@ diff -ru experiments/yoink-settle/skills/shipshape/SKILL.md experiments/methods-
  
  ## Project policies
  
-@@ -432,7 +497,7 @@
+@@ -432,7 +506,7 @@
  
  `watchbill.json` is the verification scope order and the only channel that creates QM targets: Captain limits what is verified, and verification output over that scope creates the worklist. The watchbill selects and orders; it creates no work itself. Captain writes fixed-shape `watchbill.json` as intent lands: a new or edited scenario's entry is written with the edit, a tier tag enumerates a tier's failing set, and a perturbation's planked scenarios enter at plant time per the Perturbation policy. If `watchbill.json` and verification disagree, verification wins. A spent watchbill is struck: Boatswain removes the file and stages the removal with the custody commit that closes the voyage, per the Boatswain skill. Captain MAY withdraw intent early by removing the file; a watchbill with entries no report verifies is not spent and stays for Captain. Absent at rest is the healthy state: QM dispatched with no watchbill reports the deck at rest. A scenario the scope missed waits for the next harbour full regression, per the Verification policy.
  
@@ -449,7 +506,7 @@ diff -ru experiments/yoink-settle/skills/shipshape/SKILL.md experiments/methods-
  
  ### Verification policy
  
-@@ -442,16 +507,16 @@
+@@ -442,16 +516,16 @@
  
  | Question | Shape | Cost |
  |---|---|---|
@@ -472,8 +529,8 @@ diff -ru experiments/yoink-settle/skills/shipshape/SKILL.md experiments/methods-
  
 diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods-candidate/skills/shipwright/SKILL.md
 --- experiments/yoink-settle/skills/shipwright/SKILL.md	2026-07-25 13:45:47.464641515 +0000
-+++ experiments/methods-candidate/skills/shipwright/SKILL.md	2026-07-26 17:18:32.706003884 +0000
-@@ -36,29 +36,27 @@
++++ experiments/methods-candidate/skills/shipwright/SKILL.md	2026-07-26 17:34:16.654741488 +0000
+@@ -36,38 +36,57 @@
  
  ## Discovery tools
  
@@ -498,24 +555,52 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
  
  ## Fitting out
  
- Fitting out is first-run setup of a project for Shipshape. It is a harbour activity. Shipwright derives the project tooling values from the repository and scaffolds the Shipshape configuration. Shipwright derives the rig manifest from the existing rigging; it does not create the project toolchain. Shipwright never asks the user for a value it should derive itself. It derives from the repository, or it raises a Captain blocker; where the runtime permits direct conversation, per the Harbour flow, reviewing findings with the user is that blocker's own resolution channel, not a substitute for derivation.
- 
+-Fitting out is first-run setup of a project for Shipshape. It is a harbour activity. Shipwright derives the project tooling values from the repository and scaffolds the Shipshape configuration. Shipwright derives the rig manifest from the existing rigging; it does not create the project toolchain. Shipwright never asks the user for a value it should derive itself. It derives from the repository, or it raises a Captain blocker; where the runtime permits direct conversation, per the Harbour flow, reviewing findings with the user is that blocker's own resolution channel, not a substitute for derivation.
+-
 -**Greenfield fast path.** On a repository with no production code and no `RIGGING.md`, fitting out MAY defer to the first harbour: Captain discovers the five required values and the toolchain with the user in the product-intent conversation, installs the harness, and writes a minimal `RIGGING.md` holding the required values, plus any further value the user named in that conversation and every slot the bootstrap tooling offer confirmed, with every remaining slot reading `none`, per the Captain skill, whose fast-path rule embeds the exact minimal form and the quality-toolchain offer. The first product voyage sails on that minimal rigging and carries no methodology checks. The first harbour after a fast-path bootstrap completes fitting out before its inventory: full derivation per this section, every slot re-derived from the repository as it then stands.
-+**Greenfield fast path.** On a repository with no production code and no `RIGGING.md`, fitting out MAY defer to the first harbour: Captain discovers the required values and the toolchain with the user in the product-intent conversation, derives the methods from them, installs the harness, and writes a minimal `RIGGING.md` holding the required values, plus any further value the user named in that conversation and every slot the bootstrap tooling offer confirmed, with every remaining slot reading `none`, per the Captain skill, whose fast-path rule embeds the exact minimal form and the quality-toolchain offer. The first product voyage sails on that minimal rigging and carries no methodology checks. The first harbour after a fast-path bootstrap completes fitting out before its inventory: full derivation per this section, every slot re-derived from the repository as it then stands.
- 
- 1. If `AGENTS.md` or `RIGGING.md` is absent, fit out before the inventory.
- 2. Derive `RIGGING.md` values from the repository. Read the language, runtime, package manager, commands, directories, dependency policy, perturbation syntax, docblock inventory tooling, and tooling checks from project files and configuration.
- 3. Verify the project tooling is runnable. Confirm the package manifest or equivalent project init file, the runtime, and the package manager for the derived stack. If the init file is missing or the runtime is not installed, raise a Captain blocker. Name every gap the pass found in that one blocker, underivable required values and missing toolchain together, so Captain resolves the stack decision and the toolchain setup in one cycle. Toolchain setup is Captain's duty per the Captain skill, never the operator's, and so is the initial commit on a repository with no commits. Every dependency is Shipwright's to install, per the Rigging read contract: install the runner, the tier drivers, the quality-gate tooling the derived commands invoke, and each product dependency Captain has confirmed under `## Dependencies`, through the project's own package manager, and block to Captain only for what that package manager cannot provide, such as the runtime or the package manager itself, or for a dependency Captain has not yet selected. A blocker raised to have another role run that install spends a cycle and discovers nothing. Verify each derived tier authenticates: run the smallest real command for that tier, a read-only or dry-run probe where the tier offers one. For a CLI-custodied credential, the probe is that CLI's own command; never inspect the CLI's store. A tier that fails to authenticate here is a Captain blocker naming the credential to provision, through the custodian CLI's own login flow where one exists, operator-run when interactive. Derived methodology checks are proven red at adoption, when QM makes the promoted check's steps executable, per the Verification policy's planted-red rule; fitting out derives commands and writes skeletons without planting, which keeps plant cycles off the bootstrap path. Planting stays a harbour-scoped write exception only for a newly referenced scantling that no fixture can redden, per the Scantling agreement: that plant and any scratch `watchbill.json` it needs leave the tree fully with the test, and no harbour session ends with a planted violation. Hold candidate commands in the session until tooling is verified, then write them together. Do not write `RIGGING.md` until tooling is verified. Prove the derivation before writing it, per the Rigging read contract: run the runner once through a derived command and confirm it executes.
+-
+-1. If `AGENTS.md` or `RIGGING.md` is absent, fit out before the inventory.
+-2. Derive `RIGGING.md` values from the repository. Read the language, runtime, package manager, commands, directories, dependency policy, perturbation syntax, docblock inventory tooling, and tooling checks from project files and configuration.
+-3. Verify the project tooling is runnable. Confirm the package manifest or equivalent project init file, the runtime, and the package manager for the derived stack. If the init file is missing or the runtime is not installed, raise a Captain blocker. Name every gap the pass found in that one blocker, underivable required values and missing toolchain together, so Captain resolves the stack decision and the toolchain setup in one cycle. Toolchain setup is Captain's duty per the Captain skill, never the operator's, and so is the initial commit on a repository with no commits. Every dependency is Shipwright's to install, per the Rigging read contract: install the runner, the tier drivers, the quality-gate tooling the derived commands invoke, and each product dependency Captain has confirmed under `## Dependencies`, through the project's own package manager, and block to Captain only for what that package manager cannot provide, such as the runtime or the package manager itself, or for a dependency Captain has not yet selected. A blocker raised to have another role run that install spends a cycle and discovers nothing. Verify each derived tier authenticates: run the smallest real command for that tier, a read-only or dry-run probe where the tier offers one. For a CLI-custodied credential, the probe is that CLI's own command; never inspect the CLI's store. A tier that fails to authenticate here is a Captain blocker naming the credential to provision, through the custodian CLI's own login flow where one exists, operator-run when interactive. Derived methodology checks are proven red at adoption, when QM makes the promoted check's steps executable, per the Verification policy's planted-red rule; fitting out derives commands and writes skeletons without planting, which keeps plant cycles off the bootstrap path. Planting stays a harbour-scoped write exception only for a newly referenced scantling that no fixture can redden, per the Scantling agreement: that plant and any scratch `watchbill.json` it needs leave the tree fully with the test, and no harbour session ends with a planted violation. Hold candidate commands in the session until tooling is verified, then write them together. Do not write `RIGGING.md` until tooling is verified. Prove the derivation before writing it, per the Rigging read contract: run the runner once through a derived command and confirm it executes.
 -4. If the stack has no Gherkin runner, `focused`, `discover`, and `step-usage` are underivable: raise a Captain blocker naming the runner as a dependency decision for Captain and the user. Existing non-Gherkin tests still derive `coverage` and the quality gates, and their modules count as covered for triage only after scenarios bind them.
 -5. Write `RIGGING.md` and `AGENTS.md` from the templates in `templates.md` beside this skill, with the derived values, following the Rigging shape below. Append the README block from `templates.md` to the project README without overwriting existing content. When `templates.md` is absent, derive all three artifacts from the Rigging shape and the Rigging read contract directly. Write the derived search-exclusion artifact per the derivation notes.
 -6. For any required value Shipwright cannot derive, or where the repository is ambiguous, raise a Captain blocker naming the value. Write `RIGGING.md` with every derivable value and leave the underivable required slot empty. The required values are `language`, `implementation`, `specs`, `focused`, and perturbation `perturb`. Captain discovers the missing value with the user and writes it.
-+4. If the stack has no Gherkin runner, `prove`, `verify`, `sweep`, `discovery` and `plank-join` are underivable: raise a Captain blocker naming the runner as a dependency decision for Captain and the user. Existing non-Gherkin tests still derive `regression` and the gates the hygiene methods carry, and their modules count as covered for triage only after scenarios bind them.
-+5. Write `RIGGING.md` and `AGENTS.md` from the templates in `templates.md` beside this skill, with the derived values and the derived methods, following the Rigging shape below. Append the README block from `templates.md` to the project README without overwriting existing content. When `templates.md` is absent, derive all three artifacts from the Rigging shape and the Rigging read contract directly. Write the derived search-exclusion artifact per the derivation notes.
-+6. For any required value Shipwright cannot derive, or where the repository is ambiguous, raise a Captain blocker naming the value. Write `RIGGING.md` with every derivable value and leave the underivable required slot empty. The required values are `language`, `implementation`, `specs`, every method the Methods section names, and perturbation `perturb`. Captain discovers the missing value with the user and writes it.
- 7. Leave `CAPTAIN.md` to Captain. Shipwright does not create it.
+-7. Leave `CAPTAIN.md` to Captain. Shipwright does not create it.
++Fitting out is first-run setup of a project for Shipshape, a harbour activity. Shipwright derives the
++project tooling values from the repository and scaffolds the Shipshape configuration; it derives the
++rig manifest from the existing rigging and does not create the project toolchain. Shipwright never
++asks the user for a value it should derive itself: it derives from the repository, or it raises a
++Captain blocker, and where the runtime permits conversation, reviewing findings with the user is that
++blocker's resolution channel rather than a substitute for derivation.
++
++**Greenfield fast path.** On a repository with no production code and no `RIGGING.md`, fitting out MAY
++defer to the first harbour: Captain discovers the required values and the toolchain with the user in
++the product-intent conversation, derives the methods from them, installs the harness, and writes a
++minimal `RIGGING.md` under its write-scope exception. Shipwright is never dispatched at a repository
++with nothing to derive.
++
++| # | Job | What it produces |
++|---|---|---|
++| 1 | Fit out before the inventory where `AGENTS.md` or `RIGGING.md` is absent | the decision to fit |
++| 2 | Derive every value from the repository: language, runtime, package manager, directories, dependency policy, perturbation syntax, docblock style, tiers | the rigging's values |
++| 3 | Derive a method per job the Methods section names, register each plan in the project's own task runner, and write the invocation as the value | `## Methods`, and the task-runner entries behind it |
++| 4 | Write each derived tool's config the methods need, such as the Gherkin lint rule file and a structural query's rule file | the tool configs, without which a method fails on its config rather than on the code |
++| 5 | Prove every derived method by running it | the proof that no value is a claim |
++| 6 | Write `RIGGING.md` and `AGENTS.md` from `templates.md`, and append the README block without overwriting | the durable configuration |
++| 7 | Write the derived search-exclusion artifact and the verification-conformance rule set | the derived artifacts |
++
++Where the stack has no Gherkin runner, `prove`, `verify`, `sweep`, `discovery` and `plank-join` are
++underivable: raise a Captain blocker naming the runner as a dependency decision for Captain and the
++user. Existing non-Gherkin tests still derive `regression` and the gates the hygiene methods carry,
++and their modules count as covered for triage only once scenarios bind them. For any required value
++Shipwright cannot derive, or where the repository is ambiguous, raise a Captain blocker naming the
++value and write `RIGGING.md` with every derivable one, leaving the underivable required slot empty;
++Captain discovers it with the user and writes it. The required values are `language`,
++`implementation`, `specs`, every method the Methods section names, and perturbation `perturb`. Leave
++`CAPTAIN.md` to Captain: Shipwright does not create it.
  
  ### Rigging shape
-@@ -66,8 +64,8 @@
+ 
  `RIGGING.md` holds values, not procedure; procedure lives in the skills. Write it to the read contract in the `shipshape` skill. Command values are wrapped in backticks and path values are bare. Keep narrative short: long rationale belongs in `AGENTS.md`, not `RIGGING.md`. Use these sections:
  
  - `## Stack`: `language`, `runtime`, and `packageManager`.
@@ -526,7 +611,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
  - `## Perturbation`: the stable `message` and project-specific `perturb` statement. The `message` MUST contain the literal token `PERTURBATION` so a role can detect a live perturbation in the tree.
  - `## Tiers`: the `default` tier tag, any `sandbox` tier tag, one `policy` line per tier naming that tier's credential source or provisioning policy, such as the custodian CLI or the variable name, never a secret value or a check command, an optional `budget` wall-clock ceiling for the full regression with tier-suffixed variants such as `budget-sandbox` per tier, enforced by the derived budget check under Methodology checks, an optional `weather` path naming the wake's weather record so the next run finds it, and an optional `runrecord` path naming the wake's voyage run record per the Transient output policy.
  - `## Dependencies`: the dependency `policy` and one `dependency` line per selected or installed name. Recording routes with installation: the fitting role writes a line for each dependency the fit installs, the runner and the quality tooling included, so `none` stands only where nothing is installed.
-@@ -75,13 +73,76 @@
+@@ -75,13 +94,78 @@
  
  ### Derivation notes
  
@@ -545,7 +630,9 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
 +environment value the plan reads: write `$SS_SCENARIO` where the target set belongs and
 +`$SS_DEPENDENCY` where the package does, so a role prefixes the assignment and copies the value
 +exactly as it stands. Where the stack carries no task runner, the
-+plan itself is the value and that cost is accepted. What each method needs from a stack:
++plan itself is the value and that cost is accepted. Each plan is self-contained, so a stack's runner
++appears in every plan that runs it and repairing that invocation is a refit across the plans carrying
++it; reuse is by method, one method several roles run, never a plan embedded in other plans. What each method needs from a stack:
 +
 +- `prove`: the runner, selecting the canonical `<spec>.feature:<Scenario Name>` references `$SS_SCENARIO` carries, verbatim, wrapping the runner where its native selector differs, so no role translates a reference by hand. Where the runner accepts a list, `$SS_SCENARIO` is that list; where it accepts one target at a time, the plan carries one part per target and that limit lives here rather than in a role's improvised loop.
 +- `verify`: the `prove` run over `$SS_SCENARIO`, joined with the plank parts `plank-join` carries, so one invocation answers a watch's targets and its planks together.
@@ -609,7 +696,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
  
  #### Tiers and weather
  
-@@ -98,25 +159,34 @@
+@@ -98,25 +182,34 @@
  #### Gates and coverage
  
  - Quality gates: derive `lint` and `typecheck` from the tooling the project already runs, and record a gap for the Captain where the project runs none, naming stack-native candidates in the gap, such as biome or eslint for lint and tsc for typecheck on a TypeScript stack, so Captain's resolution proposes rather than asks. Prefer tooling native to the project's stack; a gate imported from another ecosystem for its popularity is weight, not fit. Name the command; the project owns the tool.
@@ -649,7 +736,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
  1. Load the `shipshape` skill (`shipshape:shipshape` under the plugin channel).
  2. **Retrieve the rigging and the deck. One pass.** Nothing here depends on anything else here:
  
-@@ -124,25 +194,25 @@
+@@ -124,25 +217,25 @@
     cat RIGGING.md && cat AGENTS.md && git status
     ```
  
@@ -682,7 +769,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
  11. Refresh the golden captures. Harbour is the cadence the Verification agreement names, and a canned response stands only while it still matches what the real dependency returns. For each `@exceptional-double` justified as a golden capture, re-record the response from the real dependency and compare it against the stored capture: a capture that still matches is refreshed by that act, and one that differs is drift, so restore the capture from the recording and report any scenario whose expectation the new response changes. A capture is not judged current by its age or by eye, per the check-precedence rule: it is judged by the recording. Where the real dependency cannot be reached at harbour, report it as a Captain blocker naming the double, because an unrefreshable capture is a fake by the same agreement's terms.
  12. Complete the full inventory. Do not stop until every module in scope has been analysed and all `@shipwright`-condemned scenarios and code have been processed.
  13. Confirm harbour left nothing unproven. Planks and `@captain` skeletons change nothing executable and need no rerun. Condemnation batches carry their scoped proofs from step 10, which stand as the proof for the removals that followed step 4. Step 4's full regression is harbour's one full-suite run, and the only full regression Shipshape runs; do not rerun it.
-@@ -156,6 +226,7 @@
+@@ -156,6 +249,7 @@
  - modules analysed,
  - `@captain` scenarios written, total and by finding type,
  - the two required `@conformance` methodology skeletons, each named with its feature file and scenario, watchbill-shape conformance and perturbation-quiescence, both owed on every fitting-out,
