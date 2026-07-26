@@ -364,7 +364,7 @@ diff -ru experiments/yoink-settle/skills/qm/SKILL.md experiments/methods-candida
  ## Final report
 diff -ru experiments/yoink-settle/skills/shipshape/SKILL.md experiments/methods-candidate/skills/shipshape/SKILL.md
 --- experiments/yoink-settle/skills/shipshape/SKILL.md	2026-07-25 13:44:14.511373308 +0000
-+++ experiments/methods-candidate/skills/shipshape/SKILL.md	2026-07-26 17:34:16.654741488 +0000
++++ experiments/methods-candidate/skills/shipshape/SKILL.md	2026-07-26 18:30:25.066443609 +0000
 @@ -211,12 +211,19 @@
  Attestation:
  
@@ -469,7 +469,7 @@ diff -ru experiments/yoink-settle/skills/shipshape/SKILL.md experiments/methods-
 +which is what a job needs: the role judges the parts one at a time, and a single collapsed status
 +hides which part failed. A shell sequence carries the parts without their statuses, and a shell chain
 +joined by `&&` is worse, because it stops at the first non-zero exit and hides every part behind it.
-+So a value whose entry is not a Yoink plan is not a method, whatever else it is. Yoink is always
++So a value whose entry is not a Yoink plan is not a method, whatever else it is. A job with ONE part is a plan too: the label names what ran, the timeout is what a slow run needs to finish, and the byte bound is what stops one loud part flooding the role's context, and a bare command carries none of the three. The plan is not the multi-part case; it is the form every method takes. Yoink is always
 +available, so every stack can express every method. The Shipwright skill carries how each method is
 +derived, registered and proven; this section carries what a method is and how a role reads one.
 +
@@ -529,7 +529,7 @@ diff -ru experiments/yoink-settle/skills/shipshape/SKILL.md experiments/methods-
  
 diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods-candidate/skills/shipwright/SKILL.md
 --- experiments/yoink-settle/skills/shipwright/SKILL.md	2026-07-25 13:45:47.464641515 +0000
-+++ experiments/methods-candidate/skills/shipwright/SKILL.md	2026-07-26 18:10:04.930587299 +0000
++++ experiments/methods-candidate/skills/shipwright/SKILL.md	2026-07-26 18:30:25.066443609 +0000
 @@ -36,38 +36,84 @@
  
  ## Discovery tools
@@ -645,10 +645,10 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
 -#### Commands
 +#### Methods
 +
-+Derive one method per job the Methods section names. Each method's plan is a Yoink plan whose parts
++Derive one method per job the Methods section names. EVERY method is a Yoink plan, including the ones with a single part: `discovery`, `dead-code`, `spec-lint` and `install` are one-part jobs on most stacks and are plans exactly as `hygiene` is, because the label, the timeout and the byte bound are what the role reads. Writing the bare tool invocation as the entry's body is the fault that costs a whole stack its methods. Each method's plan is a Yoink plan whose parts
 +are what this stack needs for that job, every part carrying a `--label` and a `--timeout`, and the
 +plan carrying one `--max-bytes` bound. REGISTER each plan as an entry in the project's own task
-+runner, named for its method, deriving the runner the stack already uses: npm scripts in
++runner, named for its method, its body a Yoink plan whatever the part count, deriving the runner the stack already uses: npm scripts in
 +`package.json` on Node and TypeScript, Poe the Poet tasks in `pyproject.toml` on Python, Cargo
 +aliases in `.cargo/config.toml` on Rust, and a Just recipe or a Make target where the project
 +already keeps one. The method
