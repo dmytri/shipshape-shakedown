@@ -21,7 +21,7 @@ TAKES_DEPENDENCY = {"install"}
 VERIFYING = {"prove", "verify", "sweep", "static", "discovery", "regression", "condemnation"}
 
 
-SOFT_FAIL = re.compile(r"--no-strict\b|--exit-zero\b|--no-exit-code\b|\|\|\s*true\b|--soft-fail\b")
+SOFT_FAIL = re.compile(r"--no-strict\b|--exit-zero\b|--no-exit-code\b|\|\|\s*true\b|--soft-fail\b|&&\s*echo\b|\|\s*grep -q\b")
 
 
 def _excludes(cmd):
@@ -61,7 +61,7 @@ def task_runner_body(sim, value):
         pp = os.path.join(sim, "pyproject.toml")
         if os.path.exists(pp):
             t = open(pp, errors="replace").read()
-            mm = re.search(rf'"?{re.escape(m.group(1))}"?\s*=\s*(?:\{{[^}}]*?(?:shell|cmd)\s*=\s*)?(\'\'\'|"""|"|\')(.*?)\1',
+            mm = re.search(rf'"?{re.escape(m.group(1))}"?\s*=\s*(?:\{{[^}}]*?(?:shell|cmd)\s*=\s*)?(\'\'\'|"""|"|\')((?:\\.|(?!\1).)*)\1',
                            t, re.S)
             if mm:
                 return mm.group(2)
