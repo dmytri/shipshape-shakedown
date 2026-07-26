@@ -1,0 +1,35 @@
+diff --git a/js/app.js b/js/app.js
+index 01014ac..42bdb9b 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -38,6 +38,7 @@
+   // --- State ---
+   var todos = loadTodos();
+   var currentFilter = loadFilter();
++  var saveEditInProgress = false;
+ 
+   /**
+    * Derive filter from URL hash.
+@@ -326,7 +327,12 @@
+       var id = li.getAttribute('data-id');
+ 
+       if (e.key === 'Enter' || e.keyCode === 13) {
+-        saveEdit(li, id, e.target.value);
++        saveEditInProgress = true;
++        try {
++          saveEdit(li, id, e.target.value);
++        } finally {
++          saveEditInProgress = false;
++        }
+       } else if (e.key === 'Escape' || e.keyCode === 27) {
+         li.classList.remove('editing');
+         e.target.value = findTodoById(id).title;
+@@ -336,6 +342,8 @@
+ 
+   todoList.addEventListener('blur', function (e) {
+     if (e.target.classList.contains('edit')) {
++      // Guard: saveEdit already called from keydown handler (Enter key)
++      if (saveEditInProgress) return;
+       var li = e.target.closest('li');
+       // Guard: li may have been removed from DOM by a prior keydown/Enter call
+       if (!li || li.parentNode !== todoList) return;

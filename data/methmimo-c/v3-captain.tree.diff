@@ -1,0 +1,272 @@
+diff --git a/css/app.css b/css/app.css
+index 7d927c0..661dfd8 100644
+--- a/css/app.css
++++ b/css/app.css
+@@ -1 +1,7 @@
+ /* Custom CSS overrides for TodoMVC app */
++
++/* Hide toggle and destroy when editing (standard TodoMVC behaviour) */
++li.editing .toggle,
++li.editing .destroy {
++  display: none;
++}
+diff --git a/js/app.js b/js/app.js
+index 6d43814..d0d4814 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -79,68 +79,7 @@
+   var clearCompletedBtn = document.querySelector('.clear-completed');
+   var filterLinks = document.querySelectorAll('.filters a');
+ 
+-  // --- Render ---
+-  /**
+-   * Render the full application state to the DOM.
+-   * @planks("the app is loaded in the browser")
+-   */
+-  function render() {
+-    var filtered = todos.filter(function (todo) {
+-      if (currentFilter === 'active') return !todo.completed;
+-      if (currentFilter === 'completed') return todo.completed;
+-      return true;
+-    });
+-
+-    // Clear list
+-    todoList.innerHTML = '';
+-
+-    // Build items
+-    filtered.forEach(function (todo) {
+-      var li = document.createElement('li');
+-      li.setAttribute('data-id', todo.id);
+-      if (todo.completed) li.classList.add('completed');
+-
+-      li.innerHTML =
+-        '<div class="view">' +
+-          '<input class="toggle" type="checkbox"' + (todo.completed ? ' checked' : '') + '>' +
+-          '<label>' + escapeHtml(todo.title) + '</label>' +
+-          '<button class="destroy"></button>' +
+-        '</div>' +
+-        '<input class="edit" value="' + escapeHtml(todo.title) + '">';
+-
+-      todoList.appendChild(li);
+-    });
+-
+-    // Main section visibility
+-    var hasTodos = todos.length > 0;
+-    mainSection.style.display = hasTodos ? 'block' : 'none';
+-    footer.style.display = hasTodos ? 'block' : 'none';
+-
+-    // Toggle all state
+-    var allCompleted = todos.length > 0 && todos.every(function (t) { return t.completed; });
+-    toggleAllCheckbox.checked = allCompleted;
+-
+-    // Counter
+-    var activeCount = todos.filter(function (t) { return !t.completed; }).length;
+-    var pluralized = activeCount === 1 ? 'item left' : 'items left';
+-    todoCount.innerHTML = '<strong>' + activeCount + '</strong> ' + pluralized;
+-
+-    // Clear completed visibility
+-    var hasCompleted = todos.some(function (t) { return t.completed; });
+-    clearCompletedBtn.style.display = hasCompleted ? 'block' : 'none';
+-
+-    // Filter selection
+-    filterLinks.forEach(function (link) {
+-      link.classList.remove('selected');
+-    });
+-    var filterHash = currentFilter === 'active' ? '#/active' : currentFilter === 'completed' ? '#/completed' : '#/';
+-    filterLinks.forEach(function (link) {
+-      if (link.getAttribute('href') === filterHash) {
+-        link.classList.add('selected');
+-      }
+-    });
+-  }
+-
++  // --- Helpers ---
+   /**
+    * Escape HTML entities to prevent XSS.
+    * @planks-provisional("features/counter-behaviour.feature:Counter displays remaining items with correct pluralisation")
+@@ -151,7 +90,6 @@
+     return div.innerHTML;
+   }
+ 
+-  // --- Helpers ---
+   /**
+    * Generate a unique todo ID.
+    * @planks("the user types {string} in the new-todo input and presses Enter")
+@@ -188,6 +126,92 @@
+     return -1;
+   }
+ 
++  /**
++   * Check whether a todo is visible under the current filter.
++   */
++  function isTodoVisible(todo) {
++    if (currentFilter === 'active') return !todo.completed;
++    if (currentFilter === 'completed') return todo.completed;
++    return true;
++  }
++
++  /**
++   * Create a <li> element for a todo.
++   */
++  function createTodoLi(todo) {
++    var li = document.createElement('li');
++    li.setAttribute('data-id', todo.id);
++    if (todo.completed) li.classList.add('completed');
++
++    li.innerHTML =
++      '<div class="view">' +
++        '<input class="toggle" type="checkbox"' + (todo.completed ? ' checked' : '') + '>' +
++        '<label>' + escapeHtml(todo.title) + '</label>' +
++        '<button class="destroy"></button>' +
++      '</div>' +
++      '<input class="edit" value="' + escapeHtml(todo.title) + '">';
++
++    return li;
++  }
++
++  // --- Render ---
++  /**
++   * Update header/footer state without rebuilding the list.
++   */
++  function updateHeaderFooter() {
++    // Main section visibility
++    var hasTodos = todos.length > 0;
++    mainSection.style.display = hasTodos ? 'block' : 'none';
++    footer.style.display = hasTodos ? 'block' : 'none';
++
++    // Toggle all state
++    var allCompleted = todos.length > 0 && todos.every(function (t) { return t.completed; });
++    toggleAllCheckbox.checked = allCompleted;
++
++    // Counter
++    var activeCount = todos.filter(function (t) { return !t.completed; }).length;
++    var pluralized = activeCount === 1 ? 'item left' : 'items left';
++    todoCount.innerHTML = '<strong>' + activeCount + '</strong> ' + pluralized;
++
++    // Clear completed visibility
++    var hasCompleted = todos.some(function (t) { return t.completed; });
++    clearCompletedBtn.style.display = hasCompleted ? 'block' : 'none';
++  }
++
++  /**
++   * Render the full application state to the DOM.
++   * @planks("the app is loaded in the browser")
++   */
++  function render() {
++    var filtered = todos.filter(function (todo) {
++      if (currentFilter === 'active') return !todo.completed;
++      if (currentFilter === 'completed') return todo.completed;
++      return true;
++    });
++
++    // Clear list
++    todoList.innerHTML = '';
++
++    // Build items
++    filtered.forEach(function (todo) {
++      todoList.appendChild(createTodoLi(todo));
++    });
++
++    // Update header/footer
++    updateHeaderFooter();
++
++    // Filter selection
++    filterLinks.forEach(function (link) {
++      link.classList.remove('selected');
++    });
++    var filterHash = currentFilter === 'active' ? '#/active' : currentFilter === 'completed' ? '#/completed' : '#/';
++    filterLinks.forEach(function (link) {
++      if (link.getAttribute('href') === filterHash) {
++        link.classList.add('selected');
++      }
++    });
++  }
++
+   // --- Event handlers ---
+ 
+   // New todo input
+@@ -207,10 +231,16 @@
+       newTodoInput.value = '';
+       return;
+     }
+-    todos.push({ id: generateId(), title: title, completed: false });
++    var todo = { id: generateId(), title: title, completed: false };
++    todos.push(todo);
+     saveTodos(todos);
+     newTodoInput.value = '';
+-    render();
++
++    // Append the new item in-place (no full rebuild)
++    if (isTodoVisible(todo)) {
++      todoList.appendChild(createTodoLi(todo));
++    }
++    updateHeaderFooter();
+   }
+ 
+   // Toggle all
+@@ -231,9 +261,23 @@
+       var id = li.getAttribute('data-id');
+       var todo = findTodoById(id);
+       if (todo) {
++        var wasCompleted = todo.completed;
+         todo.completed = e.target.checked;
+         saveTodos(todos);
+-        render();
++
++        // Mutate the existing <li> in-place to preserve DOM identity
++        if (todo.completed) {
++          li.classList.add('completed');
++        } else {
++          li.classList.remove('completed');
++        }
++
++        // If the item should no longer be visible under current filter, remove it
++        if (!isTodoVisible(todo)) {
++          li.parentNode.removeChild(li);
++        }
++
++        updateHeaderFooter();
+       }
+     }
+   });
+@@ -265,6 +309,7 @@
+   todoList.addEventListener('blur', function (e) {
+     if (e.target.classList.contains('edit')) {
+       var li = e.target.closest('li');
++      if (!li) return;
+       var id = li.getAttribute('data-id');
+       saveEdit(li, id, e.target.value);
+     }
+@@ -281,13 +326,19 @@
+     if (!trimmed) {
+       // Delete todo if edit is empty
+       todos = todos.filter(function (t) { return t.id !== id; });
++      li.parentNode.removeChild(li);
+     } else {
+       var todo = findTodoById(id);
+-      if (todo) todo.title = trimmed;
++      if (todo) {
++        todo.title = trimmed;
++        // Update the label and edit input in-place
++        li.querySelector('label').textContent = trimmed;
++        li.querySelector('.edit').value = trimmed;
++      }
++      li.classList.remove('editing');
+     }
+-    li.classList.remove('editing');
+     saveTodos(todos);
+-    render();
++    updateHeaderFooter();
+   }
+ 
+   todoList.addEventListener('click', function (e) {
+@@ -297,7 +348,8 @@
+       var id = li.getAttribute('data-id');
+       todos = todos.filter(function (t) { return t.id !== id; });
+       saveTodos(todos);
+-      render();
++      li.parentNode.removeChild(li);
++      updateHeaderFooter();
+     }
+   });
+ 

@@ -1,0 +1,33 @@
+# banked: 2026-07-26T14:16:54Z
+# verdict: PENDING
+# leg: {  "name": "v4-captain",  "model": "xiaomi/mimo-v2.5",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/methmimo-c/sim",  "timeout_s": 1200,  "skills": [    "/home/exedev/shipshape-shakedown/experiments/methods-candidate/skills/shipshape",    "/home/exedev/shipshape-shakedown/experiments/methods-candidate/skills/captain"  ]}
+
+
+=== v4-captain.session.jsonl ===
+  turns=22  wall=81.1s  in=23300  out=7278  cache_read=269504  cost=$0.0061
+  role reads: (no role SKILL.md read)
+  roles loaded: NONE
+  ~ repeated tool signature at turns [17] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    4192/188      512 $0.0006  read
+    t1    3112/666     4672 $0.0006  read
+    t2    1483/140     7744 $0.0003  read, bash
+    t3     212/120     9216 $0.0001  bash
+    t4     154/79      9408 $0.0001  bash
+    t5     447/119     9536 $0.0001  bash
+    t6     196/102     9920 $0.0001  bash
+    t7     120/102    10112 $0.0001  bash
+    t8     172/55     10176 $0.0001  bash
+    t9     791/59     10176 $0.0002  read
+    t10    536/328    10944 $0.0002  bash, bash
+    t11    373/123    11456 $0.0001  bash
+    t12    190/1726   11776 $0.0005  bash
+    t13   1802/179    11904 $0.0003  read
+    t14   2070/803    13696 $0.0006  edit
+    t15    869/519    15744 $0.0003  edit
+    t16    605/494    16576 $0.0003  edit
+    t17    567/297    17152 $0.0002  edit
+    t18    396/110    17664 $0.0001  read, read
+    t19   3295/102    18048 $0.0005  bash
+    t20    480/636    21312 $0.0003  bash
+    t21   1238/331    21760 $0.0003  -

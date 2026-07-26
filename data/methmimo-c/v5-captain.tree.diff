@@ -1,0 +1,15 @@
+diff --git a/js/app.js b/js/app.js
+index 2372299..d44e775 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -354,8 +354,8 @@
+     if (!trimmed) {
+       // Delete todo if edit is empty
+       todos = todos.filter(function (t) { return t.id !== id; });
+-      if (li.parentNode) {
+-        li.parentNode.removeChild(li);
++      if (li.parentNode === todoList) {
++        todoList.removeChild(li);
+       }
+     } else {
+       var todo = findTodoById(id);

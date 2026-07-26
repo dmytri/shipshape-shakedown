@@ -1,0 +1,67 @@
+diff --git a/css/app.css b/css/app.css
+index 661dfd8..08cd98e 100644
+--- a/css/app.css
++++ b/css/app.css
+@@ -1,6 +1,9 @@
+ /* Custom CSS overrides for TodoMVC app */
+ 
+-/* Hide toggle and destroy when editing (standard TodoMVC behaviour) */
++/* Hide controls when editing (standard TodoMVC behaviour) */
++li.editing .view {
++  display: none;
++}
+ li.editing .toggle,
+ li.editing .destroy {
+   display: none;
+diff --git a/js/app.js b/js/app.js
+index d0d4814..2372299 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -251,7 +251,35 @@
+       todo.completed = checked;
+     });
+     saveTodos(todos);
+-    render();
++
++    // Mutate existing <li> elements in-place to preserve DOM identity.
++    var items = todoList.querySelectorAll('li');
++    for (var i = 0; i < items.length; i++) {
++      var li = items[i];
++      var id = li.getAttribute('data-id');
++      var todo = findTodoById(id);
++      if (!todo) continue;
++      if (todo.completed) {
++        li.classList.add('completed');
++      } else {
++        li.classList.remove('completed');
++      }
++      var cb = li.querySelector('.toggle');
++      if (cb) cb.checked = todo.completed;
++    }
++
++    updateHeaderFooter();
++
++    // Update filter selection
++    filterLinks.forEach(function (link) {
++      link.classList.remove('selected');
++    });
++    var filterHash = currentFilter === 'active' ? '#/active' : currentFilter === 'completed' ? '#/completed' : '#/';
++    filterLinks.forEach(function (link) {
++      if (link.getAttribute('href') === filterHash) {
++        link.classList.add('selected');
++      }
++    });
+   });
+ 
+   // Todo list events (delegated)
+@@ -326,7 +354,9 @@
+     if (!trimmed) {
+       // Delete todo if edit is empty
+       todos = todos.filter(function (t) { return t.id !== id; });
+-      li.parentNode.removeChild(li);
++      if (li.parentNode) {
++        li.parentNode.removeChild(li);
++      }
+     } else {
+       var todo = findTodoById(id);
+       if (todo) {

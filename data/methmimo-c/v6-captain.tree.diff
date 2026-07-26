@@ -1,0 +1,14 @@
+diff --git a/js/app.js b/js/app.js
+index d44e775..01014ac 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -337,7 +337,8 @@
+   todoList.addEventListener('blur', function (e) {
+     if (e.target.classList.contains('edit')) {
+       var li = e.target.closest('li');
+-      if (!li) return;
++      // Guard: li may have been removed from DOM by a prior keydown/Enter call
++      if (!li || li.parentNode !== todoList) return;
+       var id = li.getAttribute('data-id');
+       saveEdit(li, id, e.target.value);
+     }
