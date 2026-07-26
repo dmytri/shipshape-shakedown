@@ -53,10 +53,10 @@ case "$STACK" in
     # A venv is built HERE, at scaffold time and at the sim's own absolute path, because a venv
     # carries that path inside it and does not survive a copy. Network is available at scaffold
     # time; the leg itself then needs none for the suite.
-    python3 -m venv .venv >/dev/null 2>&1
-    ./.venv/bin/pip install -q --disable-pip-version-check -r requirements.txt >/dev/null 2>&1 \
-      || { echo "SCAFFOLD(py): pip install failed"; exit 1; }
-    ./.venv/bin/behave >/dev/null 2>&1 || { echo "SCAFFOLD(py): behave not green"; exit 1; }
+    # uv against pyproject.toml is the shape doctrine prefers on Python: one manifest resolves,
+    # locks and runs. The env is built HERE because a venv carries its absolute path inside it.
+    uv sync --quiet >/dev/null 2>&1 || { echo "SCAFFOLD(py): uv sync failed"; exit 1; }
+    uv run behave >/dev/null 2>&1 || { echo "SCAFFOLD(py): behave not green"; exit 1; }
     ;;
 esac
 

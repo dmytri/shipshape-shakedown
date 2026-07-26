@@ -1,0 +1,22 @@
+[project]
+name = "tidewatch"
+version = "0.1.0"
+description = "Tide prediction"
+requires-python = ">=3.11"
+dependencies = []
+
+[dependency-groups]
+dev = [
+  "behave>=1.2.6",
+  "coverage>=7.6",
+  "mypy>=1.11",
+  "ruff>=0.6",
+  "poethepoet>=0.29",
+]
+
+[tool.setuptools]
+packages = ["src"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
