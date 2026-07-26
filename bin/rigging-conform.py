@@ -58,6 +58,10 @@ def score(path):
         val = meth[name]
         b = bare(val)
         if is_none(val):
+            # A Gherkin linter is available on every stack, so an unlinted spec surface is a
+            # fitting-out fault rather than a stack limit (dk, 2026-07-26).
+            if name == "spec-lint":
+                viol.append("spec-lint: none, but a Gherkin linter is always available (gplint)")
             notes.append(name)
             continue
         derived += 1

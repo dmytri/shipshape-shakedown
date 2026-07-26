@@ -70,9 +70,30 @@ def methods_of(sim):
     return out
 
 
-def signature(plan):
-    """A few distinctive fragments of a plan, so an invocation can be matched to its method."""
-    return [f for f in re.findall(r"--run '([^']{6,90})'", plan)]
+def parts_of(plan):
+    """The set of --run parts in a plan, normalized so an invocation can be matched exactly."""
+    parts = re.findall(r"--run\s+'([^']*)'", plan) or re.findall(r'--run\s+"([^"]*)"', plan)
+    out = set()
+    for p in parts:
+        p = re.sub(r"\s+", " ", p).strip()
+        p = p.replace("{scenario}", "").replace("{dependency}", "")
+        # a target list substituted into a prove part must not defeat the match
+        p = re.sub(r"features/\S*", "", p)
+        out.add(p.strip())
+    return out
+
+
+def match_method(cmd, meths):
+    """Which method IS this invocation? Exact part-set match, and ambiguity is reported, not guessed:
+    on a stack whose typecheck and lint read none, hygiene and plank-join have the same parts, and
+    calling that 'verify' (an earlier bug here) invents a result."""
+    inv = parts_of(cmd)
+    if not inv:
+        return None
+    hits = [name for name, plan in meths.items() if parts_of(plan) == inv]
+    if hits:
+        return "|".join(sorted(hits))
+    return None
 
 
 def audit(base):
@@ -86,14 +107,13 @@ def audit(base):
     ran, adhoc = {}, []
     for c in cmds:
         if "yoink" in c and "--run" in c:
-            hit = None
-            for name, plan in meths.items():
-                sig = signature(plan)
-                if sig and sum(1 for f in sig if f[:40] in c) >= max(1, len(sig) - 1):
-                    hit = name
-                    break
-            ran.setdefault(hit or "unnamed-plan", 0)
-            ran[hit or "unnamed-plan"] += 1
+            hit = match_method(c, meths)
+            key = hit or "OFF-RIGGING PLAN (composed by the role)"
+            ran[key] = ran.get(key, 0) + 1
+            continue
+        # A git invocation is custody, and its commit message is prose: a message quoting an
+        # annotation is not an annotation scan (an earlier false positive here).
+        if re.match(r"\s*(cd .*&&\s*)?git\b", c):
             continue
         for pat, what, owner in TOOLING:
             if re.search(pat, c):
