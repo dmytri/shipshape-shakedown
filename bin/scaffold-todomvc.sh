@@ -44,6 +44,17 @@ JSON
 
 printf 'node_modules\n' > .gitignore
 
+# OPTIONAL vendored rigging (methods-candidate A/B, 2026-07-26). Normally the roles derive
+# RIGGING.md themselves on the greenfield fast path, and its content then varies per draw —
+# which is exactly the variance a controlled composite-method test cannot carry. RIGGING_TEMPLATE
+# fits the sim out with a fixed rigging so the two arms differ ONLY in the `## Methods` section.
+# Unset = the original behaviour (roles derive it), so every prior pilot path is unchanged.
+if [ -n "${RIGGING_TEMPLATE:-}" ]; then
+  [ -f "$RIGGING_TEMPLATE" ] || { echo "SCAFFOLD: RIGGING_TEMPLATE not found: $RIGGING_TEMPLATE"; exit 1; }
+  cp "$RIGGING_TEMPLATE" RIGGING.md
+  echo "scaffold-todomvc: fitted out with vendored rigging $(basename "$RIGGING_TEMPLATE")"
+fi
+
 # node_modules for the eval path: same overlay contract as scaffold.sh. Symlink the
 # shared toolkit for the green check, then leave an empty dir as the bwrap mountpoint.
 if [ -n "${EVAL_SHARED_NM:-}" ] && [ -d "$EVAL_SHARED_NM/@cucumber" ]; then
