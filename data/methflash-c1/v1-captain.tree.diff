@@ -1,0 +1,348 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..2f29ef0
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,15 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
++
++## Next cycle
++
++- 4 feature files authored: `todos.feature`, `todo-editing.feature`, `todo-routing.feature`, `todo-persistence.feature`
++- 27 scenarios across 4 watches in `watchbill.json`
++- Stack is vanilla JavaScript with happy-dom for DOM-level verification
++- Template base at `assets/app-template.index.html` — production code needs index.html, css/app.css, js/app.js, js/models/todo.js, js/controllers/todos.js
++- localStorage key: `todos-vanillajs` per app-spec
++- todomvc-common and todomvc-app-css packages need installing in package.json before they resolve in node_modules
++- QM dispatches next: writes step definitions, verification support, then Crew writes production code
+\ No newline at end of file
+diff --git a/features/todo-editing.feature b/features/todo-editing.feature
+new file mode 100644
+index 0000000..9b7330a
+--- /dev/null
++++ b/features/todo-editing.feature
+@@ -0,0 +1,40 @@
++Feature: Todo editing
++  As a user
++  I want to edit a todo title
++  So that I can correct or update my task descriptions
++
++  Background:
++    Given I type "Buy milk" into the new-todo input and press Enter
++    And I double-click the label of the todo
++
++  Rule: Save on blur
++
++  Scenario: Save the edit when the input loses focus
++    Given the edit input shows "Buy milk"
++    When I clear the edit input and type "Buy organic milk"
++    And the edit input loses focus
++    Then the todo label shows "Buy organic milk"
++    And the "editing" class is removed from the todo item
++
++  Rule: Save on Enter
++
++  Scenario: Save the edit when Enter is pressed
++    Given the edit input shows "Buy milk"
++    When I clear the edit input and type "Buy organic milk" and press Enter in the edit input
++    Then the todo label shows "Buy organic milk"
++    And the "editing" class is removed from the todo item
++
++  Rule: Destroy on empty
++
++  Scenario: Destroy the todo when the edited title is empty
++    Given the edit input shows "Buy milk"
++    When I clear the edit input and press Enter in the edit input
++    Then the todo is removed from the list
++
++  Rule: Cancel on Escape
++
++  Scenario: Cancel editing and discard changes on Escape
++    Given the edit input shows "Buy milk"
++    When I clear the edit input and type "Buy organic milk" and press Escape
++    Then the todo label shows "Buy milk"
++    And the "editing" class is removed from the todo item
+\ No newline at end of file
+diff --git a/features/todo-persistence.feature b/features/todo-persistence.feature
+new file mode 100644
+index 0000000..9b9bdce
+--- /dev/null
++++ b/features/todo-persistence.feature
+@@ -0,0 +1,44 @@
++Feature: Todo persistence
++  As a user
++  I want my todos to be saved across page reloads
++  So that I do not lose my task list
++
++  Background:
++    Given the app is loaded
++
++  Rule: Save todos to localStorage
++
++  Scenario: Persist todos after creating them
++    Given I type "Buy milk" into the new-todo input and press Enter
++    And I type "Walk the dog" into the new-todo input and press Enter
++    When the app is reloaded
++    Then the todo list shows 2 items
++    And the todo list shows "Buy milk"
++    And the todo list shows "Walk the dog"
++
++  Scenario: Persist completion state
++    Given I type "Buy milk" into the new-todo input and press Enter
++    And I click the toggle checkbox on "Buy milk"
++    When the app is reloaded
++    Then "Buy milk" has the class "completed"
++
++  Scenario: Persist todos after editing
++    Given I type "Buy milk" into the new-todo input and press Enter
++    When I double-click the label of "Buy milk"
++    And I clear the edit input and type "Buy organic milk" and press Enter in the edit input
++    When the app is reloaded
++    Then the todo list shows "Buy organic milk"
++
++  Scenario: Persist active filter on reload
++    Given I type "Buy milk" into the new-todo input and press Enter
++    And I navigate to the "#/active" route
++    When the app is reloaded
++    Then the "Active" filter link has the "selected" class
++
++  Rule: Editing mode must not be persisted
++
++  Scenario: Editing mode is not persisted
++    Given I type "Buy milk" into the new-todo input and press Enter
++    And I double-click the label of "Buy milk"
++    When the app is reloaded
++    Then no todo item has the "editing" class
+\ No newline at end of file
+diff --git a/features/todo-routing.feature b/features/todo-routing.feature
+new file mode 100644
+index 0000000..c50ef10
+--- /dev/null
++++ b/features/todo-routing.feature
+@@ -0,0 +1,47 @@
++Feature: Todo routing
++  As a user
++  I want to filter the todo list by completion state
++  So that I can focus on active or completed tasks
++
++  Background:
++    Given the app is loaded
++    And I create the following todos:
++      | Buy milk    |
++      | Walk the dog |
++      | Write code  |
++    And I click the toggle checkbox on "Walk the dog"
++
++  Rule: Default route shows all todos
++
++  Scenario: Default route shows all todos
++    Given the URL hash is "#/"
++    Then the todo list shows 3 items
++    And the "All" filter link has the "selected" class
++
++  Rule: Active filter
++
++  Scenario: Active filter shows only active todos
++    When I navigate to the "#/active" route
++    Then the todo list shows 2 items
++    And the todo list does not include "Walk the dog"
++    And the "Active" filter link has the "selected" class
++
++  Rule: Completed filter
++
++  Scenario: Completed filter shows only completed todos
++    When I navigate to the "#/completed" route
++    Then the todo list shows 1 item
++    And the todo list shows "Walk the dog"
++    And the "Completed" filter link has the "selected" class
++
++  Rule: Item update in filtered view
++
++  Scenario: Completing an item in the Active filter hides it
++    Given I navigate to the "#/active" route
++    When I click the toggle checkbox on "Buy milk"
++    Then "Buy milk" is not shown in the todo list
++
++  Scenario: Reactivating a completed item in the Completed filter hides it
++    Given I navigate to the "#/completed" route
++    When I click the toggle checkbox on "Walk the dog"
++    Then "Walk the dog" is not shown in the todo list
+\ No newline at end of file
+diff --git a/features/todos.feature b/features/todos.feature
+new file mode 100644
+index 0000000..6ad5dd9
+--- /dev/null
++++ b/features/todos.feature
+@@ -0,0 +1,109 @@
++Feature: Todo management
++  As a user
++  I want to manage a todo list
++  So that I can track tasks I need to complete
++
++  Background:
++    Given the app is loaded
++
++  Rule: New todo creation
++
++  Scenario: Create a new todo
++    Given the input field shows "What needs to be done?"
++    When I type "Buy milk" into the new-todo input and press Enter
++    Then the todo list shows an item with the text "Buy milk"
++    And the input field is cleared
++
++  Scenario: Do not create an empty todo
++    When I type "   " into the new-todo input and press Enter
++    Then no new item is added to the list
++
++  Rule: No todos state
++
++  Scenario: Hide main and footer when there are no todos
++    Given there are no todos
++    Then the section with class "main" is not visible
++    And the footer is not visible
++
++  Scenario: Show main and footer when a todo exists
++    Given I type "Buy milk" into the new-todo input and press Enter
++    Then the section with class "main" is visible
++    And the footer is visible
++
++  Rule: Completing a todo
++
++  Scenario: Toggle a todo as completed
++    Given I type "Buy milk" into the new-todo input and press Enter
++    When I click the toggle checkbox on the todo
++    Then the todo item receives the class "completed"
++    And its toggle checkbox becomes checked
++
++  Rule: Deleting a todo
++
++  Scenario: Delete a todo
++    Given I type "Buy milk" into the new-todo input and press Enter
++    When I click the destroy button on the todo
++    Then the todo is removed from the list
++
++  Rule: Mark all as complete
++
++  Scenario: Mark all todos as completed
++    Given I create the following todos:
++      | Buy milk    |
++      | Walk the dog |
++    When I click the toggle-all checkbox
++    Then all todos have the class "completed"
++    And the toggle-all checkbox is checked
++
++  Scenario: Toggle-all reflects individual completion
++    Given I create the following todos:
++      | Buy milk    |
++      | Walk the dog |
++    When I click the toggle checkbox on "Buy milk"
++    Then the toggle-all checkbox is not checked
++    When I click the toggle checkbox on "Walk the dog"
++    Then the toggle-all checkbox is checked
++
++  Scenario: Toggle-all checkbox clears after clear-completed
++    Given I create the following todos:
++      | Buy milk    |
++      | Walk the dog |
++    When I click the toggle-all checkbox
++    And I click the clear-completed button
++    Then the toggle-all checkbox is not checked
++
++  Rule: Counter
++
++  Scenario: Display the number of active todos
++    Given I create the following todos:
++      | Buy milk    |
++      | Walk the dog |
++      | Write code  |
++    When I click the toggle checkbox on "Walk the dog"
++    Then the todo-count shows "<strong>2</strong> items left"
++    When I click the toggle checkbox on "Buy milk"
++    Then the todo-count shows "<strong>1</strong> item left"
++
++  Rule: Clear completed
++
++  Scenario: Clear completed removes all completed todos
++    Given I create the following todos:
++      | Buy milk    |
++      | Walk the dog |
++    When I click the toggle checkbox on "Buy milk"
++    And I click the clear-completed button
++    Then the todo list shows only "Walk the dog"
++    And the clear-completed button is hidden
++
++  Scenario: Hide clear-completed when no todos are completed
++    Given I create the following todos:
++      | Buy milk    |
++    Then the clear-completed button is hidden
++
++  Rule: Item display
++
++  Scenario: Double-clicking a label enters editing mode
++    Given I type "Buy milk" into the new-todo input and press Enter
++    When I double-click the label of the todo
++    Then the todo item receives the class "editing"
++    And the edit input is focused
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..7c0e422
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,51 @@
++{
++  "watches": [
++    {
++      "name": "Todos CRUD and Display",
++      "scenarios": [
++        "features/todos.feature:Create a new todo",
++        "features/todos.feature:Do not create an empty todo",
++        "features/todos.feature:Hide main and footer when there are no todos",
++        "features/todos.feature:Show main and footer when a todo exists",
++        "features/todos.feature:Toggle a todo as completed",
++        "features/todos.feature:Delete a todo",
++        "features/todos.feature:Mark all todos as completed",
++        "features/todos.feature:Toggle-all reflects individual completion",
++        "features/todos.feature:Toggle-all checkbox clears after clear-completed",
++        "features/todos.feature:Display the number of active todos",
++        "features/todos.feature:Clear completed removes all completed todos",
++        "features/todos.feature:Hide clear-completed when no todos are completed",
++        "features/todos.feature:Double-clicking a label enters editing mode"
++      ]
++    },
++    {
++      "name": "Todo Editing",
++      "scenarios": [
++        "features/todo-editing.feature:Save the edit when the input loses focus",
++        "features/todo-editing.feature:Save the edit when Enter is pressed",
++        "features/todo-editing.feature:Destroy the todo when the edited title is empty",
++        "features/todo-editing.feature:Cancel editing and discard changes on Escape"
++      ]
++    },
++    {
++      "name": "Todo Routing",
++      "scenarios": [
++        "features/todo-routing.feature:Default route shows all todos",
++        "features/todo-routing.feature:Active filter shows only active todos",
++        "features/todo-routing.feature:Completed filter shows only completed todos",
++        "features/todo-routing.feature:Completing an item in the Active filter hides it",
++        "features/todo-routing.feature:Reactivating a completed item in the Completed filter hides it"
++      ]
++    },
++    {
++      "name": "Todo Persistence",
++      "scenarios": [
++        "features/todo-persistence.feature:Persist todos after creating them",
++        "features/todo-persistence.feature:Persist completion state",
++        "features/todo-persistence.feature:Persist todos after editing",
++        "features/todo-persistence.feature:Persist active filter on reload",
++        "features/todo-persistence.feature:Editing mode is not persisted"
++      ]
++    }
++  ]
++}
+\ No newline at end of file

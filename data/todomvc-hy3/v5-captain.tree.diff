@@ -1,0 +1,52 @@
+diff --git a/css/app.css b/css/app.css
+index 0d1af1d..35ce036 100644
+--- a/css/app.css
++++ b/css/app.css
+@@ -1,9 +1,10 @@
+ /* Application-specific style overrides for the TodoMVC app. */
+ 
+-/* While a row is being edited, hide its checkbox and delete (destroy) control
+-   so the user only interacts with the edit field. The `.editing` class is set
+-   by js/app.js on the row's <li> when the label is double-clicked. */
++/* While a row is being edited, hide its checkbox, label, and delete (destroy)
++   control so the user only interacts with the edit field. The `.editing` class
++   is set by js/app.js on the row's <li> when the label is double-clicked. */
+ .editing .toggle,
+-.editing .destroy {
++.editing .destroy,
++.editing label {
+   display: none;
+ }
+diff --git a/features/editing-visibility.feature b/features/editing-visibility.feature
+index 0a84bd8..c920f4d 100644
+--- a/features/editing-visibility.feature
++++ b/features/editing-visibility.feature
+@@ -13,3 +13,8 @@ Feature: Editing hides the row controls
+     Then the todo "EditMe" is in edit mode
+     And the checkbox for "EditMe" is hidden
+     And the delete button for "EditMe" is hidden
++
++  Scenario: The label is hidden while editing
++    When the user double-clicks the todo "EditMe"
++    Then the todo "EditMe" is in edit mode
++    And the label for "EditMe" is hidden
+diff --git a/features/support/steps.mjs b/features/support/steps.mjs
+index 93413a6..0b81412 100644
+--- a/features/support/steps.mjs
++++ b/features/support/steps.mjs
+@@ -150,6 +150,15 @@ Then('the delete button for {string} is hidden', function (title) {
+   }
+ });
+ 
++Then('the label for {string} is hidden', function (title) {
++  const li = this.liByTitle(title);
++  if (!li) throw new Error(`No todo "${title}"`);
++  const display = this.window.getComputedStyle(li.querySelector('label')).display;
++  if (display !== 'none') {
++    throw new Error(`Label for "${title}" is not hidden (display: ${display})`);
++  }
++});
++
+ Then('the mark-all control is checked', function () {
+   const mark = this.document.querySelector('#toggle-all');
+   if (!mark.checked) throw new Error('Mark-all control is not checked');

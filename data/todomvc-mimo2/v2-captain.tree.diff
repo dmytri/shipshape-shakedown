@@ -1,0 +1,190 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 3acbc52..c81ad6e 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -11,7 +11,7 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ - **Spec source:** `assets/app-spec.md` (TodoMVC spec), `assets/app-template.index.html` (base markup)
+ - **Specs written:** 7 feature files, 32 scenarios total
+ - **Watchbill:** 7 watches, ordered by dependency (persistence -> add -> toggle -> edit -> clear -> route -> visibility)
+-- **Next role:** QM dispatches against the watchbill, discovers undefined steps, then dispatches Crew per failing target
++- **Acceptance suite:** External Cypress browser suite (fixed, correct)
+ 
+ ## Decisions
+ 
+@@ -19,3 +19,13 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ - **Routing:** Hash-based (`#/`, `#/active`, `#/completed`) per spec
+ - **No framework:** Vanilla JS, components split into `js/app.js` following spec directory structure
+ - **No perturbation planted:** Greenfield app, no existing production code to perturb
++
++## Browser-defect fixes applied
++
++Three product defects fixed to pass the external Cypress acceptance suite:
++
++1. **DOM identity preservation** (`js/app.js`): Replaced `innerHTML = ''` destroy-and-recreate render with reconciliation-based `reconcileTodoList()`. Existing `<li>` elements are updated in place (class, checkbox, label) instead of being removed and recreated. Prevents Cypress "element detached from DOM" errors on toggle interactions.
++
++2. **Editing-mode CSS** (`index.html`): Added inline `<style>` rules to hide `.view` and show `.edit` when `<li>` has `.editing` class. The `todomvc-app-css` package is not installed; these rules fill the gap so the toggle checkbox is properly hidden during editing.
++
++3. **Escape/blur race** (`js/app.js`): Added `escapePressed` flag. `cancelEdit()` sets it; the blur handler checks it and returns early. Prevents the blur handler from re-saving the edit after Escape cancels it. `startEdit()` resets the flag.
+diff --git a/index.html b/index.html
+index ab81336..a89ee80 100644
+--- a/index.html
++++ b/index.html
+@@ -6,6 +6,11 @@
+   <title>TodoMVC</title>
+   <link rel="stylesheet" href="node_modules/todomvc-common/base.css">
+   <link rel="stylesheet" href="node_modules/todomvc-app-css/index.css">
++  <style>
++    .todo-list li .edit { display: none; }
++    .todo-list li.editing .edit { display: block; }
++    .todo-list li.editing .view { display: none; }
++  </style>
+ </head>
+ <body>
+   <section class="todoapp">
+diff --git a/js/app.js b/js/app.js
+index 1a4d9bc..032d736 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -17,6 +17,7 @@
+   var $countLabel = document.querySelector('.todo-count');
+   var $clearCompleted = document.querySelector('.clear-completed');
+   var $filters = document.querySelectorAll('.filters a');
++  var escapePressed = false;
+ 
+   function generateId() {
+     return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+@@ -60,24 +61,8 @@
+     var activeCount = getActiveCount();
+     var completedCount = todos.length - activeCount;
+ 
+-    // Render todo list
+-    $todoList.innerHTML = '';
+-    filtered.forEach(function (todo) {
+-      var li = document.createElement('li');
+-      li.dataset.id = todo.id;
+-      if (todo.completed) li.classList.add('completed');
+-      if (editingId === todo.id) li.classList.add('editing');
+-
+-      li.innerHTML =
+-        '<div class="view">' +
+-          '<input class="toggle" type="checkbox"' + (todo.completed ? ' checked' : '') + '>' +
+-          '<label>' + escapeHtml(todo.title) + '</label>' +
+-          '<button class="destroy"></button>' +
+-        '</div>' +
+-        '<input class="edit" value="' + escapeHtml(todo.title) + '">';
+-
+-      $todoList.appendChild(li);
+-    });
++    // Reconcile todo list DOM (preserve element identity)
++    reconcileTodoList(filtered);
+ 
+     // Update count
+     $count.textContent = activeCount;
+@@ -112,6 +97,80 @@
+     });
+   }
+ 
++  function createTodoLi(todo) {
++    var li = document.createElement('li');
++    li.dataset.id = todo.id;
++    if (todo.completed) li.classList.add('completed');
++    if (editingId === todo.id) li.classList.add('editing');
++    li.innerHTML =
++      '<div class="view">' +
++        '<input class="toggle" type="checkbox"' + (todo.completed ? ' checked' : '') + '>' +
++        '<label>' + escapeHtml(todo.title) + '</label>' +
++        '<button class="destroy"></button>' +
++      '</div>' +
++      '<input class="edit" value="' + escapeHtml(todo.title) + '">';
++    return li;
++  }
++
++  function updateTodoLi(li, todo) {
++    if (todo.completed) {
++      li.classList.add('completed');
++    } else {
++      li.classList.remove('completed');
++    }
++    if (editingId === todo.id) {
++      li.classList.add('editing');
++    } else {
++      li.classList.remove('editing');
++    }
++    var checkbox = li.querySelector('.toggle');
++    if (checkbox) {
++      checkbox.checked = todo.completed;
++    }
++    var label = li.querySelector('label');
++    if (label) {
++      label.textContent = todo.title;
++    }
++    var editInput = li.querySelector('.edit');
++    if (editInput) {
++      editInput.value = todo.title;
++    }
++  }
++
++  function reconcileTodoList(filtered) {
++    var existingLis = $todoList.querySelectorAll('li');
++    var existingMap = {};
++    for (var i = 0; i < existingLis.length; i++) {
++      existingMap[existingLis[i].dataset.id] = existingLis[i];
++    }
++
++    var seenIds = {};
++    var newOrder = [];
++
++    filtered.forEach(function (todo) {
++      seenIds[todo.id] = true;
++      var li = existingMap[todo.id];
++      if (li) {
++        updateTodoLi(li, todo);
++      } else {
++        li = createTodoLi(todo);
++      }
++      newOrder.push(li);
++    });
++
++    // Remove elements not in filtered list
++    for (var j = 0; j < existingLis.length; j++) {
++      if (!seenIds[existingLis[j].dataset.id]) {
++        existingLis[j].remove();
++      }
++    }
++
++    // Reorder DOM to match filtered order
++    for (var k = 0; k < newOrder.length; k++) {
++      $todoList.appendChild(newOrder[k]);
++    }
++  }
++
+   function escapeHtml(text) {
+     var div = document.createElement('div');
+     div.textContent = text;
+@@ -163,6 +222,7 @@
+ 
+   function startEdit(id) {
+     editingId = id;
++    escapePressed = false;
+     render();
+     var editing = $todoList.querySelector('li.editing .edit');
+     if (editing) {
+@@ -188,6 +248,7 @@
+   }
+ 
+   function cancelEdit() {
++    escapePressed = true;
+     editingId = null;
+     render();
+   }
+@@ -238,6 +299,10 @@
+ 
+   $todoList.addEventListener('blur', function (e) {
+     if (e.target.classList.contains('edit')) {
++      if (escapePressed) {
++        escapePressed = false;
++        return;
++      }
+       var li = e.target.closest('li');
+       if (li) {
+         saveEdit(li.dataset.id, e.target.value);

@@ -1,0 +1,381 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..3ac781f
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,18 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++Binding behaviour lives in `features/**` specs and `assets/**`. History lives in git. These notes carry only what the next cycle needs.
++
++## Decisions captured
++- Framework label for the persistence key is `vanillajs`, so the localStorage name is `todos-vanillajs` (spec format `todos-[framework]`). Confirmed against the tastejs TodoMVC vanilla example convention.
++- Spec base markup is `assets/app-template.index.html`; CSS overrides live in `css/app.css`, base CSS untouched. App logic lives in `js/app.js` (vanilla, no preprocessors).
++- Persistence keys per item: `id`, `title`, `completed`. Editing mode is session-only and MUST NOT be persisted.
++- Routes required: `#/` (all, default), `#/active`, `#/completed`. Active filter persists across reload.
++
++## Open questions for the user
++- The package manifest (`package.json`) does not yet list `todomvc-common` or `todomvc-app-css`; the spec mandates them. Recorded under `## Dependencies` in `RIGGING.md` for Shipwright to install at fitting out. Does the user want the dependency install now, or defer to harbour?
++- Product dependencies `todomvc-common` / `todomvc-app-css` supply `base.css`, `index.css`, and `base.js`. The template references them under `node_modules/`. Confirm the relative paths stay as the template specifies.
++
++## Next role
++- QM, base commit `HEAD` (261606c). Scope is `watchbill.json` (watch1..watch6). Step definitions under `features/support/` and production code in `js/` and `index.html` are QM/Crew work, not Captain's.
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..513d00e
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,45 @@
++# Rigging
++
++## Stack
++- language: JavaScript
++- runtime: node
++- packageManager: npm
++
++## Directories
++- implementation: js
++- specs: features
++- verification: none
++- assets: assets
++- scantlings: none
++
++## Commands
++- discover: `npx cucumber-js --dry-run --tags "not @captain and not @shipwright"`
++- focused: `ref="{scenario}"; npx cucumber-js "${ref%%:*}" --name "^${ref#*:}$" --tags "not @captain and not @shipwright"`
++- broad: none
++- coverage: none
++- step-usage: none
++- plank-inventory: none
++- typecheck: none
++- lint: none
++- conformance: none
++
++## Perturbation
++- message: `PERTURBATION: consider current durable context; remove when fixed`
++- perturb: `throw new Error("PERTURBATION: consider current durable context; remove when fixed");`
++
++## Tiers
++- default: @logic
++- sandbox: @sandbox
++- policy: none
++- weather: none
++- runrecord: none
++
++## Dependencies
++- policy: locked
++- dependency: @cucumber/cucumber
++- dependency: happy-dom
++- dependency: todomvc-common
++- dependency: todomvc-app-css
++
++## Outbound
++- outbound: none
+diff --git a/features/completing-todos.feature b/features/completing-todos.feature
+new file mode 100644
+index 0000000..2267799
+--- /dev/null
++++ b/features/completing-todos.feature
+@@ -0,0 +1,31 @@
++Feature: Completing todos
++  As a user of the todo app
++  I want to mark todos complete and clear finished work
++  So that I can track what remains
++
++  Background:
++    Given the app is loaded with todos:
++      | title        | completed |
++      | Learn JS     | false     |
++      | Buy a unicorn | false     |
++
++  Rule: Completing a todo toggles its completed state and its styling
++
++  Scenario: Toggling a todo marks it completed
++    When the user toggles the todo "Learn JS"
++    Then the todo "Learn JS" is marked completed
++
++  Scenario: Mark-all checkbox completes every todo
++    When the user marks all todos as complete
++    Then every todo is marked completed
++
++  Scenario: Mark-all checkbox reflects all-complete state
++    When the user toggles the todo "Learn JS"
++    And the user toggles the todo "Buy a unicorn"
++    Then the mark-all control is checked
++
++  Scenario: Clearing completed todos removes them and unchecks mark-all
++    Given the todo "Learn JS" is marked completed
++    When the user clears completed todos
++    Then the todo list has 1 item
++    And the mark-all control is unchecked
+diff --git a/features/creating-todos.feature b/features/creating-todos.feature
+new file mode 100644
+index 0000000..0f2ae93
+--- /dev/null
++++ b/features/creating-todos.feature
+@@ -0,0 +1,33 @@
++Feature: Creating todos
++  As a user of the todo app
++  I want to add new todos through the top input
++  So that I can capture the work I need to do
++
++  Background:
++    Given the app is loaded with no todos
++
++  Rule: A non-empty trimmed title entered and confirmed creates exactly one todo
++
++  Scenario: New todo is appended when Enter is pressed
++    When the user types "Buy milk" into the new todo input
++    And the user presses Enter
++    Then the todo list shows "Buy milk"
++    And the todo list has 1 item
++
++  Scenario: New todo input is cleared after creation
++    When the user types "Walk the dog" into the new todo input
++    And the user presses Enter
++    Then the new todo input is empty
++
++  Scenario: Whitespace-only new todo is ignored
++    When the user types "   " into the new todo input
++    And the user presses Enter
++    Then the todo list has 0 items
++
++  Scenario: New todo is trimmed before creation
++    When the user types "  Water the plants  " into the new todo input
++    And the user presses Enter
++    Then the todo list shows "Water the plants"
++
++  Scenario: New todo input is focused on page load
++    Then the new todo input is focused
+diff --git a/features/editing-todos.feature b/features/editing-todos.feature
+new file mode 100644
+index 0000000..017b852
+--- /dev/null
++++ b/features/editing-todos.feature
+@@ -0,0 +1,37 @@
++Feature: Editing todos
++  As a user of the todo app
++  I want to rename a todo in place
++  So that I can correct a title without deleting the todo
++
++  Background:
++    Given the app is loaded with todos:
++      | title    | completed |
++      | Taste JS | false     |
++
++  Rule: Editing commits a trimmed title, discards on escape, and deletes on empty
++
++  Scenario: Double-clicking a todo label enters edit mode
++    When the user double-clicks the todo "Taste JS"
++    Then the todo "Taste JS" is in edit mode
++
++  Scenario: Editing a todo saves on Enter
++    When the user double-clicks the todo "Taste JS"
++    And the user edits the title to "Taste JavaScript" and presses Enter
++    Then the todo list shows "Taste JavaScript"
++    And the todo "Taste JavaScript" is not in edit mode
++
++  Scenario: Editing a todo saves on blur
++    When the user double-clicks the todo "Taste JS"
++    And the user edits the title to "Taste ECMAScript" and blurs the field
++    Then the todo list shows "Taste ECMAScript"
++
++  Scenario: Empty edit removes the todo
++    When the user double-clicks the todo "Taste JS"
++    And the user edits the title to "   " and presses Enter
++    Then the todo list has 0 items
++
++  Scenario: Escape discards an in-progress edit
++    When the user double-clicks the todo "Taste JS"
++    And the user edits the title to "Changed" and presses Escape
++    Then the todo list shows "Taste JS"
++    And the todo "Taste JS" is not in edit mode
+diff --git a/features/list-summary.feature b/features/list-summary.feature
+new file mode 100644
+index 0000000..9879245
+--- /dev/null
++++ b/features/list-summary.feature
+@@ -0,0 +1,39 @@
++Feature: List summary and visibility
++  As a user of the todo app
++  I want the chrome to reflect my list state
++  So that I see only what is useful
++
++  Rule: Empty lists hide the main and footer; the count and clear button reflect state
++
++  Scenario: Empty list hides the main and footer sections
++    Given the app is loaded with no todos
++    Then the main section is hidden
++    And the footer is hidden
++
++  Scenario: App is built on the template markup
++    Given the app is loaded with no todos
++    Then the page contains a new todo input
++    And the page contains a toggle-all control
++    And the page contains "All", "Active", and "Completed" filter links
++
++  Scenario Outline: Remaining count uses correct pluralization
++    Given the app has <count> active todos
++    Then the remaining count reads "<text>"
++
++    Examples:
++      | count | text         |
++      | 0     | 0 items left |
++      | 1     | 1 item left  |
++      | 2     | 2 items left |
++
++  Scenario: Clear-completed button hides when no completed todos
++    Given the app is loaded with todos:
++      | title | completed |
++      | A     | false     |
++    Then the clear-completed button is hidden
++
++  Scenario: Clear-completed button shows when completed todos exist
++    Given the app is loaded with todos:
++      | title | completed |
++      | A     | true      |
++    Then the clear-completed button is visible
+diff --git a/features/persistence.feature b/features/persistence.feature
+new file mode 100644
+index 0000000..9ebc624
+--- /dev/null
++++ b/features/persistence.feature
+@@ -0,0 +1,32 @@
++Feature: Persistence
++  As a user of the todo app
++  I want my todos to survive a page reload
++  So that I do not lose my list
++
++  Rule: Todos are stored in localStorage under todos-vanillajs with id, title, and completed fields
++
++  Scenario: Todos persist across a page reload
++    Given the app is loaded with todos:
++      | title   | completed |
++      | Ship it | false     |
++      | Fix bug | true      |
++    When the user reloads the app
++    Then the todo list shows "Ship it"
++    And the todo list shows "Fix bug"
++    And the todo "Fix bug" is marked completed
++
++  Scenario: Editing state is not persisted
++    Given the app is loaded with todos:
++      | title   | completed |
++      | Edit me | false     |
++    When the user double-clicks the todo "Edit me"
++    And the user reloads the app
++    Then the todo "Edit me" is not in edit mode
++
++  @contract
++  Scenario: The localStorage todo record matches the required shape
++    Given the app is loaded with todos:
++      | title | completed |
++      | Shape | true      |
++    Then the "todos-vanillajs" localStorage entry is a JSON array
++    And each stored todo has the fields "id", "title", and "completed"
+diff --git a/features/routing.feature b/features/routing.feature
+new file mode 100644
+index 0000000..1c5480f
+--- /dev/null
++++ b/features/routing.feature
+@@ -0,0 +1,39 @@
++Feature: Routing and filters
++  As a user of the todo app
++  I want to filter the list by status
++  So that I can focus on active or completed work
++
++  Background:
++    Given the app is loaded with todos:
++      | title   | completed |
++      | Active1 | false     |
++      | Done1   | true      |
++
++  Rule: Routes filter the visible list and mark the active filter link
++
++  Scenario: Active filter shows only incomplete todos
++    When the user opens the "Active" filter
++    Then the todo list shows "Active1"
++    And the todo list does not show "Done1"
++
++  Scenario: Completed filter shows only completed todos
++    When the user opens the "Completed" filter
++    Then the todo list shows "Done1"
++    And the todo list does not show "Active1"
++
++  Scenario: All filter shows every todo
++    When the user opens the "Completed" filter
++    And the user opens the "All" filter
++    Then the todo list shows "Active1"
++    And the todo list shows "Done1"
++
++  Scenario: Filter selection toggles the selected link
++    When the user opens the "Active" filter
++    Then the "Active" filter link is selected
++    And the "All" filter link is not selected
++
++  Scenario: Active filter persists across a reload
++    When the user opens the "Completed" filter
++    And the user reloads the app
++    Then the "Completed" filter link is selected
++    And the todo list shows "Done1"
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..d0132a1
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,53 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/creating-todos.feature:New todo is appended when Enter is pressed",
++      "features/creating-todos.feature:New todo input is cleared after creation",
++      "features/creating-todos.feature:Whitespace-only new todo is ignored",
++      "features/creating-todos.feature:New todo is trimmed before creation",
++      "features/creating-todos.feature:New todo input is focused on page load"
++    ]
++  },
++  "watch2": {
++    "scenarios": [
++      "features/completing-todos.feature:Toggling a todo marks it completed",
++      "features/completing-todos.feature:Mark-all checkbox completes every todo",
++      "features/completing-todos.feature:Mark-all checkbox reflects all-complete state",
++      "features/completing-todos.feature:Clearing completed todos removes them and unchecks mark-all"
++    ]
++  },
++  "watch3": {
++    "scenarios": [
++      "features/editing-todos.feature:Double-clicking a todo label enters edit mode",
++      "features/editing-todos.feature:Editing a todo saves on Enter",
++      "features/editing-todos.feature:Editing a todo saves on blur",
++      "features/editing-todos.feature:Empty edit removes the todo",
++      "features/editing-todos.feature:Escape discards an in-progress edit"
++    ]
++  },
++  "watch4": {
++    "scenarios": [
++      "features/list-summary.feature:Empty list hides the main and footer sections",
++      "features/list-summary.feature:App is built on the template markup",
++      "features/list-summary.feature:Remaining count uses correct pluralization",
++      "features/list-summary.feature:Clear-completed button hides when no completed todos",
++      "features/list-summary.feature:Clear-completed button shows when completed todos exist"
++    ]
++  },
++  "watch5": {
++    "scenarios": [
++      "features/persistence.feature:Todos persist across a page reload",
++      "features/persistence.feature:Editing state is not persisted",
++      "features/persistence.feature:The localStorage todo record matches the required shape"
++    ]
++  },
++  "watch6": {
++    "scenarios": [
++      "features/routing.feature:Active filter shows only incomplete todos",
++      "features/routing.feature:Completed filter shows only completed todos",
++      "features/routing.feature:All filter shows every todo",
++      "features/routing.feature:Filter selection toggles the selected link",
++      "features/routing.feature:Active filter persists across a reload"
++    ]
++  }
++}

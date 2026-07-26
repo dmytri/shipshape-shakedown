@@ -1,0 +1,102 @@
+diff --git a/css/app.css b/css/app.css
+index 8682ca4..9413a0c 100644
+--- a/css/app.css
++++ b/css/app.css
+@@ -2,7 +2,8 @@
+ 	display: none;
+ }
+ 
+-.todo-list li.editing .toggle,
+-.todo-list li.editing .destroy {
++/* While a todo row is being edited, hide its entire .view block (checkbox,
++   label, and destroy button) so only the edit field remains. */
++.todo-list li.editing .view {
+ 	display: none;
+ }
+diff --git a/features/editing-todos.feature b/features/editing-todos.feature
+index 834cea3..34236cd 100644
+--- a/features/editing-todos.feature
++++ b/features/editing-todos.feature
+@@ -6,12 +6,13 @@ Feature: Editing todos
+   Background:
+     Given the todo app has the todo "Buy milk"
+ 
+-  Rule: While a row is edited its checkbox and delete button are hidden
++  Rule: While a row is edited its checkbox, label, and delete button are hidden
+ 
+-  Scenario: A todo's checkbox and delete button are hidden while it is being edited
++  Scenario: A todo's checkbox, label, and delete button are hidden while it is being edited
+     Given the todo app has the todo "Buy milk"
+     When I double-click the label of the todo "Buy milk"
+     Then the toggle of the todo "Buy milk" is hidden
++    And the label of the todo "Buy milk" is hidden
+     And the destroy button of the todo "Buy milk" is hidden
+ 
+   Rule: Double-clicking the label starts editing
+diff --git a/features/support/steps.js b/features/support/steps.js
+index f1406d8..23d9899 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -310,9 +310,8 @@ Then('the toggle of the todo {string} is hidden', function (title) {
+   this.injectAppCss();
+   const toggle = this.liFor(title).querySelector('.toggle');
+   assert(toggle, 'no toggle for "' + title + '"');
+-  assert.strictEqual(
+-    this.window.getComputedStyle(toggle).display,
+-    'none',
++  assert(
++    this.isHiddenByCss(toggle),
+     'toggle of "' + title + '" is not hidden by CSS'
+   );
+ });
+@@ -321,13 +320,22 @@ Then('the destroy button of the todo {string} is hidden', function (title) {
+   this.injectAppCss();
+   const destroy = this.liFor(title).querySelector('.destroy');
+   assert(destroy, 'no destroy button for "' + title + '"');
+-  assert.strictEqual(
+-    this.window.getComputedStyle(destroy).display,
+-    'none',
++  assert(
++    this.isHiddenByCss(destroy),
+     'destroy button of "' + title + '" is not hidden by CSS'
+   );
+ });
+ 
++Then('the label of the todo {string} is hidden', function (title) {
++  this.injectAppCss();
++  const label = this.liFor(title).querySelector('label');
++  assert(label, 'no label for "' + title + '"');
++  assert(
++    this.isHiddenByCss(label),
++    'label of "' + title + '" is not hidden by CSS'
++  );
++});
++
+ // --- Assertions: localStorage persistence ---
+ 
+ Then('localStorage holds the key {string}', function (key) {
+diff --git a/features/support/world.js b/features/support/world.js
+index 5f20359..dc0ccc2 100644
+--- a/features/support/world.js
++++ b/features/support/world.js
+@@ -84,6 +84,20 @@ class TodoWorld {
+     }
+   }
+ 
++  // True when `el` or any ancestor is hidden via CSS `display: none`. A
++  // `display:none` ancestor means the subtree is not rendered, even though
++  // `getComputedStyle(child).display` keeps the child's own resolved value.
++  isHiddenByCss(el) {
++    let node = el;
++    while (node && node.nodeType === 1) {
++      if (this.window.getComputedStyle(node).display === 'none') {
++        return true;
++      }
++      node = node.parentElement;
++    }
++    return false;
++  }
++
+   // --- DOM interaction helpers ---
+ 
+   get el() {

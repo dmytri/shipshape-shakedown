@@ -1,0 +1,130 @@
+diff --git a/js/app.js b/js/app.js
+index fd3cc46..ea404a8 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -82,7 +82,22 @@
+       return t;
+     });
+     this.save();
+-    this.render();
++    // Update DOM in-place to preserve element identity across the interaction
++    var todoList = document.querySelector('.todo-list');
++    var li = todoList ? todoList.querySelector('li[data-id="' + id + '"]') : null;
++    if (li) {
++      var todo = todos.find(function (t) { return t.id === id; });
++      if (todo.completed) {
++        li.classList.add('completed');
++      } else {
++        li.classList.remove('completed');
++      }
++      var checkbox = li.querySelector('.toggle');
++      if (checkbox) {
++        checkbox.checked = todo.completed;
++      }
++    }
++    this.renderUI();
+   };
+ 
+   /**
+@@ -96,7 +111,23 @@
+       return t;
+     });
+     this.save();
+-    this.render();
++    // Update DOM in-place to preserve element identity
++    var todoList = document.querySelector('.todo-list');
++    if (todoList) {
++      var items = todoList.querySelectorAll('li');
++      Array.prototype.forEach.call(items, function (li) {
++        if (completed) {
++          li.classList.add('completed');
++        } else {
++          li.classList.remove('completed');
++        }
++        var checkbox = li.querySelector('.toggle');
++        if (checkbox) {
++          checkbox.checked = completed;
++        }
++      });
++    }
++    this.renderUI();
+   };
+ 
+   /**
+@@ -295,11 +326,10 @@
+    * @planks("/^the ([#a-z]+) section is hidden$/")
+    * @planks("/^the ([#a-z]+) section is visible$/")
+    * @planks("the todo-count shows {string}")
++   * Update all UI except the todo list itself. Used by in-place
++   * mutations that must preserve element identity.
+    */
+-  TodoApp.prototype.render = function () {
+-    var self = this;
+-    var filteredTodos = this.getFilteredTodos();
+-    var todoList = document.querySelector('.todo-list');
++  TodoApp.prototype.renderUI = function () {
+     var main = document.querySelector('#main');
+     var footer = document.querySelector('#footer');
+     var todoCount = document.querySelector('.todo-count');
+@@ -308,26 +338,6 @@
+     var activeCount = this.getActiveCount();
+     var completedCount = this.getCompletedCount();
+ 
+-    // Render todo list
+-    if (todoList) {
+-      todoList.innerHTML = '';
+-      filteredTodos.forEach(function (todo) {
+-        var li = document.createElement('li');
+-        li.dataset.id = todo.id;
+-        if (todo.completed) {
+-          li.classList.add('completed');
+-        }
+-        li.innerHTML =
+-          '<div class="view">' +
+-            '<input class="toggle" type="checkbox" ' + (todo.completed ? 'checked' : '') + '>' +
+-            '<label>' + self.escapeHtml(todo.title) + '</label>' +
+-            '<button class="destroy"></button>' +
+-          '</div>' +
+-          '<input class="edit" value="' + self.escapeHtml(todo.title) + '">';
+-        todoList.appendChild(li);
+-      });
+-    }
+-
+     // Show/hide main and footer
+     if (main) {
+       main.style.display = todos.length === 0 ? 'none' : '';
+@@ -365,6 +375,34 @@
+     });
+   };
+ 
++  TodoApp.prototype.render = function () {
++    var self = this;
++    var filteredTodos = this.getFilteredTodos();
++    var todoList = document.querySelector('.todo-list');
++
++    // Rebuild the todo list from scratch
++    if (todoList) {
++      todoList.innerHTML = '';
++      filteredTodos.forEach(function (todo) {
++        var li = document.createElement('li');
++        li.dataset.id = todo.id;
++        if (todo.completed) {
++          li.classList.add('completed');
++        }
++        li.innerHTML =
++          '<div class="view">' +
++            '<input class="toggle" type="checkbox" ' + (todo.completed ? 'checked' : '') + '>' +
++            '<label>' + self.escapeHtml(todo.title) + '</label>' +
++            '<button class="destroy"></button>' +
++          '</div>' +
++          '<input class="edit" value="' + self.escapeHtml(todo.title) + '">';
++        todoList.appendChild(li);
++      });
++    }
++
++    this.renderUI();
++  };
++
+   TodoApp.prototype.escapeHtml = function (text) {
+     var div = document.createElement('div');
+     div.appendChild(document.createTextNode(text));

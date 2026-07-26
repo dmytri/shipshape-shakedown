@@ -1,0 +1,567 @@
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..88f1e20
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,39 @@
++# RIGGING
++
++## Stack
++
++- language: JavaScript
++
++## Directories
++
++- implementation: js
++- specs: features
++
++## Commands
++
++- discover: npx cucumber-js --dry-run
++- focused: npx cucumber-js {scenario}
++- step-usage: npx cucumber-js --dry-run --format json
++- plank-inventory: grep -rn "@planks" js/
++- typecheck: none
++- lint: none
++
++## Tiers
++
++- logic: @logic
++
++## Dependencies
++
++- policy: locked
++
++## Perturbation
++
++- message: PERTURBATION
++
++## Outbound
++
++- none
++
++## Transient
++
++- runrecord: none
+diff --git a/features/step_definitions/steps.js b/features/step_definitions/steps.js
+new file mode 100644
+index 0000000..a15d55f
+--- /dev/null
++++ b/features/step_definitions/steps.js
+@@ -0,0 +1,446 @@
++const { Given, When, Then, After } = require('@cucumber/cucumber');
++const fs = require('fs');
++const path = require('path');
++const { Window } = require('happy-dom');
++
++let win;
++let doc;
++
++function loadApp(hash, localStorageState) {
++  const indexHtml = fs.readFileSync(
++    path.resolve(__dirname, '../../index.html'),
++    'utf8'
++  );
++  const appJs = fs.readFileSync(
++    path.resolve(__dirname, '../../js/app.js'),
++    'utf8'
++  );
++
++  win = new Window({
++    url: 'http://localhost:8080/' + (hash || ''),
++    pretendToBeVisual: true,
++  });
++
++  doc = win.document;
++
++  // Load HTML
++  doc.write(indexHtml);
++  doc.close();
++
++  // Restore localStorage before app init reads it
++  if (localStorageState) {
++    for (const [key, value] of Object.entries(localStorageState)) {
++      win.localStorage.setItem(key, value);
++    }
++  }
++
++  // Execute app.js via eval in window context
++  win.eval(appJs);
++
++  // Dispatch DOMContentLoaded
++  const event = new win.Event('DOMContentLoaded');
++  doc.dispatchEvent(event);
++
++  // Simulate autofocus (happy-dom doesn't auto-focus)
++  const newTodoInput = doc.querySelector('.new-todo');
++  if (newTodoInput) newTodoInput.focus();
++}
++
++function teardown() {
++  if (win) {
++    win.close();
++    win = null;
++    doc = null;
++  }
++}
++
++function createTodo(title) {
++  const input = doc.querySelector('.new-todo');
++  input.value = title;
++  const event = new win.KeyboardEvent('keydown', { keyCode: 13, bubbles: true });
++  input.dispatchEvent(event);
++}
++
++function findTodoLi(title) {
++  const items = doc.querySelectorAll('.todo-list li');
++  for (let i = 0; i < items.length; i++) {
++    const label = items[i].querySelector('.view label');
++    if (label && label.textContent === title) {
++      return items[i];
++    }
++  }
++  return null;
++}
++
++// ── Background / setup ─────────────────────────────────────────────────
++Given('the app is loaded', function () {
++  loadApp();
++});
++
++// ── Creating todos ─────────────────────────────────────────────────────
++When(
++  'the user types {string} in the new-todo input and presses Enter',
++  function (title) {
++    createTodo(title);
++  }
++);
++
++When('the user presses Enter in the new-todo input', function () {
++  createTodo('');
++});
++
++Then('a todo item {string} appears in the list', function (title) {
++  const li = findTodoLi(title);
++  if (!li) throw new Error(`Todo "${title}" not found in list`);
++});
++
++Then('the new-todo input is empty', function () {
++  const input = doc.querySelector('.new-todo');
++  if (input.value !== '') {
++    throw new Error(`Expected input to be empty, got "${input.value}"`);
++  }
++});
++
++Then('no todo items appear in the list', function () {
++  const items = doc.querySelectorAll('.todo-list li');
++  if (items.length !== 0) {
++    throw new Error(`Expected no todo items, found ${items.length}`);
++  }
++});
++
++Then('the new-todo input has focus', function () {
++  const input = doc.querySelector('.new-todo');
++  if (doc.activeElement !== input) {
++    throw new Error('new-todo input does not have focus');
++  }
++});
++
++// ── Existing todos helper ──────────────────────────────────────────────
++Given('the user has created a todo {string}', function (title) {
++  createTodo(title);
++});
++
++// ── Counter ────────────────────────────────────────────────────────────
++Then('the todo count shows {string}', function (text) {
++  const countEl = doc.querySelector('.todo-count');
++  const actual = countEl.textContent.trim();
++  if (actual !== text) {
++    throw new Error(`Expected count "${text}", got "${actual}"`);
++  }
++});
++
++// ── Toggling ───────────────────────────────────────────────────────────
++When('the user toggles the todo {string}', function (title) {
++  const li = findTodoLi(title);
++  if (!li) throw new Error(`Todo "${title}" not found`);
++  const checkbox = li.querySelector('.toggle');
++  checkbox.click();
++});
++
++Then('the todo {string} has the completed class', function (title) {
++  const li = findTodoLi(title);
++  if (!li) throw new Error(`Todo "${title}" not found`);
++  if (!li.classList.contains('completed')) {
++    throw new Error(`Todo "${title}" does not have completed class`);
++  }
++});
++
++Then('the todo {string} does not have the completed class', function (title) {
++  const li = findTodoLi(title);
++  if (!li) throw new Error(`Todo "${title}" not found`);
++  if (li.classList.contains('completed')) {
++    throw new Error(`Todo "${title}" has completed class but should not`);
++  }
++});
++
++// ── Deleting ───────────────────────────────────────────────────────────
++When('the user deletes the todo {string}', function (title) {
++  const li = findTodoLi(title);
++  if (!li) throw new Error(`Todo "${title}" not found`);
++  const destroyBtn = li.querySelector('.destroy');
++  destroyBtn.click();
++});
++
++Then('the todo {string} is not in the list', function (title) {
++  const li = findTodoLi(title);
++  if (li) {
++    throw new Error(`Todo "${title}" is still in the list`);
++  }
++});
++
++Then('the todo {string} is in the list', function (title) {
++  const li = findTodoLi(title);
++  if (!li) {
++    throw new Error(`Todo "${title}" is not in the list`);
++  }
++});
++
++// ── Visibility ─────────────────────────────────────────────────────────
++Then('the main section is hidden', function () {
++  const main = doc.querySelector('.main');
++  if (main.style.display !== 'none') {
++    throw new Error('Main section is not hidden');
++  }
++});
++
++Then('the footer is hidden', function () {
++  const footer = doc.querySelector('.footer');
++  if (footer.style.display !== 'none') {
++    throw new Error('Footer is not hidden');
++  }
++});
++
++Then('the main section is visible', function () {
++  const main = doc.querySelector('.main');
++  if (main.style.display === 'none') {
++    throw new Error('Main section is hidden');
++  }
++});
++
++Then('the footer is visible', function () {
++  const footer = doc.querySelector('.footer');
++  if (footer.style.display === 'none') {
++    throw new Error('Footer is hidden');
++  }
++});
++
++// ── Editing ────────────────────────────────────────────────────────────
++When('the user double-clicks the todo label {string}', function (title) {
++  const li = findTodoLi(title);
++  if (!li) throw new Error(`Todo "${title}" not found`);
++  const label = li.querySelector('.view label');
++  const event = new win.Event('dblclick', { bubbles: true });
++  label.dispatchEvent(event);
++});
++
++Then('the todo {string} has the editing class', function (title) {
++  const li = findTodoLi(title);
++  if (!li) throw new Error(`Todo "${title}" not found`);
++  if (!li.classList.contains('editing')) {
++    throw new Error(`Todo "${title}" does not have editing class`);
++  }
++});
++
++Then('the edit input for {string} has focus', function (title) {
++  const li = findTodoLi(title);
++  if (!li) throw new Error(`Todo "${title}" not found`);
++  const editInput = li.querySelector('.edit');
++  if (doc.activeElement !== editInput) {
++    throw new Error('Edit input does not have focus');
++  }
++});
++
++Then('the edit input value is {string}', function (expectedValue) {
++  const editingLi = doc.querySelector('.todo-list li.editing');
++  if (!editingLi) throw new Error('No todo is being edited');
++  const editInput = editingLi.querySelector('.edit');
++  if (editInput.value !== expectedValue) {
++    throw new Error(
++      `Expected edit input value "${expectedValue}", got "${editInput.value}"`
++    );
++  }
++});
++
++Given('the user is editing the todo {string}', function (title) {
++  const li = findTodoLi(title);
++  if (!li) throw new Error(`Todo "${title}" not found`);
++  const label = li.querySelector('.view label');
++  const event = new win.Event('dblclick', { bubbles: true });
++  label.dispatchEvent(event);
++});
++
++When(
++  'the user changes the edit input to {string} and presses Enter',
++  function (newTitle) {
++    const editingLi = doc.querySelector('.todo-list li.editing');
++    if (!editingLi) throw new Error('No todo is being edited');
++    const editInput = editingLi.querySelector('.edit');
++    editInput.value = newTitle;
++    const event = new win.KeyboardEvent('keydown', {
++      keyCode: 13,
++      bubbles: true,
++    });
++    editInput.dispatchEvent(event);
++  }
++);
++
++When(
++  'the user changes the edit input to {string} and blurs',
++  function (newTitle) {
++    const editingLi = doc.querySelector('.todo-list li.editing');
++    if (!editingLi) throw new Error('No todo is being edited');
++    const editInput = editingLi.querySelector('.edit');
++    editInput.value = newTitle;
++    const event = new win.FocusEvent('blur', { bubbles: true });
++    editInput.dispatchEvent(event);
++  }
++);
++
++When('the user clears the edit input and presses Enter', function () {
++  const editingLi = doc.querySelector('.todo-list li.editing');
++  if (!editingLi) throw new Error('No todo is being edited');
++  const editInput = editingLi.querySelector('.edit');
++  editInput.value = '';
++  const event = new win.KeyboardEvent('keydown', {
++    keyCode: 13,
++    bubbles: true,
++  });
++  editInput.dispatchEvent(event);
++});
++
++When(
++  'the user changes the edit input to {string} and presses Escape',
++  function (newTitle) {
++    const editingLi = doc.querySelector('.todo-list li.editing');
++    if (!editingLi) throw new Error('No todo is being edited');
++    const editInput = editingLi.querySelector('.edit');
++    editInput.value = newTitle;
++    const event = new win.KeyboardEvent('keydown', {
++      keyCode: 27,
++      bubbles: true,
++    });
++    editInput.dispatchEvent(event);
++  }
++);
++
++Then('the todo {string} does not have the editing class', function (title) {
++  const li = findTodoLi(title);
++  if (li && li.classList.contains('editing')) {
++    throw new Error(`Todo "${title}" has editing class but should not`);
++  }
++});
++
++// ── Toggle all ─────────────────────────────────────────────────────────
++When('the user toggles the toggle-all checkbox', function () {
++  const toggleAll = doc.querySelector('#toggle-all');
++  toggleAll.click();
++});
++
++Then('the toggle-all checkbox is checked', function () {
++  const toggleAll = doc.querySelector('#toggle-all');
++  if (!toggleAll.checked) {
++    throw new Error('Toggle-all checkbox is not checked');
++  }
++});
++
++Then('the toggle-all checkbox is not checked', function () {
++  const toggleAll = doc.querySelector('#toggle-all');
++  if (toggleAll.checked) {
++    throw new Error('Toggle-all checkbox is checked');
++  }
++});
++
++// ── Clear completed ────────────────────────────────────────────────────
++When('the user clicks the clear-completed button', function () {
++  const btn = doc.querySelector('.clear-completed');
++  btn.click();
++});
++
++Then('the clear-completed button is hidden', function () {
++  const btn = doc.querySelector('.clear-completed');
++  if (btn.style.display !== 'none') {
++    throw new Error('Clear-completed button is not hidden');
++  }
++});
++
++Then('the clear-completed button is visible', function () {
++  const btn = doc.querySelector('.clear-completed');
++  if (btn.style.display === 'none') {
++    throw new Error('Clear-completed button is hidden');
++  }
++});
++
++// ── Navigation / filtering ─────────────────────────────────────────────
++function navigateTo(hash) {
++  win.location.hash = hash;
++  const event = new win.HashChangeEvent('hashchange', {
++    oldURL: win.location.href,
++    newURL: win.location.href,
++    bubbles: true,
++  });
++  win.dispatchEvent(event);
++}
++
++When('the user navigates to {string}', navigateTo);
++
++Then('the {string} filter is selected', function (filterName) {
++  const filters = doc.querySelectorAll('.filters a');
++  for (let i = 0; i < filters.length; i++) {
++    if (filters[i].textContent === filterName) {
++      if (!filters[i].classList.contains('selected')) {
++        throw new Error(`Filter "${filterName}" is not selected`);
++      }
++      return;
++    }
++  }
++  throw new Error(`Filter "${filterName}" not found`);
++});
++
++// ── Page reload ────────────────────────────────────────────────────────
++When('the page is reloaded', function () {
++  const hash = win.location.hash;
++  // Capture all localStorage state
++  const storageState = {};
++  for (let i = 0; i < win.localStorage.length; i++) {
++    const key = win.localStorage.key(i);
++    storageState[key] = win.localStorage.getItem(key);
++  }
++
++  // Teardown and rebuild with preserved state
++  teardown();
++  loadApp(hash, storageState);
++});
++
++// ── Servable page (contract) ───────────────────────────────────────────
++Given('the project root has an {string} file', function (filename) {
++  const filePath = path.resolve(__dirname, '../../' + filename);
++  if (!fs.existsSync(filePath)) {
++    throw new Error(`File "${filename}" does not exist at project root`);
++  }
++});
++
++let parsedDocument = null;
++
++When('the file is parsed as HTML', function () {
++  const filePath = path.resolve(__dirname, '../../index.html');
++  const html = fs.readFileSync(filePath, 'utf8');
++  const tempWin = new Window();
++  tempWin.document.write(html);
++  tempWin.document.close();
++  parsedDocument = tempWin.document;
++  // Keep reference alive for querySelector
++  global.__parsedWindow = tempWin;
++});
++
++Then(
++  'the document contains an element matching {string}',
++  function (selector) {
++    if (!parsedDocument) throw new Error('No document parsed');
++    const el = parsedDocument.querySelector(selector);
++    if (!el) {
++      throw new Error(
++        `Document does not contain an element matching "${selector}"`
++      );
++    }
++  }
++);
++
++Then(
++  'the document contains a script tag with source {string}',
++  function (src) {
++    if (!parsedDocument) throw new Error('No document parsed');
++    const scripts = parsedDocument.querySelectorAll('script[src]');
++    for (let i = 0; i < scripts.length; i++) {
++      if (scripts[i].getAttribute('src') === src) {
++        return;
++      }
++    }
++    throw new Error(`No script tag with source "${src}" found`);
++  }
++);
++
++// ── After hook ─────────────────────────────────────────────────────────
++After(function () {
++  teardown();
++  parsedDocument = null;
++});
+diff --git a/features/support/setup.js b/features/support/setup.js
+new file mode 100644
+index 0000000..4c9794a
+--- /dev/null
++++ b/features/support/setup.js
+@@ -0,0 +1,64 @@
++const { Window } = require('happy-dom');
++const fs = require('fs');
++const path = require('path');
++
++let window;
++let document;
++
++function setupWindow(hash) {
++  const indexHtml = fs.readFileSync(
++    path.resolve(__dirname, '../../index.html'),
++    'utf8'
++  );
++
++  window = new Window({
++    url: 'http://localhost:8080/' + (hash || ''),
++    pretendToBeVisual: true,
++  });
++
++  document = window.document;
++  document.write(indexHtml);
++  document.close();
++
++  // Execute app.js in the window context
++  const appJs = fs.readFileSync(
++    path.resolve(__dirname, '../../js/app.js'),
++    'utf8'
++  );
++
++  // Stub todomvc-common/base.js if needed
++  if (!window._initialized) {
++    // Create a script element to run app.js
++    const scriptEl = document.createElement('script');
++    scriptEl.textContent = appJs;
++    document.body.appendChild(scriptEl);
++    // Trigger DOMContentLoaded
++    const event = new window.Event('DOMContentLoaded');
++    document.dispatchEvent(event);
++    window._initialized = true;
++  }
++
++  return window;
++}
++
++function getWindow() {
++  return window;
++}
++
++function getDocument() {
++  return document;
++}
++
++function teardown() {
++  if (window) {
++    window.close();
++    window = null;
++    document = null;
++  }
++}
++
++// Export for step definitions
++global.__setupWindow = setupWindow;
++global.__getWindow = getWindow;
++global.__getDocument = getDocument;
++global.__teardown = teardown;

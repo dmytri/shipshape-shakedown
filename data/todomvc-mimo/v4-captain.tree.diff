@@ -1,0 +1,56 @@
+diff --git a/css/app.css b/css/app.css
+index 5a2a42a..4e12c07 100644
+--- a/css/app.css
++++ b/css/app.css
+@@ -1,7 +1,8 @@
+ /* app.css - minimal overrides */
+ 
+-/* Hide toggle and delete button while a todo is being edited */
++/* Hide checkbox, label, and delete button while a todo is being edited */
+ li.editing .view .toggle,
++li.editing .view label,
+ li.editing .view .destroy {
+ 	display: none;
+ }
+\ No newline at end of file
+diff --git a/features/step_definitions/steps.js b/features/step_definitions/steps.js
+index 1134229..50f507f 100644
+--- a/features/step_definitions/steps.js
++++ b/features/step_definitions/steps.js
+@@ -355,6 +355,19 @@ Then('the toggle checkbox for {string} is hidden', function (title) {
+   }
+ });
+ 
++Then('the label for {string} is hidden', function (title) {
++  const li = findTodoLi(title);
++  if (!li) throw new Error(`Todo "${title}" not found`);
++  const label = li.querySelector('.view label');
++  if (!label) throw new Error(`Label not found for "${title}"`);
++  const style = win.getComputedStyle(label);
++  if (style.display !== 'none') {
++    throw new Error(
++      `Label for "${title}" is not hidden (display: ${style.display})`
++    );
++  }
++});
++
+ Then('the delete button for {string} is hidden', function (title) {
+   const li = findTodoLi(title);
+   if (!li) throw new Error(`Todo "${title}" not found`);
+diff --git a/features/todo-editing.feature b/features/todo-editing.feature
+index e4d31c6..edf471b 100644
+--- a/features/todo-editing.feature
++++ b/features/todo-editing.feature
+@@ -8,10 +8,11 @@ Feature: Todo editing
+ 
+   Rule: Edit mode hides controls
+ 
+-    Scenario: Toggle checkbox and delete button are hidden while editing
++    Scenario: Toggle checkbox, label, and delete button are hidden while editing
+       Given the user has created a todo "Buy milk"
+       When the user double-clicks the todo label "Buy milk"
+       Then the toggle checkbox for "Buy milk" is hidden
++      And the label for "Buy milk" is hidden
+       And the delete button for "Buy milk" is hidden
+ 
+   Rule: Activating edit mode

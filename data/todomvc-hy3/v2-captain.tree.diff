@@ -1,0 +1,307 @@
+diff --git a/css/app.css b/css/app.css
+index a167db1..0d1af1d 100644
+--- a/css/app.css
++++ b/css/app.css
+@@ -1 +1,9 @@
+ /* Application-specific style overrides for the TodoMVC app. */
++
++/* While a row is being edited, hide its checkbox and delete (destroy) control
++   so the user only interacts with the edit field. The `.editing` class is set
++   by js/app.js on the row's <li> when the label is double-clicked. */
++.editing .toggle,
++.editing .destroy {
++  display: none;
++}
+diff --git a/features/editing-visibility.feature b/features/editing-visibility.feature
+new file mode 100644
+index 0000000..0a84bd8
+--- /dev/null
++++ b/features/editing-visibility.feature
+@@ -0,0 +1,15 @@
++Feature: Editing hides the row controls
++  As a real browser user
++  I want a row's checkbox and delete button hidden while I edit its title
++  So that I only interact with the title edit field
++
++  Background:
++    Given the app is loaded with todos:
++      | title   | completed |
++      | EditMe  | false     |
++
++  Scenario: The checkbox and delete button are hidden while editing
++    When the user double-clicks the todo "EditMe"
++    Then the todo "EditMe" is in edit mode
++    And the checkbox for "EditMe" is hidden
++    And the delete button for "EditMe" is hidden
+diff --git a/features/row-preservation.feature b/features/row-preservation.feature
+new file mode 100644
+index 0000000..904b57f
+--- /dev/null
++++ b/features/row-preservation.feature
+@@ -0,0 +1,21 @@
++Feature: Row preservation on update
++  As a real browser user
++  I want toggling a todo or marking all complete to update the row in place
++  So that the row I clicked is not torn down and rebuilt on every change
++
++  Background:
++    Given the app is loaded with todos:
++      | title   | completed |
++      | First   | false     |
++      | Second  | false     |
++
++  Scenario: Toggling a todo updates its own row in place
++    When the user toggles the todo "First"
++    Then the todo "First" is marked completed
++    And the row for "First" is the same DOM element as before the last change
++
++  Scenario: Marking all complete updates every row in place
++    When the user marks all todos as complete
++    Then every todo is marked completed
++    And the row for "First" is the same DOM element as before the last change
++    And the row for "Second" is the same DOM element as before the last change
+diff --git a/features/support/steps.mjs b/features/support/steps.mjs
+index 41b53c4..93413a6 100644
+--- a/features/support/steps.mjs
++++ b/features/support/steps.mjs
+@@ -95,12 +95,18 @@ Given('the todo {string} is marked completed', function (title) {
+ When('the user toggles the todo {string}', function (title) {
+   const li = this.liByTitle(title);
+   if (!li) throw new Error(`No todo "${title}"`);
++  this._rowsBefore = { [title]: li };
+   const toggle = li.querySelector('.toggle');
+   toggle.checked = !toggle.checked;
+   toggle.dispatchEvent(new this.window.Event('change', { bubbles: true }));
+ });
+ 
+ When('the user marks all todos as complete', function () {
++  this._rowsBefore = {};
++  for (const li of this.todoItems()) {
++    const lbl = li.querySelector('label')?.textContent?.trim();
++    if (lbl) this._rowsBefore[lbl] = li;
++  }
+   const mark = this.document.querySelector('#toggle-all');
+   mark.checked = true;
+   mark.dispatchEvent(new this.window.Event('change', { bubbles: true }));
+@@ -116,6 +122,34 @@ Then('every todo is marked completed', function () {
+   }
+ });
+ 
++Then('the row for {string} is the same DOM element as before the last change', function (title) {
++  const before = this._rowsBefore && this._rowsBefore[title];
++  if (!before) throw new Error(`No captured row for "${title}" before the last change`);
++  const after = this.liByTitle(title);
++  if (!after) throw new Error(`Row "${title}" is not present after the change`);
++  if (after !== before) {
++    throw new Error(`Row "${title}" was rebuilt instead of updated in place`);
++  }
++});
++
++Then('the checkbox for {string} is hidden', function (title) {
++  const li = this.liByTitle(title);
++  if (!li) throw new Error(`No todo "${title}"`);
++  const display = this.window.getComputedStyle(li.querySelector('.toggle')).display;
++  if (display !== 'none') {
++    throw new Error(`Checkbox for "${title}" is not hidden (display: ${display})`);
++  }
++});
++
++Then('the delete button for {string} is hidden', function (title) {
++  const li = this.liByTitle(title);
++  if (!li) throw new Error(`No todo "${title}"`);
++  const display = this.window.getComputedStyle(li.querySelector('.destroy')).display;
++  if (display !== 'none') {
++    throw new Error(`Delete button for "${title}" is not hidden (display: ${display})`);
++  }
++});
++
+ Then('the mark-all control is checked', function () {
+   const mark = this.document.querySelector('#toggle-all');
+   if (!mark.checked) throw new Error('Mark-all control is not checked');
+diff --git a/features/support/world.mjs b/features/support/world.mjs
+index 8a16733..266237d 100644
+--- a/features/support/world.mjs
++++ b/features/support/world.mjs
+@@ -6,6 +6,7 @@ import { setWorldConstructor } from '@cucumber/cucumber';
+ const ROOT = process.cwd();
+ const INDEX = path.join(ROOT, 'index.html');
+ const APP = path.join(ROOT, 'js', 'app.js');
++const CSS = path.join(ROOT, 'css', 'app.css');
+ const STORAGE_KEY = 'todos-vanillajs';
+ 
+ function cleanBody(html) {
+@@ -49,6 +50,11 @@ class TodoWorld {
+     }
+     const bodyHtml = cleanBody(fs.readFileSync(INDEX, 'utf8'));
+     this.document.body.innerHTML = bodyHtml;
++    // Load the app's own stylesheet so behaviour pinned to css/app.css (e.g.
++    // hiding the checkbox/destroy control while a row is edited) is observable.
++    const style = this.document.createElement('style');
++    style.textContent = fs.readFileSync(CSS, 'utf8');
++    (this.document.head || this.document.body).appendChild(style);
+     const appSrc = fs.readFileSync(APP, 'utf8');
+     this.window.eval(appSrc);
+   }
+diff --git a/js/app.js b/js/app.js
+index a2fde7c..30e1906 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -13,6 +13,7 @@ const $count = document.querySelector('.todo-count');
+ const $filters = document.querySelector('.filters');
+ 
+ let todos = [];
++let editingId = null;
+ 
+ /**
+  * Reads the persisted todo list from localStorage.
+@@ -123,6 +124,7 @@ function clearCompleted() {
+ function commitEdit(id, value, discard) {
+   const todo = todos.find((t) => t.id === id);
+   if (!todo) return;
++  editingId = null;
+   if (discard) {
+     render();
+     return;
+@@ -137,6 +139,73 @@ function commitEdit(id, value, discard) {
+   render();
+ }
+ 
++/**
++ * Builds a list row element for a todo, wiring its event handlers once.
++ * Rows are created once and then kept in place across renders, keyed by todo id.
++ */
++function createRow(todo) {
++  const li = document.createElement('li');
++  li.dataset.id = todo.id;
++
++  const view = document.createElement('div');
++  view.className = 'view';
++  const toggle = document.createElement('input');
++  toggle.className = 'toggle';
++  toggle.type = 'checkbox';
++  const label = document.createElement('label');
++  const destroy = document.createElement('button');
++  destroy.className = 'destroy';
++  view.appendChild(toggle);
++  view.appendChild(label);
++  view.appendChild(destroy);
++
++  const edit = document.createElement('input');
++  edit.className = 'edit';
++
++  li.appendChild(view);
++  li.appendChild(edit);
++
++  toggle.addEventListener('change', () => toggleTodo(todo.id, toggle.checked));
++  label.addEventListener('dblclick', () => {
++    editingId = todo.id;
++    li.classList.add('editing');
++    edit.value = todo.title;
++    edit.focus();
++  });
++  destroy.addEventListener('click', () => {
++    todos = todos.filter((t) => t.id !== todo.id);
++    saveTodos();
++    render();
++  });
++  edit.addEventListener('keydown', (e) => {
++    if (e.key === 'Enter' || e.keyCode === ENTER_KEY) {
++      commitEdit(todo.id, edit.value, false);
++    } else if (e.key === 'Escape') {
++      commitEdit(todo.id, edit.value, true);
++    }
++  });
++  edit.addEventListener('blur', () => commitEdit(todo.id, edit.value, false));
++
++  return li;
++}
++
++/**
++ * Syncs an existing row element to the current model and route state.
++ * The row element itself is preserved; only its contents and state change.
++ */
++function updateRow(li, todo, filter) {
++  li.classList.toggle('completed', todo.completed);
++  li.classList.toggle('editing', editingId === todo.id);
++  li.querySelector('.toggle').checked = todo.completed;
++  li.querySelector('label').textContent = todo.title;
++  if (editingId !== todo.id) {
++    li.querySelector('.edit').value = todo.title;
++  }
++  if (filter === 'active' && todo.completed) li.hidden = true;
++  else if (filter === 'completed' && !todo.completed) li.hidden = true;
++  else li.hidden = false;
++}
++
+ /**
+  * Renders the list and chrome from the current model and route.
+  * @planks("the todo list shows {string}")
+@@ -155,57 +224,18 @@ function commitEdit(id, value, discard) {
+  */
+ function render() {
+   const filter = getFilter();
+-  $list.innerHTML = '';
++  const seen = new Set();
+   todos.forEach((todo) => {
+-    const li = document.createElement('li');
+-    if (todo.completed) li.classList.add('completed');
+-    li.dataset.id = todo.id;
+-
+-    const view = document.createElement('div');
+-    view.className = 'view';
+-    const toggle = document.createElement('input');
+-    toggle.className = 'toggle';
+-    toggle.type = 'checkbox';
+-    toggle.checked = todo.completed;
+-    const label = document.createElement('label');
+-    label.textContent = todo.title;
+-    const destroy = document.createElement('button');
+-    destroy.className = 'destroy';
+-    view.appendChild(toggle);
+-    view.appendChild(label);
+-    view.appendChild(destroy);
+-
+-    const edit = document.createElement('input');
+-    edit.className = 'edit';
+-    edit.value = todo.title;
+-
+-    li.appendChild(view);
+-    li.appendChild(edit);
+-
+-    if (filter === 'active' && todo.completed) li.hidden = true;
+-    if (filter === 'completed' && !todo.completed) li.hidden = true;
+-
+-    toggle.addEventListener('change', () => toggleTodo(todo.id, toggle.checked));
+-    label.addEventListener('dblclick', () => {
+-      li.classList.add('editing');
+-      edit.value = todo.title;
+-      edit.focus();
+-    });
+-    destroy.addEventListener('click', () => {
+-      todos = todos.filter((t) => t.id !== todo.id);
+-      saveTodos();
+-      render();
+-    });
+-    edit.addEventListener('keydown', (e) => {
+-      if (e.key === 'Enter' || e.keyCode === ENTER_KEY) {
+-        commitEdit(todo.id, edit.value, false);
+-      } else if (e.key === 'Escape') {
+-        commitEdit(todo.id, edit.value, true);
+-      }
+-    });
+-    edit.addEventListener('blur', () => commitEdit(todo.id, edit.value, false));
+-
+-    $list.appendChild(li);
++    let li = $list.querySelector('li[data-id="' + String(todo.id) + '"]');
++    if (!li) {
++      li = createRow(todo);
++      $list.appendChild(li);
++    }
++    updateRow(li, todo, filter);
++    seen.add(String(todo.id));
++  });
++  Array.prototype.forEach.call($list.querySelectorAll('li'), (li) => {
++    if (!seen.has(li.dataset.id)) li.remove();
+   });
+ 
+   const hasTodos = todos.length > 0;

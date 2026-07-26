@@ -1,0 +1,357 @@
+diff --git a/css/app.css b/css/app.css
+new file mode 100644
+index 0000000..183d5c6
+--- /dev/null
++++ b/css/app.css
+@@ -0,0 +1,20 @@
++/* Hide the view (checkbox, label, destroy button) when editing */
++.todo-list li.editing .view {
++	display: none;
++}
++
++/* Explicitly hide toggle and destroy so computed style captures it */
++.todo-list li.editing .toggle,
++.todo-list li.editing .destroy {
++	display: none;
++}
++
++/* Show the edit input when editing */
++.todo-list li.editing .edit {
++	display: block;
++}
++
++/* Hide edit input by default */
++.todo-list li .edit {
++	display: none;
++}
+diff --git a/features/rendering-stability.feature b/features/rendering-stability.feature
+new file mode 100644
+index 0000000..f3c4b3b
+--- /dev/null
++++ b/features/rendering-stability.feature
+@@ -0,0 +1,33 @@
++Feature: Rendering stability
++  The app must update todo items in-place rather than tearing
++  down and rebuilding the entire list on every change. Editing
++  mode must hide the checkbox and destroy button via CSS.
++
++  Scenario: Checkbox element survives a toggle
++    Given the todo application is loaded
++    And the todo list has the following items:
++      | title    | completed |
++      | Buy milk | false     |
++    When the user marks "Buy milk" as complete
++    Then "Buy milk" is marked as completed
++    And the todo item for "Buy milk" remains the same DOM element
++
++  Scenario: Toggle-all preserves individual item elements
++    Given the todo application is loaded
++    And the todo list has the following items:
++      | title           | completed |
++      | Taste JavaScript | false     |
++      | Buy a unicorn    | false     |
++    When the user clicks the toggle-all checkbox
++    Then "Taste JavaScript" is marked as completed
++    And "Buy a unicorn" is marked as completed
++    And the todo item for "Taste JavaScript" remains the same DOM element
++
++  Scenario: Checkbox and destroy button are hidden during editing
++    Given the todo application is loaded
++    And the todo list has the following items:
++      | title    | completed |
++      | Buy milk | false     |
++    And "Buy milk" is in editing mode
++    Then the checkbox for "Buy milk" is hidden
++    And the destroy button for "Buy milk" is hidden
+diff --git a/features/step_definitions/steps.js b/features/step_definitions/steps.js
+index ca18409..b05301f 100644
+--- a/features/step_definitions/steps.js
++++ b/features/step_definitions/steps.js
+@@ -139,6 +139,7 @@ When("the user navigates to {string}", async function (hash) {
+ 
+ When("the user marks {string} as complete", async function (title) {
+   const li = world.findTodoItem(title);
++  world.rememberedElement = li;
+   const toggle = li.querySelector(".toggle");
+   if (!toggle.checked) toggle.click();
+   await new Promise((r) => setTimeout(r, 0));
+@@ -146,6 +147,7 @@ When("the user marks {string} as complete", async function (title) {
+ 
+ When("the user marks {string} as active", async function (title) {
+   const li = world.findTodoItem(title);
++  world.rememberedElement = li;
+   const toggle = li.querySelector(".toggle");
+   if (toggle.checked) toggle.click();
+   await new Promise((r) => setTimeout(r, 0));
+@@ -159,6 +161,9 @@ When("the user double-clicks the label for {string}", async function (title) {
+ });
+ 
+ When("the user clicks the toggle-all checkbox", async function () {
++  world.rememberedElements = Array.from(
++    world.document.querySelectorAll(".todo-list li")
++  );
+   const toggleAll = world.document.querySelector("#toggle-all");
+   toggleAll.click();
+   await new Promise((r) => setTimeout(r, 0));
+@@ -378,4 +383,47 @@ Then("the toggle-all checkbox is checked", function () {
+ Then("the toggle-all checkbox is not checked", function () {
+   const toggleAll = world.document.querySelector("#toggle-all");
+   assert.strictEqual(toggleAll.checked, false, "Expected toggle-all not to be checked");
++});
++
++Then("the todo item for {string} remains the same DOM element", function (title) {
++  var el = world.rememberedElement;
++  if (!el && world.rememberedElements) {
++    // Try to find by title in the remembered array
++    for (var i = 0; i < world.rememberedElements.length; i++) {
++      var label = world.rememberedElements[i].querySelector("label");
++      if (label && label.textContent === title) {
++        el = world.rememberedElements[i];
++        break;
++      }
++    }
++  }
++  assert.ok(el, `Expected a remembered element for "${title}"`);
++  assert.ok(el.parentNode, `Expected "${title}" element to remain attached to the DOM`);
++  assert.strictEqual(
++    world.document.contains(el),
++    true,
++    `Expected "${title}" element to still be in the document`
++  );
++});
++
++Then("the checkbox for {string} is hidden", function (title) {
++  const li = world.findTodoItem(title);
++  const checkbox = li.querySelector(".toggle");
++  const style = world.window.getComputedStyle(checkbox);
++  assert.strictEqual(
++    style.display,
++    "none",
++    `Expected checkbox for "${title}" to be hidden`
++  );
++});
++
++Then("the destroy button for {string} is hidden", function (title) {
++  const li = world.findTodoItem(title);
++  const destroyBtn = li.querySelector(".destroy");
++  const style = world.window.getComputedStyle(destroyBtn);
++  assert.strictEqual(
++    style.display,
++    "none",
++    `Expected destroy button for "${title}" to be hidden`
++  );
+ });
+\ No newline at end of file
+diff --git a/features/support/world.js b/features/support/world.js
+index ea78174..599e640 100644
+--- a/features/support/world.js
++++ b/features/support/world.js
+@@ -11,11 +11,24 @@ const appJsCache = fs.readFileSync(
+   "utf-8"
+ );
+ 
++let appCssCache = null;
++try {
++  appCssCache = fs.readFileSync(
++    path.resolve(__dirname, "..", "..", "css", "app.css"),
++    "utf-8"
++  );
++} catch (e) {
++  // css/app.css may not exist yet
++  appCssCache = null;
++}
++
+ class TodoWorld {
+   constructor() {
+     this.window = null;
+     this.document = null;
+     this.localStorage = null;
++    this.rememberedElement = null;
++    this.rememberedElements = null;
+   }
+ 
+   async loadApp() {
+@@ -25,6 +38,14 @@ class TodoWorld {
+     this.localStorage = window.localStorage;
+ 
+     this.document.write(htmlCache);
++
++    // Inject app.css as inline style so happy-dom applies it
++    if (appCssCache) {
++      const styleEl = this.document.createElement("style");
++      styleEl.textContent = appCssCache;
++      this.document.head.appendChild(styleEl);
++    }
++
+     this.window.eval(appJsCache);
+ 
+     const autofocusEl = this.document.querySelector("[autofocus]");
+@@ -60,6 +81,14 @@ class TodoWorld {
+     }
+ 
+     this.document.write(htmlCache);
++
++    // Inject app.css as inline style so happy-dom applies it
++    if (appCssCache) {
++      const styleEl = this.document.createElement("style");
++      styleEl.textContent = appCssCache;
++      this.document.head.appendChild(styleEl);
++    }
++
+     this.window.eval(appJsCache);
+ 
+     const autofocusEl = this.document.querySelector("[autofocus]");
+diff --git a/js/app.js b/js/app.js
+index 86e2d32..37b5434 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -81,6 +81,51 @@
+     }
+   }
+ 
++  /**
++   * @planks("the todo list displays {string}")
++   * @planks("the todo list does not display {string}")
++   * @planks("the todo list has {int} item")
++   * @planks("the todo list has {int} items")
++   * @planks("the main section is hidden")
++   * @planks("the main section is visible")
++   * @planks("the footer is hidden")
++   * @planks("the footer is visible")
++   * @planks("the edit field for {string} contains {string}")
++   */
++  function makeTodoElement(todo) {
++    var li = document.createElement("li");
++    li.setAttribute("data-id", todo.id);
++    if (todo.completed) {
++      li.className = "completed";
++    }
++
++    var viewDiv = document.createElement("div");
++    viewDiv.className = "view";
++
++    var toggle = document.createElement("input");
++    toggle.className = "toggle";
++    toggle.type = "checkbox";
++    toggle.checked = todo.completed;
++
++    var label = document.createElement("label");
++    label.textContent = todo.title;
++
++    var destroyBtn = document.createElement("button");
++    destroyBtn.className = "destroy";
++
++    viewDiv.appendChild(toggle);
++    viewDiv.appendChild(label);
++    viewDiv.appendChild(destroyBtn);
++
++    var editInput = document.createElement("input");
++    editInput.className = "edit";
++    editInput.value = todo.title;
++
++    li.appendChild(viewDiv);
++    li.appendChild(editInput);
++    return li;
++  }
++
+   /**
+    * @planks("the todo list displays {string}")
+    * @planks("the todo list does not display {string}")
+@@ -107,42 +152,65 @@
+       filteredTodos = todos.filter(function (t) { return t.completed; });
+     }
+ 
+-    // Clear list
+-    list.innerHTML = "";
+-
+-    // Render todos
++    // Build a set of ids that should be visible
++    var visibleIds = {};
+     for (var i = 0; i < filteredTodos.length; i++) {
+-      var li = document.createElement("li");
+-      li.setAttribute("data-id", filteredTodos[i].id);
+-      if (filteredTodos[i].completed) {
+-        li.className = "completed";
+-      }
+-
+-      var viewDiv = document.createElement("div");
+-      viewDiv.className = "view";
+-
+-      var toggle = document.createElement("input");
+-      toggle.className = "toggle";
+-      toggle.type = "checkbox";
+-      toggle.checked = filteredTodos[i].completed;
+-
+-      var label = document.createElement("label");
+-      label.textContent = filteredTodos[i].title;
+-
+-      var destroyBtn = document.createElement("button");
+-      destroyBtn.className = "destroy";
++      visibleIds[filteredTodos[i].id] = true;
++    }
+ 
+-      viewDiv.appendChild(toggle);
+-      viewDiv.appendChild(label);
+-      viewDiv.appendChild(destroyBtn);
++    // Remove template items (no data-id) and index existing items
++    var existing = {};
++    var existingItems = list.querySelectorAll("li");
++    for (var i = 0; i < existingItems.length; i++) {
++      var id = existingItems[i].getAttribute("data-id");
++      if (id) {
++        existing[id] = existingItems[i];
++      } else {
++        // Template item from base HTML — remove it
++        list.removeChild(existingItems[i]);
++      }
++    }
+ 
+-      var editInput = document.createElement("input");
+-      editInput.className = "edit";
+-      editInput.value = filteredTodos[i].title;
++    // Update or insert, preserving order
++    var nextSibling = null;
++    for (var i = filteredTodos.length - 1; i >= 0; i--) {
++      var todo = filteredTodos[i];
++      var li = existing[todo.id];
++      if (li) {
++        // Update existing element in-place
++        if (todo.completed) {
++          li.classList.add("completed");
++        } else {
++          li.classList.remove("completed");
++        }
++        li.querySelector(".toggle").checked = todo.completed;
++        var label = li.querySelector("label");
++        if (label.textContent !== todo.title) {
++          label.textContent = todo.title;
++        }
++        var editInput = li.querySelector(".edit");
++        if (editInput.value !== todo.title) {
++          editInput.value = todo.title;
++        }
++        // Place in correct order
++        if (li.nextSibling !== nextSibling) {
++          list.insertBefore(li, nextSibling);
++        }
++        // Remove from existing map so we know it was handled
++        delete existing[todo.id];
++      } else {
++        // Create new element
++        li = makeTodoElement(todo);
++        list.insertBefore(li, nextSibling);
++      }
++      nextSibling = li;
++    }
+ 
+-      li.appendChild(viewDiv);
+-      li.appendChild(editInput);
+-      list.appendChild(li);
++    // Remove any leftover existing items (no longer in filtered set)
++    for (var id in existing) {
++      if (Object.prototype.hasOwnProperty.call(existing, id)) {
++        list.removeChild(existing[id]);
++      }
+     }
+ 
+     // Show/hide main and footer

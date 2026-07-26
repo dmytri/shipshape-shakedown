@@ -1,0 +1,29 @@
+# banked: 2026-07-25T20:24:31Z
+# verdict: PENDING
+# leg: {  "name": "v1-qm",  "model": "moonshotai/kimi-k3",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/todomvc-kimi/sim",  "timeout_s": 1500,  "skills": [    "/home/exedev/shipshape-shakedown/experiments/yoink-settle/skills/shipshape",    "/home/exedev/shipshape-shakedown/experiments/yoink-settle/skills/qm",    "/home/exedev/shipshape-shakedown/experiments/yoink-settle/skills/crew",    "/home/exedev/shipshape-shakedown/experiments/yoink-settle/skills/boatswain"  ]}
+
+
+=== v1-qm.session.jsonl ===
+  turns=18  wall=284.8s  in=56068  out=9953  cache_read=406016  cost=$0.4393
+  role reads: qm@t0 -> shipshape@t1 -> crew@t9 -> boatswain@t13
+  roles loaded: boatswain, crew, qm, shipshape
+  ~ repeated tool signature at turns [1, 7, 15] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    1190/92       768 $0.0052  read
+    t1    3510/176     1792 $0.0137  read, bash
+    t2   12625/144     4096 $0.0413  bash
+    t3     555/105    16384 $0.0082  bash
+    t4    2484/245    16384 $0.0160  bash
+    t5    1319/129    18432 $0.0114  read, read
+    t6    3726/2871   18432 $0.0598  write
+    t7    4609/1790   20480 $0.0468  write
+    t8    2363/140    24576 $0.0166  bash
+    t9    1323/362    26624 $0.0174  edit, read
+    t10   3369/669    26624 $0.0281  write
+    t11   2047/1509   28672 $0.0374  write
+    t12   1566/113    30720 $0.0156  bash
+    t13   1795/133    30720 $0.0166  read
+    t14   5756/342    30720 $0.0316  bash, bash
+    t15   3227/377    34816 $0.0258  bash
+    t16   3076/304    36864 $0.0248  bash
+    t17   1528/452    38912 $0.0230  -

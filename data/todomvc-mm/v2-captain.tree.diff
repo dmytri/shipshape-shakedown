@@ -1,0 +1,279 @@
+diff --git a/css/app.css b/css/app.css
+new file mode 100644
+index 0000000..3226259
+--- /dev/null
++++ b/css/app.css
+@@ -0,0 +1,5 @@
++/* Hide the toggle and destroy controls while the row is in editing mode. */
++.todo-list li.editing .toggle,
++.todo-list li.editing .destroy {
++	display: none;
++}
+diff --git a/features/item.feature b/features/item.feature
+index 8f7b41c..63a5ea2 100644
+--- a/features/item.feature
++++ b/features/item.feature
+@@ -41,3 +41,13 @@ Feature: Item interactions
+     When the user clicks the destroy button on "Buy milk"
+     Then "Buy milk" does not appear in the list
+     And "Walk the dog" still appears in the list
++
++  Scenario: Clicking an item checkbox keeps the same row in place
++    Given the row for "Buy milk" is marked for identity tracking
++    When the user marks "Buy milk" as complete
++    Then the marked row for "Buy milk" is still in the document
++
++  Scenario: While in editing mode the toggle and destroy controls are hidden
++    Given "Buy milk" is in editing mode
++    Then the toggle for "Buy milk" is hidden
++    And the destroy button for "Buy milk" is hidden
+diff --git a/features/mark-all.feature b/features/mark-all.feature
+index 0db4aaf..7fcceb8 100644
+--- a/features/mark-all.feature
++++ b/features/mark-all.feature
+@@ -26,3 +26,12 @@ Feature: Mark all as complete
+   Scenario: The mark-all checkbox is unchecked when any todo is incomplete
+     Given one todo in the list has the completed state and the others do not
+     Then the mark-all checkbox is unchecked
++
++  Scenario: Clicking the mark-all checkbox keeps every row in place
++    Given the row for "Buy milk" is marked for identity tracking
++    And the row for "Walk the dog" is marked for identity tracking
++    And the row for "Read book" is marked for identity tracking
++    When the user clicks the mark-all checkbox
++    Then the marked row for "Buy milk" is still in the document
++    And the marked row for "Walk the dog" is still in the document
++    And the marked row for "Read book" is still in the document
+diff --git a/features/support/steps/assertions.js b/features/support/steps/assertions.js
+index 816a301..438db0e 100644
+--- a/features/support/steps/assertions.js
++++ b/features/support/steps/assertions.js
+@@ -138,6 +138,27 @@ Then('{string} is no longer in editing mode', function (title) {
+ 	}
+ });
+ 
++Then('the marked row for {string} is still in the document', function (title) {
++	const marked = this.doc.querySelector('[data-identity-marker="' + title + '"]');
++	assert.ok(marked, 'marked row for ' + title + ' is no longer in the document');
++});
++
++Then('the toggle for {string} is hidden', function (title) {
++	const li = this.findTodoByTitle(title);
++	assert.ok(li, title + ' not found');
++	const toggle = li.querySelector('.toggle');
++	assert.ok(toggle, 'toggle for ' + title + ' not found');
++	assert.ok(this.isHidden(toggle), 'toggle for ' + title + ' should be hidden while editing');
++});
++
++Then('the destroy button for {string} is hidden', function (title) {
++	const li = this.findTodoByTitle(title);
++	assert.ok(li, title + ' not found');
++	const btn = li.querySelector('.destroy');
++	assert.ok(btn, 'destroy button for ' + title + ' not found');
++	assert.ok(this.isHidden(btn), 'destroy button for ' + title + ' should be hidden while editing');
++});
++
+ Then('the clear completed button is hidden', function () {
+ 	const btn = this.doc.querySelector('.clear-completed');
+ 	assert.ok(this.isHidden(btn));
+diff --git a/features/support/steps/setup.js b/features/support/steps/setup.js
+index bace85c..9f848a3 100644
+--- a/features/support/steps/setup.js
++++ b/features/support/steps/setup.js
+@@ -68,6 +68,12 @@ Given('{string} is in editing mode', function (title) {
+ 	}
+ });
+ 
++Given('the row for {string} is marked for identity tracking', function (title) {
++	const li = this.findTodoByTitle(title);
++	assert.ok(li, 'todo ' + title + ' not found');
++	li.dataset.identityMarker = title;
++});
++
+ 
+ 
+ Given('the user is on the default route', function () {
+diff --git a/features/support/world.js b/features/support/world.js
+index a4ff2ba..2879e25 100644
+--- a/features/support/world.js
++++ b/features/support/world.js
+@@ -5,6 +5,7 @@ const { Window } = require('happy-dom');
+ 
+ const HTML_PATH = path.resolve(__dirname, '..', '..', 'index.html');
+ const APP_JS_PATH = path.resolve(__dirname, '..', '..', 'js', 'app.js');
++const APP_CSS_PATH = path.resolve(__dirname, '..', '..', 'css', 'app.css');
+ 
+ function loadWorld(preload, hash) {
+ 	const window = new Window();
+@@ -26,6 +27,13 @@ function loadWorld(preload, hash) {
+ 	const appJs = fs.readFileSync(APP_JS_PATH, 'utf-8');
+ 	window.eval(appJs);
+ 
++	if (fs.existsSync(APP_CSS_PATH)) {
++		const css = fs.readFileSync(APP_CSS_PATH, 'utf-8');
++		const style = document.createElement('style');
++		style.textContent = css;
++		document.head.appendChild(style);
++	}
++
+ 	return window;
+ }
+ 
+diff --git a/index.html b/index.html
+index 1e3265a..86a2c32 100644
+--- a/index.html
++++ b/index.html
+@@ -7,6 +7,7 @@
+ 		<style>
+ 			.hidden { display: none; }
+ 		</style>
++		<link rel="stylesheet" href="css/app.css">
+ 	</head>
+ 	<body>
+ 		<section class="todoapp">
+diff --git a/js/app.js b/js/app.js
+index 2c0129a..c191ef3 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -203,46 +203,88 @@
+ 			}
+ 		}
+ 
+-		function renderList() {
+-			while (todoList.firstChild) todoList.removeChild(todoList.firstChild);
+-			var items = visibleTodos();
+-			for (var i = 0; i < items.length; i++) {
+-				var todo = items[i];
+-				var li = document.createElement('li');
+-				if (todo.completed) li.classList.add('completed');
+-
+-				var view = document.createElement('div');
+-				view.className = 'view';
+-
+-				var toggle = document.createElement('input');
+-				toggle.className = 'toggle';
+-				toggle.type = 'checkbox';
+-				toggle.checked = !!todo.completed;
+-				toggle.setAttribute('data-action', 'toggle');
+-				toggle.setAttribute('data-id', String(todo.id));
+-
+-				var label = document.createElement('label');
+-				label.setAttribute('data-action', 'edit');
+-				label.setAttribute('data-id', String(todo.id));
+-				label.textContent = todo.title;
+-
+-				var destroy = document.createElement('button');
+-				destroy.className = 'destroy';
+-				destroy.setAttribute('data-action', 'destroy');
+-				destroy.setAttribute('data-id', String(todo.id));
+-
+-				view.appendChild(toggle);
+-				view.appendChild(label);
+-				view.appendChild(destroy);
+-				li.appendChild(view);
++		function buildRow(todo) {
++			var li = document.createElement('li');
++			li.setAttribute('data-id', String(todo.id));
++			if (todo.completed) li.classList.add('completed');
++
++			var view = document.createElement('div');
++			view.className = 'view';
++
++			var toggle = document.createElement('input');
++			toggle.className = 'toggle';
++			toggle.type = 'checkbox';
++			toggle.checked = !!todo.completed;
++			toggle.setAttribute('data-action', 'toggle');
++			toggle.setAttribute('data-id', String(todo.id));
++
++			var label = document.createElement('label');
++			label.setAttribute('data-action', 'edit');
++			label.setAttribute('data-id', String(todo.id));
++			label.textContent = todo.title;
++
++			var destroy = document.createElement('button');
++			destroy.className = 'destroy';
++			destroy.setAttribute('data-action', 'destroy');
++			destroy.setAttribute('data-id', String(todo.id));
++
++			view.appendChild(toggle);
++			view.appendChild(label);
++			view.appendChild(destroy);
++			li.appendChild(view);
++
++			var editInput = document.createElement('input');
++			editInput.className = 'edit';
++			editInput.value = todo.title;
++			editInput.setAttribute('data-action', 'edit-input');
++			editInput.setAttribute('data-id', String(todo.id));
++			li.appendChild(editInput);
++
++			return li;
++		}
+ 
+-				var editInput = document.createElement('input');
+-				editInput.className = 'edit';
++		function updateRow(li, todo) {
++			if (todo.completed) {
++				li.classList.add('completed');
++			} else {
++				li.classList.remove('completed');
++			}
++			var toggle = li.querySelector('.toggle');
++			toggle.checked = !!todo.completed;
++			var label = li.querySelector('label');
++			if (label.textContent !== todo.title) {
++				label.textContent = todo.title;
++			}
++			var editInput = li.querySelector('.edit');
++			if (editInput.value !== todo.title) {
+ 				editInput.value = todo.title;
+-				editInput.setAttribute('data-action', 'edit-input');
+-				editInput.setAttribute('data-id', String(todo.id));
+-				li.appendChild(editInput);
++			}
++		}
+ 
++		function clearEditingClass(id) {
++			var editInput = todoList.querySelector('.edit[data-id="' + id + '"]');
++			if (!editInput) return;
++			var li = editInput.closest('li');
++			if (li) li.classList.remove('editing');
++		}
++
++		function renderList() {
++			var items = visibleTodos();
++			var existingById = {};
++			var existingLis = Array.prototype.slice.call(todoList.children);
++			for (var i = 0; i < existingLis.length; i++) {
++				var id = parseInt(existingLis[i].getAttribute('data-id'), 10);
++				existingById[id] = existingLis[i];
++				todoList.removeChild(existingLis[i]);
++			}
++			for (var j = 0; j < items.length; j++) {
++				var todo = items[j];
++				var li = existingById[todo.id];
++				if (li) {
++					updateRow(li, todo);
++				} else {
++					li = buildRow(todo);
++				}
+ 				todoList.appendChild(li);
+ 			}
+ 		}
+@@ -320,6 +362,7 @@
+ 					todo.title = trimmed;
+ 				}
+ 			}
++			clearEditingClass(id);
+ 			persist();
+ 			render();
+ 		}
+@@ -327,6 +370,7 @@
+ 		function cancelEdit(id) {
+ 			var idx = findTodoIndex(id);
+ 			if (idx === -1) return;
++			clearEditingClass(id);
+ 			render();
+ 		}
+ 

@@ -1,0 +1,123 @@
+diff --git a/src/app.js b/src/app.js
+index b1e6542..e091299 100644
+--- a/src/app.js
++++ b/src/app.js
+@@ -196,43 +196,90 @@
+   TodoApp.prototype.renderTodoList = function () {
+     var self = this;
+     var todoList = document.querySelector('.todo-list');
+-    todoList.innerHTML = '';
+ 
+-    var visible = this.getVisibleTodos();
++    /* snapshot existing <li> elements keyed by data-id so we can reuse them */
++    var existingLis = {};
++    var currentLis = Array.prototype.slice.call(todoList.querySelectorAll('li'));
++    for (var i = 0; i < currentLis.length; i++) {
++      existingLis[currentLis[i].dataset.id] = currentLis[i];
++    }
+ 
+-    this.todos.forEach(function (todo) {
+-      var isVisible = visible.indexOf(todo) !== -1;
+-      var li = document.createElement('li');
+-      li.dataset.id = String(todo.id);
+-      if (todo.completed) li.classList.add('completed');
+-      if (self.editingId === todo.id) li.classList.add('editing');
+-      if (!isVisible) li.style.display = 'none';
++    var visible = this.getVisibleTodos();
+ 
+-      var view = document.createElement('div');
+-      view.className = 'view';
++    /* track which model ids survive so we can prune stale nodes */
++    var modelIds = {};
++    this.todos.forEach(function (todo) { modelIds[todo.id] = true; });
+ 
+-      var toggle = document.createElement('input');
+-      toggle.className = 'toggle';
+-      toggle.type = 'checkbox';
+-      toggle.checked = todo.completed;
++    /* remove <li> elements whose todos have been deleted */
++    var keys = Object.keys(existingLis);
++    for (var k = 0; k < keys.length; k++) {
++      if (!modelIds[keys[k]]) {
++        todoList.removeChild(existingLis[keys[k]]);
++        delete existingLis[keys[k]];
++      }
++    }
+ 
+-      var label = document.createElement('label');
+-      label.textContent = todo.title;
++    /* add new / update existing <li> elements — never detaches survivors */
++    this.todos.forEach(function (todo) {
++      var isVisible = visible.indexOf(todo) !== -1;
++      var li = existingLis[todo.id];
+ 
+-      var destroy = document.createElement('button');
+-      destroy.className = 'destroy';
++      if (li) {
++        /* — in-place update: toggle classes, checkbox, text, visibility — */
++        if (todo.completed) {
++          li.classList.add('completed');
++        } else {
++          li.classList.remove('completed');
++        }
++        if (self.editingId === todo.id) {
++          li.classList.add('editing');
++        } else {
++          li.classList.remove('editing');
++        }
++        li.style.display = isVisible ? '' : 'none';
+ 
+-      view.appendChild(toggle);
+-      view.appendChild(label);
+-      view.appendChild(destroy);
++        var toggle = li.querySelector('.toggle');
++        if (toggle) toggle.checked = todo.completed;
+ 
+-      var edit = document.createElement('input');
+-      edit.className = 'edit';
+-      edit.value = todo.title;
++        var label = li.querySelector('label');
++        if (label) label.textContent = todo.title;
+ 
+-      li.appendChild(view);
+-      li.appendChild(edit);
+-      todoList.appendChild(li);
++        var edit = li.querySelector('.edit');
++        if (edit) edit.value = todo.title;
++      } else {
++        /* — brand-new todo: build a fresh <li> — */
++        li = document.createElement('li');
++        li.dataset.id = String(todo.id);
++        if (todo.completed) li.classList.add('completed');
++        if (self.editingId === todo.id) li.classList.add('editing');
++        if (!isVisible) li.style.display = 'none';
++
++        var view = document.createElement('div');
++        view.className = 'view';
++
++        var toggle = document.createElement('input');
++        toggle.className = 'toggle';
++        toggle.type = 'checkbox';
++        toggle.checked = todo.completed;
++
++        var label = document.createElement('label');
++        label.textContent = todo.title;
++
++        var destroy = document.createElement('button');
++        destroy.className = 'destroy';
++
++        view.appendChild(toggle);
++        view.appendChild(label);
++        view.appendChild(destroy);
++
++        var edit = document.createElement('input');
++        edit.className = 'edit';
++        edit.value = todo.title;
++
++        li.appendChild(view);
++        li.appendChild(edit);
++        todoList.appendChild(li);
++      }
+     });
+ 
+     if (self.editingId !== null) {

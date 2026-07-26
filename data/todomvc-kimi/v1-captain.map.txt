@@ -1,0 +1,24 @@
+# banked: 2026-07-25T20:19:30Z
+# verdict: PENDING
+# leg: {  "name": "v1-captain",  "model": "moonshotai/kimi-k3",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/todomvc-kimi/sim",  "timeout_s": 1500,  "skills": [    "/home/exedev/shipshape-shakedown/experiments/yoink-settle/skills/shipshape",    "/home/exedev/shipshape-shakedown/experiments/yoink-settle/skills/captain"  ]}
+
+
+=== v1-captain.session.jsonl ===
+  turns=13  wall=214.2s  in=46955  out=7577  cache_read=307456  cost=$0.3468
+  role reads: captain@t0 -> shipshape@t1
+  roles loaded: captain, shipshape
+  ~ repeated tool signature at turns [1, 2, 3, 11] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0     940/153      768 $0.0053  read, bash
+    t1    5850/233     1536 $0.0215  read, read, bash
+    t2   13653/408     6144 $0.0489  read, read, bash
+    t3   10479/418    18432 $0.0432  bash
+    t4     716/856    28672 $0.0236  bash
+    t5    1689/178    28672 $0.0163  bash
+    t6    1932/1668   28672 $0.0394  bash
+    t7    3638/401    28672 $0.0255  write
+    t8    2050/1554   30720 $0.0387  write, write, write
+    t9    1721/781    32768 $0.0267  write, write
+    t10   2611/145    32768 $0.0198  bash
+    t11    758/109    34816 $0.0144  bash
+    t12    918/673    34816 $0.0233  -

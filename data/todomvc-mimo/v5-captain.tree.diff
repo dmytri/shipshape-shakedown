@@ -1,0 +1,94 @@
+diff --git a/features/edit-enter-conformance.feature b/features/edit-enter-conformance.feature
+new file mode 100644
+index 0000000..78c0c09
+--- /dev/null
++++ b/features/edit-enter-conformance.feature
+@@ -0,0 +1,11 @@
++Feature: Edit Enter key conformance
++  As the project
++  I want the edit-field Enter handler to release focus rather than commit directly
++  So that a single blur handler performs the one and only commit
++
++  @conformance
++  Scenario: Enter keydown handler calls blur and does not call saveEdit directly
++    Given the production source at "js/app.js"
++    When the Enter keydown handler for the edit field is inspected
++    Then the handler calls ".blur()" on the edit input
++    And the handler does not call "saveEdit" directly
+diff --git a/features/step_definitions/steps.js b/features/step_definitions/steps.js
+index 50f507f..0782a1f 100644
+--- a/features/step_definitions/steps.js
++++ b/features/step_definitions/steps.js
+@@ -510,8 +510,59 @@ Then(
+   }
+ );
+ 
++// ── Conformance: source inspection ──────────────────────────────────────
++let inspectedSource = null;
++let enterHandlerBlock = null;
++
++Given('the production source at {string}', function (relPath) {
++  const filePath = path.resolve(__dirname, '../../' + relPath);
++  if (!fs.existsSync(filePath)) {
++    throw new Error(`Source file "${relPath}" not found at ${filePath}`);
++  }
++  inspectedSource = fs.readFileSync(filePath, 'utf8');
++});
++
++When('the Enter keydown handler for the edit field is inspected', function () {
++  if (!inspectedSource) throw new Error('No source loaded');
++  // Find the keydown handler block that checks ENTER_KEY on .edit inputs
++  // The block is inside: if (e.target.classList.contains('edit'))
++  // We find the edit guard, then find the ENTER_KEY check inside it
++  var editKeyPattern = /e\.target\.classList\.contains\(\s*'edit'\s*\)[\s\S]*?ENTER_KEY[\s\S]*?\{([^}]*)\}/;
++  var match = editKeyPattern.exec(inspectedSource);
++  if (!match) {
++    throw new Error('Could not find Enter keydown handler block for edit field in source');
++  }
++  enterHandlerBlock = match[1];
++});
++
++Then('the handler calls {string} on the edit input', function (call) {
++  if (!enterHandlerBlock) throw new Error('No Enter handler block inspected');
++  // call is something like '.blur()' - check it appears in the handler block
++  if (enterHandlerBlock.indexOf(call) === -1) {
++    throw new Error(
++      `Enter handler does not call "${call}" on the edit input. ` +
++      `Handler block: ${enterHandlerBlock.trim()}`
++    );
++  }
++});
++
++Then('the handler does not call {string} directly', function (funcName) {
++  if (!enterHandlerBlock) throw new Error('No Enter handler block inspected');
++  // Check that the function name does NOT appear as a direct call in the handler
++  // We look for the function name followed by ( to detect a direct call
++  var directCallPattern = new RegExp('\\b' + funcName + '\\s*\\(');
++  if (directCallPattern.test(enterHandlerBlock)) {
++    throw new Error(
++      `Enter handler calls "${funcName}" directly, but should only call blur(). ` +
++      `Handler block: ${enterHandlerBlock.trim()}`
++    );
++  }
++});
++
+ // ── After hook ─────────────────────────────────────────────────────────
+ After(function () {
+   teardown();
+   parsedDocument = null;
++  inspectedSource = null;
++  enterHandlerBlock = null;
+ });
+diff --git a/js/app.js b/js/app.js
+index 296d4aa..50e1fb1 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -311,7 +311,7 @@
+ 			}
+ 			if (e.target.classList.contains('edit')) {
+ 				if (e.keyCode === ENTER_KEY) {
+-					saveEdit(id, e.target.value);
++					e.target.blur();
+ 				} else if (e.keyCode === ESCAPE_KEY) {
+ 					cancelEdit();
+ 				}

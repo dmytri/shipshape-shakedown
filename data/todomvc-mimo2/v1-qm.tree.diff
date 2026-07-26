@@ -1,0 +1,806 @@
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..039c4bc
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,34 @@
++# Rigging
++
++## Stack
++- language: JavaScript
++- runner: cucumber-js
++- browser: happy-dom
++
++## Directories
++- implementation: js/
++- specs: features/
++
++## Commands
++- focused: npx cucumber-js {scenario} --require features/support/**/*.js --require features/step_definitions/**/*.js
++- discover: npx cucumber-js features/ --dry-run --require features/support/**/*.js --require features/step_definitions/**/*.js
++- broad: npx cucumber-js features/ --require features/support/**/*.js --require features/step_definitions/**/*.js
++- step-usage: npx cucumber-js features/ --dry-run --require features/support/**/*.js --require features/step_definitions/**/*.js
++- plank-inventory: grep -r "@planks" js/
++- typecheck: none
++- lint: none
++- coverage: none
++
++## Tiers
++- @logic: default tier, local tests, no external accounts
++
++## Perturbation
++- message: PERTURBATION
++- statement: none
++
++## Dependencies
++- dependency: @cucumber/cucumber
++- dependency: happy-dom
++
++## Transient output
++- runrecord: none
+diff --git a/features/step_definitions/todo.steps.js b/features/step_definitions/todo.steps.js
+new file mode 100644
+index 0000000..4a76e6c
+--- /dev/null
++++ b/features/step_definitions/todo.steps.js
+@@ -0,0 +1,292 @@
++const { Given, When, Then } = require('@cucumber/cucumber');
++const assert = require('assert');
++
++// ============ GIVEN ============
++
++Given('the todo app is loaded', function () {
++  this.loadApp();
++});
++
++Given('the user has added a todo {string}', function (title) {
++  const input = this.document.querySelector('.new-todo');
++  this.typeInInput(input, title);
++  this.pressEnter(input);
++});
++
++Given('the todo {string} is completed', function (title) {
++  const todo = this.findTodoByTitle(title);
++  if (!todo) throw new Error(`Todo "${title}" not found`);
++  const checkbox = todo.querySelector('.toggle');
++  if (!checkbox.checked) {
++    this.clickElement(checkbox);
++  }
++});
++
++Given('all todos are completed', function () {
++  const toggleAll = this.document.querySelector('#toggle-all');
++  if (!toggleAll.checked) {
++    this.clickElement(toggleAll);
++  }
++});
++
++// ============ WHEN ============
++
++When('the user types {string} in the new todo input', function (text) {
++  const input = this.document.querySelector('.new-todo');
++  this.typeInInput(input, text);
++});
++
++When('the user presses Enter', function () {
++  const input = this.document.querySelector('.new-todo');
++  this.pressEnter(input);
++});
++
++When('the user presses Escape', function () {
++  const editingInput = this.document.querySelector('.todo-list li.editing .edit');
++  if (editingInput) {
++    this.pressEscape(editingInput);
++  }
++});
++
++When('the user clicks {string}', function (buttonText) {
++  const buttons = this.document.querySelectorAll('button');
++  for (const btn of buttons) {
++    if (btn.textContent.trim() === buttonText) {
++      this.clickElement(btn);
++      return;
++    }
++  }
++  throw new Error(`Button "${buttonText}" not found`);
++});
++
++When('the user toggles the todo {string}', function (title) {
++  const todo = this.findTodoByTitle(title);
++  if (!todo) throw new Error(`Todo "${title}" not found`);
++  const checkbox = todo.querySelector('.toggle');
++  this.clickElement(checkbox);
++});
++
++When('the user clicks the toggle-all checkbox', function () {
++  const toggleAll = this.document.querySelector('#toggle-all');
++  this.clickElement(toggleAll);
++});
++
++When('the user double-clicks the todo {string}', function (title) {
++  const todo = this.findTodoByTitle(title);
++  if (!todo) throw new Error(`Todo "${title}" not found`);
++  const label = todo.querySelector('label');
++  this.doubleClickElement(label);
++});
++
++When('the user changes the edit input to {string}', function (text) {
++  const editingInput = this.document.querySelector('.todo-list li.editing .edit');
++  if (!editingInput) throw new Error('No editing input found');
++  this.typeInInput(editingInput, text);
++  // Trigger input event for reactivity
++  editingInput.dispatchEvent(new this.window.Event('input', { bubbles: true }));
++});
++
++When('the user blurs the edit input', function () {
++  const editingInput = this.document.querySelector('.todo-list li.editing .edit');
++  if (!editingInput) throw new Error('No editing input found');
++  this.blurElement(editingInput);
++});
++
++When('the user navigates to {string}', function (hash) {
++  this.navigateTo(hash);
++});
++
++When('the user reloads the page', function () {
++  this.reloadPage();
++});
++
++// ============ THEN ============
++
++Then('the new todo input should be focused', function () {
++  const input = this.document.querySelector('.new-todo');
++  assert.strictEqual(input, this.document.activeElement,
++    'New todo input is not focused');
++});
++
++Then('the todo list should contain {int} item(s)', function (count) {
++  const todos = this.getTodos();
++  assert.strictEqual(todos.length, count,
++    `Expected ${count} todos, found ${todos.length}`);
++});
++
++Then('the todo {string} should be visible in the list', function (title) {
++  const todos = this.getTodos();
++  const visible = todos.filter(todo => {
++    const style = this.window.getComputedStyle(todo);
++    if (style.display === 'none') return false;
++    const label = todo.querySelector('label');
++    return label && label.textContent === title;
++  });
++  assert.ok(visible.length > 0, `Todo "${title}" not found in visible list`);
++});
++
++Then('the todo {string} should not be visible in the list', function (title) {
++  const todos = this.getTodos();
++  const visible = todos.filter(todo => {
++    const style = this.window.getComputedStyle(todo);
++    if (style.display === 'none') return false;
++    const label = todo.querySelector('label');
++    return label && label.textContent === title;
++  });
++  assert.strictEqual(visible.length, 0,
++    `Todo "${title}" should not be visible but was found`);
++});
++
++Then('the new todo input should be empty', function () {
++  const input = this.document.querySelector('.new-todo');
++  assert.strictEqual(input.value, '', 'New todo input is not empty');
++});
++
++Then('the todo {string} should have the completed class', function (title) {
++  const todo = this.findTodoByTitle(title);
++  assert.ok(todo, `Todo "${title}" not found`);
++  assert.ok(todo.classList.contains('completed'),
++    `Todo "${title}" does not have completed class`);
++});
++
++Then('the todo {string} should not have the completed class', function (title) {
++  const todo = this.findTodoByTitle(title);
++  assert.ok(todo, `Todo "${title}" not found`);
++  assert.ok(!todo.classList.contains('completed'),
++    `Todo "${title}" has completed class`);
++});
++
++Then('the todo {string} checkbox should be checked', function (title) {
++  const todo = this.findTodoByTitle(title);
++  assert.ok(todo, `Todo "${title}" not found`);
++  const checkbox = todo.querySelector('.toggle');
++  assert.ok(checkbox.checked, `Todo "${title}" checkbox is not checked`);
++});
++
++Then('the todo {string} checkbox should be unchecked', function (title) {
++  const todo = this.findTodoByTitle(title);
++  assert.ok(todo, `Todo "${title}" not found`);
++  const checkbox = todo.querySelector('.toggle');
++  assert.ok(!checkbox.checked, `Todo "${title}" checkbox is checked`);
++});
++
++Then('all todos should be completed', function () {
++  const todos = this.getTodos();
++  assert.ok(todos.length > 0, 'No todos found');
++  for (const todo of todos) {
++    assert.ok(todo.classList.contains('completed'),
++      `Todo "${todo.querySelector('label')?.textContent}" is not completed`);
++  }
++});
++
++Then('no todos should be completed', function () {
++  const todos = this.getTodos();
++  for (const todo of todos) {
++    assert.ok(!todo.classList.contains('completed'),
++      `Todo "${todo.querySelector('label')?.textContent}" is completed`);
++  }
++});
++
++Then('the toggle-all checkbox should be checked', function () {
++  const toggleAll = this.document.querySelector('#toggle-all');
++  assert.ok(toggleAll.checked, 'Toggle-all checkbox is not checked');
++});
++
++Then('the toggle-all checkbox should be unchecked', function () {
++  const toggleAll = this.document.querySelector('#toggle-all');
++  assert.ok(!toggleAll.checked, 'Toggle-all checkbox is checked');
++});
++
++Then('the active count should be {int}', function (count) {
++  const countEl = this.document.querySelector('.todo-count strong');
++  assert.ok(countEl, 'Active count element not found');
++  assert.strictEqual(parseInt(countEl.textContent, 10), count,
++    `Expected active count ${count}, found ${countEl.textContent}`);
++});
++
++Then('the active count label should be {string}', function (label) {
++  const countEl = this.document.querySelector('.todo-count');
++  assert.ok(countEl, 'Count element not found');
++  const text = countEl.textContent.trim();
++  assert.ok(text.includes(label),
++    `Expected count label to contain "${label}", got "${text}"`);
++});
++
++Then('the todo {string} should have the editing class', function (title) {
++  const todo = this.findTodoByTitle(title);
++  assert.ok(todo, `Todo "${title}" not found`);
++  assert.ok(todo.classList.contains('editing'),
++    `Todo "${title}" does not have editing class`);
++});
++
++Then('the edit input for {string} should be visible and focused', function (title) {
++  const todo = this.findTodoByTitle(title);
++  assert.ok(todo, `Todo "${title}" not found`);
++  const editInput = todo.querySelector('.edit');
++  assert.ok(editInput, 'Edit input not found');
++  const style = this.window.getComputedStyle(editInput);
++  assert.notStrictEqual(style.display, 'none', 'Edit input is hidden');
++  assert.strictEqual(editInput, this.document.activeElement,
++    'Edit input is not focused');
++});
++
++Then('the {string} section should be hidden', function (selector) {
++  const el = this.document.querySelector(selector);
++  assert.ok(el, `Element "${selector}" not found`);
++  const style = this.window.getComputedStyle(el);
++  assert.ok(style.display === 'none' || style.visibility === 'hidden' ||
++    style.opacity === '0' || el.hidden,
++    `Element "${selector}" is not hidden`);
++});
++
++Then('the {string} section should be visible', function (selector) {
++  const el = this.document.querySelector(selector);
++  assert.ok(el, `Element "${selector}" not found`);
++  const style = this.window.getComputedStyle(el);
++  assert.notStrictEqual(style.display, 'none',
++    `Element "${selector}" is hidden`);
++});
++
++Then('the {string} button should be hidden', function (buttonText) {
++  const buttons = this.document.querySelectorAll('button');
++  for (const btn of buttons) {
++    if (btn.textContent.trim() === buttonText) {
++      const style = this.window.getComputedStyle(btn);
++      assert.ok(style.display === 'none' || style.visibility === 'hidden' ||
++        btn.hidden,
++        `Button "${buttonText}" is not hidden`);
++      return;
++    }
++  }
++  // If button not found at all, it's effectively hidden
++});
++
++Then('the {string} button should be visible', function (buttonText) {
++  const buttons = this.document.querySelectorAll('button');
++  for (const btn of buttons) {
++    if (btn.textContent.trim() === buttonText) {
++      const style = this.window.getComputedStyle(btn);
++      assert.notStrictEqual(style.display, 'none',
++        `Button "${buttonText}" is hidden`);
++      return;
++    }
++  }
++  throw new Error(`Button "${buttonText}" not found`);
++});
++
++Then('the {string} filter should be selected', function (filterName) {
++  const links = this.document.querySelectorAll('.filters a');
++  for (const link of links) {
++    if (link.textContent.trim() === filterName) {
++      assert.ok(link.classList.contains('selected'),
++        `Filter "${filterName}" does not have selected class`);
++      return;
++    }
++  }
++  throw new Error(`Filter "${filterName}" not found`);
++});
++
++Then('localStorage should contain a key {string}', function (key) {
++  const value = this.window.localStorage.getItem(key);
++  assert.ok(value !== null, `localStorage key "${key}" not found`);
++});
+diff --git a/features/support/hooks.js b/features/support/hooks.js
+new file mode 100644
+index 0000000..432e851
+--- /dev/null
++++ b/features/support/hooks.js
+@@ -0,0 +1,10 @@
++const { Before, After } = require('@cucumber/cucumber');
++const { clearSharedStorage } = require('./storage');
++
++Before(function () {
++  // Each scenario starts with fresh localStorage
++  clearSharedStorage();
++  this.window = null;
++  this.document = null;
++  this._lastHash = '';
++});
+diff --git a/features/support/storage.js b/features/support/storage.js
+new file mode 100644
+index 0000000..7280081
+--- /dev/null
++++ b/features/support/storage.js
+@@ -0,0 +1,22 @@
++// Module-level shared localStorage to persist across window recreations
++let _sharedStorage = {};
++
++function clearSharedStorage() {
++  _sharedStorage = {};
++}
++
++function getSharedStorage() {
++  return _sharedStorage;
++}
++
++function captureFromWindow(win) {
++  if (!win) return;
++  try {
++    for (let i = 0; i < win.localStorage.length; i++) {
++      const key = win.localStorage.key(i);
++      _sharedStorage[key] = win.localStorage.getItem(key);
++    }
++  } catch (e) {}
++}
++
++module.exports = { clearSharedStorage, getSharedStorage, captureFromWindow };
+diff --git a/features/support/world.js b/features/support/world.js
+new file mode 100644
+index 0000000..754647f
+--- /dev/null
++++ b/features/support/world.js
+@@ -0,0 +1,104 @@
++const { setWorldConstructor, World } = require('@cucumber/cucumber');
++const fs = require('fs');
++const path = require('path');
++const { getSharedStorage, captureFromWindow } = require('./storage');
++
++class TodoWorld extends World {
++  constructor(options) {
++    super(options);
++    this.window = null;
++    this.document = null;
++    this._lastHash = '';
++  }
++
++  loadApp() {
++    // Capture localStorage from previous window before destroying
++    if (this.window) {
++      captureFromWindow(this.window);
++      try { this.window.close(); } catch (e) {}
++      this.window = null;
++      this.document = null;
++    }
++
++    const htmlPath = path.join(process.cwd(), 'index.html');
++    if (!fs.existsSync(htmlPath)) {
++      throw new Error('index.html not found at project root');
++    }
++    const html = fs.readFileSync(htmlPath, 'utf-8');
++    const jsCode = fs.readFileSync(path.join(process.cwd(), 'js/app.js'), 'utf-8');
++
++    const { Window } = require('happy-dom');
++    this.window = new Window({
++      url: 'http://localhost:3000/' + (this._lastHash || '')
++    });
++    this.document = this.window.document;
++
++    // Restore shared localStorage
++    const storage = getSharedStorage();
++    for (const [key, value] of Object.entries(storage)) {
++      this.window.localStorage.setItem(key, value);
++    }
++
++    this.document.open();
++    this.document.write(html);
++    this.document.close();
++
++    this.window.eval(jsCode);
++  }
++
++  typeInInput(input, text) {
++    input.value = text;
++    input.dispatchEvent(new this.window.Event('input', { bubbles: true }));
++    input.dispatchEvent(new this.window.Event('change', { bubbles: true }));
++  }
++
++  pressEnter(input) {
++    input.dispatchEvent(new this.window.KeyboardEvent('keydown', {
++      key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true
++    }));
++  }
++
++  pressEscape(input) {
++    input.dispatchEvent(new this.window.KeyboardEvent('keydown', {
++      key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true
++    }));
++  }
++
++  clickElement(element) {
++    element.dispatchEvent(new this.window.MouseEvent('click', { bubbles: true }));
++  }
++
++  doubleClickElement(element) {
++    element.dispatchEvent(new this.window.MouseEvent('dblclick', { bubbles: true }));
++  }
++
++  blurElement(element) {
++    element.dispatchEvent(new this.window.Event('blur', { bubbles: true }));
++  }
++
++  getTodos() {
++    return Array.from(this.document.querySelectorAll('.todo-list li'));
++  }
++
++  findTodoByTitle(title) {
++    return this.getTodos().find(todo => {
++      const label = todo.querySelector('label');
++      return label && label.textContent === title;
++    });
++  }
++
++  navigateTo(hash) {
++    this.window.location.hash = hash;
++    this.window.dispatchEvent(new this.window.HashChangeEvent('hashchange', {
++      oldURL: 'http://localhost:3000/' + (this._lastHash || ''),
++      newURL: 'http://localhost:3000/' + hash
++    }));
++    this._lastHash = hash;
++  }
++
++  reloadPage() {
++    this.loadApp();
++  }
++}
++
++setWorldConstructor(TodoWorld);
+diff --git a/index.html b/index.html
+new file mode 100644
+index 0000000..ab81336
+--- /dev/null
++++ b/index.html
+@@ -0,0 +1,36 @@
++<!doctype html>
++<html lang="en">
++<head>
++  <meta charset="utf-8">
++  <meta name="viewport" content="width=device-width, initial-scale=1">
++  <title>TodoMVC</title>
++  <link rel="stylesheet" href="node_modules/todomvc-common/base.css">
++  <link rel="stylesheet" href="node_modules/todomvc-app-css/index.css">
++</head>
++<body>
++  <section class="todoapp">
++    <header class="header">
++      <h1>todos</h1>
++      <input class="new-todo" placeholder="What needs to be done?" autofocus>
++    </header>
++    <section id="main" class="main">
++      <input id="toggle-all" class="toggle-all" type="checkbox">
++      <label for="toggle-all">Mark all as complete</label>
++      <ul class="todo-list"></ul>
++    </section>
++    <footer id="footer" class="footer">
++      <span class="todo-count"><strong>0</strong> items left</span>
++      <ul class="filters">
++        <li><a class="selected" href="#/">All</a></li>
++        <li><a href="#/active">Active</a></li>
++        <li><a href="#/completed">Completed</a></li>
++      </ul>
++      <button class="clear-completed">Clear completed</button>
++    </footer>
++  </section>
++  <footer class="info">
++    <p>Double-click to edit a todo</p>
++  </footer>
++  <script src="js/app.js"></script>
++</body>
++</html>
+diff --git a/js/app.js b/js/app.js
+new file mode 100644
+index 0000000..1a4d9bc
+--- /dev/null
++++ b/js/app.js
+@@ -0,0 +1,266 @@
++(function () {
++  'use strict';
++
++  var STORAGE_KEY = 'todos-vanillajs';
++  var ENTER_KEY = 13;
++  var ESCAPE_KEY = 27;
++
++  var todos = [];
++  var editingId = null;
++
++  var $newTodo = document.querySelector('.new-todo');
++  var $todoList = document.querySelector('.todo-list');
++  var $toggleAll = document.querySelector('#toggle-all');
++  var $main = document.querySelector('.main');
++  var $footer = document.querySelector('.footer');
++  var $count = document.querySelector('.todo-count strong');
++  var $countLabel = document.querySelector('.todo-count');
++  var $clearCompleted = document.querySelector('.clear-completed');
++  var $filters = document.querySelectorAll('.filters a');
++
++  function generateId() {
++    return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
++  }
++
++  function save() {
++    localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
++  }
++
++  function load() {
++    try {
++      var data = localStorage.getItem(STORAGE_KEY);
++      if (data) {
++        todos = JSON.parse(data);
++      }
++    } catch (e) {
++      todos = [];
++    }
++  }
++
++  function getActiveFilter() {
++    var hash = window.location.hash || '#/';
++    if (hash === '#/active') return 'active';
++    if (hash === '#/completed') return 'completed';
++    return 'all';
++  }
++
++  function getFilteredTodos() {
++    var filter = getActiveFilter();
++    if (filter === 'active') return todos.filter(function (t) { return !t.completed; });
++    if (filter === 'completed') return todos.filter(function (t) { return t.completed; });
++    return todos;
++  }
++
++  function getActiveCount() {
++    return todos.filter(function (t) { return !t.completed; }).length;
++  }
++
++  function render() {
++    var filtered = getFilteredTodos();
++    var activeCount = getActiveCount();
++    var completedCount = todos.length - activeCount;
++
++    // Render todo list
++    $todoList.innerHTML = '';
++    filtered.forEach(function (todo) {
++      var li = document.createElement('li');
++      li.dataset.id = todo.id;
++      if (todo.completed) li.classList.add('completed');
++      if (editingId === todo.id) li.classList.add('editing');
++
++      li.innerHTML =
++        '<div class="view">' +
++          '<input class="toggle" type="checkbox"' + (todo.completed ? ' checked' : '') + '>' +
++          '<label>' + escapeHtml(todo.title) + '</label>' +
++          '<button class="destroy"></button>' +
++        '</div>' +
++        '<input class="edit" value="' + escapeHtml(todo.title) + '">';
++
++      $todoList.appendChild(li);
++    });
++
++    // Update count
++    $count.textContent = activeCount;
++    var labelWord = activeCount === 1 ? 'item' : 'items';
++    $countLabel.innerHTML = '<strong>' + activeCount + '</strong> ' + labelWord + ' left';
++
++    // Show/hide sections
++    if (todos.length === 0) {
++      $main.style.display = 'none';
++      $footer.style.display = 'none';
++    } else {
++      $main.style.display = '';
++      $footer.style.display = '';
++    }
++
++    // Update toggle-all
++    $toggleAll.checked = todos.length > 0 && activeCount === 0;
++
++    // Update clear-completed
++    $clearCompleted.style.display = completedCount > 0 ? '' : 'none';
++
++    // Update filter links
++    var currentFilter = getActiveFilter();
++    $filters.forEach(function (link) {
++      link.classList.remove('selected');
++      var href = link.getAttribute('href');
++      if ((currentFilter === 'all' && href === '#/') ||
++          (currentFilter === 'active' && href === '#/active') ||
++          (currentFilter === 'completed' && href === '#/completed')) {
++        link.classList.add('selected');
++      }
++    });
++  }
++
++  function escapeHtml(text) {
++    var div = document.createElement('div');
++    div.textContent = text;
++    return div.innerHTML;
++  }
++
++  function addTodo(title) {
++    title = title.trim();
++    if (!title) return;
++    todos.push({
++      id: generateId(),
++      title: title,
++      completed: false
++    });
++    save();
++    render();
++  }
++
++  function toggleTodo(id) {
++    todos.forEach(function (todo) {
++      if (todo.id === id) {
++        todo.completed = !todo.completed;
++      }
++    });
++    save();
++    render();
++  }
++
++  function toggleAll() {
++    var allCompleted = todos.every(function (t) { return t.completed; });
++    todos.forEach(function (todo) {
++      todo.completed = !allCompleted;
++    });
++    save();
++    render();
++  }
++
++  function clearCompleted() {
++    todos = todos.filter(function (t) { return !t.completed; });
++    save();
++    render();
++  }
++
++  function deleteTodo(id) {
++    todos = todos.filter(function (t) { return t.id !== id; });
++    save();
++    render();
++  }
++
++  function startEdit(id) {
++    editingId = id;
++    render();
++    var editing = $todoList.querySelector('li.editing .edit');
++    if (editing) {
++      editing.focus();
++      editing.selectionStart = editing.value.length;
++    }
++  }
++
++  function saveEdit(id, title) {
++    title = title.trim();
++    if (!title) {
++      deleteTodo(id);
++      return;
++    }
++    todos.forEach(function (todo) {
++      if (todo.id === id) {
++        todo.title = title;
++      }
++    });
++    editingId = null;
++    save();
++    render();
++  }
++
++  function cancelEdit() {
++    editingId = null;
++    render();
++  }
++
++  // Event listeners
++  $newTodo.addEventListener('keydown', function (e) {
++    if (e.keyCode === ENTER_KEY) {
++      addTodo($newTodo.value);
++      $newTodo.value = '';
++    }
++  });
++
++  $todoList.addEventListener('change', function (e) {
++    if (e.target.classList.contains('toggle')) {
++      var li = e.target.closest('li');
++      toggleTodo(li.dataset.id);
++    }
++  });
++
++  $todoList.addEventListener('click', function (e) {
++    var li = e.target.closest('li');
++    if (!li) return;
++
++    if (e.target.classList.contains('destroy')) {
++      deleteTodo(li.dataset.id);
++    }
++  });
++
++  $todoList.addEventListener('dblclick', function (e) {
++    var li = e.target.closest('li');
++    if (!li) return;
++    if (e.target.tagName === 'LABEL') {
++      startEdit(li.dataset.id);
++    }
++  });
++
++  $todoList.addEventListener('keydown', function (e) {
++    var li = e.target.closest('li');
++    if (!li) return;
++    if (e.target.classList.contains('edit')) {
++      if (e.keyCode === ENTER_KEY) {
++        saveEdit(li.dataset.id, e.target.value);
++      } else if (e.keyCode === ESCAPE_KEY) {
++        cancelEdit();
++      }
++    }
++  });
++
++  $todoList.addEventListener('blur', function (e) {
++    if (e.target.classList.contains('edit')) {
++      var li = e.target.closest('li');
++      if (li) {
++        saveEdit(li.dataset.id, e.target.value);
++      }
++    }
++  }, true);
++
++  $toggleAll.addEventListener('change', function () {
++    toggleAll();
++  });
++
++  $clearCompleted.addEventListener('click', function () {
++    clearCompleted();
++  });
++
++  // Route changes
++  function onHashChange() {
++    render();
++  }
++
++  window.addEventListener('hashchange', onHashChange);
++
++  // Initialize
++  load();
++  render();
++})();

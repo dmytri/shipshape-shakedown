@@ -1,0 +1,17 @@
+# banked: 2026-07-25T20:56:20Z
+# verdict: PENDING
+# leg: {  "name": "v5-qm",  "model": "xiaomi/mimo-v2.5",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/todomvc-mimo/sim",  "timeout_s": 1500,  "skills": [    "/home/exedev/shipshape-shakedown/experiments/yoink-settle/skills/shipshape",    "/home/exedev/shipshape-shakedown/experiments/yoink-settle/skills/qm",    "/home/exedev/shipshape-shakedown/experiments/yoink-settle/skills/crew",    "/home/exedev/shipshape-shakedown/experiments/yoink-settle/skills/boatswain"  ]}
+
+
+=== v5-qm.session.jsonl ===
+  turns=6  wall=9.0s  in=27701  out=641  cache_read=70144  cost=$0.0043
+  role reads: qm@t0 -> shipshape@t1
+  roles loaded: qm, shipshape
+  ~ repeated tool signature at turns [1, 2] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    1731/78       512 $0.0003  read
+    t1    3374/78      2240 $0.0005  read
+    t2   14050/84      2240 $0.0020  read
+    t3    8078/107    16256 $0.0012  bash
+    t4     295/85     24320 $0.0001  bash
+    t5     173/209    24576 $0.0002  -

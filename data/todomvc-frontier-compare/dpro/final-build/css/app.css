@@ -1,0 +1,20 @@
+/* Hide the view (checkbox, label, destroy button) when editing */
+.todo-list li.editing .view {
+	display: none;
+}
+
+/* Explicitly hide toggle and destroy so computed style captures it */
+.todo-list li.editing .toggle,
+.todo-list li.editing .destroy {
+	display: none;
+}
+
+/* Show the edit input when editing */
+.todo-list li.editing .edit {
+	display: block;
+}
+
+/* Hide edit input by default */
+.todo-list li .edit {
+	display: none;
+}

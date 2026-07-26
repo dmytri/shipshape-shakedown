@@ -1,0 +1,19 @@
+[2026-07-25T18:13:00Z] PILOT START wave=todomvc-dpro model=deepseek/deepseek-v4-pro clone=.eval-scratch/oracle-clone-qwen port=8874 max=14 resume=0
+[2026-07-25T18:13:01Z] VOYAGE 1 (build)
+[2026-07-25T18:43:01Z] V1 build 1800s | self-suite: 29 scenarios (29 passed) — Shipwright harbour pass #1 (before first oracle)
+[2026-07-25T18:45:57Z] PILOT START wave=todomvc-dpro model=deepseek/deepseek-v4-pro clone=.eval-scratch/oracle-clone-qwen port=8874 max=14 resume=2
+[2026-07-25T18:45:57Z] RESUME: Shipwright harbour pass #1 (before oracle), then grade baseline (voyage 1)
+[2026-07-25T18:55:57Z] SHIPWRIGHT[prebuild] 599s | committed=yes | self-suite:? | planks=32 on-seam=20 hoisted=12 | @captain=4 @conformance=2
+[2026-07-25T18:56:57Z] resume baseline oracle 23/29 | failing:
+    TodoMVC - shakedown -- Mark all as completed -- should allow me to mark all items as completed
+    TodoMVC - shakedown -- Mark all as completed -- should allow me to clear the complete state of all items
+    TodoMVC - shakedown -- Item -- should allow me to mark items as complete
+    TodoMVC - shakedown -- Item -- should allow me to un-mark items as complete
+    TodoMVC - shakedown -- Editing -- should hide other controls when editing
+[2026-07-25T18:56:57Z] VOYAGE 2 (intent=domidentity)
+[2026-07-25T19:11:40Z] V2 domidentity 846s |  | self-suite: ? | oracle 28/29 | failing:
+    
+[2026-07-25T19:11:40Z] REACHED 28/29 — Shipwright harbour pass #2 (after 28/29)
+[2026-07-25T19:12:03Z] SHIPWRIGHT[final] 22s | committed=no | self-suite:? | planks=42 on-seam=23 hoisted=19 | @captain=2 @conformance=2
+[2026-07-25T19:12:41Z] POST-SHIPWRIGHT oracle 28/29 — STILL 28/29 (shipwright did not regress) — DONE
+[2026-07-25T19:12:41Z] PILOT END wave=todomvc-dpro final=28/29

@@ -1,0 +1,99 @@
+diff --git a/css/app.css b/css/app.css
+index 3a14397..9d8143f 100644
+--- a/css/app.css
++++ b/css/app.css
+@@ -1,4 +1,5 @@
+ .todo-list li.editing .toggle,
+-.todo-list li.editing .destroy {
++.todo-list li.editing .destroy,
++.todo-list li.editing .view label {
+ 	display: none;
+ }
+diff --git a/features/managing-todos.feature b/features/managing-todos.feature
+index e66ab57..960928e 100644
+--- a/features/managing-todos.feature
++++ b/features/managing-todos.feature
+@@ -101,6 +101,11 @@ Feature: Managing todos
+     Then the toggle control for "Buy milk" is hidden
+     And the destroy control for "Buy milk" is hidden
+ 
++  Scenario: While a todo is being edited its label is hidden
++    Given the todo list contains an active todo "Buy milk"
++    When the visitor starts editing "Buy milk"
++    Then the label for "Buy milk" is hidden
++
+   @captain
+   Scenario: A key other than Enter in the new todo field adds nothing
+     When the visitor types "Buy milk" in the new todo field and presses "a"
+@@ -119,9 +124,17 @@ Feature: Managing todos
+     Then the todo list contains "<em>Buy milk</em>"
+     And the row for "<em>Buy milk</em>" shows the title as text, not markup
+ 
+-  @captain
+-  Scenario: Focusing away from an open edit field keeps the edit open
++  Scenario: Focusing away from an open edit field saves the change
+     Given the todo list contains an active todo "Buy milk"
+     When the visitor starts editing "Buy milk"
++    And the visitor changes the edit text to "Buy oat milk"
+     And the edit field loses focus
+-    Then the todo list contains "Buy milk"
++    Then the todo list contains "Buy oat milk"
++    And the todo list does not contain "Buy milk"
++
++  Scenario: Focusing away from an open edit field with a blank title destroys the todo
++    Given the todo list contains an active todo "Buy milk"
++    When the visitor starts editing "Buy milk"
++    And the visitor changes the edit text to "   "
++    And the edit field loses focus
++    Then the todo list is empty
+diff --git a/features/support/steps.js b/features/support/steps.js
+index a8261a9..723e369 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -81,6 +81,12 @@ When('the visitor changes the edit text to {string}', function (text) {
+ 	edit.value = text;
+ });
+ 
++When('the edit field loses focus', function () {
++	const edit = this.document.querySelector('.todo-list li.editing .edit');
++	assert.ok(edit, 'expected an open edit field');
++	edit.dispatchEvent(new this.window.Event('blur', { bubbles: false }));
++});
++
+ When('the visitor presses Escape', function () {
+ 	const edit = this.document.querySelector('.todo-list li.editing .edit');
+ 	assert.ok(edit, 'expected an open edit field');
+@@ -215,6 +221,13 @@ Then('the destroy control for {string} is hidden', function (title) {
+ 	assert.equal(this.window.getComputedStyle(destroy).display, 'none', 'expected the destroy control for ' + title + ' to be hidden');
+ });
+ 
++Then('the label for {string} is hidden', function (title) {
++	const li = this.findItem(title);
++	assert.ok(li, 'expected a todo titled ' + title);
++	const label = li.querySelector('.view label');
++	assert.equal(this.window.getComputedStyle(label).display, 'none', 'expected the label for ' + title + ' to be hidden');
++});
++
+ Then('the {string} filter link is selected', function (label) {
+ 	const links = [...this.document.querySelectorAll('.filters a')];
+ 	const link = links.find((a) => a.textContent.trim() === label);
+diff --git a/js/app.js b/js/app.js
+index 0391fc1..0b9acab 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -188,6 +188,15 @@
+ 			}
+ 		});
+ 
++		/**
++		 * @planks("the edit field loses focus")
++		 */
++		edit.addEventListener('blur', function () {
++			if (li.classList.contains('editing')) {
++				commitEdit(todo, li, edit.value);
++			}
++		});
++
+ 		return { li: li, toggle: toggle, label: label, destroy: destroy, edit: edit };
+ 	}
+ 

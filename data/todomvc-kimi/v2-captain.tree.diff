@@ -1,0 +1,301 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index bf7b430..435c780 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -8,4 +8,5 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ - Storage key fixed as `todos-vanillajs` (vanilla JS, spec format `todos-[framework]`).
+ - Verification tier: happy-dom, cheapest DOM tier; installed per package.json.
+ - Toolchain slots left `none` pending user word: lint (biome present in node_modules but undeclared), coverage (c8 likewise), plank-inventory (jsdoc absent; plain-JS stack wants `jsdoc -X`).
++- Voyage 2 (operator-directed, no QM/Crew dispatch): 3 scenarios added to managing-todos.feature pin in-place row updates (keyed by todo) and hidden toggle/destroy while editing; fixed in js/app.js (rows Map + createRow) and new css/app.css. Broad run: 25/25 green. Uncommitted per operator order. World harness now injects css/app.css as <style> (happy-dom fetches no linked stylesheets).
+ - assets/app-spec.md sections treated as out of scope for specs: directory-structure prose, README requirement, code-style rules, browser-compatibility matrix. Await user confirmation of exclusion per the Asset policy before QM dispatch.
+diff --git a/css/app.css b/css/app.css
+new file mode 100644
+index 0000000..3a14397
+--- /dev/null
++++ b/css/app.css
+@@ -0,0 +1,4 @@
++.todo-list li.editing .toggle,
++.todo-list li.editing .destroy {
++	display: none;
++}
+diff --git a/features/managing-todos.feature b/features/managing-todos.feature
+index 2a18a15..a884299 100644
+--- a/features/managing-todos.feature
++++ b/features/managing-todos.feature
+@@ -81,6 +81,26 @@ Feature: Managing todos
+     Given the todo list contains an active todo "Buy milk"
+     Then the clear completed control is hidden
+ 
++  Scenario: Completing a todo updates its existing row in place
++    Given the todo list contains active todos "Buy milk" and "Walk the dog"
++    And the visitor notes the row for "Walk the dog"
++    When the visitor completes "Walk the dog"
++    Then "Walk the dog" is marked completed
++    And the row for "Walk the dog" is the same row element the visitor noted
++
++  Scenario: Marking all as complete updates the existing rows in place
++    Given the todo list contains active todos "Buy milk" and "Walk the dog"
++    And the visitor notes the row for "Buy milk"
++    When the visitor marks all todos as complete
++    Then "Buy milk" is marked completed
++    And the row for "Buy milk" is the same row element the visitor noted
++
++  Scenario: While a todo is being edited its toggle and destroy controls are hidden
++    Given the todo list contains an active todo "Buy milk"
++    When the visitor starts editing "Buy milk"
++    Then the toggle control for "Buy milk" is hidden
++    And the destroy control for "Buy milk" is hidden
++
+   @captain
+   Scenario: A key other than Enter in the new todo field adds nothing
+     When the visitor types "Buy milk" in the new todo field and presses "a"
+diff --git a/features/support/steps.js b/features/support/steps.js
+index aefe415..a8261a9 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -45,6 +45,11 @@ Given('the visitor is on the {string} route', function (hash) {
+ 	this.openRoute(hash);
+ });
+ 
++Given('the visitor notes the row for {string}', function (title) {
++	this.notedRow = this.findItem(title);
++	assert.ok(this.notedRow, 'expected a todo titled ' + title);
++});
++
+ // When
+ 
+ When('the visitor submits a new todo {string}', function (title) {
+@@ -189,6 +194,27 @@ Then('that stored todo has a completed field set to false', function () {
+ 	assert.equal(this.storedTodo && this.storedTodo.completed, false);
+ });
+ 
++Then('the row for {string} is the same row element the visitor noted', function (title) {
++	assert.ok(this.notedRow, 'expected a noted row');
++	const li = this.findItem(title);
++	assert.ok(li, 'expected a todo titled ' + title);
++	assert.ok(li === this.notedRow, 'expected the row for ' + title + ' to be updated in place, not rebuilt');
++});
++
++Then('the toggle control for {string} is hidden', function (title) {
++	const li = this.findItem(title);
++	assert.ok(li, 'expected a todo titled ' + title);
++	const toggle = li.querySelector('.toggle');
++	assert.equal(this.window.getComputedStyle(toggle).display, 'none', 'expected the toggle for ' + title + ' to be hidden');
++});
++
++Then('the destroy control for {string} is hidden', function (title) {
++	const li = this.findItem(title);
++	assert.ok(li, 'expected a todo titled ' + title);
++	const destroy = li.querySelector('.destroy');
++	assert.equal(this.window.getComputedStyle(destroy).display, 'none', 'expected the destroy control for ' + title + ' to be hidden');
++});
++
+ Then('the {string} filter link is selected', function (label) {
+ 	const links = [...this.document.querySelectorAll('.filters a')];
+ 	const link = links.find((a) => a.textContent.trim() === label);
+diff --git a/features/support/world.js b/features/support/world.js
+index 7a2a69c..963e0db 100644
+--- a/features/support/world.js
++++ b/features/support/world.js
+@@ -13,6 +13,14 @@ class TodoWorld extends World {
+ 		const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+ 		this.window.document.write(html);
+ 		this.document = this.window.document;
++		try {
++			const css = fs.readFileSync(path.join(ROOT, 'css', 'app.css'), 'utf8');
++			const style = this.document.createElement('style');
++			style.textContent = css;
++			this.document.head.appendChild(style);
++		} catch (error) {
++			// css/app.css not present
++		}
+ 		if (storage) {
+ 			for (const key of Object.keys(storage)) {
+ 				this.window.localStorage.setItem(key, storage[key]);
+diff --git a/js/app.js b/js/app.js
+index 4695418..38f5136 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -16,6 +16,7 @@
+ 
+ 	var todos = load();
+ 	var route = currentRoute();
++	var rows = new Map();
+ 
+ 	/**
+ 	 * @planks("the visitor reloads the app")
+@@ -70,77 +71,28 @@
+ 			return true;
+ 		});
+ 
+-		todoList.innerHTML = '';
+-		visible.forEach(function (todo) {
+-			var li = document.createElement('li');
+-			if (todo.completed) {
+-				li.classList.add('completed');
++		rows.forEach(function (row, todo) {
++			if (todos.indexOf(todo) === -1) {
++				row.li.remove();
++				rows.delete(todo);
++			} else if (visible.indexOf(todo) === -1) {
++				row.li.remove();
+ 			}
++		});
+ 
+-			var view = document.createElement('div');
+-			view.className = 'view';
+-
+-			var toggle = document.createElement('input');
+-			toggle.className = 'toggle';
+-			toggle.type = 'checkbox';
+-			toggle.checked = todo.completed;
+-
+-			var label = document.createElement('label');
+-			label.textContent = todo.title;
+-
+-			var destroy = document.createElement('button');
+-			destroy.className = 'destroy';
+-
+-			view.appendChild(toggle);
+-			view.appendChild(label);
+-			view.appendChild(destroy);
+-
+-			var edit = document.createElement('input');
+-			edit.className = 'edit';
+-			edit.value = todo.title;
+-
+-			li.appendChild(view);
+-			li.appendChild(edit);
+-			todoList.appendChild(li);
+-
+-			/**
+-			 * @planks("the visitor completes {string}")
+-			 * @planks("the visitor reactivates {string}")
+-			 */
+-			toggle.addEventListener('change', function () {
+-				todo.completed = toggle.checked;
+-				update();
+-			});
+-
+-			/**
+-			 * @planks("the visitor destroys {string}")
+-			 */
+-			destroy.addEventListener('click', function () {
+-				todos.splice(todos.indexOf(todo), 1);
+-				update();
+-			});
+-
+-			/**
+-			 * @planks("the visitor starts editing {string}")
+-			 */
+-			label.addEventListener('dblclick', function () {
+-				li.classList.add('editing');
+-				edit.value = todo.title;
+-				edit.focus();
+-			});
+-
+-			/**
+-			 * @planks("the visitor edits {string} to {string}")
+-			 * @planks("the visitor presses Escape")
+-			 */
+-			edit.addEventListener('keydown', function (event) {
+-				if (event.key === ENTER_KEY) {
+-					commitEdit(todo, li, edit.value);
+-				} else if (event.key === ESCAPE_KEY) {
+-					li.classList.remove('editing');
+-					edit.value = todo.title;
+-				}
+-			});
++		visible.forEach(function (todo) {
++			var row = rows.get(todo);
++			if (!row) {
++				row = createRow(todo);
++				rows.set(todo, row);
++			}
++			row.li.classList.toggle('completed', todo.completed);
++			row.toggle.checked = todo.completed;
++			if (!row.li.classList.contains('editing')) {
++				row.label.textContent = todo.title;
++				row.edit.value = todo.title;
++			}
++			todoList.appendChild(row.li);
+ 		});
+ 
+ 		var hasTodos = todos.length > 0;
+@@ -164,6 +116,76 @@
+ 		});
+ 	}
+ 
++	/**
++	 * @planks("the todo list contains {string}")
++	 */
++	function createRow(todo) {
++		var li = document.createElement('li');
++
++		var view = document.createElement('div');
++		view.className = 'view';
++
++		var toggle = document.createElement('input');
++		toggle.className = 'toggle';
++		toggle.type = 'checkbox';
++
++		var label = document.createElement('label');
++
++		var destroy = document.createElement('button');
++		destroy.className = 'destroy';
++
++		view.appendChild(toggle);
++		view.appendChild(label);
++		view.appendChild(destroy);
++
++		var edit = document.createElement('input');
++		edit.className = 'edit';
++
++		li.appendChild(view);
++		li.appendChild(edit);
++
++		/**
++		 * @planks("the visitor completes {string}")
++		 * @planks("the visitor reactivates {string}")
++		 */
++		toggle.addEventListener('change', function () {
++			todo.completed = toggle.checked;
++			update();
++		});
++
++		/**
++		 * @planks("the visitor destroys {string}")
++		 */
++		destroy.addEventListener('click', function () {
++			todos.splice(todos.indexOf(todo), 1);
++			update();
++		});
++
++		/**
++		 * @planks("the visitor starts editing {string}")
++		 */
++		label.addEventListener('dblclick', function () {
++			li.classList.add('editing');
++			edit.value = todo.title;
++			edit.focus();
++		});
++
++		/**
++		 * @planks("the visitor edits {string} to {string}")
++		 * @planks("the visitor presses Escape")
++		 */
++		edit.addEventListener('keydown', function (event) {
++			if (event.key === ENTER_KEY) {
++				commitEdit(todo, li, edit.value);
++			} else if (event.key === ESCAPE_KEY) {
++				li.classList.remove('editing');
++				edit.value = todo.title;
++			}
++		});
++
++		return { li: li, toggle: toggle, label: label, destroy: destroy, edit: edit };
++	}
++
+ 	/**
+ 	 * @planks("the visitor edits {string} to {string}")
+ 	 */

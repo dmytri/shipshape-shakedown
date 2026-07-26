@@ -1,0 +1,41 @@
+# banked: 2026-07-25T19:02:51Z
+# verdict: PENDING
+# leg: {  "name": "v2-captain",  "model": "deepseek/deepseek-v4-pro",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/todomvc-dpro/sim",  "timeout_s": 1500,  "skills": [    "/home/exedev/shipshape/skills/shipshape",    "/home/exedev/shipshape/skills/captain"  ]}
+
+
+=== v2-captain.session.jsonl ===
+  turns=30  wall=343.3s  in=122048  out=19661  cache_read=712960  cost=$0.0728
+  role reads: (no role SKILL.md read)
+  roles loaded: NONE
+  ~ repeated tool signature at turns [11, 17, 27] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    2264/251        0 $0.0012  bash, read
+    t1    4176/167     2048 $0.0020  bash, read
+    t2    7144/213      256 $0.0033  read, read, read
+    t3   12499/193        0 $0.0056  bash, bash
+    t4    5506/324     7552 $0.0027  read, read, read, read
+    t5    1383/170    13312 $0.0008  read, read
+    t6   17931/219        0 $0.0080  bash, read, read
+    t7    4116/177    14848 $0.0020  bash, bash
+    t8     804/1715   19072 $0.0019  bash
+    t9     177/4628   21504 $0.0042  bash, bash
+    t10    208/235    26240 $0.0004  bash
+    t11    296/235    26624 $0.0004  bash
+    t12     35/750    27136 $0.0008  write
+    t13     70/319    27904 $0.0004  read
+    t14   2790/1620   28288 $0.0027  edit
+    t15   1764/1061   30976 $0.0018  edit
+    t16   8350/115    18048 $0.0038  bash
+    t17   1532/246    32640 $0.0010  bash, bash
+    t18    904/1987   26496 $0.0022  edit
+    t19   2612/100    34304 $0.0013  bash
+    t20     38/157    36992 $0.0003  write
+    t21    242/127    36992 $0.0003  bash
+    t22    502/2437   37248 $0.0025  edit
+    t23   2602/355    37632 $0.0016  edit
+    t24     61/116    40576 $0.0003  bash
+    t25    267/747    40704 $0.0009  edit
+    t26    172/107    41600 $0.0003  bash
+    t27    109/151    41856 $0.0003  bash
+    t28  42237/209        0 $0.0186  read, read
+    t29   1257/530    42112 $0.0012  -

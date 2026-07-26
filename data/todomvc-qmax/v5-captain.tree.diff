@@ -1,0 +1,72 @@
+diff --git a/src/app.js b/src/app.js
+index 8d57fdd..8afe7a6 100644
+--- a/src/app.js
++++ b/src/app.js
+@@ -73,7 +73,10 @@
+     if (todo) {
+       todo.completed = !todo.completed;
+       this.save();
+-      this.render();
++      this._updateTodoListItem(id);
++      this.renderCounter();
++      this.renderToggleAll();
++      this.renderClearCompleted();
+     }
+   };
+ 
+@@ -111,9 +114,54 @@
+    * @planks("all todos are marked as active")
+    */
+   TodoApp.prototype.toggleAll = function (checked) {
++    var self = this;
+     this.todos.forEach(function (t) { t.completed = checked; });
+     this.save();
+-    this.render();
++    this._updateAllTodoListItems();
++    this.renderCounter();
++    this.renderClearCompleted();
++  };
++
++  TodoApp.prototype._updateTodoListItem = function (id) {
++    var self = this;
++    var li = document.querySelector('.todo-list li[data-id="' + id + '"]');
++    if (!li) return;
++    var todo = this.todos.find(function (t) { return t.id === id; });
++    if (!todo) return;
++    var toggle = li.querySelector('.toggle');
++    if (toggle) toggle.checked = todo.completed;
++    if (todo.completed) {
++      li.classList.add('completed');
++    } else {
++      li.classList.remove('completed');
++    }
++    /* update visibility under active/completed filters without full re-render */
++    var isVisible = this.filter === 'all' ||
++      (this.filter === 'active' && !todo.completed) ||
++      (this.filter === 'completed' && todo.completed);
++    li.style.display = isVisible ? '' : 'none';
++  };
++
++  TodoApp.prototype._updateAllTodoListItems = function () {
++    var self = this;
++    var items = document.querySelectorAll('.todo-list li');
++    items.forEach(function (li) {
++      var id = Number(li.dataset.id);
++      var todo = self.todos.find(function (t) { return t.id === id; });
++      if (todo) {
++        var toggle = li.querySelector('.toggle');
++        if (toggle) toggle.checked = todo.completed;
++        if (todo.completed) {
++          li.classList.add('completed');
++        } else {
++          li.classList.remove('completed');
++        }
++        var isVisible = self.filter === 'all' ||
++          (self.filter === 'active' && !todo.completed) ||
++          (self.filter === 'completed' && todo.completed);
++        li.style.display = isVisible ? '' : 'none';
++      }
++    });
+   };
+ 
+   /**

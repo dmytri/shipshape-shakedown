@@ -1,0 +1,209 @@
+diff --git a/css/app.css b/css/app.css
+index 952e12d..5a2a42a 100644
+--- a/css/app.css
++++ b/css/app.css
+@@ -1 +1,7 @@
+ /* app.css - minimal overrides */
++
++/* Hide toggle and delete button while a todo is being edited */
++li.editing .view .toggle,
++li.editing .view .destroy {
++	display: none;
++}
+\ No newline at end of file
+diff --git a/features/step_definitions/steps.js b/features/step_definitions/steps.js
+index a15d55f..1134229 100644
+--- a/features/step_definitions/steps.js
++++ b/features/step_definitions/steps.js
+@@ -27,6 +27,18 @@ function loadApp(hash, localStorageState) {
+   doc.write(indexHtml);
+   doc.close();
+ 
++  // Inject CSS files so getComputedStyle works
++  const cssFiles = ['node_modules/todomvc-common/base.css', 'node_modules/todomvc-app-css/index.css', 'css/app.css'];
++  cssFiles.forEach(function (cssFile) {
++    const cssPath = path.resolve(__dirname, '../../' + cssFile);
++    if (fs.existsSync(cssPath)) {
++      const cssContent = fs.readFileSync(cssPath, 'utf8');
++      const styleEl = doc.createElement('style');
++      styleEl.textContent = cssContent;
++      doc.head.appendChild(styleEl);
++    }
++  });
++
+   // Restore localStorage before app init reads it
+   if (localStorageState) {
+     for (const [key, value] of Object.entries(localStorageState)) {
+@@ -310,6 +322,52 @@ Then('the todo {string} does not have the editing class', function (title) {
+   }
+ });
+ 
++// ── DOM identity ────────────────────────────────────────────────────────
++let storedTodoElement = null;
++
++Given('the DOM element for todo {string} is stored', function (title) {
++  const li = findTodoLi(title);
++  if (!li) throw new Error(`Todo "${title}" not found`);
++  storedTodoElement = li;
++});
++
++Then('the todo {string} DOM element is still the same', function (title) {
++  const li = findTodoLi(title);
++  if (!li) throw new Error(`Todo "${title}" not found`);
++  if (li !== storedTodoElement) {
++    throw new Error(
++      `Todo "${title}" DOM element was recreated (not preserved)`
++    );
++  }
++});
++
++// ── Edit mode visibility ────────────────────────────────────────────────
++Then('the toggle checkbox for {string} is hidden', function (title) {
++  const li = findTodoLi(title);
++  if (!li) throw new Error(`Todo "${title}" not found`);
++  const toggle = li.querySelector('.toggle');
++  if (!toggle) throw new Error(`Toggle checkbox not found for "${title}"`);
++  const style = win.getComputedStyle(toggle);
++  if (style.display !== 'none') {
++    throw new Error(
++      `Toggle checkbox for "${title}" is not hidden (display: ${style.display})`
++    );
++  }
++});
++
++Then('the delete button for {string} is hidden', function (title) {
++  const li = findTodoLi(title);
++  if (!li) throw new Error(`Todo "${title}" not found`);
++  const destroyBtn = li.querySelector('.destroy');
++  if (!destroyBtn) throw new Error(`Delete button not found for "${title}"`);
++  const style = win.getComputedStyle(destroyBtn);
++  if (style.display !== 'none') {
++    throw new Error(
++      `Delete button for "${title}" is not hidden (display: ${style.display})`
++    );
++  }
++});
++
+ // ── Toggle all ─────────────────────────────────────────────────────────
+ When('the user toggles the toggle-all checkbox', function () {
+   const toggleAll = doc.querySelector('#toggle-all');
+diff --git a/features/todo-editing.feature b/features/todo-editing.feature
+index 6208e9e..e4d31c6 100644
+--- a/features/todo-editing.feature
++++ b/features/todo-editing.feature
+@@ -6,6 +6,14 @@ Feature: Todo editing
+   Background:
+     Given the app is loaded
+ 
++  Rule: Edit mode hides controls
++
++    Scenario: Toggle checkbox and delete button are hidden while editing
++      Given the user has created a todo "Buy milk"
++      When the user double-clicks the todo label "Buy milk"
++      Then the toggle checkbox for "Buy milk" is hidden
++      And the delete button for "Buy milk" is hidden
++
+   Rule: Activating edit mode
+ 
+     Scenario: Double-clicking a todo label activates edit mode
+diff --git a/features/todo-lifecycle.feature b/features/todo-lifecycle.feature
+index 0cfe868..ec30801 100644
+--- a/features/todo-lifecycle.feature
++++ b/features/todo-lifecycle.feature
+@@ -50,6 +50,15 @@ Feature: Todo lifecycle
+       Then the todo "Buy milk" is not in the list
+       And the todo "Walk dog" is in the list
+ 
++  Rule: Toggle preserves existing DOM
++
++    Scenario: Toggling a todo preserves the existing DOM element
++      Given the user has created a todo "Buy milk"
++      And the DOM element for todo "Buy milk" is stored
++      When the user toggles the todo "Buy milk"
++      Then the todo "Buy milk" has the completed class
++      And the todo "Buy milk" DOM element is still the same
++
+   Rule: Main and footer visibility
+ 
+     Scenario: Main section and footer are hidden when there are no todos
+diff --git a/js/app.js b/js/app.js
+index e9311c3..296d4aa 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -76,29 +76,59 @@
+ 		var clearCompleted = $('.clear-completed');
+ 		var visibleTodos = getVisibleTodos();
+ 
+-		todoList.innerHTML = '';
++		// Build a map of existing <li> elements keyed by id
++		var existing = {};
++		var existingItems = todoList.querySelectorAll('li[data-id]');
++		for (var i = 0; i < existingItems.length; i++) {
++			var eid = existingItems[i].getAttribute('data-id');
++			existing[eid] = existingItems[i];
++		}
++
++		// Track which ids we are placing, in order
++		var placedIds = [];
+ 
+ 		visibleTodos.forEach(function (todo) {
+-			var li = document.createElement('li');
+-			li.setAttribute('data-id', todo.id);
+-			if (todo.completed) {
+-				li.classList.add('completed');
+-			}
+-			if (editingId === todo.id) {
+-				li.classList.add('editing');
+-			}
++			var li = existing[todo.id];
++			if (li) {
++				// Update existing element in place
++				li.classList.toggle('completed', todo.completed);
++				li.classList.toggle('editing', editingId === todo.id);
++				li.querySelector('.toggle').checked = todo.completed;
++				li.querySelector('label').textContent = todo.title;
++				li.querySelector('.edit').value = todo.title;
++			} else {
++				// Create new element
++				li = document.createElement('li');
++				li.setAttribute('data-id', todo.id);
++				if (todo.completed) {
++					li.classList.add('completed');
++				}
++				if (editingId === todo.id) {
++					li.classList.add('editing');
++				}
+ 
+-			li.innerHTML =
+-				'<div class="view">' +
+-					'<input class="toggle" type="checkbox"' + (todo.completed ? ' checked' : '') + '>' +
+-					'<label>' + escapeHtml(todo.title) + '</label>' +
+-					'<button class="destroy"></button>' +
+-				'</div>' +
+-				'<input class="edit" value="' + escapeHtml(todo.title) + '">';
++				li.innerHTML =
++					'<div class="view">' +
++						'<input class="toggle" type="checkbox"' + (todo.completed ? ' checked' : '') + '>' +
++						'<label>' + escapeHtml(todo.title) + '</label>' +
++						'<button class="destroy"></button>' +
++					'</div>' +
++					'<input class="edit" value="' + escapeHtml(todo.title) + '">';
+ 
+-			todoList.appendChild(li);
++				todoList.appendChild(li);
++			}
++			placedIds.push(todo.id);
+ 		});
+ 
++		// Remove elements for todos no longer visible
++		var allLi = todoList.querySelectorAll('li[data-id]');
++		for (var j = 0; j < allLi.length; j++) {
++			var liId = allLi[j].getAttribute('data-id');
++			if (placedIds.indexOf(liId) === -1) {
++				allLi[j].parentNode.removeChild(allLi[j]);
++			}
++		}
++
+ 		if (todos.length === 0) {
+ 			main.style.display = 'none';
+ 			footer.style.display = 'none';

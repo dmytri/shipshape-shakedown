@@ -1,0 +1,980 @@
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..4796b18
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,23 @@
++## Stack
++- language: javascript
++
++## Directories
++- implementation: js/
++- specs: features/
++
++## Commands
++- focused: npx cucumber-js --import features/ --name "{scenario}"
++- discover: npx cucumber-js --import features/ --dry-run --format usage
++- step-usage: npx cucumber-js --import features/ --dry-run --format usage
++- plank-inventory: none
++- typecheck: none
++- lint: none
++
++## Perturbation
++- message: PERTURBATION
++
++## Dependencies
++- dependency: node
++- dependency: npm
++- dependency: @cucumber/cucumber
++- dependency: happy-dom
+\ No newline at end of file
+diff --git a/features/step_definitions/steps.js b/features/step_definitions/steps.js
+new file mode 100644
+index 0000000..ca18409
+--- /dev/null
++++ b/features/step_definitions/steps.js
+@@ -0,0 +1,381 @@
++const { Given, When, Then, Before } = require("@cucumber/cucumber");
++const { TodoWorld } = require("../support/world");
++const assert = require("assert");
++
++let world;
++
++Before(async function () {
++  world = new TodoWorld();
++});
++
++/* ---- Given steps ---- */
++
++Given("the todo application is loaded", async function () {
++  await world.loadApp();
++});
++
++Given("there are no todos", function () {
++  // localStorage already empty from loadApp; ensure it stays clean
++  world.localStorage.setItem("todos-vanilla", JSON.stringify([]));
++  world.reload();
++});
++
++Given("the todo list has the following items:", function (dataTable) {
++  const todos = dataTable.hashes().map((row) => ({
++    id: Date.now().toString() + Math.random().toString(36).slice(2),
++    title: row.title,
++    completed: row.completed === "true",
++  }));
++  world.localStorage.setItem("todos-vanilla", JSON.stringify(todos));
++  world.reload();
++});
++
++Given("the user has added a new todo {string}", function (title) {
++  const existing = JSON.parse(
++    world.localStorage.getItem("todos-vanilla") || "[]"
++  );
++  existing.push({
++    id: Date.now().toString(),
++    title: title,
++    completed: false,
++  });
++  world.localStorage.setItem("todos-vanilla", JSON.stringify(existing));
++  world.reload();
++});
++
++Given("the user has double-clicked the label for {string}", async function (title) {
++  // First ensure the todo exists
++  const existing = JSON.parse(
++    world.localStorage.getItem("todos-vanilla") || "[]"
++  );
++  if (!existing.find((t) => t.title === title)) {
++    existing.push({
++      id: Date.now().toString(),
++      title: title,
++      completed: false,
++    });
++    world.localStorage.setItem("todos-vanilla", JSON.stringify(existing));
++    world.reload();
++  }
++  // Double-click the label
++  const li = world.findTodoItem(title);
++  const label = li.querySelector("label");
++  label.dispatchEvent(new world.window.Event("dblclick", { bubbles: true }));
++  await new Promise((r) => setTimeout(r, 0));
++});
++
++Given("{string} is in editing mode", async function (title) {
++  // Ensure todo exists
++  const existing = JSON.parse(
++    world.localStorage.getItem("todos-vanilla") || "[]"
++  );
++  if (!existing.find((t) => t.title === title)) {
++    existing.push({
++      id: Date.now().toString(),
++      title: title,
++      completed: false,
++    });
++    world.localStorage.setItem("todos-vanilla", JSON.stringify(existing));
++    world.reload();
++  }
++  const li = world.findTodoItem(title);
++  li.classList.add("editing");
++  const editInput = li.querySelector(".edit");
++  if (editInput) editInput.focus();
++  await new Promise((r) => setTimeout(r, 0));
++  // Assert editing mode is active
++  assert.ok(
++    li.classList.contains("editing"),
++    `Expected "${title}" to be in editing mode`
++  );
++});
++
++Given("the user has navigated to {string}", function (hash) {
++  world.window.location.hash = hash;
++  world.window.dispatchEvent(
++    new world.window.HashChangeEvent("hashchange")
++  );
++  world.reload();
++});
++
++/* ---- When steps ---- */
++
++When("the user adds a new todo {string}", async function (title) {
++  const input = world.document.querySelector(".new-todo");
++  input.value = title;
++  input.dispatchEvent(
++    new world.window.KeyboardEvent("keydown", {
++      key: "Enter",
++      keyCode: 13,
++      bubbles: true,
++    })
++  );
++  await new Promise((r) => setTimeout(r, 0));
++});
++
++When("the user clicks {string}", async function (text) {
++  const buttons = world.document.querySelectorAll("button");
++  for (const btn of buttons) {
++    if (btn.textContent.trim() === text) {
++      btn.click();
++      break;
++    }
++  }
++  await new Promise((r) => setTimeout(r, 0));
++});
++
++When("the user reloads the page", async function () {
++  world.reload();
++  await new Promise((r) => setTimeout(r, 0));
++});
++
++When("the user navigates to {string}", async function (hash) {
++  world.window.location.hash = hash;
++  world.window.dispatchEvent(
++    new world.window.HashChangeEvent("hashchange")
++  );
++  await new Promise((r) => setTimeout(r, 0));
++});
++
++When("the user marks {string} as complete", async function (title) {
++  const li = world.findTodoItem(title);
++  const toggle = li.querySelector(".toggle");
++  if (!toggle.checked) toggle.click();
++  await new Promise((r) => setTimeout(r, 0));
++});
++
++When("the user marks {string} as active", async function (title) {
++  const li = world.findTodoItem(title);
++  const toggle = li.querySelector(".toggle");
++  if (toggle.checked) toggle.click();
++  await new Promise((r) => setTimeout(r, 0));
++});
++
++When("the user double-clicks the label for {string}", async function (title) {
++  const li = world.findTodoItem(title);
++  const label = li.querySelector("label");
++  label.dispatchEvent(new world.window.Event("dblclick", { bubbles: true }));
++  await new Promise((r) => setTimeout(r, 0));
++});
++
++When("the user clicks the toggle-all checkbox", async function () {
++  const toggleAll = world.document.querySelector("#toggle-all");
++  toggleAll.click();
++  await new Promise((r) => setTimeout(r, 0));
++});
++
++When(
++  "the user changes the edit value to {string} and presses Enter",
++  async function (value) {
++    const editingLi = world.document.querySelector(".todo-list li.editing");
++    const editInput = editingLi.querySelector(".edit");
++    editInput.value = value;
++    editInput.dispatchEvent(
++      new world.window.KeyboardEvent("keydown", {
++        key: "Enter",
++        keyCode: 13,
++        bubbles: true,
++      })
++    );
++    await new Promise((r) => setTimeout(r, 0));
++  }
++);
++
++When(
++  "the user changes the edit value to {string} and clicks outside",
++  async function (value) {
++    const editingLi = world.document.querySelector(".todo-list li.editing");
++    const editInput = editingLi.querySelector(".edit");
++    editInput.value = value;
++    editInput.dispatchEvent(
++      new world.window.Event("blur", { bubbles: true })
++    );
++    await new Promise((r) => setTimeout(r, 0));
++  }
++);
++
++When(
++  "the user changes the edit value to {string} and presses Escape",
++  async function (value) {
++    const editingLi = world.document.querySelector(".todo-list li.editing");
++    const editInput = editingLi.querySelector(".edit");
++    editInput.value = value;
++    editInput.dispatchEvent(
++      new world.window.KeyboardEvent("keydown", {
++        key: "Escape",
++        keyCode: 27,
++        bubbles: true,
++      })
++    );
++    await new Promise((r) => setTimeout(r, 0));
++  }
++);
++
++When("the user clears the edit value and presses Enter", async function () {
++  const editingLi = world.document.querySelector(".todo-list li.editing");
++  const editInput = editingLi.querySelector(".edit");
++  editInput.value = "";
++  editInput.dispatchEvent(
++    new world.window.KeyboardEvent("keydown", {
++      key: "Enter",
++      keyCode: 13,
++      bubbles: true,
++    })
++  );
++  await new Promise((r) => setTimeout(r, 0));
++});
++
++/* ---- Then steps ---- */
++
++Then("the todo list displays {string}", function (title) {
++  const li = world.findTodoItem(title);
++  assert.ok(li, `Expected todo list to display "${title}"`);
++});
++
++Then("the todo list does not display {string}", function (title) {
++  const li = world.findTodoItem(title);
++  assert.ok(!li, `Expected todo list not to display "${title}"`);
++});
++
++Then("the todo list has {int} item", function (count) {
++  const items = world.document.querySelectorAll(".todo-list li");
++  assert.strictEqual(items.length, count);
++});
++
++Then("the todo list has {int} items", function (count) {
++  const items = world.document.querySelectorAll(".todo-list li");
++  assert.strictEqual(items.length, count);
++});
++
++Then("the new todo field is empty", function () {
++  const input = world.document.querySelector(".new-todo");
++  assert.strictEqual(input.value, "");
++});
++
++Then("the new todo input is focused", function () {
++  const input = world.document.querySelector(".new-todo");
++  assert.strictEqual(
++    world.document.activeElement,
++    input,
++    "Expected new todo input to be focused"
++  );
++});
++
++Then("the main section is hidden", function () {
++  const main = world.document.querySelector(".main");
++  const style = world.window.getComputedStyle(main);
++  assert.strictEqual(
++    style.display,
++    "none",
++    "Expected main section to be hidden"
++  );
++});
++
++Then("the main section is visible", function () {
++  const main = world.document.querySelector(".main");
++  const style = world.window.getComputedStyle(main);
++  assert.notStrictEqual(
++    style.display,
++    "none",
++    "Expected main section to be visible"
++  );
++});
++
++Then("the footer is hidden", function () {
++  const footer = world.document.querySelector(".footer");
++  const style = world.window.getComputedStyle(footer);
++  assert.strictEqual(
++    style.display,
++    "none",
++    "Expected footer to be hidden"
++  );
++});
++
++Then("the footer is visible", function () {
++  const footer = world.document.querySelector(".footer");
++  const style = world.window.getComputedStyle(footer);
++  assert.notStrictEqual(
++    style.display,
++    "none",
++    "Expected footer to be visible"
++  );
++});
++
++Then("{string} is marked as completed", function (title) {
++  const li = world.findTodoItem(title);
++  assert.ok(
++    li.classList.contains("completed"),
++    `Expected "${title}" to be marked as completed`
++  );
++});
++
++Then("{string} is not marked as completed", function (title) {
++  const li = world.findTodoItem(title);
++  assert.ok(
++    !li.classList.contains("completed"),
++    `Expected "${title}" not to be marked as completed`
++  );
++});
++
++Then("{string} is not in editing mode", function (title) {
++  const li = world.findTodoItem(title);
++  assert.ok(
++    !li.classList.contains("editing"),
++    `Expected "${title}" not to be in editing mode`
++  );
++});
++
++Then("the edit field for {string} contains {string}", function (title, value) {
++  const li = world.findTodoItem(title);
++  const editInput = li.querySelector(".edit");
++  assert.strictEqual(editInput.value, value);
++});
++
++Then("the edit field for {string} is focused", function (title) {
++  const li = world.findTodoItem(title);
++  const editInput = li.querySelector(".edit");
++  assert.strictEqual(
++    world.document.activeElement,
++    editInput,
++    `Expected edit field for "${title}" to be focused`
++  );
++});
++
++Then("the clear completed button is hidden", function () {
++  const btn = world.document.querySelector(".clear-completed");
++  const style = world.window.getComputedStyle(btn);
++  assert.strictEqual(
++    style.display,
++    "none",
++    "Expected clear completed button to be hidden"
++  );
++});
++
++Then("the counter shows {string}", function (text) {
++  const counter = world.document.querySelector(".todo-count");
++  assert.strictEqual(counter.textContent.trim(), text);
++});
++
++Then("the {string} filter is selected", function (filter) {
++  const links = world.document.querySelectorAll(".filters a");
++  for (const link of links) {
++    if (link.textContent.trim() === filter) {
++      assert.ok(
++        link.classList.contains("selected"),
++        `Expected "${filter}" filter to be selected`
++      );
++      return;
++    }
++  }
++  assert.fail(`Filter "${filter}" not found`);
++});
++
++Then("the toggle-all checkbox is checked", function () {
++  const toggleAll = world.document.querySelector("#toggle-all");
++  assert.strictEqual(toggleAll.checked, true, "Expected toggle-all to be checked");
++});
++
++Then("the toggle-all checkbox is not checked", function () {
++  const toggleAll = world.document.querySelector("#toggle-all");
++  assert.strictEqual(toggleAll.checked, false, "Expected toggle-all not to be checked");
++});
+\ No newline at end of file
+diff --git a/features/support/world.js b/features/support/world.js
+new file mode 100644
+index 0000000..ea78174
+--- /dev/null
++++ b/features/support/world.js
+@@ -0,0 +1,80 @@
++const { Window } = require("happy-dom");
++const fs = require("fs");
++const path = require("path");
++
++const htmlCache = fs.readFileSync(
++  path.resolve(__dirname, "..", "..", "index.html"),
++  "utf-8"
++);
++const appJsCache = fs.readFileSync(
++  path.resolve(__dirname, "..", "..", "js", "app.js"),
++  "utf-8"
++);
++
++class TodoWorld {
++  constructor() {
++    this.window = null;
++    this.document = null;
++    this.localStorage = null;
++  }
++
++  async loadApp() {
++    const window = new Window();
++    this.window = window;
++    this.document = window.document;
++    this.localStorage = window.localStorage;
++
++    this.document.write(htmlCache);
++    this.window.eval(appJsCache);
++
++    const autofocusEl = this.document.querySelector("[autofocus]");
++    if (autofocusEl && typeof autofocusEl.focus === "function") {
++      autofocusEl.focus();
++    }
++
++    await new Promise((r) => setTimeout(r, 0));
++  }
++
++  reload() {
++    // Properly simulate page reload: create new Window, copy localStorage and hash
++    const oldStorage = {};
++    const oldHash = this.window ? this.window.location.hash : "";
++    if (this.localStorage) {
++      const data = this.localStorage.getItem("todos-vanilla");
++      if (data) oldStorage["todos-vanilla"] = data;
++    }
++
++    const window = new Window();
++    this.window = window;
++    this.document = window.document;
++    this.localStorage = window.localStorage;
++
++    // Restore localStorage
++    for (const [key, value] of Object.entries(oldStorage)) {
++      this.localStorage.setItem(key, value);
++    }
++
++    // Restore hash
++    if (oldHash) {
++      this.window.location.hash = oldHash;
++    }
++
++    this.document.write(htmlCache);
++    this.window.eval(appJsCache);
++
++    const autofocusEl = this.document.querySelector("[autofocus]");
++    if (autofocusEl && typeof autofocusEl.focus === "function") {
++      autofocusEl.focus();
++    }
++  }
++
++  findTodoItem(title) {
++    const labels = this.document.querySelectorAll(".todo-list li label");
++    for (const label of labels) {
++      if (label.textContent === title) return label.closest("li");
++    }
++    return null;
++  }
++}
++
++module.exports = { TodoWorld };
+\ No newline at end of file
+diff --git a/index.html b/index.html
+new file mode 100644
+index 0000000..a69e865
+--- /dev/null
++++ b/index.html
+@@ -0,0 +1,75 @@
++<!doctype html>
++<html lang="en">
++	<head>
++		<meta charset="utf-8">
++		<meta name="viewport" content="width=device-width, initial-scale=1">
++		<title>Template • TodoMVC</title>
++		<link rel="stylesheet" href="node_modules/todomvc-common/base.css">
++		<link rel="stylesheet" href="node_modules/todomvc-app-css/index.css">
++		<!-- CSS overrides - remove if you don't need it -->
++		<link rel="stylesheet" href="css/app.css">
++	</head>
++	<body>
++		<section class="todoapp">
++			<header class="header">
++				<h1>todos</h1>
++				<input class="new-todo" placeholder="What needs to be done?" autofocus>
++			</header>
++			<!-- This section should be hidden by default and shown when there are todos -->
++			<section class="main">
++				<input id="toggle-all" class="toggle-all" type="checkbox">
++				<label for="toggle-all">Mark all as complete</label>
++				<ul class="todo-list">
++					<!-- These are here just to show the structure of the list items -->
++					<!-- List items should get the class `editing` when editing and `completed` when marked as completed -->
++					<li class="completed">
++						<div class="view">
++							<input class="toggle" type="checkbox" checked>
++							<label>Taste JavaScript</label>
++							<button class="destroy"></button>
++						</div>
++						<input class="edit" value="Create a TodoMVC template">
++					</li>
++					<li>
++						<div class="view">
++							<input class="toggle" type="checkbox">
++							<label>Buy a unicorn</label>
++							<button class="destroy"></button>
++						</div>
++						<input class="edit" value="Rule the web">
++					</li>
++				</ul>
++			</section>
++			<!-- This footer should be hidden by default and shown when there are todos -->
++			<footer class="footer">
++				<!-- This should be `0 items left` by default -->
++				<span class="todo-count"><strong>0</strong> item left</span>
++				<!-- Remove this if you don't implement routing -->
++				<ul class="filters">
++					<li>
++						<a class="selected" href="#/">All</a>
++					</li>
++					<li>
++						<a href="#/active">Active</a>
++					</li>
++					<li>
++						<a href="#/completed">Completed</a>
++					</li>
++				</ul>
++				<!-- Hidden if no completed items are left ↓ -->
++				<button class="clear-completed">Clear completed</button>
++			</footer>
++		</section>
++		<footer class="info">
++			<p>Double-click to edit a todo</p>
++			<!-- Remove the below line ↓ -->
++			<p>Template by <a href="http://sindresorhus.com">Sindre Sorhus</a></p>
++			<!-- Change this out with your name and url ↓ -->
++			<p>Created by <a href="http://todomvc.com">you</a></p>
++			<p>Part of <a href="http://todomvc.com">TodoMVC</a></p>
++		</footer>
++		<!-- Scripts here. Don't remove ↓ -->
++		<script src="node_modules/todomvc-common/base.js"></script>
++		<script src="js/app.js"></script>
++	</body>
++</html>
+diff --git a/js/app.js b/js/app.js
+new file mode 100644
+index 0000000..401cede
+--- /dev/null
++++ b/js/app.js
+@@ -0,0 +1,339 @@
++/**
++ * TodoMVC application
++ *
++ * @planks("When the user adds a new todo {string}")
++ * @planks("Then the todo list displays {string}")
++ * @planks("Then the todo list does not display {string}")
++ * @planks("Then the todo list has {int} item")
++ * @planks("Then the todo list has {int} items")
++ * @planks("Then the main section is hidden")
++ * @planks("Then the main section is visible")
++ * @planks("Then the footer is hidden")
++ * @planks("Then the footer is visible")
++ * @planks("When the user marks {string} as complete")
++ * @planks("When the user marks {string} as active")
++ * @planks("Then {string} is marked as completed")
++ * @planks("Then {string} is not marked as completed")
++ * @planks("When the user clicks the toggle-all checkbox")
++ * @planks("Then the toggle-all checkbox is checked")
++ * @planks("Then the toggle-all checkbox is not checked")
++ * @planks("When the user double-clicks the label for {string}")
++ * @planks("Then {string} is in editing mode")
++ * @planks("Then {string} is not in editing mode")
++ * @planks("When the user changes the edit value to {string} and presses Enter")
++ * @planks("When the user changes the edit value to {string} and clicks outside")
++ * @planks("When the user changes the edit value to {string} and presses Escape")
++ * @planks("When the user clears the edit value and presses Enter")
++ * @planks("Then the edit field for {string} contains {string}")
++ * @planks("Then the edit field for {string} is focused")
++ * @planks("When the user clicks {string}")
++ * @planks("Then the clear completed button is hidden")
++ * @planks("Then the counter shows {string}")
++ * @planks("When the user navigates to {string}")
++ * @planks("Then the {string} filter is selected")
++ */
++(function () {
++  "use strict";
++
++  var STORAGE_KEY = "todos-vanilla";
++  var ENTER_KEY = 13;
++  var ESCAPE_KEY = 27;
++
++  function getTodos() {
++    try {
++      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
++    } catch (e) {
++      return [];
++    }
++  }
++
++  function setTodos(todos) {
++    localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
++  }
++
++  function updateToggleAll() {
++    var todos = getTodos();
++    var toggleAll = document.querySelector("#toggle-all");
++    if (todos.length === 0) {
++      toggleAll.checked = false;
++    } else {
++      toggleAll.checked = todos.every(function (t) { return t.completed; });
++    }
++  }
++
++  function updateCounter() {
++    var todos = getTodos();
++    var activeCount = todos.filter(function (t) { return !t.completed; }).length;
++    var countEl = document.querySelector(".todo-count");
++    var word = activeCount === 1 ? "item" : "items";
++    countEl.innerHTML = "<strong>" + activeCount + "</strong> " + word + " left";
++  }
++
++  function updateClearCompleted() {
++    var todos = getTodos();
++    var hasCompleted = todos.some(function (t) { return t.completed; });
++    var btn = document.querySelector(".clear-completed");
++    btn.style.display = hasCompleted ? "" : "none";
++  }
++
++  function getCurrentFilter() {
++    var hash = location.hash;
++    if (hash === "#/active") return "active";
++    if (hash === "#/completed") return "completed";
++    return "all";
++  }
++
++  function updateFilterUI() {
++    var filter = getCurrentFilter();
++    var links = document.querySelectorAll(".filters a");
++    for (var i = 0; i < links.length; i++) {
++      links[i].classList.remove("selected");
++    }
++    var selectedLink = document.querySelector(".filters a[href='" + location.hash + "']");
++    if (!selectedLink) {
++      selectedLink = document.querySelector(".filters a[href='#/']");
++    }
++    if (selectedLink) {
++      selectedLink.classList.add("selected");
++    }
++  }
++
++  function render() {
++    var todos = getTodos();
++    var filter = getCurrentFilter();
++    var list = document.querySelector(".todo-list");
++    var main = document.querySelector(".main");
++    var footer = document.querySelector(".footer");
++
++    // Filter todos based on route
++    var filteredTodos = todos;
++    if (filter === "active") {
++      filteredTodos = todos.filter(function (t) { return !t.completed; });
++    } else if (filter === "completed") {
++      filteredTodos = todos.filter(function (t) { return t.completed; });
++    }
++
++    // Clear list
++    list.innerHTML = "";
++
++    // Render todos
++    for (var i = 0; i < filteredTodos.length; i++) {
++      var li = document.createElement("li");
++      li.setAttribute("data-id", filteredTodos[i].id);
++      if (filteredTodos[i].completed) {
++        li.className = "completed";
++      }
++
++      var viewDiv = document.createElement("div");
++      viewDiv.className = "view";
++
++      var toggle = document.createElement("input");
++      toggle.className = "toggle";
++      toggle.type = "checkbox";
++      toggle.checked = filteredTodos[i].completed;
++
++      var label = document.createElement("label");
++      label.textContent = filteredTodos[i].title;
++
++      var destroyBtn = document.createElement("button");
++      destroyBtn.className = "destroy";
++
++      viewDiv.appendChild(toggle);
++      viewDiv.appendChild(label);
++      viewDiv.appendChild(destroyBtn);
++
++      var editInput = document.createElement("input");
++      editInput.className = "edit";
++      editInput.value = filteredTodos[i].title;
++
++      li.appendChild(viewDiv);
++      li.appendChild(editInput);
++      list.appendChild(li);
++    }
++
++    // Show/hide main and footer
++    if (todos.length === 0) {
++      main.style.display = "none";
++      footer.style.display = "none";
++    } else {
++      main.style.display = "";
++      footer.style.display = "";
++    }
++
++    updateToggleAll();
++    updateCounter();
++    updateClearCompleted();
++    updateFilterUI();
++  }
++
++  function addTodo(title) {
++    var todos = getTodos();
++    todos.push({
++      id: Date.now().toString(),
++      title: title,
++      completed: false,
++    });
++    setTodos(todos);
++    render();
++  }
++
++  function onNewTodoKeydown(event) {
++    if (event.keyCode !== ENTER_KEY) return;
++    var input = event.target;
++    var title = input.value.trim();
++    if (title === "") return;
++    addTodo(title);
++    input.value = "";
++  }
++
++  function findTodoById(id) {
++    var todos = getTodos();
++    for (var i = 0; i < todos.length; i++) {
++      if (todos[i].id === id) return i;
++    }
++    return -1;
++  }
++
++  function onToggleClick(event) {
++    var li = event.target.closest("li");
++    var id = li.getAttribute("data-id");
++    var idx = findTodoById(id);
++    if (idx === -1) return;
++    var todos = getTodos();
++    todos[idx].completed = !todos[idx].completed;
++    setTodos(todos);
++    render();
++  }
++
++  function onToggleAllClick() {
++    var toggleAll = document.querySelector("#toggle-all");
++    var todos = getTodos();
++    var newState = toggleAll.checked;
++    for (var i = 0; i < todos.length; i++) {
++      todos[i].completed = newState;
++    }
++    setTodos(todos);
++    render();
++  }
++
++  function onDoubleClick(event) {
++    var label = event.target;
++    if (label.tagName !== "LABEL") return;
++    var li = label.closest("li");
++    li.classList.add("editing");
++    var editInput = li.querySelector(".edit");
++    editInput.focus();
++  }
++
++  function onEditKeydown(event) {
++    var editInput = event.target;
++    var li = editInput.closest("li");
++    var id = li.getAttribute("data-id");
++    var idx = findTodoById(id);
++    if (idx === -1) return;
++
++    if (event.keyCode === ENTER_KEY) {
++      var newTitle = editInput.value.trim();
++      if (newTitle === "") {
++        // Destroy todo
++        var todos = getTodos();
++        todos.splice(idx, 1);
++        setTodos(todos);
++        render();
++      } else {
++        var todos = getTodos();
++        todos[idx].title = newTitle;
++        setTodos(todos);
++        li.classList.remove("editing");
++        render();
++      }
++    } else if (event.keyCode === ESCAPE_KEY) {
++      // Cancel - revert the edit input to original title
++      var todos = getTodos();
++      editInput.value = todos[idx].title;
++      li.classList.remove("editing");
++    }
++  }
++
++  function onEditBlur(event) {
++    var editInput = event.target;
++    var li = editInput.closest("li");
++    if (!li.classList.contains("editing")) return;
++    var id = li.getAttribute("data-id");
++    var idx = findTodoById(id);
++    if (idx === -1) return;
++    var newTitle = editInput.value.trim();
++    if (newTitle === "") {
++      var todos = getTodos();
++      todos.splice(idx, 1);
++      setTodos(todos);
++      render();
++    } else {
++      var todos = getTodos();
++      todos[idx].title = newTitle;
++      setTodos(todos);
++      li.classList.remove("editing");
++      render();
++    }
++  }
++
++  function onClearCompletedClick() {
++    var todos = getTodos().filter(function (t) { return !t.completed; });
++    setTodos(todos);
++    render();
++  }
++
++  // Delegated event listeners on the todo list
++  var todoList = document.querySelector(".todo-list");
++
++  // Toggle individual todo
++  todoList.addEventListener("change", function (event) {
++    if (event.target.className === "toggle") {
++      onToggleClick(event);
++    }
++  });
++
++  // Double-click to edit
++  todoList.addEventListener("dblclick", function (event) {
++    onDoubleClick(event);
++  });
++
++  // Edit keydown (Enter to save, Escape to cancel)
++  todoList.addEventListener("keydown", function (event) {
++    if (event.target.className === "edit") {
++      onEditKeydown(event);
++    }
++  });
++
++  // Edit blur (save on blur)
++  todoList.addEventListener("blur", function (event) {
++    if (event.target.className === "edit") {
++      onEditBlur(event);
++    }
++  }, true);
++
++  // New todo input
++  var newTodoInput = document.querySelector(".new-todo");
++  if (newTodoInput) {
++    newTodoInput.addEventListener("keydown", onNewTodoKeydown);
++  }
++
++  // Toggle-all
++  var toggleAll = document.querySelector("#toggle-all");
++  if (toggleAll) {
++    toggleAll.addEventListener("click", onToggleAllClick);
++  }
++
++  // Clear completed
++  var clearCompleted = document.querySelector(".clear-completed");
++  if (clearCompleted) {
++    clearCompleted.addEventListener("click", onClearCompletedClick);
++  }
++
++  // Routing
++  window.addEventListener("hashchange", function () {
++    render();
++  });
++
++  render();
++})();
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+deleted file mode 100644
+index 88ea449..0000000
+--- a/watchbill.json
++++ /dev/null
+@@ -1,41 +0,0 @@
+-{
+-  "watch1": {
+-    "scenarios": [
+-      "features/todo-display.feature:Empty todo list hides main and footer",
+-      "features/todo-display.feature:Todo list with items shows main and footer",
+-      "features/new-todo.feature:Creating a new todo",
+-      "features/new-todo.feature:New todo input is focused on page load",
+-      "features/new-todo.feature:Rejecting blank todo input"
+-    ]
+-  },
+-  "watch2": {
+-    "scenarios": [
+-      "features/todo-item.feature:Mark a todo as complete",
+-      "features/todo-item.feature:Mark a completed todo as active",
+-      "features/todo-item.feature:Activate editing by double-click",
+-      "features/toggle-all.feature:Mark all todos as complete",
+-      "features/toggle-all.feature:Mark all todos as active",
+-      "features/toggle-all.feature:Toggle-all becomes checked when every item is completed",
+-      "features/toggle-all.feature:Toggle-all becomes unchecked when an item is uncompleted",
+-      "features/toggle-all.feature:Toggle-all clears after clear completed",
+-      "features/editing.feature:Saving an edit on Enter",
+-      "features/editing.feature:Saving an edit on blur",
+-      "features/editing.feature:Cancelling an edit on Escape",
+-      "features/editing.feature:Empty edit destroys the todo",
+-      "features/clear-completed.feature:Clear completed removes completed todos",
+-      "features/clear-completed.feature:Clear completed button hidden when no completed todos",
+-      "features/counter.feature:Counter shows correct count and pluralization"
+-    ]
+-  },
+-  "watch3": {
+-    "scenarios": [
+-      "features/persistence.feature:Todos survive a page reload",
+-      "features/persistence.feature:Editing mode is not persisted across reload",
+-      "features/routing.feature:All filter shows all todos",
+-      "features/routing.feature:Active filter shows only active todos",
+-      "features/routing.feature:Completed filter shows only completed todos",
+-      "features/routing.feature:Active filter persists on reload",
+-      "features/routing.feature:Completing an item hides it from the active filter"
+-    ]
+-  }
+-}
+\ No newline at end of file

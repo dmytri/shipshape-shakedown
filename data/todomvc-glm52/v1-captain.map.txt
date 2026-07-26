@@ -1,0 +1,30 @@
+# banked: 2026-07-25T18:30:00Z
+# verdict: PENDING
+# leg: {  "name": "v1-captain",  "model": "z-ai/glm-5.2",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/todomvc-glm52/sim",  "timeout_s": 1500,  "skills": [    "/home/exedev/shipshape/skills/shipshape",    "/home/exedev/shipshape/skills/captain"  ]}
+
+
+=== v1-captain.session.jsonl ===
+  turns=19  wall=966.5s  in=80985  out=46238  cache_read=1163264  cost=$0.3561
+  role reads: captain@t0 -> shipshape@t0
+  roles loaded: captain, shipshape
+  ~ repeated tool signature at turns [1, 9, 10, 11] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0      23/185     1728 $0.0007  read, read, read, read
+    t1   18325/322     1728 $0.0158  read, bash
+    t2    8707/6545   20032 $0.0266  bash
+    t3   11845/28757  28736 $0.0866  write, write, write, write, write, write, write, write, write, write, write
+    t4   29161/2246   40576 $0.0352  bash, write
+    t5    2475/143    69696 $0.0128  bash
+    t6     457/1293   72128 $0.0144  write
+    t7    1341/60     72576 $0.0121  bash
+    t8    1406/481    73856 $0.0134  bash
+    t9     937/526    75200 $0.0133  bash
+    t10    591/128    76096 $0.0122  bash
+    t11    482/151    76672 $0.0122  bash
+    t12    253/442    77120 $0.0129  bash
+    t13    609/1021   77312 $0.0146  write
+    t14   1092/60     77888 $0.0127  bash
+    t15    997/1419   78976 $0.0162  write
+    t16   1495/60     79936 $0.0133  bash
+    t17    222/362    81408 $0.0133  bash
+    t18    567/2037   81600 $0.0178  -

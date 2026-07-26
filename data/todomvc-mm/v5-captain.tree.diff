@@ -1,0 +1,54 @@
+diff --git a/css/app.css b/css/app.css
+index dd0351f..819a73e 100644
+--- a/css/app.css
++++ b/css/app.css
+@@ -1,9 +1,11 @@
+ /*
+- * Hide the toggle and destroy controls while the row is in editing mode.
++ * Hide the other controls while the row is in editing mode.
+  * @planks("the toggle for {string} is hidden")
+  * @planks("the destroy button for {string} is hidden")
++ * @planks("the label for {string} is hidden")
+  */
+ .todo-list li.editing .toggle,
+-.todo-list li.editing .destroy {
++.todo-list li.editing .destroy,
++.todo-list li.editing label {
+ 	display: none;
+ }
+diff --git a/features/item.feature b/features/item.feature
+index 581a7e2..cc39df1 100644
+--- a/features/item.feature
++++ b/features/item.feature
+@@ -47,9 +47,10 @@ Feature: Item interactions
+     When the user marks "Buy milk" as complete
+     Then the marked row for "Buy milk" is still in the document
+ 
+-  Scenario: While in editing mode the toggle and destroy controls are hidden
++  Scenario: While in editing mode the other controls are hidden
+     Given "Buy milk" is in editing mode
+-    Then the toggle for "Buy milk" is hidden
++    Then the label for "Buy milk" is hidden
++    And the toggle for "Buy milk" is hidden
+     And the destroy button for "Buy milk" is hidden
+ 
+   @captain
+diff --git a/features/support/steps/assertions.js b/features/support/steps/assertions.js
+index 438db0e..566a625 100644
+--- a/features/support/steps/assertions.js
++++ b/features/support/steps/assertions.js
+@@ -151,6 +151,14 @@ Then('the toggle for {string} is hidden', function (title) {
+ 	assert.ok(this.isHidden(toggle), 'toggle for ' + title + ' should be hidden while editing');
+ });
+ 
++Then('the label for {string} is hidden', function (title) {
++	const li = this.findTodoByTitle(title);
++	assert.ok(li, title + ' not found');
++	const label = li.querySelector('label');
++	assert.ok(label, 'label for ' + title + ' not found');
++	assert.ok(this.isHidden(label), 'label for ' + title + ' should be hidden while editing');
++});
++
+ Then('the destroy button for {string} is hidden', function (title) {
+ 	const li = this.findTodoByTitle(title);
+ 	assert.ok(li, title + ' not found');

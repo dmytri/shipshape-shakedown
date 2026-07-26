@@ -1,0 +1,286 @@
+diff --git a/css/app.css b/css/app.css
+index c427684..8682ca4 100644
+--- a/css/app.css
++++ b/css/app.css
+@@ -1,3 +1,8 @@
+ [hidden] {
+ 	display: none;
+ }
++
++.todo-list li.editing .toggle,
++.todo-list li.editing .destroy {
++	display: none;
++}
+diff --git a/features/editing-todos.feature b/features/editing-todos.feature
+index 2e9af75..834cea3 100644
+--- a/features/editing-todos.feature
++++ b/features/editing-todos.feature
+@@ -6,6 +6,14 @@ Feature: Editing todos
+   Background:
+     Given the todo app has the todo "Buy milk"
+ 
++  Rule: While a row is edited its checkbox and delete button are hidden
++
++  Scenario: A todo's checkbox and delete button are hidden while it is being edited
++    Given the todo app has the todo "Buy milk"
++    When I double-click the label of the todo "Buy milk"
++    Then the toggle of the todo "Buy milk" is hidden
++    And the destroy button of the todo "Buy milk" is hidden
++
+   Rule: Double-clicking the label starts editing
+ 
+   Scenario: Double-clicking a todo's label opens editing mode
+diff --git a/features/stable-rows.feature b/features/stable-rows.feature
+new file mode 100644
+index 0000000..c5a4e6d
+--- /dev/null
++++ b/features/stable-rows.feature
+@@ -0,0 +1,25 @@
++Feature: Stable rows across state changes
++  As a person interacting with the todo list
++  I want a todo's row to stay in place when its state changes
++  So that the row I just clicked is not thrown away and rebuilt
++
++  Rule: A state change updates the existing row in place, keyed by todo
++
++  Scenario: Checking a todo's toggle updates its row in place
++    Given the todo app has the todos "Buy milk" and "Walk the dog"
++    And I note the row element of the todo "Buy milk"
++    And I note the row element of the todo "Walk the dog"
++    When I check the toggle of the todo "Buy milk"
++    Then the todo "Buy milk" is in the same row element noted before
++    And the todo "Walk the dog" is in the same row element noted before
++    And the todo "Buy milk" is marked as complete
++
++  Scenario: Marking all complete updates every existing row in place
++    Given the todo app has the todos "Buy milk" and "Walk the dog"
++    And I note the row element of the todo "Buy milk"
++    And I note the row element of the todo "Walk the dog"
++    When I check the mark-all checkbox
++    Then the todo "Buy milk" is in the same row element noted before
++    And the todo "Walk the dog" is in the same row element noted before
++    And the todo "Buy milk" is marked as complete
++    And the todo "Walk the dog" is marked as complete
+diff --git a/features/support/steps.js b/features/support/steps.js
+index 339d817..f1406d8 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -287,6 +287,47 @@ Then('the item counter shows the number {int} wrapped in a strong element', func
+   assert.strictEqual(strong.textContent, String(n));
+ });
+ 
++// --- Row identity (stable rows across state changes) ---
++
++Given('I note the row element of the todo {string}', function (title) {
++  if (!this._notedRows) this._notedRows = {};
++  this._notedRows[title] = this.liFor(title);
++});
++
++Then('the todo {string} is in the same row element noted before', function (title) {
++  const noted = this._notedRows && this._notedRows[title];
++  assert(noted, 'no noted row element for "' + title + '"');
++  const current = this.liFor(title);
++  assert(
++    current === noted,
++    'row for "' + title + '" is a different element than the one noted before'
++  );
++});
++
++// --- Editing visibility ---
++
++Then('the toggle of the todo {string} is hidden', function (title) {
++  this.injectAppCss();
++  const toggle = this.liFor(title).querySelector('.toggle');
++  assert(toggle, 'no toggle for "' + title + '"');
++  assert.strictEqual(
++    this.window.getComputedStyle(toggle).display,
++    'none',
++    'toggle of "' + title + '" is not hidden by CSS'
++  );
++});
++
++Then('the destroy button of the todo {string} is hidden', function (title) {
++  this.injectAppCss();
++  const destroy = this.liFor(title).querySelector('.destroy');
++  assert(destroy, 'no destroy button for "' + title + '"');
++  assert.strictEqual(
++    this.window.getComputedStyle(destroy).display,
++    'none',
++    'destroy button of "' + title + '" is not hidden by CSS'
++  );
++});
++
+ // --- Assertions: localStorage persistence ---
+ 
+ Then('localStorage holds the key {string}', function (key) {
+diff --git a/features/support/world.js b/features/support/world.js
+index db28430..5f20359 100644
+--- a/features/support/world.js
++++ b/features/support/world.js
+@@ -7,6 +7,7 @@ const vm = require('vm');
+ const ROOT = path.resolve(__dirname, '..', '..');
+ const INDEX_HTML = path.join(ROOT, 'index.html');
+ const APP_JS = path.join(ROOT, 'js', 'app.js');
++const APP_CSS = path.join(ROOT, 'css', 'app.css');
+ 
+ // A fresh happy-dom window loaded with the production index.html and js/app.js.
+ // Each scenario starts from a clean window; reloads re-seed localStorage and hash.
+@@ -69,6 +70,20 @@ class TodoWorld {
+     this.loadApp({ seed: store, hash });
+   }
+ 
++  // Inject the real css/app.css into this window on demand. happy-dom does
++  // not fetch linked stylesheets from disk, so computed-style assertions
++  // call this first. Kept lazy because a global stylesheet is expensive
++  // across every scenario.
++  injectAppCss() {
++    if (this._cssInjected) return;
++    this._cssInjected = true;
++    if (fs.existsSync(APP_CSS)) {
++      const style = this.document.createElement('style');
++      style.textContent = fs.readFileSync(APP_CSS, 'utf8');
++      this.document.head.appendChild(style);
++    }
++  }
++
+   // --- DOM interaction helpers ---
+ 
+   get el() {
+diff --git a/js/app.js b/js/app.js
+index 3d8a681..6375a08 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -60,6 +60,63 @@
+ 		return todos.filter(function (t) { return t.id === id; })[0];
+ 	}
+ 
++	function createLi(t) {
++		var li = document.createElement('li');
++		li.setAttribute('data-id', t.id);
++
++		var view = document.createElement('div');
++		view.className = 'view';
++
++		var toggle = document.createElement('input');
++		toggle.className = 'toggle';
++		toggle.type = 'checkbox';
++		toggle.addEventListener('change', function () { onToggle(t.id); });
++
++		var label = document.createElement('label');
++		label.addEventListener('dblclick', function () { startEdit(t.id); });
++
++		var destroy = document.createElement('button');
++		destroy.className = 'destroy';
++		destroy.addEventListener('click', function () { onDestroy(t.id); });
++
++		view.appendChild(toggle);
++		view.appendChild(label);
++		view.appendChild(destroy);
++
++		var edit = document.createElement('input');
++		edit.className = 'edit';
++		edit.addEventListener('keydown', function (e) { onEditKey(t.id, e); });
++		edit.addEventListener('blur', function () { onEditBlur(t.id); });
++
++		li.appendChild(view);
++		li.appendChild(edit);
++		updateLi(li, t);
++		return li;
++	}
++
++	function updateLi(li, t) {
++		if (t.completed) {
++			li.classList.add('completed');
++		} else {
++			li.classList.remove('completed');
++		}
++		var toggle = li.querySelector('.toggle');
++		if (toggle) {
++			toggle.checked = t.completed;
++		}
++		// Do not clobber an in-progress edit while the row is being edited.
++		if (!li.classList.contains('editing')) {
++			var label = li.querySelector('label');
++			if (label) {
++				label.textContent = t.title;
++			}
++			var edit = li.querySelector('.edit');
++			if (edit) {
++				edit.value = t.title;
++			}
++		}
++	}
++
+ 	/**
+ 	 * @planks("the todo list shows {int} todo(s)")
+ 	 * @planks("the todo list shows the todo {string}")
+@@ -75,46 +132,33 @@
+ 	 * @planks("the mark-all checkbox is not checked")
+ 	 * @planks("the clear-completed button is hidden")
+ 	 * @planks("the clear-completed button is visible")
++	 * @planks("the todo {string} is in the same row element noted before")
+ 	 */
+ 	function render() {
+-		todoListEl.innerHTML = '';
+-		visibleTodos().forEach(function (t) {
+-			var li = document.createElement('li');
+-			li.setAttribute('data-id', t.id);
+-			if (t.completed) {
+-				li.classList.add('completed');
++		var vis = visibleTodos();
++		var visById = {};
++		vis.forEach(function (t) { visById[t.id] = t; });
++
++		// Remove rows whose todo no longer belongs in the visible list.
++		var existing = Array.prototype.slice.call(todoListEl.children);
++		existing.forEach(function (li) {
++			if (!visById[li.getAttribute('data-id')]) {
++				todoListEl.removeChild(li);
+ 			}
++		});
+ 
+-			var view = document.createElement('div');
+-			view.className = 'view';
+-
+-			var toggle = document.createElement('input');
+-			toggle.className = 'toggle';
+-			toggle.type = 'checkbox';
+-			toggle.checked = t.completed;
+-			toggle.addEventListener('change', function () { onToggle(t.id); });
+-
+-			var label = document.createElement('label');
+-			label.textContent = t.title;
+-			label.addEventListener('dblclick', function () { startEdit(t.id); });
+-
+-			var destroy = document.createElement('button');
+-			destroy.className = 'destroy';
+-			destroy.addEventListener('click', function () { onDestroy(t.id); });
+-
+-			view.appendChild(toggle);
+-			view.appendChild(label);
+-			view.appendChild(destroy);
+-
+-			var edit = document.createElement('input');
+-			edit.className = 'edit';
+-			edit.value = t.title;
+-			edit.addEventListener('keydown', function (e) { onEditKey(t.id, e); });
+-			edit.addEventListener('blur', function () { onEditBlur(t.id); });
+-
+-			li.appendChild(view);
+-			li.appendChild(edit);
+-			todoListEl.appendChild(li);
++		// Update existing rows in place, or create new ones, in visible order.
++		vis.forEach(function (t, idx) {
++			var li = todoListEl.querySelector('[data-id="' + t.id + '"]');
++			if (!li) {
++				li = createLi(t);
++			} else {
++				updateLi(li, t);
++			}
++			var current = todoListEl.children[idx];
++			if (current !== li) {
++				todoListEl.insertBefore(li, current || null);
++			}
+ 		});
+ 
+ 		var activeCount = todos.filter(function (t) { return !t.completed; }).length;
