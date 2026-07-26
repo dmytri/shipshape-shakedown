@@ -49,7 +49,7 @@ for i in $(seq 1 240); do
   sleep 30
 done
 
-printf '\n%-18s %-7s %-9s %-9s %-9s %s\n' wave stack derived violations ran verdict
+printf '\n%-18s %-7s %-9s %-9s %-9s %-10s %s\n' wave stack derived violations ran fidelity verdict
 pass=0
 for w in "$HERE"/.eval-scratch/M-$TAG-*/; do
   n=$(basename "$w"); st=$(echo "$n" | cut -d- -f3)
@@ -59,7 +59,8 @@ for w in "$HERE"/.eval-scratch/M-$TAG-*/; do
   d=$(echo "$line" | grep -o "derived=[0-9]*" | cut -d= -f2)
   v=$(echo "$line" | grep -o "violations=[0-9]*" | cut -d= -f2)
   ran=$(grep -o "RESULT: [0-9]*/[0-9]*" "$w/fitout.log" 2>/dev/null | tail -1 | sed 's/RESULT: //')
+  fid=$(python3 "$HERE/bin/example-fidelity.py" "$st" "$w/sim" 2>/dev/null | tail -1 | grep -o "[0-9]*/[0-9]* methods" | cut -d" " -f1)
   ok="no"; [ "${v:-9}" = "0" ] && [ -n "$ran" ] && [ "${ran%%/*}" = "${ran##*/}" ] && { ok="PASS"; pass=$((pass+1)); }
-  printf '%-18s %-7s %-9s %-9s %-9s %s\n' "$n" "$st" "${d:-?}" "${v:-?}" "${ran:-?}" "$ok"
+  printf '%-18s %-7s %-9s %-9s %-9s %-10s %s\n' "$n" "$st" "${d:-?}" "${v:-?}" "${ran:-?}" "${fid:-?}" "$ok"
 done
 echo "PASS $pass of $total"
