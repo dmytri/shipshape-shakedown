@@ -106,6 +106,16 @@ def audit(base):
     meths = methods_of(sim)
     ran, adhoc = {}, []
     for c in cmds:
+        # An alias method is invoked by its short value, so match the rigging value itself first.
+        alias = None
+        for name, plan in meths.items():
+            core = re.sub(r'^\s*SS_\w+="[^"]*"\s*', "", plan).strip()
+            if core and "yoink" not in core and core in re.sub(r"\s+", " ", c):
+                alias = name
+                break
+        if alias:
+            ran[alias] = ran.get(alias, 0) + 1
+            continue
         if "yoink" in c and "--run" in c:
             hit = match_method(c, meths)
             key = hit or "OFF-RIGGING PLAN (composed by the role)"

@@ -17,3 +17,22 @@ What the agent is expected to do, and what each outcome means:
 
 Arms: `methods-candidate` (prose) against `methods-imperative` (role/trigger/job/method form,
 -24% tokens). Model deepseek-v4-flash, 3 draws per arm. A difference of one draw is not a result.
+
+## Result: the method VALUE's length decides whether it is run (2026-07-26)
+
+Same doctrine, same decks, same model (deepseek-v4-flash), one variable: whether the method value in
+`RIGGING.md` is the 300-character Yoink plan or a short task-runner invocation whose entry holds that
+same plan.
+
+| | inline plan | short alias |
+|---|---|---|
+| QM ran `verify` | 0/3 | **3/3** |
+| Crew ran `prove` | 1/3 | 2/3 |
+| plans the role composed itself | 5 | **0** |
+| QM write-custody violations | 1/3 | **0/3** |
+| Crew legs adding planks | 1 of 6 | 2 of 3 |
+
+A role copies what it can copy. A value long enough to retype is retyped, and a retyped plan is not
+the project's method however well it runs, because the next role reads `RIGGING.md` and gets the
+other one. This is the same shape as every other finding in this corpus: the structural change moved
+behaviour where the rule alone did not, and the rule alone had been in the text for three rounds.

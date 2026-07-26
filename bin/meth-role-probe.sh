@@ -37,6 +37,14 @@ export EVAL_SHARED_NM="$NM/node_modules"
 say "PROBE START wave=$WAVE role=$ROLE model=$MODEL skills=$SKILLS_DIR"
 "$HERE/bin/scaffold-stack.sh" js "$SIM" >"$BASE/scaffold.log" 2>&1 || { say "SCAFFOLD FAILED"; exit 4; }
 cp "$RIGGING" "$SIM/RIGGING.md"
+if grep -q 'npm run ss:' "$SIM/RIGGING.md"; then
+  python3 - "$SIM/package.json" "$HERE/assets/tidewatch-method-scripts.json" <<'PYX'
+import json,sys
+pkg=json.load(open(sys.argv[1])); scripts=json.load(open(sys.argv[2]))
+pkg.setdefault("scripts",{}).update(scripts)
+json.dump(pkg,open(sys.argv[1],"w"),indent=2)
+PYX
+fi
 printf '# Captain Notes\n\nNothing durable here. No role but Captain reads this file.\n' > "$SIM/CAPTAIN.md"
 ( cd "$SIM" && git add -A && git -c user.name="Sim Operator" -c user.email="sim@example.test" commit -qm "fitted out: methods rigging" )
 BASE_COMMIT=$( cd "$SIM" && git rev-parse HEAD )

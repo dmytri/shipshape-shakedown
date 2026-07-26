@@ -8,6 +8,7 @@ states, so a violation names the line to fix rather than leaving a vibe.
 Usage: bin/rigging-conform.py <RIGGING.md|dir|glob> ...
 """
 import glob
+import json
 import os
 import re
 import sys
@@ -34,7 +35,39 @@ def values(block):
     return out
 
 
+def task_runner_body(sim, value):
+    """A method value may be a short task-runner invocation; the PLAN lives in the entry it names.
+    Resolve npm scripts, Make targets and Just recipes so the plan can be checked where it lives."""
+    m = re.search(r"npm run ([\w:.-]+)", value)
+    if m:
+        pkg = os.path.join(sim, "package.json")
+        if os.path.exists(pkg):
+            try:
+                return json.load(open(pkg)).get("scripts", {}).get(m.group(1), "")
+            except Exception:
+                return ""
+    m = re.search(r"\b(?:make|just)\s+([\w:.-]+)", value)
+    if m:
+        for f in ("Makefile", "justfile", "Justfile"):
+            p2 = os.path.join(sim, f)
+            if os.path.exists(p2):
+                t = open(p2, errors="replace").read()
+                mm = re.search(rf"^{re.escape(m.group(1))}:.*?\n((?:\s+.*\n)+)", t, re.M)
+                if mm:
+                    return mm.group(1)
+    m = re.search(r"cargo ([\w-]+)", value)
+    if m:
+        p2 = os.path.join(sim, ".cargo/config.toml")
+        if os.path.exists(p2):
+            t = open(p2, errors="replace").read()
+            mm = re.search(rf"{re.escape(m.group(1))}\s*=\s*(.+)", t)
+            if mm:
+                return mm.group(1)
+    return ""
+
+
 def score(path):
+    sim = os.path.dirname(path)
     text = open(path, errors="replace").read()
     viol, notes = [], []
     if "## Commands" in text:
@@ -67,9 +100,12 @@ def score(path):
         derived += 1
         if not val.startswith("`"):
             viol.append(f"{name}: value not in backticks")
-        if "yoink" not in b:
-            viol.append(f"{name}: not a Yoink plan (a value that is not a Yoink plan is not a method)")
+        body = b if "yoink" in b else task_runner_body(sim, b)
+        if "yoink" not in body:
+            where = "the value" if "yoink" not in b else "its task-runner entry"
+            viol.append(f"{name}: no Yoink plan in {where} (a value that is not a Yoink plan is not a method)")
             continue
+        b = body
         runs = len(re.findall(r"--run\b", b))
         labels = len(re.findall(r"--label\b", b))
         timeouts = len(re.findall(r"--timeout\b", b))
