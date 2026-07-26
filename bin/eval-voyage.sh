@@ -52,14 +52,23 @@ run_leg() {
   local out="$BASE/$name.out"; local skill_args=()
   for s in "$@"; do skill_args+=(--skill "$s"); done
   echo "eval-voyage[$WAVE/$V]: --- leg $name ($MODEL) ---"
-  if "$HERE/bin/eval-leg.sh" --model "$MODEL" --workspace "$SIM" --out "$out" \
+  local legrc=0
+  "$HERE/bin/eval-leg.sh" --model "$MODEL" --workspace "$SIM" --out "$out" \
        "${skill_args[@]}" --task-file "$task" --name "$name" --timeout-s "$TIMEOUT_S" \
-       >"$BASE/$name.leg.log" 2>&1; then
+       >"$BASE/$name.leg.log" 2>&1 || legrc=$?
+  if [ "$legrc" = 0 ]; then
     "$HERE/bin/eval-bank.sh" --wave "$WAVE" --name "$name" --out "$out" --workspace "$SIM" --verdict PENDING >/dev/null 2>&1 || true
     echo "eval-voyage[$WAVE/$V]: leg $name banked (exit $(cat "$out/exit" 2>/dev/null))"
   else
     echo "eval-voyage[$WAVE/$V]: leg $name LEG FAILED (see $BASE/$name.leg.log)"
     "$HERE/bin/eval-bank.sh" --wave "$WAVE" --name "$name" --out "$out" --workspace "$SIM" --verdict LEG-FAILED >/dev/null 2>&1 || true
+  fi
+  # void/infra guard: eval-leg exit 4 = no session produced (bwrap overlay-mount exhausted under
+  # disk pressure, or a void leg). Do NOT let the voyage proceed on a void leg and land as a
+  # SILENT no-op that burns a voyage of the cap (qmax V6-V20, 2026-07-26). Abort with a distinct
+  # code so the driver retries the voyage instead of counting it.
+  if [ "$legrc" = 4 ] || grep -qE 'leg is void|overlay mount failed \(attempt 6\)' "$BASE/$name.leg.log" 2>/dev/null; then
+    echo "eval-voyage[$WAVE/$V]: leg $name INFRA/VOID (overlay-mount/no session) — aborting voyage" >&2; exit 6
   fi
   # provider-error guard (if/fi form — the &&-idiom trips set -e when empty)
   local perr; perr="$(python3 - "$out/pi.stdout" <<'PY'

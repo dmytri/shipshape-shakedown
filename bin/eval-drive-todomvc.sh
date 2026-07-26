@@ -10,7 +10,9 @@
 set -uo pipefail
 HERE="$(cd "$(dirname "$0")/.." && pwd)"
 SCRATCH="${EVAL_SCRATCH:-$HERE/.eval-scratch}"
-WAVE=""; MODEL=""; SKILLS_DIR=""; YOINK=""; CLONE=""; PORT=8873; MAXV=14; TIMEOUT_S=1500; RESUME_FROM=0
+# Default model for all single-model runs/draws = xiaomi/mimo-v2.5 (dk, 2026-07-26; see CAPTAIN.md):
+# the all-round cheap/fast good outlier, 28/29 reproduced at ~$0.15. Override with --model.
+WAVE=""; MODEL="xiaomi/mimo-v2.5"; SKILLS_DIR=""; YOINK=""; CLONE=""; PORT=8873; MAXV=14; TIMEOUT_S=1500; RESUME_FROM=0; ORACLE_CORRECT=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --wave) WAVE="$2"; shift 2;;
@@ -22,6 +24,7 @@ while [ $# -gt 0 ]; do
     --max-voyages) MAXV="$2"; shift 2;;
     --timeout-s) TIMEOUT_S="$2"; shift 2;;
     --resume-from) RESUME_FROM="$2"; shift 2;;   # keep existing sim, skip build, start at voyage N
+    --oracle-correct) ORACLE_CORRECT=1; shift;;  # every voyage pastes the EXACT oracle failure; never give up on no-change
     *) echo "eval-drive-todomvc.sh: unknown arg '$1'" >&2; exit 2;;
   esac
 done
@@ -46,6 +49,20 @@ fi
 export EVAL_SHARED_NM="$SHARED_NM/node_modules"
 [ -x "$EVAL_SHARED_NM/.bin/skills" ] || { echo "eval-drive: 'skills' CLI missing from toolkit" >&2; exit 3; }
 
+# Disk preflight: a full disk (ENOSPC) silently corrupts everything downstream — legs die at
+# 0s, git commits fail, and oracle grades parse ENOSPC noise as a bogus low score (glm-5.2's
+# phantom "28->12 shipwright regression" on 2026-07-25 was ENOSPC, not a real regression).
+# Abort the voyage BEFORE it can produce garbage rather than mislabel a disk fault as a finding.
+DISK_MIN_KB="${DISK_MIN_KB:-2097152}"   # 2G
+disk_ok(){
+  local free; free=$(df -Pk / | awk 'NR==2{print $4}')
+  if [ "${free:-0}" -lt "$DISK_MIN_KB" ]; then
+    say "DISK GUARD: only $((free/1024))M free (< $((DISK_MIN_KB/1024))M) — ABORTING to avoid ENOSPC-corrupted results"
+    return 1
+  fi
+  return 0
+}
+
 say "PILOT START wave=$WAVE model=$MODEL clone=$CLONE port=$PORT max=$MAXV resume=$RESUME_FROM"
 if [ "$RESUME_FROM" -eq 0 ]; then
   if ! "$HERE/bin/scaffold-todomvc.sh" "$SIM" >"$BASE/scaffold.log" 2>&1; then say "SCAFFOLD FAILED"; echo PILOT-DONE; exit 4; fi
@@ -55,12 +72,72 @@ fi
 
 grade(){ # -> writes $BASE/vN-oracle.txt ; echoes "passing tests"
   local v="$1"
+  disk_ok || { echo "0 29"; return; }   # never grade on a full disk — the number would be a lie
   "$HERE/bin/oracle-grade.sh" --build "$SIM" --out "$BASE/$v-oracle.txt" --clone "$CLONE" --port "$PORT" >"$BASE/$v-oraclerun.log" 2>&1 || true
   local p t; p=$(grep -oE 'passing=[0-9]+' "$BASE/$v-oracle.txt" 2>/dev/null | head -1 | cut -d= -f2)
   t=$(grep -oE 'tests=[0-9]+' "$BASE/$v-oracle.txt" 2>/dev/null | head -1 | cut -d= -f2)
   echo "${p:-0} ${t:-29}"
 }
 titles(){ sed -n '/## failing tests/,/## /p' "$BASE/$1-oracle.txt" 2>/dev/null | grep '^  - ' | sed 's/^  - //'; }
+
+# oracle-correction intent: paste the EXACT acceptance-suite failure to the Captain, verbatim,
+# no rephrase (dk). The roles' own happy-dom suite can pass while a real browser still fails
+# (blur/visibility the tier can't fire) — so the operator hands over the raw browser failure the
+# roles cannot see from inside their harness. $1 = voyage tag whose grade to correct (e.g. v4).
+correction_intent(){
+  # NB: each local that references a prior one MUST be its own line — `local a=$1 b=$a` expands
+  # $a before it is assigned (empty), and under `set -u` exits on the unbound ref (the 0s-voyage
+  # bug, 2026-07-25; same class as the run_shipwright `local label=$1 out=..$label` crash).
+  local vg="$1"
+  local cyp="$BASE/$vg-oracle.cypress.log"
+  local task="$BASE/correct-after-$vg.task"
+  # exact failing blocks: from the first "  N) " line through the run-summary, verbatim.
+  local block=""
+  if [ -f "$cyp" ]; then
+    block="$(awk '/^  [0-9]+\)/{f=1} f{print} /^\s*[0-9]+ passing|\(Results\)|Run Finished/{if(f){exit}}' "$cyp")"
+  fi
+  [ -n "$block" ] || block="$(titles "$vg" | sed 's/^/  - /')"   # fall back to titles if no raw block
+  # Class-aware operator diagnosis. A verbatim cypress error can MISLEAD: its own remediation text
+  # ("break up the chain", "rewrite cy.get(...)") is advice to a TEST author, and a detached-DOM
+  # error reads like a test bug when the real fix is app-side. We keep the error verbatim (evidence)
+  # but add the operator's read of the CAUSE so the role fixes the product, not the (fixed) test.
+  # This is the qmax lesson, 2026-07-26: paste-exact is necessary but not sufficient for errors
+  # whose surface text points at the harness.
+  local hint=""
+  if printf '%s' "$block" | grep -qiE 'no longer attached|detached from the DOM|removed the element|requery the page'; then
+    hint="This is a DOM-identity defect. \"detached from the DOM / element was removed\" means your app
+REPLACES DOM nodes on this interaction — it re-renders (rebuilds) the list when an item's state
+changes, so a reference the browser took before the click is invalidated. Your own suite does not
+catch it because its DOM re-queries differently. The fix is app-side: PRESERVE element identity —
+mutate the existing node in place (toggle its class/checkbox) instead of re-rendering the list, so
+the node stays attached across the interaction."
+  fi
+  {
+    echo "You are the Shipshape Captain. Project root: $SIM."
+    echo
+    echo "An external browser acceptance suite runs against the build. It is FIXED and CORRECT — you"
+    echo "cannot and must not change it. Your own verification suite passes, yet the acceptance suite"
+    echo "still reports the failures below, because a real browser exercises behaviour your in-harness"
+    echo "DOM does not. These are real PRODUCT defects; fix the product so a real browser passes."
+    echo
+    echo "Verbatim acceptance-suite failure output:"
+    echo "----------------------------------------------------------------------"
+    printf '%s\n' "$block"
+    echo "----------------------------------------------------------------------"
+    echo
+    echo "How to read it:"
+    echo "- The error's own advice may suggest changing the TEST (e.g. \"break up the chain\", rewrite"
+    echo "  a cy.get(...) call). Ignore that — the test is fixed and correct. Take only the CAUSE it names."
+    if [ -n "$hint" ]; then echo "- $hint"; fi
+    echo "- If your in-harness suite genuinely cannot reproduce the failure, that is EXPECTED for a"
+    echo "  browser-only defect — do not force an impossible failing scenario. Guard the behaviour with"
+    echo "  a source-level conformance check and fix the app."
+    echo
+    echo "Proceed now without waiting for confirmation. Make the smallest product change that resolves"
+    echo "the named cause; keep everything already green. Do not commit, push, or tag."
+  } > "$task"
+  echo "$task"
+}
 
 LAST_INTENT=""
 pick_intent(){ # $1=passing  $2=titles(lowercased, newline). MAJORITY-based: the group with
@@ -101,6 +178,7 @@ pick_intent(){ # $1=passing  $2=titles(lowercased, newline). MAJORITY-based: the
 
 run_voyage(){ # $1=voyage#  $2=captain-task-file  $3=extra(eg --no-revert)
   local v="$1" task="$2" extra="${3:-}"; local t0 t1
+  disk_ok || { echo "DISK-ABORT"; return; }
   t0=$(date +%s)
   # shellcheck disable=SC2086
   "$HERE/bin/eval-voyage.sh" --wave "$WAVE" --sim "$SIM" --model "$MODEL" \
@@ -137,6 +215,7 @@ PY
 }
 run_shipwright(){ # $1=label
   local label="$1"
+  disk_ok || { say "SHIPWRIGHT[$label] SKIPPED — disk guard"; return; }
   local out="$BASE/sw-$label.out" t0 t1 committed=no prehead
   prehead="$(git -C "$SIM" rev-parse HEAD 2>/dev/null)"
   t0=$(date +%s)
@@ -190,10 +269,27 @@ for v in $(seq "$START" "$MAXV"); do
     break
   fi
   tl=$(titles v$((v-1)) | tr 'A-Z' 'a-z')
-  intent=$(pick_intent "$p" "$tl")
-  if [ "$intent" = "unknown" ]; then say "UNKNOWN failure pattern at ${p}/${t} — STOP for operator:"; titles v$((v-1)) | sed 's/^/    /' | tee -a "$LOG" >/dev/null; break; fi
-  say "VOYAGE $v (intent=$intent)"
-  w=$(run_voyage "$v" "$I/$intent.md")
+  if [ "$ORACLE_CORRECT" = "1" ]; then
+    intent="oracle-correction"
+    task=$(correction_intent "v$((v-1))")
+    say "VOYAGE $v (oracle-correction — exact failure pasted verbatim)"
+  else
+    intent=$(pick_intent "$p" "$tl")
+    if [ "$intent" = "unknown" ]; then say "UNKNOWN failure pattern at ${p}/${t} — STOP for operator:"; titles v$((v-1)) | sed 's/^/    /' | tee -a "$LOG" >/dev/null; break; fi
+    task="$I/$intent.md"
+    say "VOYAGE $v (intent=$intent)"
+  fi
+  # infra-retry: a voyage aborted by a void/overlay leg (eval-voyage exit 6) is NOT progress —
+  # retry the SAME voyage number rather than count a silent no-op (qmax V6-V20, 2026-07-26). Bounded
+  # and disk-gated so a persistently full disk stops loudly instead of grinding the cap to zero.
+  infra=0
+  while :; do
+    w=$(run_voyage "$v" "$task")
+    grep -qE 'INFRA/VOID' "$BASE/v$v.log" 2>/dev/null || break
+    infra=$((infra+1)); say "V$v INFRA/VOID (overlay-mount/void leg) — not counted; infra-retry $infra/4 (free=$(df -Pk / | awk 'NR==2{printf "%.1fG",$4/1048576}'))"
+    if [ "$infra" -ge 4 ]; then say "INFRA FAILURE 4x at voyage $v — STOP (disk/overlay); free disk then --resume-from $v"; break 2; fi
+    disk_ok || true; sleep 20
+  done
   if grep -q 'PROVIDER ERROR' "$BASE/v$v.log" 2>/dev/null; then say "PROVIDER ERROR — STOP"; break; fi
   outcome=$(grep -oE 'VOYAGE-(COMPLETE|REGRESSED)' "$BASE/v$v.log" | tail -1)
   ss=$(tail -3 "$BASE/v$v-selfsuite.txt" 2>/dev/null | grep -oE '[0-9]+ scenarios \([^)]*\)' | head -1)
@@ -201,10 +297,11 @@ for v in $(seq "$START" "$MAXV"); do
   cur_titles=$(titles v$v)
   say "V$v $intent ${w}s | $outcome | self-suite: ${ss:-?} | oracle ${p}/${t} | failing:"; echo "$cur_titles" | sed 's/^/    /' | tee -a "$LOG" >/dev/null
   LAST_INTENT="$intent"
-  # no-improvement breaker
+  # no-improvement breaker — DISABLED in oracle-correct mode (dk: keep going until convergence;
+  # each correction voyage re-pastes the exact live failure, so repetition is progress, not a loop)
   if [ "${p:-0}" = "$prev_p" ] && [ "$cur_titles" = "$prev_titles" ]; then
     stuck=$((stuck+1)); say "  (no change vs prior voyage: stuck=$stuck)"
-    if [ "$stuck" -ge 2 ]; then say "NO IMPROVEMENT 2x at ${p}/${t} — STOP for operator"; break; fi
+    if [ "$ORACLE_CORRECT" != "1" ] && [ "$stuck" -ge 2 ]; then say "NO IMPROVEMENT 2x at ${p}/${t} — STOP for operator"; break; fi
   else stuck=0; fi
   prev_p="$p"; prev_titles="$cur_titles"
 done

@@ -138,3 +138,46 @@ parallel taught:
 - Model efficiency varies WIDELY on the same task: glm-4.7 / qwen3.7-plus reached 28/29 in 3 voyages
   (~170 round-trips); deepseek-v4-flash took ~11 (~416). glm shipped a servable page in its build;
   the others needed a separate page voyage. See data/todomvc-3model-compare/REPORT.md.
+
+---
+
+## Oracle-correction refinement — paste-exact is necessary but NOT sufficient (2026-07-26, qmax)
+
+The 7-model frontier run (adds mimo-v2.5, hy3, minimax-m3, kimi-k3, qwen3.7-max). Five models were
+stuck for a full voyage-cap on the prepared `edithide` intent; a single oracle-correction voyage that
+pasted the VERBATIM cypress `AssertionError` converged each in one shot — decisive proof of the
+exact-error rule. But qwen3.7-max then stalled at 26/29 on the checkbox toggle failures even WITH the
+verbatim error, and it was **the operator's prompt, not the model**. Two prompt defects, now fixed in
+`correction_intent()`:
+
+- **A verbatim error can MISLEAD when its surface text targets the test author.** The checkbox failure
+  is a Cypress *detached-from-DOM* error whose own remediation text says "break up the chain / rewrite
+  `cy.get('button').click()`…" — advice to a TEST author. The model can't change the (quarantined,
+  fixed) oracle, so that advice is a dead end, and the real cause (the app re-renders the list on
+  toggle, detaching the node) is buried. FIX: keep the error verbatim as EVIDENCE, but add the
+  operator's read of the CAUSE and an explicit "the acceptance suite is FIXED and CORRECT — take only
+  the cause it names, ignore any advice to change the test." `correction_intent()` now injects a
+  class-aware diagnosis (detached-DOM/re-render → "preserve element identity, mutate in place").
+- **Never tell the model to write a failing scenario for a browser-only defect.** The old correction
+  template said "cover each failure with a scenario where your harness can" — contradictory for a
+  tier-invisible bug the happy-dom suite can't redden. It makes the model spin trying to author an
+  impossible red target, then give up. FIX: state that an unreproducible-in-harness failure is EXPECTED
+  for a browser-only defect, and to guard it with a source-level `@conformance` check + fix the app —
+  the tier-invisible/scantling rule (Preset B, Step 3) applied to correction voyages.
+
+Infra hardening from the same run (a full disk kept faking findings):
+- **Grades MUST run under `xvfb-run -a`.** Parallel cypress runs otherwise collide on X display `:99`
+  ("Server is already active for display 99") and return UNPARSEABLE/bogus scores — this faked a
+  glm-5.2 "shipwright regression" (really ENOSPC) and hid qmax's real state. `oracle-grade.sh` now
+  wraps cypress in `xvfb-run -a` (free display per run) and hard-fails (exit 6, `GRADE: DISK-ERROR`)
+  on ENOSPC instead of parsing disk noise as a grade.
+- **Void legs must not silently burn the cap.** Under <~3G free, bwrap `--tmp-overlay` fails all
+  retries → the leg produces no session → the voyage lands as a 44s no-op and the driver counts it,
+  grinding the whole cap to nothing (qmax V6–V20, then V21–V28). `eval-voyage.sh` now aborts a void
+  leg (exit 6); the driver RETRIES that voyage (bounded 4×, disk-gated) and STOPs loudly with a
+  `--resume-from N` hint rather than counting no-ops. A `disk_ok` preflight (2G) guards every
+  voyage/grade/Shipwright.
+- **Don't diagnose from status polls — read a leg log the FIRST time a voyage looks dead.** A voyage
+  finishing in ~40s with an unchanged score is a void-leg tell; drilling one `*.leg.log` immediately
+  shows `overlay mount failed (attempt 6) … leg is void`. Passive "update?" polling let two full
+  resumes grind before this was caught — the expensive operator mistake of the run.

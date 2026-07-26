@@ -1,5 +1,17 @@
 # Captain notes - shipshape-shakedown workstream
 
+<!-- ============================================================================= -->
+## >>> NEXT SESSION — EXECUTE AUTONOMOUSLY: `tasks/methods-candidate/PLAN.md` (dk, 2026-07-26) <<<
+dk primed a cleared session to run the **methods candidate** end-to-end WITHOUT interruption:
+build the candidate (formalize rigging commands → "methods" + composite yoink-batched methods:
+`verify`, `hygiene`) at `experiments/methods-candidate/skills` (already copied from 0.13.65);
+refine with deepseek-v4-flash draws; then sail ONE full mimo TodoMVC pilot. Goal = LATENCY: do
+composite methods cut invocations vs baseline (mimo 268 inv / $0.14 / 8.4s/RT / 28/29)? Assume
+confirmation, push through, monitor don't poll, keep disk >3G. Full spec + composition map + run
+commands + win conditions are in `tasks/methods-candidate/PLAN.md` — READ IT FIRST and follow it.
+Metrics: `bin/cohort-metrics.py <wave>`. Deliver `data/methods-candidate/REPORT.md` at the end.
+<!-- ============================================================================= -->
+
 <!-- STANDING OPERATOR CONVENTION (dk, 2026-07-23): when dk asks for "results", that
 means the METRICS TABLE — per-leg invocations, tool calls, tokens, OpenRouter price,
 wall-clock latency, and verdict, WITH totals. Not a prose summary. Prose is for findings;
@@ -74,15 +86,27 @@ BEFORE watching, never `head -1` of a fuzzy pattern. -->
 
 
 <!-- ===================== READ THIS FIRST, THEN ACT ===================== -->
-## >>> DEFAULT MODEL for single-model pilot runs: z-ai/glm-4.7 (dk, 2026-07-25). <<<
+## >>> DEFAULT MODEL for ALL single-model runs and draws: xiaomi/mimo-v2.5 (dk, 2026-07-26). <<<
 
-The 3-model TodoMVC comparison (all reached 28/29 on current 0.13.65) made **glm-4.7 the all-round
-champ**: fastest (~31 min), fewest round-trips (166), mid cost ($0.67). deepseek-v4-flash is the
-cost champ ($0.58) but slowest (~48 min, ~11 voyages); qwen3.7-plus was slower AND pricier than
-glm-4.7 ($0.96 / ~40 min). So default a 1-model run to **`z-ai/glm-4.7`** unless it specifically
-wants the cheapest (deepseek-v4-flash) or a frontier tier. Data: `data/todomvc-3model-compare/`.
-CAVEAT: functional 28/29 ≠ doctrine-conformant — planking was non-conformant across all three;
-the pilot now invokes Shipwright (harbour leg + plank-placement audit) to evaluate that properly.
+Supersedes the glm-4.7 default. The 7-model frontier cohort (all reached 28/29 through Shipwright)
+made **mimo v2.5 the all-round GOOD outlier**: cheapest by a wide margin (**$0.14**, ~4x under
+deepseek-v4-pro, 30x under glm-5.2's raw), fastest per round-trip (8.4s), near-lowest tokens, and
+fast wall (~37 min). REPRODUCED clean on the hardened harness + refined oracle-correct playbook:
+mimo2 = **$0.151 / 28/29 / 3 voyages** (vs run-1 $0.141 / 5 voyages) — the cheapness is real, not a
+fluke. So default every 1-model run and golden-set draw to **`xiaomi/mimo-v2.5`**.
+- **TWO-MODEL runs = mimo v2.5 (good control) + `tencent/hy3` (BAD control)** (dk, 2026-07-26).
+  hy3 is the clean bad outlier — slowest whole-run (~135m), highest output/reasoning tokens (82%
+  reasoning), mediocre planking (19/42, 23 hoisted) — and uncontaminated, so it anchors the "bad"
+  end honestly for good-vs-bad contrast on any doctrine change.
+- Cheapest STRESS canary (alt): **deepseek-v4-flash** ($0.58) — worst sample-efficiency (~11
+  voyages), hammers the correction loop hardest for the least money; use when the goal is to stress
+  the driver/correction machinery rather than model contrast.
+- Frontier tiers on request; data: `data/todomvc-frontier-compare/` + `data/todomvc-3model-compare/`.
+CAVEAT — planking is DRAW-UNSTABLE even for mimo: same model + same Shipwright task planked 22/22
+on-seam in run 1 and **0/0** in run 2. Functional 28/29 reproduces tightly; doctrine-conformance
+(planking) does NOT. The plank form check is unenforced (no jsdoc/plank-inventory engine), so it
+gets done fully, partially, or not at all by draw. This is the case for the queued Crew-planking
+probe — evaluate the ROLE's planking, do not read functional success as conformance.
 
 ## >>> SHIPPED 0.13.65 (2026-07-25): Shipwright conformance-skeleton enforcement. Yoink reverted from the candidate. <<<
 

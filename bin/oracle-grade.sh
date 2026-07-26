@@ -25,6 +25,10 @@ while [ $# -gt 0 ]; do
 done
 [ -n "$BUILD" ] && [ -n "$OUT" ] || { echo "usage: oracle-grade.sh --build <dir> --out <file> [--clone <d>] [--port N]" >&2; exit 2; }
 [ -d "$BUILD" ] || { echo "oracle-grade.sh: build dir '$BUILD' missing" >&2; exit 2; }
+# Disk preflight — grading on a full disk parses ENOSPC noise as a bogus low score (see the
+# ENOSPC guard below). Refuse up front rather than emit a lie. Exit 6 = infra fault, not a grade.
+_free=$(df -Pk / | awk 'NR==2{print $4}'); if [ "${_free:-0}" -lt "${ORACLE_DISK_MIN_KB:-1048576}" ]; then
+  echo "oracle-grade.sh: only $((_free/1024))M free — refusing to grade (ENOSPC risk), exit 6" >&2; exit 6; fi
 [ -n "$CLONE" ] || CLONE="${ORACLE_CLONE:-$HERE/.eval-scratch/oracle-clone}"
 [ -d "$CLONE/cypress" ] || { echo "oracle-grade.sh: oracle clone '$CLONE' not found — clone tastejs/todomvc at the pinned commit and apply fixtures/oracle/*.patch first" >&2; exit 3; }
 
@@ -58,7 +62,7 @@ set +e
 ( cd "$CLONE" && WAIT_ON_TIMEOUT="${WAIT_ON_TIMEOUT:-90000}" PORT="$PORT" \
     timeout "${ORACLE_TIMEOUT_S:-420}" npx --yes start-server-and-test \
     "node tests/server.js" "http://localhost:$PORT/examples/$FRAMEWORK/index.html" \
-    "npx cypress run --env framework=$FRAMEWORK --spec cypress/e2e/spec.cy.js --config baseUrl=http://localhost:$PORT/examples/,screenshotOnRunFailure=false,video=false" \
+    "xvfb-run -a npx cypress run --env framework=$FRAMEWORK --spec cypress/e2e/spec.cy.js --config baseUrl=http://localhost:$PORT/examples/,screenshotOnRunFailure=false,video=false" \
   ) >"$RUNLOG" 2>&1
 GEXIT=$?
 set -e
@@ -76,6 +80,15 @@ passing = last(r'Passing:\s+(\d+)')
 failing = last(r'Failing:\s+(\d+)')
 pending = last(r'Pending:\s+(\d+)')
 allpass = "All specs passed!" in txt
+# ENOSPC guard: a full disk makes cypress/the server emit garbage that parses as a bogus low
+# score (glm-5.2's phantom 12/29 on 2026-07-25). If the run couldn't parse a Tests: line AND
+# the log shows a disk error, this is an INFRASTRUCTURE fault, not a grade — fail loudly (exit 6)
+# so the caller never records the number as a real regression.
+disk_err = bool(re.search(r'ENOSPC|no space left on device', txt, re.I))
+if tests is None and disk_err:
+    open(out, "w").write("# oracle grade: DISK ERROR (ENOSPC) — result is NOT a valid grade\nGRADE: DISK-ERROR\n")
+    sys.stderr.write("oracle-grade: ENOSPC in runner output — refusing to emit a grade (exit 6)\n")
+    sys.exit(6)
 # Failing test titles from the spec reporter's FINAL failures section (replaces the
 # screenshot filenames, dk 2026-07-24). Restrict to the tail after the "N failing" summary
 # so interleaved ✓-passing run lines aren't captured. Each failure is a `  N) ` block whose
@@ -112,5 +125,8 @@ open(out, "w").write("\n".join(lines) + "\n" + "\n".join(tail) + "\n")
 print("\n".join(lines[:4]))
 print("failing:", "; ".join(failing_titles) if failing_titles else "(none parsed)")
 PY
+# Persist the raw cypress output next to the grade so operator oracle-correction voyages can
+# paste the EXACT failure (assertion text) to the roles verbatim — the parsed summary drops it.
+cp "$RUNLOG" "${OUT%.txt}.cypress.log" 2>/dev/null || true
 rm -f "$RUNLOG"
 echo "oracle-grade: grade written -> $OUT" >&2
