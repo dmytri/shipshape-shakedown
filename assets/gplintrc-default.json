@@ -1,10 +1,114 @@
 {
+  "allowed-tags": [
+    "error",
+    {
+      "tags": [
+        "@logic",
+        "@sandbox",
+        "@contract",
+        "@conformance",
+        "@captain",
+        "@shipwright",
+        "@exceptional-double"
+      ]
+    }
+  ],
+  "file-name": [
+    "error",
+    {
+      "style": "kebab-case"
+    }
+  ],
+  "indentation": [
+    "error",
+    {
+      "Feature": 0,
+      "Background": 2,
+      "Rule": 2,
+      "Scenario": 2,
+      "Step": 4,
+      "Examples": 4,
+      "example": 6,
+      "given": 4,
+      "when": 4,
+      "then": 4,
+      "and": 4,
+      "but": 4
+    }
+  ],
+  "keywords-in-logical-order": "error",
+  "max-keywords": [
+    "error",
+    {
+      "given": 5,
+      "when": 3,
+      "then": 5,
+      "ignoreConjunctions": false
+    }
+  ],
+  "max-tags-lines": [
+    "error",
+    {
+      "feature": 1,
+      "scenario": 1
+    }
+  ],
+  "name-length": [
+    "error",
+    {
+      "Feature": 90,
+      "Rule": 90,
+      "Scenario": 90,
+      "Step": 120
+    }
+  ],
+  "new-line-at-eof": [
+    "error",
+    "yes"
+  ],
+  "no-background-only-scenario": "error",
   "no-dupe-feature-names": "error",
-  "no-dupe-scenario-names": "error",
+  "no-dupe-scenario-names": [
+    "error",
+    "anywhere"
+  ],
+  "no-duplicate-tags": "error",
+  "no-empty-background": "error",
   "no-empty-file": "error",
+  "no-examples-in-scenarios": "error",
   "no-files-without-scenarios": "error",
+  "no-homogenous-tags": "error",
+  "no-multiple-empty-lines": "error",
+  "no-partially-commented-tag-lines": "error",
+  "no-restricted-patterns": [
+    "error",
+    {
+      "Global": [
+        "^\\s*#",
+        "should probably",
+        "\\bmight\\b",
+        "\\bmaybe\\b",
+        "\\bTODO\\b",
+        "\\bTBD\\b"
+      ]
+    }
+  ],
   "no-scenario-outlines-without-examples": "error",
+  "no-superfluous-tags": "error",
+  "no-trailing-spaces": "error",
   "no-unnamed-features": "error",
   "no-unnamed-scenarios": "error",
-  "indentation": ["error", { "Feature": 0, "Scenario": 2, "Step": 4 }]
+  "no-unused-variables": "error",
+  "one-space-between-tags": "error",
+  "scenario-size": [
+    "error",
+    {
+      "steps-length": {
+        "Background": 5,
+        "Scenario": 10
+      }
+    }
+  ],
+  "table-align": "error",
+  "use-and": "error"
 }
