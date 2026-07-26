@@ -1,122 +1,205 @@
-# Method audit: every job of every role, in order, and the method it uses (2026-07-26)
+# Method audit: every job of every role, and the method it uses (2026-07-26)
 
-dk asked whether the set is complete for **any** stack. This is the exhaustive pass: every job and
-step in all five role skills, what it runs, and which method answers it. A step earns a method only
-where it runs two or more `## Commands` values whose parts are independent of one another's output.
+Written after reading all five role skills end to end, not by grep. Supersedes the earlier version,
+which was restricted by a wrong premise (that a method composes `## Commands` values) and therefore
+answered "none" wherever a job ran `cat`/`git` or a single command.
 
-## Why the set is CLOSED, and closed independently of the stack
+## The rules this audit applies (dk, 2026-07-26)
 
-Three facts together bound it:
-
-1. **A method belongs to a STEP, not to a stack.** The steps are doctrine's own and finite.
-2. **The command vocabulary is closed by the Rigging read contract**: `discover`, `focused`,
-   `broad`, `coverage`, `step-usage`, `plank-inventory`, `typecheck`, `lint`, plus `conformance`
-   and tier-suffixed variants. A stack cannot invent a new command key, so it cannot invent a new
-   composition.
-3. **A method never adds an act.** It composes only what its step already runs.
-
-So a new stack changes the *parts* of a method and whether the counting rule collapses it to
-`none`. It never adds a method. The six below are therefore the whole set, and a project on any
-stack is fully fitted out when all six values are present.
+1. **Commands are gone.** `RIGGING.md` carries methods, not commands. A method is **the named way a role does a
+   job**, and its plan spells out whatever the stack needs for that job. The word is always
+   *method*: not a tool, not a command, because a runtime's tools and a shell's commands are other
+   things and the name exists to keep them apart.
+2. **Methods are the execution jobs.** A job that needs project tooling — the runner, the linter,
+   the type checker, coverage, the plank inventory, step usage, static discovery, the package
+   manager, the ship and its live check — is a method.
+3. **Ad hoc tool use is fine**, so long as (a) it needs no project tooling of its own, and (b) it is
+   never reached for *instead of* the method for that job. Reading files, `git
+   status`, a one-off grep for a token: ad hoc. Grepping for planks instead of running the plank
+   join: forbidden, and the existing check-precedence rule already says so.
+4. **Reuse is positive.** Where several roles do the same job, they call the same method. Reuse
+   means one method per job, not plans nested inside plans: each method's plan is self-contained, so
+   a stack's runner invocation appears in every plan that runs it.
 
 ## CAPTAIN
 
-| # | Job / step | Runs | Method |
+| # | Job, in order | Needs in hand (ad hoc) | Must run (method) |
 |---|---|---|---|
-| 1 | Opening: retrieve standing state, one pass | `AGENTS.md`, `RIGGING.md`, specs, `git` | none — reads, not `## Commands` values |
-| 2 | Route on `RIGGING.md` absence | nothing | none |
-| 3 | Discovery and spec authoring | nothing executable | none |
-| 4 | Feature lint at write time on Captain-authored specs | `lint` (feature lint rides the one `lint` value, feature lint first) | none — one command |
-| 5 | **Greenfield fast path bootstrap** | installs the harness, confirms the runner executes, writes minimal `RIGGING.md` | **derives all six method values** (no fitting-out session will), then `rigging-proof` proves them |
-| 6 | Perturbation planting | writes the `perturb` statement | none |
-| 7 | Harbour review 1-3 (review skeletons, retag, route economy findings) | nothing executable | none |
-| 8 | Harbour review 4-6 (dispatch custody, outbound, resume) | nothing executable | none |
+| 1 | Opening: retrieve the standing state, one pass | `AGENTS.md`, `RIGGING.md`, `CAPTAIN.md`, `watchbill.json`, tree cleanliness, and a token search for `@captain`, `@shipwright`, `PERTURBATION` | — reads and git only; no project tooling |
+| 2 | Settle preceding blockers, classify the situation | that same output | — |
+| 3 | Read the specs and assets classification made relevant | those files | — |
+| 4 | Discovery with the user | conversation | — |
+| 5 | Author or maintain specs and assets | writes | — |
+| 6 | **Lint authored specs and assets at write time** | — | **`spec-lint`** |
+| 7 | Write `watchbill.json` | writes | — |
+| 8 | Plant a perturbation (narrow exception) | the seam, the `perturb` value | — writes a statement |
+| 9 | Dispatch Boatswain / QM, resolve blockers | — | — |
+| 10 | **Greenfield fast path: install the harness and the rigging's dependencies** | user conversation, registry checks | **`install`** |
+| 11 | **Greenfield fast path: confirm the runner executes before writing `RIGGING.md`** | — | **runs each method it just derived** (the proving act, not a method of its own) |
+| 12 | Greenfield fast path: write minimal `RIGGING.md`, including every method | writes | — |
+| 13 | **Outbound: ship the release artifact** | user approval | **`ship`**, per outbound target |
+| 14 | **Outbound: verify the live artifact a user consumes** | — | **`ship-verify`**, per outbound target |
+| 15 | Harbour review 1-6 | Shipwright's report | — |
 
 ## QUARTERMASTER
 
-| # | Work-loop step | Runs | Method |
+| # | Work-loop step | Needs in hand (ad hoc) | Must run (method) |
 |---|---|---|---|
-| 1 | Enforce context bulkhead | nothing | none |
-| 2 | Retrieve rigging, watchbill, base, one pass | `cat`/`git` | none — composes no `## Commands` values; doctrine already batches it |
-| 3 | Settle rigging, HEAD, watchbill from that output | nothing | none |
-| 4 | Process watches in order; a tier-tag watch is one enumeration sweep | `broad` or its tier variant | none — one command per tier, and **across** tiers it is reactive: a red cheaper tier's dispatches complete before a costlier tier runs |
-| 5 | **Verify the watch's whole target set** | `focused` over the set + `plank-inventory` + `step-usage` | **`verify`** |
-| 6 | Dispatch Crew on production failure | nothing | none |
-| 7 | Consume parallel Crew reports | nothing | none |
-| 8 | Repeat the cycle until the watch is spent | re-runs step 5 | **`verify`** again |
-| 9 | Append the run record after a fresh green | writes a line | none |
-| 10 | End in the final report naming Boatswain | nothing | none |
-| 11 | Blocker return to Captain | nothing | none |
+| 1 | Enforce the context bulkhead | the dispatch | — |
+| 2 | Retrieve rigging, watchbill, base, one pass | `RIGGING.md`, `watchbill.json`, `git rev-parse HEAD`, `git status --porcelain` | — reads and git only |
+| 3 | Settle rigging, HEAD, watchbill from that output | — | — |
+| 4 | **A tier-tag watch: one enumeration sweep of that tier** | — | **`sweep`**, or its tier-suffixed variant |
+| 5 | **Verify the watch's whole target set, and join its planks** | the targets' features, step definitions, seam surfaces | **`verify`** |
+| 6 | Dispatch Crew on a production failure | the failure evidence | — |
+| 7 | Consume parallel Crew reports | reports | — |
+| 8 | Repeat the cycle until the watch is spent | — | **`verify`** again, per cycle |
+| 9 | Append the run record after a fresh green | writes a line | — |
+| 10 | End in the final report naming Boatswain | — | — |
+| 11 | Return a product-intent blocker to Captain | — | — |
+
+QM also makes undefined steps executable and reverifies: that reverification is `verify` again.
+A harness defect QM engineers out is a write, then `verify`.
 
 ## CREW
 
-| # | Step | Runs | Method |
+| # | Step, in order | Needs in hand (ad hoc) | Must run (method) |
 |---|---|---|---|
-| 1-3 | Opening: verify dispatch, two retrieval passes | reads | none |
-| 1 | Reproduce or inspect the failure | `focused` on its target | none — one command |
-| 2 | Edit minimum production code, update planks | nothing | none |
-| 3 | Run focused verification | `focused` | none — one command, and a method must not **add** an act (giving Crew typecheck/lint would be a new obligation, not a composition) |
-| 4-5 | Report pass, or report blocker | nothing | none |
+| 1 | Opening: verify the dispatch against the contract | the dispatch | — |
+| 2 | Opening: first pass, one retrieval | `RIGGING.md`, every target's feature file with its `Background` and `Rule:`, `AGENTS.md` for a perturbation target | — reads only |
+| 3 | Opening: second pass, one retrieval | the step definitions and support the first pass named, the referenced spec or asset, the directly related production files | — reads only, and genuinely depends on pass 2 |
+| 4 | State target and durable source | — | — |
+| 5 | **Reproduce or inspect the failure** | the evidence | **`prove`** over the dispatched target set |
+| 6 | Edit minimum production code, add or update planks | writes | — |
+| 7 | **Run focused verification** | — | **`prove`** |
+| 8 | Report the pass, or the blocker | — | — |
+
+Crew's green is what QM and Boatswain inherit, so `prove`'s output is the hand-off's evidence.
 
 ## BOATSWAIN
 
-| # | Job / step | Runs | Method |
+| # | Job / step, in order | Needs in hand (ad hoc) | Must run (method) |
 |---|---|---|---|
-| 1 | Opening: verify dispatch | nothing | none |
-| 2 | Retrieve rigging and deck, one pass | `cat`/`git status`/`git diff`/`git log` | none — no `## Commands` values |
-| 3 | Settle job, touched seams, deck-state hash | nothing | none |
-| 4 | **Hygiene checks (both jobs)** | `plank-inventory` + `step-usage` + `typecheck` + `lint` | **`hygiene`** |
-| 5 | Recheck, executable hunk with no carried evidence | `focused` over the planked scenario set | none — one command, and doctrine calls the recheck "the one run that depends on what came before", i.e. reactive |
-| 6 | Recheck, verification-support hunk | that tier's `broad` | none — one command |
-| 7 | **Recheck, non-executable hunk / deletion / configuration** | `discover` + `typecheck` + `lint` | **`static`** |
-| 8 | Recheck, hunk with carried green evidence | nothing — inherits it | none |
-| 9 | Strike a spent watchbill without carried evidence | `focused` over the watchbill's entries | none — one command |
-| 10 | Stage and commit locally | `git` | none |
-| 11 | Report to Captain | nothing | none |
+| 1 | Opening: verify the dispatch | the dispatch | — |
+| 2 | Opening: retrieve the rigging and the deck, one pass | `RIGGING.md`, `AGENTS.md`, `git status`, `git diff <base> -- . ':!CAPTAIN.md'`, `git log -n 5` | — reads and git only; **the `:!CAPTAIN.md` exclusion is part of the retrieval and stays mandatory** |
+| 3 | Settle job, touched seams, deck-state hash | — | — |
+| 4 | **Hygiene checks: one evidence run answers every check** | the deck from step 2 | **`hygiene`** |
+| 5 | Judge each hygiene check against that output | — | — a check judged by reading the diff is an opinion, not a check |
+| 6 | Recheck, verification-support hunk | the staged hunks | **`sweep`** of the tier it serves |
+| 7 | Recheck, executable hunk with no carried evidence | its planks, from step 4's output | **`prove`** over the planked scenario set |
+| 8 | Recheck, non-executable hunk, deletion, or configuration | — | **`static`** |
+| 9 | Recheck, hunk with a carried fresh green at this deck-state hash | the hand-off or run record | — inherits it; runs nothing |
+| 10 | Strike a spent watchbill with no carried evidence | the watchbill's entries | **`prove`** over those entries |
+| 11 | Stage intended changes, commit locally | `git` | — |
+| 12 | Confirm the tree clean, report to Captain | `git status` | — |
 
 ## SHIPWRIGHT
 
-| # | Job / step | Runs | Method |
+| # | Job / step, in order | Needs in hand (ad hoc) | Must run (method) |
 |---|---|---|---|
-| A | Harbour-entry guard | `git status` | none |
-| B | **Fitting out: derive `RIGGING.md`** | derives every command value | **writes all six methods** |
-| C | **Fitting out: prove the tooling runnable** | every derived command, once each | **`rigging-proof`** |
-| D | Fitting out: methodology-check skeletons, search-exclusion artifact | writes files | none |
-| 1-2 | Work loop: load core skill; retrieve rigging and deck, one pass | `cat`/`git` | none |
-| 3 | Identify scope | reads | none |
-| 4 | **Harbour's one full regression** | `coverage` + each tier-suffixed variant, cheapest first | **`regression`** |
-| 5 | Map covered code to step definitions | reads step definitions (`step-usage` output already in hand) | none |
-| 6 | Find uncovered modules | reads step 4's coverage output | none — reactive on step 4 |
-| 7 | Judge each seam, reference analysis | static analysis / text search, not `## Commands` | none |
-| 8 | Write the two `@conformance` skeletons | writes files | none |
-| 9 | Annotate every seam with planks | writes annotations | none |
-| 10 | **Process condemned scenarios: scoped proof after each removal batch** | `typecheck` + `lint` + `focused` over the touched seams' scenarios | **`condemnation`** |
-| 11 | Refresh golden captures | re-records from the real dependency | none — not `## Commands` |
-| 12-13 | Confirm nothing unproven (step 4 is the one full run; do not rerun) | nothing new | none |
-| 14 | Report to Captain, leave edits uncommitted | nothing | none |
-| E | **Refit: verify every command and method slot, prove they still execute** | every derived command | **`rigging-proof`** |
+| A | Harbour-entry guard | `git status` | — |
+| B | **Fitting out: derive `RIGGING.md` and `AGENTS.md`** | the repository | **derives every method** |
+| C | **Fitting out: install the runner and confirmed tooling** | the package manifest | **`install`** |
+| D | **Fitting out: prove the tooling is runnable** | — | **runs each derived method once** (the proving act) |
+| E | Fitting out: write the methodology-check skeletons and the search-exclusion artifact | writes | — |
+| 1 | Work loop: load the core skill | — | — |
+| 2 | Work loop: retrieve the rigging and the deck, one pass | `RIGGING.md`, `AGENTS.md`, `git status` | — reads and git only |
+| 3 | Identify scope | `RIGGING.md` directories | — |
+| 4 | **Harbour's one full regression, every tier, cheapest first** | — | **`regression`** |
+| 5 | **Map covered code to step definitions** | step 4's coverage output | **`plank-join`** |
+| 6 | Find uncovered modules | step 4's coverage output | — reads step 4 |
+| 7 | Judge each seam; reference analysis for unreachable code | AST inspection, text search | — ad hoc, no project tooling |
+| 8 | Write the two `@conformance` skeletons | writes | — |
+| 9 | **Annotate every production seam** | the plank mapping | **`plank-join`** output already in hand |
+| 10 | **Process condemned scenarios: prove each removal batch** | the planks | **`condemnation`**, or **`discovery`** twice for dry-run parity where the touched scenarios have no executable steps |
+| 11 | Refresh the golden captures | the real dependency | — not project tooling |
+| 12 | Verification-economy audit | the weather record, step 4's output | — |
+| 13 | Confirm nothing unproven; do not rerun step 4 | — | — |
+| 14 | Report to Captain, leave edits uncommitted | — | — |
+| F | **Refit: verify every method slot and prove they still execute** | `RIGGING.md` | **runs each method once** |
 
-## The six, and where each is used
+## What the roles ACTUALLY invoke: 190 banked legs, 4,940 shell invocations
 
-| Method | Used by | At |
-|---|---|---|
-| `verify` | QM | work-loop steps 5 and 8 (every cycle of every watch) |
-| `hygiene` | Boatswain | hygiene checks, in both jobs, every custody run |
-| `static` | Boatswain | recheck of a non-executable hunk, a deletion, or configuration |
-| `regression` | Shipwright | work-loop step 4, harbour's one full regression |
-| `condemnation` | Shipwright | work-loop step 10, after each condemnation removal batch |
-| `rigging-proof` | Shipwright, and Captain on the greenfield fast path | fitting out, and every refit |
+dk's steer: run a role and see what it reaches for. Mined from banked legs rather than fresh spend
+(`captain` = 34 legs, `qm`-assumes-crew-and-Boatswain = 140, `shipwright` fitting out = 16):
 
-Crew uses no method by design: its one command is one command, and a method never adds an act.
-Captain uses no method at sea; it derives them on the fast path so the roles downstream have them.
+| What was invoked | captain | qm (+crew+bosun) | shipwright | The method that covers it |
+|---|---|---|---|---|
+| runner, executing | 202 | 1,137 | 94 | `prove`, `sweep`, `regression` |
+| dry-run discovery and step usage | 31 | 374 | 63 | `discovery`, `plank-join` |
+| plank inventory | 2 | 85 | 37 | `plank-join` |
+| lint | 6 | 9 | 34 | `spec-lint`, and parts of `hygiene`, `static`, `condemnation` |
+| typecheck | 0 | 0 | 5 | parts of `hygiene`, `static`, `condemnation` |
+| coverage | 1 | 7 | 41 | `regression` |
+| install | 7 | 8 | 1 | `install` |
+| file reads | 443 | 597 | 82 | ad hoc, correctly |
+| git reads | 116 | 533 | 37 | ad hoc, correctly |
+| search, not for planks | 42 | 176 | 22 | ad hoc, correctly |
+| ad hoc scripting (`node -e`, `python -c`) | 43 | 340 | 7 | ad hoc: investigation, mostly happy-dom probes |
+| git writes | 0 | 47 | 0 | ad hoc, custody |
 
-## Deliberate exclusions, each with its reason
+**Only 8 invocations in 4,940 (7 distinct) match no known family**, and every one is an environment
+probe: `whoami`, `ulimit -v`, `free -m`, `rustup component list`. So the method set is closed
+empirically as well as by argument: no observed project-tooling invocation lacks a method.
 
-| Step | Why it is not a method |
+Two things the numbers say that the reading alone did not:
+
+1. **`rustup component add llvm-tools-preview` appears in a Shipwright leg** — a role installing
+   toolchain components on the fly. That is `install`, and it is evidence for making it a method
+   rather than leaving it to improvisation.
+2. **Retrieval dwarfs execution**: 1,122 file reads and 686 git reads against 1,433 executing runs.
+   Retrieval stays ad hoc by rule, but that is where the round trips actually are, so the retrieval
+   batches doctrine already states as one pass are worth keeping stated that way.
+
+## The method set this audit yields
+
+| Method | The job it is the method for | Invoked by | Takes |
+|---|---|---|---|
+| `prove` | prove a named scenario set | Crew, Boatswain, QM (inside `verify`) | `{scenario}` |
+| `verify` | verify a watch's whole target set and join its planks | QM | `{scenario}` |
+| `sweep` | enumerate a whole tier, unfiltered, no fail-fast | QM, Boatswain | tier suffix |
+| `plank-join` | join every plank to a current step-definition pattern | Shipwright, and inside `hygiene` and `verify` | — |
+| `hygiene` | judge deck hygiene in one evidence run | Boatswain | — |
+| `static` | prove a non-executable hunk, a deletion, or configuration | Boatswain | — |
+| `discovery` | list undefined and unimplemented steps, executing nothing | Shipwright | — |
+| `regression` | harbour's one full regression over every tier | Shipwright | — |
+| `condemnation` | prove a condemnation removal batch | Shipwright | `{scenario}` |
+| `spec-lint` | lint Captain-authored specs and assets at write time | Captain | — |
+| `install` | install or upgrade a dependency | Shipwright, Captain on the fast path | `{dependency}` |
+| `ship` | ship an outbound target | Captain | per target |
+| `ship-verify` | verify the live artifact a user consumes | Captain | per target |
+
+Parameters: `{scenario}` for a target set, `{dependency}` for an install, tier suffixes such as
+`sweep-sandbox`. No `{paths}` parameter is owed: every retrieval job turned out to be ad hoc.
+
+**Proving is an act, not a method.** Fitting out, the fast path, and every refit prove the rigging by
+running each derived method once. A `rigging-proof` method would be a plan that re-embeds every
+other plan, which is duplication for no gain.
+
+**Crew invokes exactly one method** (`prove`) and it is right that it invokes no more: a method is
+the tool for a job, and Crew's job is one target's fix and its focused proof. Giving Crew the gates
+would add an act, which no method may do.
+
+## What changes in the skills
+
+123 command-value mentions and 9 `## Commands` references across six skills. The substitution map:
+
+| Old command value | Becomes |
 |---|---|
-| QM step 2, Boatswain step 2, Shipwright step 2 openings | They compose `cat` and `git`, not `## Commands` values, and doctrine already states each as one run |
-| QM step 4 tier sweep across several tiers | Reactive: a red cheaper tier's dispatches complete before a costlier tier runs |
-| Boatswain's executable-hunk recheck | Doctrine's own words: the one run that depends on what came before |
-| Shipwright step 6 uncovered-module search | Reads step 4's output |
-| Crew step 3 | One command; composing more would add an act |
-| Captain's feature lint | One command |
+| `focused` | `prove`, or `verify` where the plank join belongs to the same step |
+| `broad` | `sweep` |
+| `coverage` | `regression` |
+| `step-usage` + `plank-inventory` | `plank-join` |
+| `discover` | `discovery`, or a part inside `static` |
+| `typecheck`, `lint` | parts inside `hygiene`, `static`, `condemnation`; Captain's own lint is `spec-lint` |
+| `conformance` | the part that replaces the plank inventory inside `plank-join` where the project derives its plank rules |
+| `## Outbound` `ship` / `verify` lines | `ship` / `ship-verify` methods |
+
+## Open judgments for dk
+
+1. **`## Outbound` currently carries command values** (`ship`, `verify` per target). Under rule 2
+   they are execution jobs and become methods. That is the reading this audit takes.
+2. **`install` as a method** makes the package manager's invocation a fitted value rather than a
+   role's improvisation, and gives fitting out a proven install path. It takes `{dependency}`.
+3. **A tier-tag sweep across several tiers stays several `sweep` invocations**, not one method: a
+   red cheaper tier's dispatches complete before a costlier tier runs, so the sequence is reactive
+   even though each sweep is a method.
