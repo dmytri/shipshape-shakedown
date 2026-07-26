@@ -84,13 +84,66 @@ Then("the predicted low tide is at {string} with height {float}", function (time
 });
 JS
 
-cat > "$BASE/task.md" <<EOF
+case "$ROLE" in
+  boatswain)
+    cat > "$BASE/task.md" <<EOF
 You are the Shipshape Boatswain. Project root: $SIM.
 
 Job: post-implementation. Base commit: $BASE_COMMIT.
 
 Proceed now without waiting for confirmation. Do not push or tag.
 EOF
+    ;;
+  qm)
+    # QM's deck is the OTHER shape: the spec and the watchbill exist, the production seam does not,
+    # so the target is genuinely red and QM must verify, make steps executable, and reach Crew.
+    ( cd "$SIM" && git checkout -- src/tide.js features/support/steps.js 2>/dev/null )
+    python3 - "$SIM/src/tide.js" <<'PYX'
+import sys
+p=sys.argv[1]; s=open(p).read()
+s=s.replace("module.exports = { nextHighTide, nextLowTide };","module.exports = { nextHighTide };")
+i=s.find('/** @planks("I ask for the next low tide')
+if i>0: s=s[:i].rstrip()+"\n"
+open(p,"w").write(s)
+PYX
+    cat > "$SIM/watchbill.json" <<'JSON'
+{ "watch1": { "scenarios": ["features/tides.feature:Next low tide after a given time"] } }
+JSON
+    ( cd "$SIM" && git add -A && git -c user.name="Sim Operator" -c user.email="sim@example.test" commit -qm "captain: low tide spec + watchbill" )
+    BASE_COMMIT=$( cd "$SIM" && git rev-parse HEAD )
+    cat > "$BASE/task.md" <<EOF
+You are the Shipshape Quartermaster. Project root: $SIM. Base commit: $BASE_COMMIT.
+
+You operate without a subagent spawn tool: where your role would dispatch another role, assume that
+role in place by reading its skill and following it.
+
+Proceed now without waiting for confirmation. Do not push or tag.
+EOF
+    ;;
+  crew)
+    ( cd "$SIM" && git checkout -- src/tide.js features/support/steps.js 2>/dev/null )
+    python3 - "$SIM/src/tide.js" <<'PYX'
+import sys
+p=sys.argv[1]; s=open(p).read()
+s=s.replace("module.exports = { nextHighTide, nextLowTide };","module.exports = { nextHighTide };")
+i=s.find('/** @planks("I ask for the next low tide')
+if i>0: s=s[:i].rstrip()+"\n"
+open(p,"w").write(s)
+PYX
+    ( cd "$SIM" && git add -A && git -c user.name="Sim Operator" -c user.email="sim@example.test" commit -qm "qm: low tide step definitions" )
+    BASE_COMMIT=$( cd "$SIM" && git rev-parse HEAD )
+    cat > "$BASE/task.md" <<EOF
+You are a Shipshape Crew Mate. Project root: $SIM. Base commit: $BASE_COMMIT.
+
+Target: features/tides.feature:Next low tide after a given time
+Failure evidence: the scenario fails with "TypeError: nextLowTide is not a function" from
+features/support/steps.js, because src/tide.js exports no nextLowTide.
+Solo dispatch.
+
+Proceed now without waiting for confirmation. Do not push or tag.
+EOF
+    ;;
+esac
 
 t0=$(date +%s)
 "$HERE/bin/eval-leg.sh" --model "$MODEL" --workspace "$SIM" --out "$BASE/probe.out" \
