@@ -35,7 +35,13 @@ say(){ echo "[$(date -u +%FT%TZ)] $*" | tee -a "$LOG"; }
 # so overlaying the JS toolkit into a Python sim would show the leg 160 JS packages and hand it a
 # false stack signal — the one thing a per-stack derivation test must not do.
 if [ "$STACK" = "py" ]; then
-  mkdir -p "$SCRATCH/.empty-nm/node_modules"; export EVAL_SHARED_NM="$SCRATCH/.empty-nm/node_modules"
+  # A skills-ONLY toolkit: carries the `skills` CLI (eval-leg needs it, and the npx cache is
+  # VM-mortal) but no @cucumber, so eval-leg skips the node_modules overlay and a Python sim is
+  # never shown 160 JS packages. An EMPTY toolkit starved the CLI and the leg died SILENTLY with
+  # an empty log and rc=2 (2026-07-26) — the same silent-exit class as the npx-cache wipe.
+  mkdir -p "$SCRATCH/.skillsonly-nm/node_modules"
+  [ -x "$SCRATCH/.skillsonly-nm/node_modules/.bin/skills" ] || { say "skills-only toolkit missing the skills CLI"; exit 3; }
+  export EVAL_SHARED_NM="$SCRATCH/.skillsonly-nm/node_modules"
 else
   NM="$SCRATCH/.shared-nm-$WAVE"
   [ -d "$NM/node_modules" ] || { mkdir -p "$NM"; cp -a "$SCRATCH/.shared-nm/node_modules" "$NM/"; }
