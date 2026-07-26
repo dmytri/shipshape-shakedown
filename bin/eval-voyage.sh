@@ -111,10 +111,21 @@ else
 fi
 
 # --- roles' own self-suite ---
+# The mountpoint is restored from a TRAP, not from the next line. A red or undefined self-suite
+# exits cucumber non-zero, and under `set -o pipefail` that killed this script HERE (2026-07-26,
+# methflash-b1 V2): the symlink survived, and bwrap cannot make an overlay mount on a symlink, so
+# EVERY later leg died "Can't make overlay mount ... No such file or directory" and the driver
+# read 4 void legs as disk/overlay pressure and stopped. The revert guard below was skipped in
+# the same breath, so a regressed voyage could also have survived into the base. This is very
+# likely the real cause of the qmax V6-V20 void-voyage grind that was attributed to disk.
 echo "eval-voyage[$WAVE/$V]: === SELF-SUITE ==="
+restore_nm(){ rm -f "$SIM/node_modules" 2>/dev/null || rm -rf "$SIM/node_modules" 2>/dev/null; mkdir -p "$SIM/node_modules"; }
+trap restore_nm EXIT
 rm -rf "$SIM/node_modules"; ln -s "$EVAL_SHARED_NM" "$SIM/node_modules"
-( cd "$SIM" && npx cucumber-js 2>&1 | tail -6 ) | tee "$BASE/$V-selfsuite.txt"
-rm -f "$SIM/node_modules"; mkdir -p "$SIM/node_modules"
+# A non-zero suite is DATA here, not a script failure: capture it and judge it below.
+( cd "$SIM" && npx cucumber-js 2>&1 | tail -6 ) > "$BASE/$V-selfsuite.txt" 2>&1 || true
+cat "$BASE/$V-selfsuite.txt"
+restore_nm
 
 # Phase-1 gate as a REGRESSION guard: a red self-suite means this voyage broke the roles'
 # own watchbill — revert the whole voyage so the base stays at the last green build. Skipped
