@@ -5,6 +5,8 @@ pressing the browser BACK button should return to the previously shown filter an
 the list and the highlighted filter link accordingly; forward should redo it. Right now
 back/forward does not restore the prior filter view.
 
-Proceed now without waiting for confirmation: cover it with a concrete scenario and make
-the app respond to browser history changes (the hashchange/popstate event) so the filter
-follows back/forward. Keep all existing behaviour working. Do not commit, push, or tag.
+Proceed now without waiting for confirmation. This is product intent, not a work order:
+author or correct the durable specs and `watchbill.json` that pin the behaviour, so a
+scenario fails on the current code, then STOP and report. Do not write production code
+yourself and do not edit anything under the implementation directories — the Quartermaster
+and Crew implement it from your specs on the next leg. Do not commit, push, or tag.

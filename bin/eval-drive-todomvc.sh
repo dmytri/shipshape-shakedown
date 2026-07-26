@@ -141,10 +141,19 @@ the node stays attached across the interaction."
     if [ -n "$hint" ]; then echo "- $hint"; fi
     echo "- If your in-harness suite genuinely cannot reproduce the failure, that is EXPECTED for a"
     echo "  browser-only defect — do not force an impossible failing scenario. Guard the behaviour with"
-    echo "  a source-level conformance check and fix the app."
+    echo "  a source-level conformance check instead."
     echo
-    echo "Proceed now without waiting for confirmation. Make the smallest product change that resolves"
-    echo "the named cause; keep everything already green. Do not commit, push, or tag."
+    # The operator is the user here, and a user's "just fix it" does NOT license Captain to write
+    # production code: doctrine's one absolute boundary routes it through a durable spec to QM and
+    # Crew. The old closing line ("make the smallest product change") did license it, and an
+    # 86-voyage tree audit found Captain writing js/index.html/css on ~every correction voyage
+    # under it, after which QM opened to an empty watchbill and reported "deck at rest" in three
+    # calls — so those voyages measured one model in one role, not the role chain (2026-07-26).
+    echo "Proceed now without waiting for confirmation. This is product intent, not a work order:"
+    echo "author or correct the durable specs and \`watchbill.json\` that pin the behaviour, so a"
+    echo "scenario fails on the current code, then STOP and report. Do not write production code"
+    echo "yourself and do not edit anything under the implementation directories — the Quartermaster"
+    echo "and Crew implement it from your specs on the next leg. Do not commit, push, or tag."
   } > "$task"
   echo "$task"
 }
@@ -280,9 +289,18 @@ for v in $(seq "$START" "$MAXV"); do
   fi
   tl=$(titles v$((v-1)) | tr 'A-Z' 'a-z')
   if [ "$ORACLE_CORRECT" = "1" ]; then
+    # An UNSERVED page grades UNPARSEABLE: no cypress failing blocks and no titles exist, so the
+    # correction intent would paste an EMPTY failure block between its rulers and the voyage is a
+    # guaranteed no-op (caught in flight, methflash-c1 v2, 2026-07-26). A build with no index.html
+    # has one cause and the intent library already names it; route there instead of pasting nothing.
+    if grep -q 'GRADE: UNPARSEABLE' "$BASE/v$((v-1))-oracle.txt" 2>/dev/null || [ ! -f "$SIM/index.html" ]; then
+      intent="page"; task="$I/page.md"
+      say "VOYAGE $v (intent=page — prior grade unparseable/no servable page, nothing to paste)"
+    else
     intent="oracle-correction"
     task=$(correction_intent "v$((v-1))")
     say "VOYAGE $v (oracle-correction — exact failure pasted verbatim)"
+    fi
   else
     intent=$(pick_intent "$p" "$tl")
     if [ "$intent" = "unknown" ]; then say "UNKNOWN failure pattern at ${p}/${t} — STOP for operator:"; titles v$((v-1)) | sed 's/^/    /' | tee -a "$LOG" >/dev/null; break; fi

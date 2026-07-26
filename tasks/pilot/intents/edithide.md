@@ -6,5 +6,8 @@ only the edit field. Fix it robustly: add a CSS rule to the app's own `css/app.c
 hides the controls (the `.view` block, or the checkbox and label and .destroy) of an
 `li.editing`, and make sure `index.html` actually loads `css/app.css`.
 
-Proceed now without waiting for confirmation: cover it with a scenario and fix it. Keep
-all existing behaviour working. Do not commit, push, or tag.
+Proceed now without waiting for confirmation. This is product intent, not a work order:
+author or correct the durable specs and `watchbill.json` that pin the behaviour, so a
+scenario fails on the current code, then STOP and report. Do not write production code
+yourself and do not edit anything under the implementation directories — the Quartermaster
+and Crew implement it from your specs on the next leg. Do not commit, push, or tag.
