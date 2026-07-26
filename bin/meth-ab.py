@@ -50,9 +50,17 @@ def leg_stats(path):
     cmds = shell_calls(path)
     s = dict(calls=len(cmds), plan=0, probe=0, foc1=0, focN=0, broad=0, plnk=0, usage=0, join=0)
     for c in cmds:
-        if "yoink" in c:
-            # a real plan carries at least one --run; anything else is the model probing the tool
-            (s.__setitem__("plan", s["plan"] + 1) if "--run" in c else s.__setitem__("probe", s["probe"] + 1))
+        # A composite method invocation, detected FORM-AGNOSTICALLY. The bundler form carries
+        # `--run` parts; the stack-neutral chain form carries labelled `echo "== <part>"` markers.
+        # Counting only yoink (the first version of this) scores every chain-form draw as
+        # non-adopting, which is an instrument artefact, not a result.
+        labels = len(re.findall(r'echo "== ', c))
+        if "yoink" in c and "--run" in c:
+            s["plan"] += 1
+        elif labels >= 2:
+            s["plan"] += 1
+        elif "yoink" in c:
+            s["probe"] += 1
         has_p, has_u = "@planks" in c, "format usage" in c
         s["plnk"] += has_p
         s["usage"] += has_u

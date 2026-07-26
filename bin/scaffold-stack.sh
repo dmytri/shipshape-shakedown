@@ -7,16 +7,17 @@
 # same two scenarios, and its own native runner, type checker, linter, and coverage tool, so the
 # derived commands and methods must genuinely differ.
 #
-# usage: scaffold-stack.sh <js|ts|py> <target-dir>
+# usage: scaffold-stack.sh <js|ts|py|rs> <target-dir>
 set -euo pipefail
-STACK="${1:?usage: scaffold-stack.sh <js|ts|py> <target-dir>}"
-TARGET="${2:?usage: scaffold-stack.sh <js|ts|py> <target-dir>}"
+STACK="${1:?usage: scaffold-stack.sh <js|ts|py|rs> <target-dir>}"
+TARGET="${2:?usage: scaffold-stack.sh <js|ts|py|rs> <target-dir>}"
 HERE="$(cd "$(dirname "$0")/.." && pwd)"
 case "$STACK" in
   js) SRC="$HERE/fixtures/tidewatch";;
   ts) SRC="$HERE/fixtures/tidewatch-ts";;
   py) SRC="$HERE/fixtures/tidewatch-py";;
-  *) echo "scaffold-stack.sh: unknown stack '$STACK' (js|ts|py)" >&2; exit 2;;
+  rs) SRC="$HERE/fixtures/tidewatch-rs";;
+  *) echo "scaffold-stack.sh: unknown stack '$STACK' (js|ts|py|rs)" >&2; exit 2;;
 esac
 [ -d "$SRC" ] || { echo "scaffold-stack.sh: fixture missing at $SRC" >&2; exit 2; }
 
@@ -37,6 +38,16 @@ case "$STACK" in
       npm install >/dev/null 2>&1
       npx cucumber-js >/dev/null 2>&1 || { echo "SCAFFOLD($STACK): cucumber not green"; exit 1; }
     fi
+    ;;
+  rs)
+    # No target/ is shipped: it is ~800M and a moved target dir buys little. The toolchain lives in
+    # /opt (already --ro-bind-try'd into every leg) with the real toolchain binaries symlinked into
+    # /usr/local/bin, so a leg reaches cargo/rustc/clippy/rustfmt/rustdoc with NO harness change and
+    # no rustup shim (the shim needs RUSTUP_HOME, which a --clearenv leg does not have). Cargo.lock
+    # ships, so the leg's fetch is deterministic; the leg has network and pays one cold compile.
+    rm -rf target
+    cargo test >/dev/null 2>&1 || { echo "SCAFFOLD(rs): cargo test not green"; exit 1; }
+    rm -rf target
     ;;
   py)
     # A venv is built HERE, at scaffold time and at the sim's own absolute path, because a venv

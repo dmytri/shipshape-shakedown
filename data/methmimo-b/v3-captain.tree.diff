@@ -1,0 +1,95 @@
+diff --git a/css/app.css b/css/app.css
+new file mode 100644
+index 0000000..c39be2a
+--- /dev/null
++++ b/css/app.css
+@@ -0,0 +1,4 @@
++/* Hide view elements when editing */
++.todo-list li.editing .view {
++	display: none;
++}
+diff --git a/js/app.js b/js/app.js
+index 0e2a446..a347665 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -72,24 +72,67 @@
+     var todos = loadTodos();
+     var filter = getFilter();
+ 
+-    todoList.innerHTML = '';
+-    todoCount = document.querySelector('.todo-count strong');
++    // Build map of existing li elements by id
++    var existingMap = {};
++    var existingLis = todoList.querySelectorAll('li[data-id]');
++    for (var i = 0; i < existingLis.length; i++) {
++      var existingLi = existingLis[i];
++      existingMap[existingLi.dataset.id] = existingLi;
++    }
++
++    // Track which ids are processed
++    var seenIds = {};
+ 
++    // For each todo, update existing element or create new one
++    // appendChild moves existing elements to the end (reordering)
+     todos.forEach(function (todo) {
+-      todoList.appendChild(createTodoElement(todo));
+-    });
++      var idStr = String(todo.id);
++      seenIds[idStr] = true;
+ 
+-    // Apply filter visibility
+-    var allItems = todoList.querySelectorAll('li');
+-    allItems.forEach(function (li) {
+-      var id = parseInt(li.dataset.id);
+-      var todo = todos.find(function (t) { return t.id === id; });
+-      if (!todo) return;
+-      if (filter === 'active' && todo.completed) li.style.display = 'none';
+-      else if (filter === 'completed' && !todo.completed) li.style.display = 'none';
+-      else li.style.display = '';
++      var li = existingMap[idStr];
++      if (li) {
++        // Move to end (reorders) and update in place
++        todoList.appendChild(li);
++
++        if (todo.completed) {
++          li.classList.add('completed');
++        } else {
++          li.classList.remove('completed');
++        }
++
++        // Always remove editing class during render
++        li.classList.remove('editing');
++
++        var checkbox = li.querySelector('.toggle');
++        if (checkbox) checkbox.checked = todo.completed;
++
++        var label = li.querySelector('label');
++        if (label) label.textContent = todo.title;
++
++        var editInput = li.querySelector('.edit');
++        if (editInput) editInput.value = todo.title;
++
++        if (filter === 'active' && todo.completed) li.style.display = 'none';
++        else if (filter === 'completed' && !todo.completed) li.style.display = 'none';
++        else li.style.display = '';
++      } else {
++        li = createTodoElement(todo);
++        if (filter === 'active' && todo.completed) li.style.display = 'none';
++        else if (filter === 'completed' && !todo.completed) li.style.display = 'none';
++        todoList.appendChild(li);
++      }
+     });
+ 
++    // Remove any existing elements not in the new todo list
++    for (var key in existingMap) {
++      if (!seenIds[key]) {
++        var el = existingMap[key];
++        if (el.parentNode) el.parentNode.removeChild(el);
++      }
++    }
++
++    todoCount = document.querySelector('.todo-count strong');
++
+     var activeCount = todos.filter(function (t) { return !t.completed; }).length;
+     var completedCount = todos.filter(function (t) { return t.completed; }).length;
+ 

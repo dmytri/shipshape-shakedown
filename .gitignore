@@ -21,3 +21,7 @@ experiments/
 __pycache__/
 *.pyc
 .env
+
+# Fixture build output: cargo target dirs are ~800M, python venvs carry absolute paths.
+fixtures/*/target/
+fixtures/*/.venv/

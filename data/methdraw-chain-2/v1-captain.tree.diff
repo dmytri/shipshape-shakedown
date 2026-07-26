@@ -1,0 +1,341 @@
+diff --git a/features/add-and-display-todos.feature b/features/add-and-display-todos.feature
+new file mode 100644
+index 0000000..1f7c9f5
+--- /dev/null
++++ b/features/add-and-display-todos.feature
+@@ -0,0 +1,43 @@
++Feature: Add and display todos
++  As a user
++  I want to add todos and see them listed
++  So that I can track what needs to be done
++
++  Background:
++    Given the TodoMVC app is open
++
++  Scenario: Page loads with focused input and hidden main and footer
++    Then the new-todo input is focused
++    And the main section is hidden
++    And the footer section is hidden
++
++  Scenario: Create a todo by pressing Enter
++    When the user types "Buy groceries" in the new-todo input and presses Enter
++    Then the todo list contains 1 item
++    And the todo at position 1 has title "Buy groceries"
++    And the todo at position 1 is not completed
++    And the new-todo input is empty
++    And the main section is visible
++    And the footer section is visible
++
++  Scenario: Create multiple todos
++    When the user types "Buy groceries" in the new-todo input and presses Enter
++    And the user types "Walk the dog" in the new-todo input and presses Enter
++    Then the todo list contains 2 items
++    And the todo at position 1 has title "Buy groceries"
++    And the todo at position 2 has title "Walk the dog"
++
++  Scenario: Empty or whitespace input is ignored
++    When the user types "" in the new-todo input and presses Enter
++    Then the todo list contains 0 items
++    When the user types "   " in the new-todo input and presses Enter
++    Then the todo list contains 0 items
++
++  Scenario: Input is trimmed before creating todo
++    When the user types "  Buy groceries  " in the new-todo input and presses Enter
++    Then the todo at position 1 has title "Buy groceries"
++
++  Scenario: Footer shows correct count after adding todos
++    When the user types "Buy groceries" in the new-todo input and presses Enter
++    And the user types "Walk the dog" in the new-todo input and presses Enter
++    Then the active count displays "2 items left"
+diff --git a/features/edit-todo.feature b/features/edit-todo.feature
+new file mode 100644
+index 0000000..a3c2535
+--- /dev/null
++++ b/features/edit-todo.feature
+@@ -0,0 +1,47 @@
++Feature: Edit a todo
++  As a user
++  I want to double-click a todo to edit its title
++  So that I can correct or update my tasks
++
++  Background:
++    Given the TodoMVC app is open
++    And the user has created a todo "Buy groceries"
++
++  Scenario: Double-click activates editing mode
++    When the user double-clicks the todo at position 1
++    Then the todo at position 1 has the editing class
++    And the edit input at position 1 contains "Buy groceries"
++    And the edit input at position 1 is focused
++
++  Scenario: Save edit on Enter
++    When the user double-clicks the todo at position 1
++    And the user types "Buy organic groceries" in the edit input at position 1 and presses Enter
++    Then the todo at position 1 has title "Buy organic groceries"
++    And the todo at position 1 does not have the editing class
++
++  Scenario: Save edit on blur
++    When the user double-clicks the todo at position 1
++    And the user types "Buy organic groceries" in the edit input at position 1 and blurs
++    Then the todo at position 1 has title "Buy organic groceries"
++    And the todo at position 1 does not have the editing class
++
++  Scenario: Escape discards changes
++    When the user double-clicks the todo at position 1
++    And the user types "Buy organic groceries" in the edit input at position 1 and presses Escape
++    Then the todo at position 1 has title "Buy groceries"
++    And the todo at position 1 does not have the editing class
++
++  Scenario: Empty edit destroys the todo
++    When the user double-clicks the todo at position 1
++    And the user clears the edit input at position 1 and presses Enter
++    Then the todo list contains 0 items
++
++  Scenario: Whitespace-only edit destroys the todo
++    When the user double-clicks the todo at position 1
++    And the user types "   " in the edit input at position 1 and presses Enter
++    Then the todo list contains 0 items
++
++  Scenario: Edit is trimmed before saving
++    When the user double-clicks the todo at position 1
++    And the user types "  Organic groceries  " in the edit input at position 1 and presses Enter
++    Then the todo at position 1 has title "Organic groceries"
+diff --git a/features/footer.feature b/features/footer.feature
+new file mode 100644
+index 0000000..68a021b
+--- /dev/null
++++ b/features/footer.feature
+@@ -0,0 +1,52 @@
++Feature: Footer controls
++  As a user
++  I want a footer with count, filters, and clear-completed
++  So that I can manage my todo list at a glance
++
++  Background:
++    Given the TodoMVC app is open
++
++  Scenario: Active count shows singular for one item
++    When the user types "Buy groceries" in the new-todo input and presses Enter
++    Then the active count displays "1 item left"
++
++  Scenario: Active count shows plural for multiple items
++    When the user types "Buy groceries" in the new-todo input and presses Enter
++    And the user types "Walk the dog" in the new-todo input and presses Enter
++    Then the active count displays "2 items left"
++
++  Scenario: Active count reflects completed todos
++    When the user types "Buy groceries" in the new-todo input and presses Enter
++    And the user types "Walk the dog" in the new-todo input and presses Enter
++    And the user toggles the todo at position 1
++    Then the active count displays "1 item left"
++
++  Scenario: Clear completed button removes completed todos
++    When the user types "Buy groceries" in the new-todo input and presses Enter
++    And the user types "Walk the dog" in the new-todo input and presses Enter
++    And the user toggles the todo at position 1
++    And the user clicks the "Clear completed" button
++    Then the todo list contains 1 item
++    And the todo at position 1 has title "Walk the dog"
++
++  Scenario: Clear completed is hidden when no todos are completed
++    Then the "Clear completed" button is hidden
++
++  Scenario: Clear completed is visible when some todos are completed
++    When the user types "Buy groceries" in the new-todo input and presses Enter
++    And the user toggles the todo at position 1
++    Then the "Clear completed" button is visible
++
++  Scenario: Clear completed does not affect active todos
++    When the user types "Buy groceries" in the new-todo input and presses Enter
++    And the user types "Walk the dog" in the new-todo input and presses Enter
++    And the user toggles the todo at position 1
++    And the user clicks the "Clear completed" button
++    Then the active count displays "1 item left"
++
++  Scenario: Footer hidden when no todos exist
++    Then the footer section is hidden
++
++  Scenario: Footer visible when todos exist
++    When the user types "Buy groceries" in the new-todo input and presses Enter
++    Then the footer section is visible
+diff --git a/features/persistence.feature b/features/persistence.feature
+new file mode 100644
+index 0000000..319c294
+--- /dev/null
++++ b/features/persistence.feature
+@@ -0,0 +1,27 @@
++Feature: localStorage persistence
++  As a user
++  I want my todos to persist across page reloads
++  So that I do not lose my work
++
++  Background:
++    Given the TodoMVC app is open
++
++  Scenario: Todos survive page reload
++    When the user types "Buy groceries" in the new-todo input and presses Enter
++    And the user types "Walk the dog" in the new-todo input and presses Enter
++    And the page reloads
++    Then the todo list contains 2 items
++    And the todo at position 1 has title "Buy groceries"
++    And the todo at position 2 has title "Walk the dog"
++
++  Scenario: Completion state survives page reload
++    When the user types "Buy groceries" in the new-todo input and presses Enter
++    And the user toggles the todo at position 1
++    And the page reloads
++    Then the todo at position 1 is completed
++
++  Scenario: Filter survives page reload
++    When the user types "Buy groceries" in the new-todo input and presses Enter
++    And the user navigates to "#/active"
++    And the page reloads
++    Then the "Active" filter link is selected
+diff --git a/features/routing.feature b/features/routing.feature
+new file mode 100644
+index 0000000..8073a8f
+--- /dev/null
++++ b/features/routing.feature
+@@ -0,0 +1,42 @@
++Feature: Routing and filtering
++  As a user
++  I want to filter my todos by status
++  So that I can focus on active or completed work
++
++  Background:
++    Given the TodoMVC app is open
++    And the user has created todos "Buy groceries" and "Walk the dog"
++    And the user has toggled the todo at position 1
++
++  Scenario: All filter shows all todos
++    When the user navigates to "#/"
++    Then the todo list displays 2 items
++    And the "All" filter link is selected
++
++  Scenario: Active filter shows only active todos
++    When the user navigates to "#/active"
++    Then the todo list displays 1 item
++    And the visible todo has title "Walk the dog"
++    And the "Active" filter link is selected
++
++  Scenario: Completed filter shows only completed todos
++    When the user navigates to "#/completed"
++    Then the todo list displays 1 item
++    And the visible todo has title "Buy groceries"
++    And the "Completed" filter link is selected
++
++  Scenario: Default route shows all todos
++    When the user navigates to ""
++    Then the todo list displays 2 items
++    And the "All" filter link is selected
++
++  Scenario: Toggling a todo in filtered view hides it when filter does not match
++    Given the user navigates to "#/active"
++    When the user toggles the todo at position 1
++    Then the todo list displays 0 items
++
++  Scenario: Active filter is persisted on reload
++    When the user navigates to "#/active"
++    And the page reloads
++    Then the "Active" filter link is selected
++    And the todo list displays 1 item
+diff --git a/features/toggle-todo.feature b/features/toggle-todo.feature
+new file mode 100644
+index 0000000..2b456ab
+--- /dev/null
++++ b/features/toggle-todo.feature
+@@ -0,0 +1,42 @@
++Feature: Toggle todo completion
++  As a user
++  I want to mark todos as complete or active
++  So that I can track my progress
++
++  Background:
++    Given the TodoMVC app is open
++    And the user has created todos "Buy groceries" and "Walk the dog"
++
++  Scenario: Mark a todo as completed
++    When the user toggles the todo at position 1
++    Then the todo at position 1 is completed
++    And the todo at position 2 is not completed
++
++  Scenario: Mark a completed todo as active
++    When the user toggles the todo at position 1
++    And the user toggles the todo at position 1
++    Then the todo at position 1 is not completed
++
++  Scenario: Toggle all marks all todos as completed
++    When the user toggles the toggle-all checkbox
++    Then the todo at position 1 is completed
++    And the todo at position 2 is completed
++    And the toggle-all checkbox is checked
++
++  Scenario: Toggle all marks all todos as active
++    When the user toggles the todo at position 1
++    And the user toggles the toggle-all checkbox
++    Then the todo at position 1 is not completed
++    And the todo at position 2 is not completed
++    And the toggle-all checkbox is not checked
++
++  Scenario: Toggle-all reflects state when all individual todos are completed
++    When the user toggles the todo at position 1
++    And the user toggles the todo at position 2
++    Then the toggle-all checkbox is checked
++
++  Scenario: Active count updates when todos are toggled
++    When the user toggles the todo at position 1
++    Then the active count displays "1 item left"
++    When the user toggles the toggle-all checkbox
++    Then the active count displays "2 items left"
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..5d0d64c
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,46 @@
++{
++  "watches": [
++    {
++      "id": "add-and-display",
++      "scopes": [
++        "features/add-and-display-todos.feature"
++      ],
++      "note": "Core add, display, trim, and empty-state behaviour. Must pass before other watches."
++    },
++    {
++      "id": "toggle",
++      "scopes": [
++        "features/toggle-todo.feature"
++      ],
++      "note": "Individual and toggle-all completion, active count updates."
++    },
++    {
++      "id": "edit",
++      "scopes": [
++        "features/edit-todo.feature"
++      ],
++      "note": "Double-click edit, save on blur/Enter, discard on Escape, destroy on empty."
++    },
++    {
++      "id": "routing",
++      "scopes": [
++        "features/routing.feature"
++      ],
++      "note": "Hash-based routing, filter views, filter persistence on reload."
++    },
++    {
++      "id": "footer",
++      "scopes": [
++        "features/footer.feature"
++      ],
++      "note": "Active count pluralization, clear-completed button visibility and behaviour."
++    },
++    {
++      "id": "persistence",
++      "scopes": [
++        "features/persistence.feature"
++      ],
++      "note": "localStorage persistence of todos, completion state, and active filter."
++    }
++  ]
++}

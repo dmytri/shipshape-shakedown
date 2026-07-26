@@ -1,0 +1,502 @@
+diff --git a/cucumber.js b/cucumber.js
+new file mode 100644
+index 0000000..61be6f3
+--- /dev/null
++++ b/cucumber.js
+@@ -0,0 +1,6 @@
++module.exports = {
++  default: {
++    format: ['progress'],
++    formatOptions: { snippetInterface: 'synchronous' }
++  }
++};
+diff --git a/features/step_definitions/todomvc_steps.js b/features/step_definitions/todomvc_steps.js
+new file mode 100644
+index 0000000..a66f7e5
+--- /dev/null
++++ b/features/step_definitions/todomvc_steps.js
+@@ -0,0 +1,245 @@
++const { Given, When, Then } = require('@cucumber/cucumber');
++const assert = require('assert');
++
++// Background: the TodoMVC app is open
++Given('the TodoMVC app is open', function () {
++  this.openApp();
++});
++
++// Setup: user has created a todo
++Given('the user has created a todo {string}', function (title) {
++  this.createTodo(title);
++});
++
++// Setup: user has created multiple todos
++Given('the user has created todos {string} and {string}', function (title1, title2) {
++  this.createTodo(title1);
++  this.createTodo(title2);
++});
++
++// Setup: user has toggled a todo
++Given('the user has toggled the todo at position {int}', function (pos) {
++  const todo = this.getTodoAtPosition(pos);
++  const checkbox = todo.querySelector('.toggle');
++  checkbox.click();
++});
++
++// Navigation
++When('the user navigates to {string}', function (hash) {
++  this.window.location.hash = hash;
++});
++
++// Create todo by typing and pressing Enter
++When('the user types {string} in the new-todo input and presses Enter', function (text) {
++  const input = this.document.querySelector('.new-todo');
++  input.value = text;
++  input.dispatchEvent(new this.window.KeyboardEvent('keydown', { key: 'Enter', keyCode: 13 }));
++});
++
++// Double-click todo
++When('the user double-clicks the todo at position {int}', function (pos) {
++  const todo = this.getTodoAtPosition(pos);
++  const label = todo.querySelector('label');
++  label.dispatchEvent(new this.window.Event('dblclick'));
++});
++
++// Edit: type in edit input and press Enter
++When('the user types {string} in the edit input at position {int} and presses Enter', function (text, pos) {
++  const todo = this.getTodoAtPosition(pos);
++  const editInput = todo.querySelector('.edit');
++  editInput.value = text;
++  editInput.dispatchEvent(new this.window.KeyboardEvent('keydown', { key: 'Enter', keyCode: 13 }));
++});
++
++// Edit: type in edit input and blur
++When('the user types {string} in the edit input at position {int} and blurs', function (text, pos) {
++  const todo = this.getTodoAtPosition(pos);
++  const editInput = todo.querySelector('.edit');
++  editInput.value = text;
++  editInput.dispatchEvent(new this.window.Event('blur'));
++});
++
++// Edit: type in edit input and press Escape
++When('the user types {string} in the edit input at position {int} and presses Escape', function (text, pos) {
++  const todo = this.getTodoAtPosition(pos);
++  const editInput = todo.querySelector('.edit');
++  editInput.value = text;
++  editInput.dispatchEvent(new this.window.KeyboardEvent('keydown', { key: 'Escape', keyCode: 27 }));
++});
++
++// Edit: clear edit input and press Enter
++When('the user clears the edit input at position {int} and presses Enter', function (pos) {
++  const todo = this.getTodoAtPosition(pos);
++  const editInput = todo.querySelector('.edit');
++  editInput.value = '';
++  editInput.dispatchEvent(new this.window.KeyboardEvent('keydown', { key: 'Enter', keyCode: 13 }));
++});
++
++// Toggle a todo
++When('the user toggles the todo at position {int}', function (pos) {
++  const todo = this.getTodoAtPosition(pos);
++  const checkbox = todo.querySelector('.toggle');
++  checkbox.click();
++});
++
++// Toggle all
++When('the user toggles the toggle-all checkbox', function () {
++  const toggleAll = this.document.querySelector('#toggle-all');
++  toggleAll.click();
++});
++
++// Click button
++When('the user clicks the {string} button', function (buttonText) {
++  const buttons = Array.from(this.document.querySelectorAll('button'));
++  const btn = buttons.find(b => b.textContent.trim() === buttonText);
++  btn.click();
++});
++
++// Page reload
++When('the page reloads', function () {
++  const html = this.document.documentElement.outerHTML;
++  const url = this.window.location.href;
++  this.window = new (require('happy-dom').Window)({ url });
++  this.document = this.window.document;
++  this.document.open();
++  this.document.write(html);
++  this.document.close();
++});
++
++// Assertions: new-todo input focused
++Then('the new-todo input is focused', function () {
++  const input = this.document.querySelector('.new-todo');
++  assert.strictEqual(this.document.activeElement, input);
++});
++
++// Assertions: main section visibility
++Then('the main section is hidden', function () {
++  const main = this.document.querySelector('.main');
++  const style = this.window.getComputedStyle(main);
++  assert.strictEqual(style.display, 'none');
++});
++
++Then('the main section is visible', function () {
++  const main = this.document.querySelector('.main');
++  const style = this.window.getComputedStyle(main);
++  assert.notStrictEqual(style.display, 'none');
++});
++
++// Assertions: footer section visibility
++Then('the footer section is hidden', function () {
++  const footer = this.document.querySelector('.footer');
++  const style = this.window.getComputedStyle(footer);
++  assert.strictEqual(style.display, 'none');
++});
++
++Then('the footer section is visible', function () {
++  const footer = this.document.querySelector('.footer');
++  const style = this.window.getComputedStyle(footer);
++  assert.notStrictEqual(style.display, 'none');
++});
++
++// Assertions: todo list count
++Then('the todo list contains {int} item(s)', function (count) {
++  const items = this.getTodoItems();
++  assert.strictEqual(items.length, count);
++});
++
++Then('the todo list displays {int} item(s)', function (count) {
++  const items = this.getVisibleTodoItems();
++  assert.strictEqual(items.length, count);
++});
++
++// Assertions: todo title
++Then('the todo at position {int} has title {string}', function (pos, title) {
++  const todo = this.getTodoAtPosition(pos);
++  const label = todo.querySelector('label');
++  assert.strictEqual(label.textContent, title);
++});
++
++// Assertions: todo completion state
++Then('the todo at position {int} is completed', function (pos) {
++  const todo = this.getTodoAtPosition(pos);
++  assert.ok(todo.classList.contains('completed'));
++});
++
++Then('the todo at position {int} is not completed', function (pos) {
++  const todo = this.getTodoAtPosition(pos);
++  assert.ok(!todo.classList.contains('completed'));
++});
++
++// Assertions: editing class
++Then('the todo at position {int} has the editing class', function (pos) {
++  const todo = this.getTodoAtPosition(pos);
++  assert.ok(todo.classList.contains('editing'));
++});
++
++Then('the todo at position {int} does not have the editing class', function (pos) {
++  const todo = this.getTodoAtPosition(pos);
++  assert.ok(!todo.classList.contains('editing'));
++});
++
++// Assertions: edit input
++Then('the edit input at position {int} contains {string}', function (pos, text) {
++  const todo = this.getTodoAtPosition(pos);
++  const editInput = todo.querySelector('.edit');
++  assert.strictEqual(editInput.value, text);
++});
++
++Then('the edit input at position {int} is focused', function (pos) {
++  const todo = this.getTodoAtPosition(pos);
++  const editInput = todo.querySelector('.edit');
++  assert.strictEqual(this.document.activeElement, editInput);
++});
++
++// Assertions: new-todo input empty
++Then('the new-todo input is empty', function () {
++  const input = this.document.querySelector('.new-todo');
++  assert.strictEqual(input.value, '');
++});
++
++// Assertions: active count
++Then('the active count displays {string}', function (text) {
++  const count = this.document.querySelector('.todo-count');
++  assert.strictEqual(count.textContent.trim(), text);
++});
++
++// Assertions: toggle-all checkbox
++Then('the toggle-all checkbox is checked', function () {
++  const toggleAll = this.document.querySelector('#toggle-all');
++  assert.ok(toggleAll.checked);
++});
++
++Then('the toggle-all checkbox is not checked', function () {
++  const toggleAll = this.document.querySelector('#toggle-all');
++  assert.ok(!toggleAll.checked);
++});
++
++// Assertions: filter link selected
++Then('the {string} filter link is selected', function (filterName) {
++  const links = Array.from(this.document.querySelectorAll('.filters a'));
++  const link = links.find(a => a.textContent.trim() === filterName);
++  assert.ok(link.classList.contains('selected'));
++});
++
++// Assertions: clear completed button
++Then('the "Clear completed" button is hidden', function () {
++  const btn = this.document.querySelector('.clear-completed');
++  const style = this.window.getComputedStyle(btn);
++  assert.strictEqual(style.display, 'none');
++});
++
++Then('the "Clear completed" button is visible', function () {
++  const btn = this.document.querySelector('.clear-completed');
++  const style = this.window.getComputedStyle(btn);
++  assert.notStrictEqual(style.display, 'none');
++});
++
++// Assertions: visible todo title
++Then('the visible todo has title {string}', function (title) {
++  const items = this.getVisibleTodoItems();
++  const found = items.some(item => {
++    const label = item.querySelector('label');
++    return label.textContent === title;
++  });
++  assert.ok(found, `No visible todo with title "${title}"`);
++});
+diff --git a/features/support/hooks.js b/features/support/hooks.js
+new file mode 100644
+index 0000000..0282ab1
+--- /dev/null
++++ b/features/support/hooks.js
+@@ -0,0 +1,5 @@
++const { After } = require('@cucumber/cucumber');
++
++After(function () {
++  this.closeWindow();
++});
+diff --git a/features/support/world.js b/features/support/world.js
+new file mode 100644
+index 0000000..480442b
+--- /dev/null
++++ b/features/support/world.js
+@@ -0,0 +1,66 @@
++const { setWorldConstructor, World } = require('@cucumber/cucumber');
++const { Window } = require('happy-dom');
++const fs = require('fs');
++const path = require('path');
++
++class TodoWorld extends World {
++  constructor(options) {
++    super(options);
++    this.window = null;
++    this.document = null;
++  }
++
++  openApp() {
++    // Close previous window if any
++    this.closeWindow();
++    
++    const htmlPath = path.resolve(__dirname, '../../index.html');
++    let html = fs.readFileSync(htmlPath, 'utf8');
++    // Strip external resource references to avoid socket leaks
++    html = html.replace(/<link[^>]*>/g, '');
++    html = html.replace(/<script[^>]*>[\s\S]*?<\/script>/g, '');
++    this.window = new Window({ url: 'http://localhost/' });
++    this.document = this.window.document;
++    this.document.open();
++    this.document.write(html);
++    this.document.close();
++  }
++
++  closeWindow() {
++    if (this.window) {
++      try {
++        // Destroy all child nodes to release references
++        while (this.document && this.document.documentElement) {
++          this.document.documentElement.remove();
++        }
++        this.window.close();
++      } catch (e) {}
++      this.window = null;
++      this.document = null;
++    }
++  }
++
++  getTodoItems() {
++    return Array.from(this.document.querySelectorAll('.todo-list li'));
++  }
++
++  getVisibleTodoItems() {
++    return this.getTodoItems().filter(li => {
++      const style = this.window.getComputedStyle(li);
++      return style.display !== 'none';
++    });
++  }
++
++  getTodoAtPosition(pos) {
++    const items = this.getTodoItems();
++    return items[pos - 1] || null;
++  }
++
++  createTodo(title) {
++    const input = this.document.querySelector('.new-todo');
++    input.value = title;
++    input.dispatchEvent(new this.window.KeyboardEvent('keydown', { key: 'Enter', keyCode: 13 }));
++  }
++}
++
++setWorldConstructor(TodoWorld);
+diff --git a/index.html b/index.html
+new file mode 100644
+index 0000000..f9fdf75
+--- /dev/null
++++ b/index.html
+@@ -0,0 +1,38 @@
++<!doctype html>
++<html lang="en">
++<head>
++  <meta charset="utf-8">
++  <meta name="viewport" content="width=device-width, initial-scale=1">
++  <title>Template • TodoMVC</title>
++  <link rel="stylesheet" href="node_modules/todomvc-common/base.css">
++  <link rel="stylesheet" href="node_modules/todomvc-app-css/index.css">
++  <link rel="stylesheet" href="css/app.css">
++</head>
++<body>
++  <section class="todoapp">
++    <header class="header">
++      <h1>todos</h1>
++      <input class="new-todo" placeholder="What needs to be done?" autofocus>
++    </header>
++    <section class="main">
++      <input id="toggle-all" class="toggle-all" type="checkbox">
++      <label for="toggle-all">Mark all as complete</label>
++      <ul class="todo-list"></ul>
++    </section>
++    <footer class="footer">
++      <span class="todo-count"><strong>0</strong> items left</span>
++      <ul class="filters">
++        <li><a class="selected" href="#/">All</a></li>
++        <li><a href="#/active">Active</a></li>
++        <li><a href="#/completed">Completed</a></li>
++      </ul>
++      <button class="clear-completed">Clear completed</button>
++    </footer>
++  </section>
++  <footer class="info">
++    <p>Double-click to edit a todo</p>
++  </footer>
++  <script src="node_modules/todomvc-common/base.js"></script>
++  <script src="js/app.js"></script>
++</body>
++</html>
+diff --git a/watchbill.json b/watchbill.json
+index 5d0d64c..171213f 100644
+--- a/watchbill.json
++++ b/watchbill.json
+@@ -1,46 +1,63 @@
+ {
+-  "watches": [
+-    {
+-      "id": "add-and-display",
+-      "scopes": [
+-        "features/add-and-display-todos.feature"
+-      ],
+-      "note": "Core add, display, trim, and empty-state behaviour. Must pass before other watches."
+-    },
+-    {
+-      "id": "toggle",
+-      "scopes": [
+-        "features/toggle-todo.feature"
+-      ],
+-      "note": "Individual and toggle-all completion, active count updates."
+-    },
+-    {
+-      "id": "edit",
+-      "scopes": [
+-        "features/edit-todo.feature"
+-      ],
+-      "note": "Double-click edit, save on blur/Enter, discard on Escape, destroy on empty."
+-    },
+-    {
+-      "id": "routing",
+-      "scopes": [
+-        "features/routing.feature"
+-      ],
+-      "note": "Hash-based routing, filter views, filter persistence on reload."
+-    },
+-    {
+-      "id": "footer",
+-      "scopes": [
+-        "features/footer.feature"
+-      ],
+-      "note": "Active count pluralization, clear-completed button visibility and behaviour."
+-    },
+-    {
+-      "id": "persistence",
+-      "scopes": [
+-        "features/persistence.feature"
+-      ],
+-      "note": "localStorage persistence of todos, completion state, and active filter."
+-    }
+-  ]
++  "watch1": {
++    "scenarios": [
++      "features/add-and-display-todos.feature:Page loads with focused input and hidden main and footer",
++      "features/add-and-display-todos.feature:Create a todo by pressing Enter",
++      "features/add-and-display-todos.feature:Create multiple todos",
++      "features/add-and-display-todos.feature:Empty or whitespace input is ignored",
++      "features/add-and-display-todos.feature:Input is trimmed before creating todo",
++      "features/add-and-display-todos.feature:Footer shows correct count after adding todos"
++    ]
++  },
++  "watch2": {
++    "scenarios": [
++      "features/toggle-todo.feature:Mark a todo as completed",
++      "features/toggle-todo.feature:Mark a completed todo as active",
++      "features/toggle-todo.feature:Toggle all marks all todos as completed",
++      "features/toggle-todo.feature:Toggle all marks all todos as active",
++      "features/toggle-todo.feature:Toggle-all reflects state when all individual todos are completed",
++      "features/toggle-todo.feature:Active count updates when todos are toggled"
++    ]
++  },
++  "watch3": {
++    "scenarios": [
++      "features/edit-todo.feature:Double-click activates editing mode",
++      "features/edit-todo.feature:Save edit on Enter",
++      "features/edit-todo.feature:Save edit on blur",
++      "features/edit-todo.feature:Escape discards changes",
++      "features/edit-todo.feature:Empty edit destroys the todo",
++      "features/edit-todo.feature:Whitespace-only edit destroys the todo",
++      "features/edit-todo.feature:Edit is trimmed before saving"
++    ]
++  },
++  "watch4": {
++    "scenarios": [
++      "features/routing.feature:All filter shows all todos",
++      "features/routing.feature:Active filter shows only active todos",
++      "features/routing.feature:Completed filter shows only completed todos",
++      "features/routing.feature:Default route shows all todos",
++      "features/routing.feature:Toggling a todo in filtered view hides it when filter does not match",
++      "features/routing.feature:Active filter is persisted on reload"
++    ]
++  },
++  "watch5": {
++    "scenarios": [
++      "features/footer.feature:Active count shows singular for one item",
++      "features/footer.feature:Active count shows plural for multiple items",
++      "features/footer.feature:Active count reflects completed todos",
++      "features/footer.feature:Clear completed button removes completed todos",
++      "features/footer.feature:Clear completed is hidden when no todos are completed",
++      "features/footer.feature:Clear completed is visible when some todos are completed",
++      "features/footer.feature:Clear completed does not affect active todos",
++      "features/footer.feature:Footer hidden when no todos exist",
++      "features/footer.feature:Footer visible when todos exist"
++    ]
++  },
++  "watch6": {
++    "scenarios": [
++      "features/persistence.feature:Todos survive page reload",
++      "features/persistence.feature:Completion state survives page reload",
++      "features/persistence.feature:Filter survives page reload"
++    ]
++  }
+ }

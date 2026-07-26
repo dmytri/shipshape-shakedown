@@ -1,0 +1,472 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..e749ed4
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,34 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
++
++## Voyage 1: TodoMVC
++
++**Status:** Specs authored, watchbill written. Awaiting QM dispatch.
++
++**Specs authored:**
++- `features/add-and-display-todos.feature` — 7 scenarios
++- `features/toggle-todo.feature` — 7 scenarios
++- `features/edit-todo.feature` — 7 scenarios
++- `features/active-counter.feature` — 5 scenarios
++- `features/clear-completed.feature` — 5 scenarios
++- `features/filtering-routing.feature` — 7 scenarios
++- `features/persistence.feature` — 4 scenarios
++
++**Total:** 42 scenarios across 7 features.
++
++**Design decisions:**
++- Feature-per-concern split, not one monolithic feature. Each feature has one quality concern and one set of step definitions.
++- Editing is its own feature because it has distinct interaction rules (double-click, blur, Escape, trim-and-destroy-empty).
++- Routing and filtering combined: the spec treats them as inseparable — the filter state IS the route.
++- Persistence is a separate feature, not embedded in every other feature. It tests the reload seam independently.
++- No `@contract` scenarios: no scantling specified mechanical shape for this app.
++- No `@conformance` scenarios: no methodology checks on first voyage.
++
++**Assets referenced:**
++- `assets/app-spec.md` — TodoMVC spec (source of truth for behaviour)
++- `assets/app-template.index.html` — Base HTML markup
++
++**Next role:** QM, with clean context per the Context bulkhead Article.
+diff --git a/features/active-counter.feature b/features/active-counter.feature
+new file mode 100644
+index 0000000..18d4757
+--- /dev/null
++++ b/features/active-counter.feature
+@@ -0,0 +1,31 @@
++Feature: Active todo counter
++  As a user
++  I want to see how many todos are left
++  So that I know my remaining workload
++
++  Rule: Counter shows active todo count
++
++    Scenario: Counter shows zero when no active todos
++      Given the todo list contains completed "Buy groceries"
++      Then the counter shows "0 items left"
++
++    Scenario: Counter shows singular for one active todo
++      Given the todo list contains "Buy groceries"
++      Then the counter shows "1 item left"
++
++    Scenario: Counter shows plural for multiple active todos
++      Given the todo list contains "Buy groceries"
++      And the todo list contains "Walk the dog"
++      Then the counter shows "2 items left"
++
++    Scenario: Counter updates when todo is completed
++      Given the todo list contains "Buy groceries"
++      And the todo list contains "Walk the dog"
++      When the user toggles "Buy groceries"
++      Then the counter shows "1 item left"
++
++    Scenario: Counter updates when completed todo is uncompleted
++      Given the todo list contains completed "Buy groceries"
++      And the todo list contains completed "Walk the dog"
++      When the user toggles "Buy groceries"
++      Then the counter shows "1 item left"
+diff --git a/features/add-and-display-todos.feature b/features/add-and-display-todos.feature
+new file mode 100644
+index 0000000..abd76f6
+--- /dev/null
++++ b/features/add-and-display-todos.feature
+@@ -0,0 +1,55 @@
++Feature: Add and display todos
++  As a user
++  I want to add new todos and see them in the list
++  So that I can track what needs to be done
++
++  Rule: New todos are added through the input field
++
++    Scenario: Adding a todo with Enter key
++      Given the todo list is empty
++      When the user types "Buy groceries" in the new todo input
++      And the user presses Enter
++      Then the todo list contains "Buy groceries"
++      And the new todo input is empty
++
++    Scenario: Empty or whitespace input is ignored
++      Given the todo list is empty
++      When the user types "   " in the new todo input
++      And the user presses Enter
++      Then the todo list is empty
++
++    Scenario: Input is trimmed before adding
++      Given the todo list is empty
++      When the user types "  Buy groceries  " in the new todo input
++      And the user presses Enter
++      Then the todo list contains "Buy groceries"
++
++    Scenario: Multiple todos can be added
++      Given the todo list is empty
++      When the user adds a todo "Buy groceries"
++      And the user adds a todo "Walk the dog"
++      Then the todo list contains "Buy groceries"
++      And the todo list contains "Walk the dog"
++
++  Rule: Todo visibility
++
++    Scenario: Newly added todos are active
++      Given the todo list is empty
++      When the user adds a todo "Buy groceries"
++      Then "Buy groceries" is not completed
++
++    Scenario: Empty state hides main section and footer
++      Given the todo list is empty
++      Then the main section is hidden
++      And the footer is hidden
++
++    Scenario: Non-empty state shows main section and footer
++      Given the todo list is empty
++      When the user adds a todo "Buy groceries"
++      Then the main section is visible
++      And the footer is visible
++
++  Rule: Input is focused on page load
++
++    Scenario: New todo input has focus when page loads
++      Then the new todo input is focused
+diff --git a/features/clear-completed.feature b/features/clear-completed.feature
+new file mode 100644
+index 0000000..32898ea
+--- /dev/null
++++ b/features/clear-completed.feature
+@@ -0,0 +1,36 @@
++Feature: Clear completed todos
++  As a user
++  I want to remove all completed todos
++  So that I can clean up my list
++
++  Rule: Clear completed removes completed todos
++
++    Scenario: Clear completed removes completed todos
++      Given the todo list contains "Buy groceries"
++      And the todo list contains completed "Walk the dog"
++      When the user clicks the clear completed button
++      Then the todo list contains "Buy groceries"
++      And the todo list does not contain "Walk the dog"
++
++    Scenario: Clear completed does not affect active todos
++      Given the todo list contains "Buy groceries"
++      And the todo list contains "Walk the dog"
++      When the user clicks the clear completed button
++      Then the todo list contains "Buy groceries"
++      And the todo list contains "Walk the dog"
++
++  Rule: Clear completed button visibility
++
++    Scenario: Button is hidden when no completed todos exist
++      Given the todo list contains "Buy groceries"
++      Then the clear completed button is hidden
++
++    Scenario: Button is visible when completed todos exist
++      Given the todo list contains "Buy groceries"
++      And the todo list contains completed "Walk the dog"
++      Then the clear completed button is visible
++
++    Scenario: Button hides after all completed are cleared
++      Given the todo list contains completed "Buy groceries"
++      When the user clicks the clear completed button
++      Then the clear completed button is hidden
+diff --git a/features/edit-todo.feature b/features/edit-todo.feature
+new file mode 100644
+index 0000000..5eeb4ac
+--- /dev/null
++++ b/features/edit-todo.feature
+@@ -0,0 +1,70 @@
++Feature: Edit todo
++  As a user
++  I want to edit existing todos
++  So that I can correct or update my task descriptions
++
++  Rule: Double-click activates editing mode
++
++    Scenario: Double-clicking a todo shows the edit input
++      Given the todo list contains "Buy groceries"
++      When the user double-clicks "Buy groceries"
++      Then "Buy groceries" is in editing mode
++      And the edit input contains "Buy groceries"
++
++    Scenario: Edit input is focused when editing mode activates
++      Given the todo list contains "Buy groceries"
++      When the user double-clicks "Buy groceries"
++      Then the edit input is focused
++
++  Rule: Editing saves on blur and Enter
++
++    Scenario: Pressing Enter saves the edit
++      Given the todo list contains "Buy groceries"
++      When the user double-clicks "Buy groceries"
++      And the user types "Buy organic groceries" in the edit input
++      And the user presses Enter in the edit input
++      Then the todo list contains "Buy organic groceries"
++      And "Buy organic groceries" is not in editing mode
++
++    Scenario: Blurring saves the edit
++      Given the todo list contains "Buy groceries"
++      When the user double-clicks "Buy groceries"
++      And the user types "Buy organic groceries" in the edit input
++      And the user blurs the edit input
++      Then the todo list contains "Buy organic groceries"
++      And "Buy organic groceries" is not in editing mode
++
++  Rule: Empty edits destroy the todo
++
++    Scenario: Saving an empty edit removes the todo
++      Given the todo list contains "Buy groceries"
++      When the user double-clicks "Buy groceries"
++      And the user clears the edit input
++      And the user presses Enter in the edit input
++      Then the todo list does not contain "Buy groceries"
++
++    Scenario: Saving a whitespace-only edit removes the todo
++      Given the todo list contains "Buy groceries"
++      When the user double-clicks "Buy groceries"
++      And the user types "   " in the edit input
++      And the user presses Enter in the edit input
++      Then the todo list does not contain "Buy groceries"
++
++  Rule: Escape discards changes
++
++    Scenario: Pressing Escape discards the edit
++      Given the todo list contains "Buy groceries"
++      When the user double-clicks "Buy groceries"
++      And the user types "Something else" in the edit input
++      And the user presses Escape in the edit input
++      Then the todo list contains "Buy groceries"
++      And "Buy groceries" is not in editing mode
++
++  Rule: Edit input is trimmed
++
++    Scenario: Edit input is trimmed before saving
++      Given the todo list contains "Buy groceries"
++      When the user double-clicks "Buy groceries"
++      And the user types "  Buy organic groceries  " in the edit input
++      And the user presses Enter in the edit input
++      Then the todo list contains "Buy organic groceries"
+diff --git a/features/filtering-routing.feature b/features/filtering-routing.feature
+new file mode 100644
+index 0000000..1299504
+--- /dev/null
++++ b/features/filtering-routing.feature
+@@ -0,0 +1,63 @@
++Feature: Filtering and routing
++  As a user
++  I want to filter todos by status
++  So that I can focus on active or completed work
++
++  Rule: Default view shows all todos
++
++    Scenario: All todos are visible on the default route
++      Given the todo list contains "Buy groceries"
++      And the todo list contains completed "Walk the dog"
++      When the user navigates to "#/"
++      Then "Buy groceries" is visible
++      And "Walk the dog" is visible
++      And "All" filter is selected
++
++  Rule: Active filter shows only active todos
++
++    Scenario: Active filter hides completed todos
++      Given the todo list contains "Buy groceries"
++      And the todo list contains completed "Walk the dog"
++      When the user navigates to "#/active"
++      Then "Buy groceries" is visible
++      And "Walk the dog" is not visible
++      And "Active" filter is selected
++
++  Rule: Completed filter shows only completed todos
++
++    Scenario: Completed filter hides active todos
++      Given the todo list contains "Buy groceries"
++      And the todo list contains completed "Walk the dog"
++      When the user navigates to "#/completed"
++      Then "Buy groceries" is not visible
++      And "Walk the dog" is visible
++      And "Completed" filter is selected
++
++  Rule: Items update when toggled in filtered view
++
++    Scenario: Completing a todo in Active filter hides it
++      Given the todo list contains "Buy groceries"
++      And the todo list contains "Walk the dog"
++      When the user navigates to "#/active"
++      And the user toggles "Buy groceries"
++      Then "Buy groceries" is not visible
++      And "Walk the dog" is visible
++
++    Scenario: Uncompleting a todo in Completed filter hides it
++      Given the todo list contains completed "Buy groceries"
++      And the todo list contains completed "Walk the dog"
++      When the user navigates to "#/completed"
++      And the user toggles "Buy groceries"
++      Then "Buy groceries" is not visible
++      And "Walk the dog" is visible
++
++  Rule: Routing persists on reload
++
++    Scenario: Active filter persists after page reload
++      Given the todo list contains "Buy groceries"
++      And the todo list contains completed "Walk the dog"
++      When the user navigates to "#/active"
++      And the page is reloaded
++      Then "Buy groceries" is visible
++      And "Walk the dog" is not visible
++      And "Active" filter is selected
+diff --git a/features/persistence.feature b/features/persistence.feature
+new file mode 100644
+index 0000000..aaf5bfc
+--- /dev/null
++++ b/features/persistence.feature
+@@ -0,0 +1,31 @@
++Feature: Persistence to localStorage
++  As a user
++  I want my todos to survive page reloads
++  So that I do not lose my data
++
++  Rule: Todos are saved to localStorage
++
++    Scenario: Todos persist after page reload
++      Given the todo list contains "Buy groceries"
++      And the todo list contains "Walk the dog"
++      When the page is reloaded
++      Then the todo list contains "Buy groceries"
++      And the todo list contains "Walk the dog"
++
++    Scenario: Completed state persists after page reload
++      Given the todo list contains completed "Buy groceries"
++      When the page is reloaded
++      Then "Buy groceries" is completed
++
++    Scenario: Active state persists after page reload
++      Given the todo list contains "Buy groceries"
++      When the page is reloaded
++      Then "Buy groceries" is not completed
++
++    Scenario: Deletions persist after page reload
++      Given the todo list contains "Buy groceries"
++      And the todo list contains completed "Walk the dog"
++      When the user clicks the clear completed button
++      And the page is reloaded
++      Then the todo list contains "Buy groceries"
++      And the todo list does not contain "Walk the dog"
+diff --git a/features/toggle-todo.feature b/features/toggle-todo.feature
+new file mode 100644
+index 0000000..fa348eb
+--- /dev/null
++++ b/features/toggle-todo.feature
+@@ -0,0 +1,52 @@
++Feature: Toggle todo completion
++  As a user
++  I want to mark todos as complete or active
++  So that I can track my progress
++
++  Rule: Individual todos can be toggled
++
++    Scenario: Clicking the checkbox completes a todo
++      Given the todo list contains "Buy groceries"
++      When the user toggles "Buy groceries"
++      Then "Buy groceries" is completed
++
++    Scenario: Clicking the checkbox again makes a todo active
++      Given the todo list contains "Buy groceries"
++      When the user toggles "Buy groceries"
++      And the user toggles "Buy groceries"
++      Then "Buy groceries" is not completed
++
++  Rule: Mark all as complete checkbox
++
++    Scenario: Mark all as complete checks all todos
++      Given the todo list contains "Buy groceries"
++      And the todo list contains "Walk the dog"
++      When the user clicks the toggle all checkbox
++      Then "Buy groceries" is completed
++      And "Walk the dog" is completed
++      And the toggle all checkbox is checked
++
++    Scenario: Unchecking mark all unchecks all todos
++      Given the todo list contains "Buy groceries"
++      And the todo list contains "Walk the dog"
++      When the user clicks the toggle all checkbox
++      And the user clicks the toggle all checkbox
++      Then "Buy groceries" is not completed
++      And "Walk the dog" is not completed
++      And the toggle all checkbox is not checked
++
++    Scenario: Toggle all reflects individual states
++      Given the todo list contains "Buy groceries"
++      And the todo list contains "Walk the dog"
++      When the user toggles "Buy groceries"
++      Then the toggle all checkbox is not checked
++      When the user toggles "Walk the dog"
++      Then the toggle all checkbox is checked
++
++    Scenario: Clearing all completed unchecks toggle all
++      Given the todo list contains "Buy groceries"
++      And the todo list contains "Walk the dog"
++      When the user toggles "Buy groceries"
++      And the user toggles "Walk the dog"
++      And the user clicks the clear completed button
++      Then the toggle all checkbox is not checked
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..cafb061
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,46 @@
++{
++  "watches": [
++    {
++      "id": "add-and-display",
++      "features": [
++        "features/add-and-display-todos.feature"
++      ]
++    },
++    {
++      "id": "toggle",
++      "features": [
++        "features/toggle-todo.feature"
++      ]
++    },
++    {
++      "id": "active-counter",
++      "features": [
++        "features/active-counter.feature"
++      ]
++    },
++    {
++      "id": "edit",
++      "features": [
++        "features/edit-todo.feature"
++      ]
++    },
++    {
++      "id": "clear-completed",
++      "features": [
++        "features/clear-completed.feature"
++      ]
++    },
++    {
++      "id": "filtering-routing",
++      "features": [
++        "features/filtering-routing.feature"
++      ]
++    },
++    {
++      "id": "persistence",
++      "features": [
++        "features/persistence.feature"
++      ]
++    }
++  ]
++}
