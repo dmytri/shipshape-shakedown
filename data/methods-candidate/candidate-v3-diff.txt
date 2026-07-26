@@ -156,7 +156,7 @@ diff -ru experiments/yoink-settle/skills/boatswain/SKILL.md experiments/methods-
 +- next role/blocker.
 diff -ru experiments/yoink-settle/skills/captain/SKILL.md experiments/methods-candidate/skills/captain/SKILL.md
 --- experiments/yoink-settle/skills/captain/SKILL.md	2026-07-24 06:40:41.252197510 +0000
-+++ experiments/methods-candidate/skills/captain/SKILL.md	2026-07-26 15:57:25.817116436 +0000
++++ experiments/methods-candidate/skills/captain/SKILL.md	2026-07-26 16:45:30.383818681 +0000
 @@ -51,16 +51,16 @@
  - If Boatswain reports passing verification, clean working tree, and local commit, summarize and offer outbound options. Outbound ships on the voyage's own focused and enumeration evidence. Captain never orders a full regression: it is a harbour action and harbour is its only trigger, per the Verification policy. Where a whole sweep before shipping is wanted, the route is harbour, which pairs the run with coverage triage and the economy audit; offer harbour, not a bare rerun.
  - Outbound actions such as push, PR, publish, release, and deploy require a clean Boatswain report and explicit user approval, nothing else. Credentials and environment are assumed fitted, never pre-checked, per the Verification policy: run the target's `ship` command from `RIGGING.md` under `## Outbound`, and an observed authentication failure is a fitting-out blocker resolved by refit. Then run that target's `verify` line against the live artifact and read the answer from that output, per the Outbound verification policy: shipping reports that the command exited, not that the artifact a user consumes is good, and an artifact judged good by eye is unchecked. Where the project policy states that local verification is sufficient, that statement is the check and no live verification is owed. Report what `verify` returned. Outbound runs in the human-facing main session per the Outbound verification policy; a Captain spawned as a subagent reports outbound options and performs none.
@@ -165,7 +165,7 @@ diff -ru experiments/yoink-settle/skills/captain/SKILL.md experiments/methods-ca
 +- **Greenfield fast path:** On a repository with no production code and no `RIGGING.md`, the fast path is the route: Captain bootstraps without a fitting-out session, per the Shipwright skill's fast-path rule, discovering the required values and the toolchain with the user in the same conversation as product intent, and deriving every method the Methods section names, since no fitting-out session will derive them.
    - Stack discovery names the language and, where the choice changes the toolchain, its dialect and version, such as TypeScript against plain JavaScript and the TypeScript major, the module system, the runtime floor, and the package manager; verify a version or support claim against the live registry or environment, never recall.
 -  - After the five required values, offer the stack's quality toolchain in one batched confirmation: feature lint, code lint and format, typecheck, coverage, and plank-inventory tooling, with stack-native candidates named. For a Node stack: gplint, biome, and c8, plus tsc on TypeScript.
-+  - After the required values, offer the stack's quality toolchain in one batched confirmation: feature lint, code lint and format, typecheck, coverage, plank-inventory, and an unused-code reporter, with stack-native candidates named. For a Node stack: gplint, biome, c8, and knip, plus tsc on TypeScript. Where the ecosystem carries a standard tool for a job, offer that tool rather than a hand-rolled scan, per the Methods section.
++  - After the required values, offer the stack's quality toolchain in one batched confirmation: feature lint, code lint and format, typecheck, coverage, plank-inventory, and an unused-code reporter, with stack-native candidates named. For a Node stack: gplint, biome, c8, and knip, plus tsc on TypeScript. For a Python stack: uv against `pyproject.toml` with Poe the Poet holding the methods, plus ruff, mypy, coverage.py, and vulture. Where the ecosystem carries a standard tool for a job, offer that tool rather than a hand-rolled scan, per the Methods section.
    - Plank inventory is `jsdoc -X` on plain JavaScript, and stays `none` at bootstrap on TypeScript, because jsdoc reads no TypeScript and an empty inventory is a false clean: the checker lands at first harbour, through QM's bespoke-checker route, and a library such as ts-morph, which reads a doc-comment's content rather than only its syntax shape, installs only when that checker needs it.
 -  - A confirmed tool installs at bootstrap and populates its command slot only where the tool's own CLI yields the one-line command; a library with no CLI is never glue-scripted at bootstrap, and its slot stays `none` with the gap named. The `none` rule in full: a declined or undecided slot keeps the literal `none`; a slot the stack itself answers, such as `typecheck` on a TypeScript stack, is offered, never silently `none`d; and a value the user states in the bootstrap conversation, such as the runtime or the package manager, is a discovered value that populates its own slot, so writing `none` over what the user just said discards the discovery the fast path exists to capture.
 +  - A confirmed tool installs at bootstrap and becomes a part of every method whose job it serves, but only where the tool's own CLI yields the invocation; a library with no CLI is never glue-scripted at bootstrap, and the methods that would have carried it name the gap. The `none` rule in full: a method whose parts a declined or undecided tool would have supplied keeps the literal `none`; a part the stack itself answers, such as a type checker on a TypeScript stack, is offered, never silently dropped; and a value the user states in the bootstrap conversation, such as the runtime or the package manager, is a discovered value that populates its own slot, so writing `none` over what the user just said discards the discovery the fast path exists to capture.
@@ -316,7 +316,7 @@ diff -ru experiments/yoink-settle/skills/qm/SKILL.md experiments/methods-candida
  ## Final report
 diff -ru experiments/yoink-settle/skills/shipshape/SKILL.md experiments/methods-candidate/skills/shipshape/SKILL.md
 --- experiments/yoink-settle/skills/shipshape/SKILL.md	2026-07-25 13:44:14.511373308 +0000
-+++ experiments/methods-candidate/skills/shipshape/SKILL.md	2026-07-26 16:14:21.155041828 +0000
++++ experiments/methods-candidate/skills/shipshape/SKILL.md	2026-07-26 16:39:24.158851198 +0000
 @@ -211,12 +211,19 @@
  Attestation:
  
@@ -374,7 +374,7 @@ diff -ru experiments/yoink-settle/skills/shipshape/SKILL.md experiments/methods-
 -`RIGGING.md` uses a fixed Markdown shape; the Shipwright skill carries the Rigging shape and derives the file. Roles read it on open and parse it by heading: each value is a Markdown list item `- <key>: <value>` on its own line, and a multi-value key repeats on a new line for each value. It holds values, not procedure. A context-isolated Crew mate MUST be able to succeed from `RIGGING.md` alone. The minimum required values are `language` under `## Stack`, `implementation` and `specs` under `## Directories`, `focused` under `## Commands`, and `perturb` under `## Perturbation`. Roles validate `RIGGING.md` on read. A malformed file or a missing required value is a configuration blocker to Captain. `RIGGING.md` is Shipwright's to derive and repair; Captain routes a rigging configuration blocker to Shipwright, which refits the missing values. Captain discovers a value with the user only when Shipwright cannot derive it. A command value is proven by running it, per the Verification policy's check-precedence rule. Before `RIGGING.md` is written, the deriving role runs the runner once through a derived command and confirms it executes; execution is the whole proof, and no scenario need exist yet nor pass. A command that will not execute is a tooling blocker to Captain, resolved before the next role sails. A derived command that has never run is a claim, not a value, and the role that inherits the claim is the one that pays for it.
 +`RIGGING.md` uses a fixed Markdown shape; the Shipwright skill carries the Rigging shape and derives the file. Roles read it on open and parse it by heading: each value is a Markdown list item `- <key>: <value>` on its own line, and a multi-value key repeats on a new line for each value. It holds values, not procedure. A context-isolated Crew mate MUST be able to succeed from `RIGGING.md` alone. The minimum required values are `language` under `## Stack`, `implementation` and `specs` under `## Directories`, every method the Methods section names under `## Methods`, and `perturb` under `## Perturbation`. Roles validate `RIGGING.md` on read. A malformed file or a missing required value is a configuration blocker to Captain. `RIGGING.md` is Shipwright's to derive and repair; Captain routes a rigging configuration blocker to Shipwright, which refits the missing values. Captain discovers a value with the user only when Shipwright cannot derive it. A method is proven by running it, per the Verification policy's check-precedence rule. Before `RIGGING.md` is written, the deriving role runs each derived method once and confirms it executes; execution is the whole proof, and no scenario need exist yet nor pass. A method that will not execute is a tooling blocker to Captain, resolved before the next role sails. A derived method that has never run is a claim, not a value, and the role that inherits the claim is the one that pays for it.
 +
-+Beyond the minimum, roles rely on these read-side conventions. A role runs a method verbatim from `RIGGING.md`, composing only the substitutions this contract names: the `{scenario}` placeholder, the `{dependency}` placeholder, and the tier suffixes for tiers defined under `## Tiers`. An invented tag, a hand-rewritten flag, or a part a role adds is method drift, not composition. A target reference uses the repo-root-relative `<spec>.feature:<Scenario Name>` form, and `{scenario}` takes one reference or a list of them. Every method that runs verification carries the tag exclusions, `--tags "not @captain and not @shipwright"` or the runner's equivalent, in the parts that run it; a method missing them is a rigging fault, never a thing a role patches at the point of use. A method whose stack offers nothing to run reads `none`, and a step whose method reads `none` runs nothing and says so in its report. The `## Perturbation` `message` value always contains the literal token `PERTURBATION`, so any role finds a live perturbation by searching for that token. The `## Dependencies` `policy` value `locked` means installed versions stay pinned until a spec or a Captain decision moves them.
++Beyond the minimum, roles rely on these read-side conventions. A role runs a method verbatim from `RIGGING.md`, editing nothing inside it: a method that takes a target set or a package is given it as an inline environment value, `SS_SCENARIO` or `SS_DEPENDENCY`, and a tier's own method is its tier-suffixed name under `## Tiers`. An invented tag, a hand-rewritten flag, or a part a role adds is method drift, not composition. A target reference uses the repo-root-relative `<spec>.feature:<Scenario Name>` form, and `{scenario}` takes one reference or a list of them. Every method that runs verification carries the tag exclusions, `--tags "not @captain and not @shipwright"` or the runner's equivalent, in the parts that run it; a method missing them is a rigging fault, never a thing a role patches at the point of use. A method whose stack offers nothing to run reads `none`, and a step whose method reads `none` runs nothing and says so in its report. The `## Perturbation` `message` value always contains the literal token `PERTURBATION`, so any role finds a live perturbation by searching for that token. The `## Dependencies` `policy` value `locked` means installed versions stay pinned until a spec or a Captain decision moves them.
 +
 +The project configuration files that `RIGGING.md` documents are the ship's rigging, such as the package manifest, the lockfile, and the tooling and lint configuration. Shipwright fits the rigging during fitting out. Boatswain maintains the code and configuration hygiene tooling; Captain owns and tunes the lint configuration for Captain-authored artifacts, such as a feature lint config. Captain selects dependencies and records them under `## Dependencies`, and installation is fitting out. Every install and every upgrade is Shipwright's, at fitting out and at harbour alike, or Captain's on the greenfield fast path where no fitting-out session exists; no dependency routes through Crew. Recording routes with installation: the installing role writes its `dependency` line under `## Dependencies` in the same pass, the runner and each confirmed tool included. Crew is dispatched only for a failing target, so the rigging's own dependencies could never route through it at all: until the runner is installed no target can fail, and that route is a circle. A product dependency does not route through Crew either, for two reasons the consumer split obscured. Installing moves the lockfile, the resolution graph, and the engines constraints, a tree-wide blast radius that contradicts Crew's charter of the smallest change for one failing target. And whether a given dependency is the rigging's own or one the implementation consumes is a judgment needing tree-wide context, which the isolated role is worst placed to hold and the fitting role holds by construction. A spec that needs an uninstalled dependency is a Crew blocker to QM, raised to Captain and routed to Shipwright, one round-trip. An upgrade the dependency policy itself orders, such as a held version under a `latest-stable` policy, has no failing target and no spec ordering it: it is harbour work Shipwright takes up directly, and needs no Crew route to exist. So `none` stands under `## Dependencies` only where nothing is installed, and a `prove` method that names a runner above `dependency: none` is a contradiction the shape forbids.
  
@@ -399,24 +399,24 @@ diff -ru experiments/yoink-settle/skills/shipshape/SKILL.md experiments/methods-
 +
 +| Method | The job | Run by | Takes |
 +|---|---|---|---|
-+| `prove` | prove a named scenario set, and nothing wider | Crew, Boatswain | `{scenario}` |
-+| `verify` | verify a watch's whole target set and join its planks | QM | `{scenario}` |
++| `prove` | prove a named scenario set, and nothing wider | Crew, Boatswain | `SS_SCENARIO` |
++| `verify` | verify a watch's whole target set and join its planks | QM | `SS_SCENARIO` |
 +| `sweep` | enumerate one whole tier, unfiltered, without stop-on-first-failure | QM, Boatswain | tier suffix |
 +| `plank-join` | join every plank to a current step-definition pattern | Shipwright | |
 +| `hygiene` | answer every deck-hygiene check in one run | Boatswain | |
 +| `static` | prove a non-executable hunk, a deletion, or configuration | Boatswain | |
 +| `discovery` | list undefined and unimplemented steps, executing nothing | Shipwright | |
 +| `regression` | harbour's one full regression, every tier, cheapest first | Shipwright | |
-+| `condemnation` | prove a condemnation removal batch | Shipwright | `{scenario}` |
++| `condemnation` | prove a condemnation removal batch | Shipwright | `SS_SCENARIO` |
 +| `dead-code` | report what nothing reaches: unused files, exports and dependencies | Shipwright, Boatswain | |
 +| `spec-lint` | lint Captain-authored specs and assets at write time | Captain | |
-+| `install` | install or upgrade a dependency | Shipwright, Captain on the fast path | `{dependency}` |
++| `install` | install or upgrade a dependency | Shipwright, Captain on the fast path | `SS_DEPENDENCY` |
 +| `ship` | ship one outbound target | Captain | per target |
 +| `ship-verify` | verify the live artifact that target's users consume | Captain | per target |
 +
 +A method value is one SHORT invocation, in backticks: the project's own task runner entry for that job, such as an npm script, a Make target, a Cargo alias, or a Just recipe. The Yoink plan is that entry's body, where the runner keeps it: one `npx @dk/yoink` invocation, one `--run` per part, a `--label` and a `--timeout` on every part, and one `--max-bytes` bound on the plan. Yoink returns each part's output and each part's own status separately, which is what a job needs: the role judges the parts one at a time, and a single collapsed status hides which part failed. A shell sequence carries the parts without their statuses, and a shell chain joined by `&&` is worse, because it stops at the first non-zero exit and hides every part behind it. Yoink is always available, so every stack can express every method.
 +
-+The value is short because a role copies what it can copy. A value long enough to retype is retyped, and a retyped plan is a plan the role composed: it runs, it looks right, and it is not the project's method, so the next role reading `RIGGING.md` gets the other one. Where a stack carries no task runner at all, the value is the plan itself and that cost is accepted. A parameter rides as a named value the entry reads, `SS_SCENARIO` for a target set and `SS_DEPENDENCY` for an install, so the invocation stays one token and the placeholder stays legible in `RIGGING.md`.
++The value is short because a role copies what it can copy. A value long enough to retype is retyped, and a retyped plan is a plan the role composed: it runs, it looks right, and it is not the project's method, so the next role reading `RIGGING.md` gets the other one. Where a stack carries no task runner at all, the value is the plan itself and that cost is accepted. A parameter rides as an inline environment value the plan reads, never as text a role edits into the plan: `SS_SCENARIO` carries a target set and `SS_DEPENDENCY` carries an install's package. The plan names `$SS_SCENARIO` where the target belongs, and a role that runs a method taking one prefixes the assignment, `SS_SCENARIO="<targets>" <method>`. So the method value is copied exactly as it stands, and nothing inside it is rewritten: a value a role edits is a value a role has already started composing.
 +
 +A method's parts are independent by construction: no part reads another part's output, and no part is
 +chosen from another part's result. Where a job's next act depends on what the last one returned, that
@@ -472,7 +472,7 @@ diff -ru experiments/yoink-settle/skills/shipshape/SKILL.md experiments/methods-
  
 diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods-candidate/skills/shipwright/SKILL.md
 --- experiments/yoink-settle/skills/shipwright/SKILL.md	2026-07-25 13:45:47.464641515 +0000
-+++ experiments/methods-candidate/skills/shipwright/SKILL.md	2026-07-26 16:14:43.527349896 +0000
++++ experiments/methods-candidate/skills/shipwright/SKILL.md	2026-07-26 16:45:55.404158533 +0000
 @@ -36,29 +36,27 @@
  
  ## Discovery tools
@@ -526,7 +526,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
  - `## Perturbation`: the stable `message` and project-specific `perturb` statement. The `message` MUST contain the literal token `PERTURBATION` so a role can detect a live perturbation in the tree.
  - `## Tiers`: the `default` tier tag, any `sandbox` tier tag, one `policy` line per tier naming that tier's credential source or provisioning policy, such as the custodian CLI or the variable name, never a secret value or a check command, an optional `budget` wall-clock ceiling for the full regression with tier-suffixed variants such as `budget-sandbox` per tier, enforced by the derived budget check under Methodology checks, an optional `weather` path naming the wake's weather record so the next run finds it, and an optional `runrecord` path naming the wake's voyage run record per the Transient output policy.
  - `## Dependencies`: the dependency `policy` and one `dependency` line per selected or installed name. Recording routes with installation: the fitting role writes a line for each dependency the fit installs, the runner and the quality tooling included, so `none` stands only where nothing is installed.
-@@ -75,13 +73,43 @@
+@@ -75,13 +73,75 @@
  
  ### Derivation notes
  
@@ -536,32 +536,64 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
 +Derive one method per job the Methods section names. Each method's plan is a Yoink plan whose parts
 +are what this stack needs for that job, every part carrying a `--label` and a `--timeout`, and the
 +plan carrying one `--max-bytes` bound. REGISTER each plan as an entry in the project's own task
-+runner, named for its method: an npm script, a Make target, a Cargo alias, a Just recipe. The method
++runner, named for its method, deriving the runner the stack already uses: npm scripts in
++`package.json` on Node and TypeScript, Poe the Poet tasks in `pyproject.toml` on Python, Cargo
++aliases in `.cargo/config.toml` on Rust, and a Just recipe or a Make target where the project
++already keeps one. The method
 +VALUE is that entry's invocation, so what a role reads is one short token. This is what makes a
-+method copied rather than retyped, and a retyped plan is drift wearing the right clothes. A parameter
-+rides as a named value the entry reads, `SS_SCENARIO` or `SS_DEPENDENCY`, so the value stays one
-+token while `RIGGING.md` still shows the placeholder. Where the stack carries no task runner, the
++method copied rather than retyped, and a retyped plan is drift wearing the right clothes. A parameter rides as an inline
++environment value the plan reads: write `$SS_SCENARIO` where the target set belongs and
++`$SS_DEPENDENCY` where the package does, so a role prefixes the assignment and copies the value
++exactly as it stands. Where the stack carries no task runner, the
 +plan itself is the value and that cost is accepted. What each method needs from a stack:
 +
-+- `prove`: the runner, selecting the canonical `<spec>.feature:<Scenario Name>` references `{scenario}` carries, verbatim, wrapping the runner where its native selector differs, so no role translates a reference by hand. Where the runner accepts a list, `{scenario}` is that list; where it accepts one target at a time, the plan carries one part per target and that limit lives here rather than in a role's improvised loop.
-+- `verify`: the `prove` run over `{scenario}`, joined with the plank parts `plank-join` carries, so one invocation answers a watch's targets and its planks together.
++- `prove`: the runner, selecting the canonical `<spec>.feature:<Scenario Name>` references `$SS_SCENARIO` carries, verbatim, wrapping the runner where its native selector differs, so no role translates a reference by hand. Where the runner accepts a list, `$SS_SCENARIO` is that list; where it accepts one target at a time, the plan carries one part per target and that limit lives here rather than in a role's improvised loop.
++- `verify`: the `prove` run over `$SS_SCENARIO`, joined with the plank parts `plank-join` carries, so one invocation answers a watch's targets and its planks together.
 +- `sweep`: the tier unfiltered, without stop-on-first-failure, at normal concurrency, with a tier-suffixed variant per tier under `## Tiers`, such as `sweep-sandbox`. QM lists a tier's whole failing set from one sweep rather than restarting the tier per fix, so derive no fail-fast form.
 +- `plank-join`: the annotation scan over exactly the `implementation` paths, reporting `@planks` and `@planks-provisional` alike, joined with the runner's machine-readable step-usage form, one that does not truncate step text, such as Cucumber's `usage-json`. Truncated usage output produces false stale-plank reports. On plain JavaScript the scan is `jsdoc -X`, machine-readable doclets from one line; on TypeScript jsdoc reads no `.ts` input and silently yields an empty inventory, a false clean, so derive a parser-backed reader instead. Where the project derives its plank rules into a conformance rule set, the conformance check is the part that runs in place of a bare scan.
 +- `hygiene`: the plank join, the type checker, and the linter, so one run answers every deck-hygiene check.
 +- `static`: the runner's static dry-run form, which lists undefined and unimplemented steps and executes nothing, with the type checker and the linter. They redden on a broken load or import, which is what a non-executable hunk needs proven.
 +- `discovery`: that same dry-run form alone, as a proof gate.
 +- `regression`: real per-line and per-branch coverage native to the stack, such as c8 for Node and TypeScript, coverage.py for Python, SimpleCov for Ruby, or `go test -cover` for Go, over every configured tier, cheapest tier first, each tier composed with its tier tag. Record a gap for Captain where the stack has no such tool. Derive it without stop-on-first-failure: harbour reads the whole picture.
-+- `condemnation`: the type checker, the linter, and the `prove` run over `{scenario}`, the scenarios whose steps plank the touched seams.
++- `condemnation`: the type checker, the linter, and the `prove` run over `$SS_SCENARIO`, the scenarios whose steps plank the touched seams.
 +- `spec-lint`: the Gherkin linter and any Markdown lint for Captain-authored specs and assets, the Gherkin lint first, so one gate reddens on either fault. gplint is the default on every stack: it runs through `npx` exactly as Yoink does, so it is always available and this method is never `none` and specs are never fitted out unlinted. The one exception is a stack whose own Gherkin runner ships a well-maintained linter paired with that runner; derive that one where it exists, and gplint everywhere else. A Gherkin linter needs its rule file, and gplint fails without one, so fitting out writes it alongside the method. Derive the MAXIMAL rule set, every rule the linter offers that encodes a Scenario-writing agreement requirement, each at error: the agreement's rules are already binding, and a rule the linter decides is a rule no role spends a read on. That includes the closed tag vocabulary through `allowed-tags`, carrying the tags this skill's Tags table names plus the project's own tier tags from `## Tiers`; the hedging and placeholder words the agreement's Avoid list bans, through `no-restricted-patterns`; kebab-case feature file names; strict `Given`, `When`, `Then` order; the step ceiling a scenario stays within; `And` for a repeated keyword; unnamed features and scenarios; outlines without examples; unused example variables; duplicate names; and the whitespace and indentation shape. Captain owns and tunes that file thereafter, per the Project configuration section, and relaxes a rule that gets in a project's way rather than dropping the file. A method whose config the fit did not write is a method proven by nothing, because its first run fails on the missing file. Prove the rule set red once at adoption, per the Verification policy's planted-red rule: a bare comment is the one Avoid-list item a Gherkin linter cannot see, since comments leave the syntax tree, so it stays Captain's own discipline and the conformance rule set's to catch.
 +- `dead-code`: the stack's own unused-code reporter over the implementation paths, reporting unused files, unused exports, and unused dependencies. Derive knip on a JavaScript or TypeScript project, vulture on Python, and `cargo-udeps` or `cargo-machete` on Rust. This is the reference analysis behind an unreachable-code finding: a reporter reads the resolved module graph, which a text search cannot, so derive the tool wherever the ecosystem has one and record a gap for Captain where it does not.
-+- `install`: the project's package manager installing or upgrading `{dependency}`, writing the manifest and lockfile as that manager writes them.
++- `install`: the project's package manager installing or upgrading `$SS_DEPENDENCY`, writing the manifest and lockfile as that manager writes them. On Python, derive uv against `pyproject.toml`, which resolves, locks and runs from one manifest; a `requirements.txt` and a hand-managed virtualenv are the older shape, and a fit that finds them records the gap for Captain rather than building new methods on them.
 +- `ship` and `ship-verify`: per outbound target, the command that ships it and the check that reads the live artifact its users consume. A runbook longer than a plan lives in `AGENTS.md` and `ship-verify` points at it.
 +
++One worked `hygiene` per stack shape, registered in that stack's own runner and invoked by its short
++value. The plan is the entry's body; the value is what `RIGGING.md` carries:
++
++```jsonc
++// package.json, Node and TypeScript.  Value: `npm run ss:hygiene --silent`
++"ss:hygiene": "npx @dk/yoink --max-bytes 200000 --run 'npx jsdoc -X src' --label plank-inventory --timeout 60 --run 'npx cucumber-js --dry-run --format usage-json --tags \"not @captain and not @shipwright\"' --label step-usage --timeout 300 --run 'npx tsc --noEmit' --label typecheck --timeout 300 --run 'npx biome check src features' --label lint --timeout 300"
++```
++
++```toml
++# pyproject.toml, Python: uv resolves, locks and runs, and Poe the Poet holds the tasks.
++# Value: `uv run poe ss:hygiene`
++[tool.poe.tasks]
++"ss:hygiene" = { shell = "npx @dk/yoink --max-bytes 200000 --run 'grep -rn \"@planks\" src/' --label plank-inventory --timeout 60 --run 'uv run behave --dry-run --no-summary' --label step-usage --timeout 300 --run 'uv run mypy src' --label typecheck --timeout 300 --run 'uv run ruff check src features' --label lint --timeout 300" }
++```
++
++```toml
++# .cargo/config.toml, Rust.  Value: `cargo ss-hygiene`
++[alias]
++ss-hygiene = "!npx @dk/yoink --max-bytes 200000 --run 'ast-grep scan --inline-rules \'{id: planks, language: rust, rule: {kind: line_comment, regex: \"@planks\"}}\' src' --label plank-inventory --timeout 60 --run 'cargo test --test cucumber -- --dry-run' --label step-usage --timeout 300 --run 'cargo check --all-targets' --label typecheck --timeout 300 --run 'cargo clippy --all-targets -- -D warnings' --label lint --timeout 300"
++```
++
 +Derive the quality gates the hygiene methods carry from tooling the project already runs, and record a
-+gap for Captain where it runs none, naming stack-native candidates in the gap so Captain's resolution
-+proposes rather than asks, such as biome or eslint for lint and tsc for typecheck on a TypeScript
-+stack. Prefer tooling native to the project's stack; a gate imported from another ecosystem for its
-+popularity is a dependency the project did not need.
++gap for Captain where it runs none, naming candidates in the gap so Captain's resolution proposes
++rather than asks. Two biases decide which candidate to name. Prefer tooling native to the project's
++stack: a gate imported from another ecosystem for its popularity is a dependency the project did not
++need. And prefer the MODERN tool the ecosystem has converged on over the older one it replaced, such
++as uv over pip with a hand-managed virtualenv, ruff over flake8 and pylint, biome over a separate
++linter and formatter pair, knip over an unmaintained unused-dependency scanner, and a maintained
++coverage tool over an abandoned one. A tool the ecosystem has moved past is slower, thinner, and
++unmaintained where it matters, and a method built on it inherits all three. Where the project itself
++carries the older tool, the method derives what the project runs and the report names the gap: a fit
++does not re-tool a project behind Captain's back, and it does not quietly bless a dead dependency
++either.
 +
 +Every part that runs verification carries the tag exclusions per the Rigging read contract, so no
 +role ever runs a skeleton or a condemned scenario. A method whose job this stack offers nothing for
@@ -576,7 +608,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
  
  #### Tiers and weather
  
-@@ -98,25 +126,34 @@
+@@ -98,25 +158,34 @@
  #### Gates and coverage
  
  - Quality gates: derive `lint` and `typecheck` from the tooling the project already runs, and record a gap for the Captain where the project runs none, naming stack-native candidates in the gap, such as biome or eslint for lint and tsc for typecheck on a TypeScript stack, so Captain's resolution proposes rather than asks. Prefer tooling native to the project's stack; a gate imported from another ecosystem for its popularity is weight, not fit. Name the command; the project owns the tool.
@@ -616,7 +648,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
  1. Load the `shipshape` skill (`shipshape:shipshape` under the plugin channel).
  2. **Retrieve the rigging and the deck. One pass.** Nothing here depends on anything else here:
  
-@@ -124,25 +161,25 @@
+@@ -124,25 +193,25 @@
     cat RIGGING.md && cat AGENTS.md && git status
     ```
  
@@ -649,7 +681,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
  11. Refresh the golden captures. Harbour is the cadence the Verification agreement names, and a canned response stands only while it still matches what the real dependency returns. For each `@exceptional-double` justified as a golden capture, re-record the response from the real dependency and compare it against the stored capture: a capture that still matches is refreshed by that act, and one that differs is drift, so restore the capture from the recording and report any scenario whose expectation the new response changes. A capture is not judged current by its age or by eye, per the check-precedence rule: it is judged by the recording. Where the real dependency cannot be reached at harbour, report it as a Captain blocker naming the double, because an unrefreshable capture is a fake by the same agreement's terms.
  12. Complete the full inventory. Do not stop until every module in scope has been analysed and all `@shipwright`-condemned scenarios and code have been processed.
  13. Confirm harbour left nothing unproven. Planks and `@captain` skeletons change nothing executable and need no rerun. Condemnation batches carry their scoped proofs from step 10, which stand as the proof for the removals that followed step 4. Step 4's full regression is harbour's one full-suite run, and the only full regression Shipshape runs; do not rerun it.
-@@ -156,6 +193,7 @@
+@@ -156,6 +225,7 @@
  - modules analysed,
  - `@captain` scenarios written, total and by finding type,
  - the two required `@conformance` methodology skeletons, each named with its feature file and scenario, watchbill-shape conformance and perturbation-quiescence, both owed on every fitting-out,
