@@ -364,7 +364,7 @@ diff -ru experiments/yoink-settle/skills/qm/SKILL.md experiments/methods-candida
  ## Final report
 diff -ru experiments/yoink-settle/skills/shipshape/SKILL.md experiments/methods-candidate/skills/shipshape/SKILL.md
 --- experiments/yoink-settle/skills/shipshape/SKILL.md	2026-07-25 13:44:14.511373308 +0000
-+++ experiments/methods-candidate/skills/shipshape/SKILL.md	2026-07-26 18:30:25.066443609 +0000
++++ experiments/methods-candidate/skills/shipshape/SKILL.md	2026-07-26 19:09:26.117996687 +0000
 @@ -211,12 +211,19 @@
  Attestation:
  
@@ -469,7 +469,7 @@ diff -ru experiments/yoink-settle/skills/shipshape/SKILL.md experiments/methods-
 +which is what a job needs: the role judges the parts one at a time, and a single collapsed status
 +hides which part failed. A shell sequence carries the parts without their statuses, and a shell chain
 +joined by `&&` is worse, because it stops at the first non-zero exit and hides every part behind it.
-+So a value whose entry is not a Yoink plan is not a method, whatever else it is. A job with ONE part is a plan too: the label names what ran, the timeout is what a slow run needs to finish, and the byte bound is what stops one loud part flooding the role's context, and a bare command carries none of the three. The plan is not the multi-part case; it is the form every method takes. Yoink is always
++So a value whose entry is not a Yoink plan is not a method, whatever else it is. Yoink is always
 +available, so every stack can express every method. The Shipwright skill carries how each method is
 +derived, registered and proven; this section carries what a method is and how a role reads one.
 +
@@ -490,7 +490,7 @@ diff -ru experiments/yoink-settle/skills/shipshape/SKILL.md experiments/methods-
 +
 +Methods are Shipwright's to derive and repair. Captain derives them with the minimal values on the
 +greenfield fast path, where no fitting-out session exists to derive them, and MAY write a method when
-+resolving a rigging blocker with the user, under the same write-scope exception. A step whose method
++resolving a rigging blocker with the user, under the same write-scope exception. EVERY method in the table gets its key, including a job this project has nothing to do: a project with no outbound target still carries `ship` and `ship-verify` reading `none`. An absent key is a malformed rigging, because a role cannot tell a job that is not derived from a job nobody wrote down. A step whose method
 +is missing is a configuration blocker to Captain, routed to Shipwright to refit: hand-composing the
 +invocation is not the fallback, because a role that can compose it will, and then the composition is
 +back at the point of use, which is the whole fault this section removes. A role runs the method as `RIGGING.md` carries it, verbatim, with only the substitutions this contract names. Writing a fresh Yoink plan of its own is that same drift wearing the right clothes: a plan the role composed is not the project's method however well it runs, because the next role reads `RIGGING.md` and gets the other one.
@@ -529,7 +529,7 @@ diff -ru experiments/yoink-settle/skills/shipshape/SKILL.md experiments/methods-
  
 diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods-candidate/skills/shipwright/SKILL.md
 --- experiments/yoink-settle/skills/shipwright/SKILL.md	2026-07-25 13:45:47.464641515 +0000
-+++ experiments/methods-candidate/skills/shipwright/SKILL.md	2026-07-26 18:30:25.066443609 +0000
++++ experiments/methods-candidate/skills/shipwright/SKILL.md	2026-07-26 19:11:41.423822330 +0000
 @@ -36,38 +36,84 @@
  
  ## Discovery tools
@@ -645,10 +645,10 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
 -#### Commands
 +#### Methods
 +
-+Derive one method per job the Methods section names. EVERY method is a Yoink plan, including the ones with a single part: `discovery`, `dead-code`, `spec-lint` and `install` are one-part jobs on most stacks and are plans exactly as `hygiene` is, because the label, the timeout and the byte bound are what the role reads. Writing the bare tool invocation as the entry's body is the fault that costs a whole stack its methods. Each method's plan is a Yoink plan whose parts
++Derive one method per job the Methods section names. Each method's plan is a Yoink plan whose parts
 +are what this stack needs for that job, every part carrying a `--label` and a `--timeout`, and the
 +plan carrying one `--max-bytes` bound. REGISTER each plan as an entry in the project's own task
-+runner, named for its method, its body a Yoink plan whatever the part count, deriving the runner the stack already uses: npm scripts in
++runner, named for its method, its body the plan, deriving the runner the stack already uses: npm scripts in
 +`package.json` on Node and TypeScript, Poe the Poet tasks in `pyproject.toml` on Python, Cargo
 +aliases in `.cargo/config.toml` on Rust, and a Just recipe or a Make target where the project
 +already keeps one. The method
@@ -710,7 +710,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
 +does not re-tool a project behind Captain's back, and it does not quietly bless a dead dependency
 +either.
 +
-+EVERY part that runs the verification runner carries the tag exclusions, `--tags "not @captain and not @shipwright"` or that runner's equivalent, without exception: `prove`, `verify`, `sweep`, `static`, `discovery`, `regression` and `condemnation` alike. A part missing them runs skeletons and condemned scenarios, which is the one fault no later role can see, because the run is green either way. A fit that derives a runner invocation writes the exclusions into the same part in the same act. A method whose job this stack offers nothing for
++No part carries a flag that turns a red into a pass. A soft-fail switch such as a runner non-strict mode, an exit-zero option, or a trailing || true makes the method report green over a failure, and every role downstream then reads a pass that never happened; a sweep with undefined steps suppressed is the sharpest case, because enumerating the red list is the whole job. A method reports what ran and returns what happened. EVERY part that runs the verification runner carries the tag exclusions, `--tags "not @captain and not @shipwright"` or that runner's equivalent, without exception: `prove`, `verify`, `sweep`, `static`, `discovery`, `regression` and `condemnation` alike. A part missing them runs skeletons and condemned scenarios, which is the one fault no later role can see, because the run is green either way. A fit that derives a runner invocation writes the exclusions into the same part in the same act. A method whose job this stack offers nothing for
 +reads `none` and the report names it. Prove every derived method by running it before writing
 +`RIGGING.md`, per the Rigging read contract.
  

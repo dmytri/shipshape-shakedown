@@ -8,7 +8,7 @@
   "ss:discovery": "npx @dk/yoink --max-bytes 200000 --run 'NODE_OPTIONS=\"--import tsx\" npx cucumber-js --dry-run --tags \"not @captain and not @shipwright\"' --label discovery --timeout 300",
   "ss:regression": "npx @dk/yoink --max-bytes 200000 --run 'npx c8 NODE_OPTIONS=\"--import tsx\" npx cucumber-js --tags \"not @captain and not @shipwright\"' --label coverage --timeout 900",
   "ss:condemnation": "npx @dk/yoink --max-bytes 200000 --run 'npx biome check src features' --label lint --timeout 300 --run 'npx tsc --noEmit' --label typecheck --timeout 300 --run 'NODE_OPTIONS=\"--import tsx\" npx cucumber-js --name \"$SS_SCENARIO\" --tags \"not @captain and not @shipwright\"' --label prove --timeout 900",
-  "ss:dead-code": "npx @dk/yoink --max-bytes 200000 --run 'npx knip --no-exit-code' --label dead-code --timeout 300",
+  "ss:dead-code": "npx @dk/yoink --max-bytes 200000 --run 'npx knip' --label dead-code --timeout 300",
   "ss:spec-lint": "npx @dk/yoink --max-bytes 200000 --run 'npx gplint \"features/**/*.feature\"' --label gherkin-lint --timeout 300",
   "ss:install": "npx @dk/yoink --max-bytes 200000 --run 'npm install --save-dev \"$SS_DEPENDENCY\"' --label install --timeout 600"
 }

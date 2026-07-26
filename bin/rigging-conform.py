@@ -21,6 +21,15 @@ TAKES_DEPENDENCY = {"install"}
 VERIFYING = {"prove", "verify", "sweep", "static", "discovery", "regression", "condemnation"}
 
 
+SOFT_FAIL = re.compile(r"--no-strict\b|--exit-zero\b|--no-exit-code\b|\|\|\s*true\b|--soft-fail\b")
+
+
+def _excludes(cmd):
+    """The tag exclusions, however this runner spells them: cucumber tags, pytest markers, or a
+    CUCUMBER_FILTER_TAGS environment value."""
+    return ("not @captain" in cmd) or ("not captain" in cmd) or ("CUCUMBER_FILTER_TAGS" in cmd)
+
+
 def section(text, name):
     m = re.search(rf"^## {re.escape(name)}\n(.*?)(?=^## |\Z)", text, re.S | re.M)
     return m.group(1) if m else ""
@@ -46,6 +55,16 @@ def task_runner_body(sim, value):
                 return json.load(open(pkg)).get("scripts", {}).get(m.group(1), "")
             except Exception:
                 return ""
+    # Poe the Poet tasks live in pyproject.toml, invoked as `uv run poe <task>` or `poe <task>`.
+    m = re.search(r"\bpoe\s+([\w:.-]+)", value)
+    if m:
+        pp = os.path.join(sim, "pyproject.toml")
+        if os.path.exists(pp):
+            t = open(pp, errors="replace").read()
+            mm = re.search(rf'"?{re.escape(m.group(1))}"?\s*=\s*(?:\{{[^}}]*?(?:shell|cmd)\s*=\s*)?(\'\'\'|"""|"|\')(.*?)\1',
+                           t, re.S)
+            if mm:
+                return mm.group(2)
     m = re.search(r"\b(?:make|just)\s+([\w:.-]+)", value)
     if m:
         for f in ("Makefile", "justfile", "Justfile"):
@@ -109,9 +128,18 @@ def score(path):
             chained = len(re.findall(r"&&|;\s*\S|\|\|", body))
             if chained:
                 viol.append(f"{name}: {chained + 1} commands chained without a Yoink plan; their statuses collapse")
-            b = body
-        else:
-            b = body
+            # A bare single invocation has no plan shape to check: skip the plan checks and judge
+            # only what still applies, the parameter and the tag exclusions.
+            if name in TAKES_SCENARIO and not any(t in body + val for t in ("SS_SCENARIO", "{scenario}")):
+                viol.append(f"{name}: takes a target set but names neither $SS_SCENARIO nor a placeholder")
+            if name in TAKES_DEPENDENCY and not any(t in body + val for t in ("SS_DEPENDENCY", "{dependency}")):
+                viol.append(f"{name}: takes a package but names neither $SS_DEPENDENCY nor a placeholder")
+            if SOFT_FAIL.search(body):
+                viol.append(f"{name}: carries a soft-fail flag, so a red reads as a pass")
+            if name in VERIFYING and not _excludes(body):
+                viol.append(f"{name}: a verifying part without the tag exclusions")
+            continue
+        b = body
         runs = len(re.findall(r"--run\b", b))
         labels = len(re.findall(r"--label\b", b))
         timeouts = len(re.findall(r"--timeout\b", b))
@@ -130,7 +158,9 @@ def score(path):
             viol.append(f"{name}: takes a target set but names neither $SS_SCENARIO nor a placeholder")
         if name in TAKES_DEPENDENCY and not any(t in b + raw for t in ("SS_DEPENDENCY", "{dependency}")):
             viol.append(f"{name}: takes a package but names neither $SS_DEPENDENCY nor a placeholder")
-        if name in VERIFYING and "not @captain" not in b:
+        if SOFT_FAIL.search(b):
+            viol.append(f"{name}: carries a soft-fail flag, so a red reads as a pass")
+        if name in VERIFYING and not _excludes(b):
             viol.append(f"{name}: a verifying part without the tag exclusions")
     extras = [k for k in meth if k not in METHODS and not re.match(r"(sweep|regression)-", k)]
     for e in extras:
