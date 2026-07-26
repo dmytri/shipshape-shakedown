@@ -1,350 +1,5 @@
-diff -ru experiments/yoink-settle/skills/boatswain/SKILL.md experiments/methods-candidate/skills/boatswain/SKILL.md
---- experiments/yoink-settle/skills/boatswain/SKILL.md	2026-07-24 06:40:41.256197557 +0000
-+++ experiments/methods-candidate/skills/boatswain/SKILL.md	2026-07-26 20:27:04.975882671 +0000
-@@ -20,30 +20,29 @@
- ## Role contract
- 
- - Write hygiene edits and commits only. No new product behaviour, no new verification, no assets.
--- Captain trims their own notes; Boatswain MUST NOT read or edit `CAPTAIN.md`. Staging is not reading: when a `CAPTAIN.md` edit rides the voyage's role-advanced work, stage and commit it content-blind, by path alone, with `git add -- CAPTAIN.md`; never open, diff, or grep it. The path MAY ride among the other staged paths of one `git add` pathspec list, so batching the staging into one command stays content-blind and legal. Compose deck retrieval to exclude it: diff and search by explicit paths or with the `:!CAPTAIN.md` pathspec exclusion, so its content never enters context. An enforcing runtime permits exactly these staging and exclusion forms and blocks every other command that opens, searches, edits, or removes the file; prose naming it inside a quoted string (an echoed label, a commit message) and a bare metadata stat are not access and pass.
--- **Scope and hygiene.** The deck is Boatswain's one retrieval: `git status` and the diff against the base commit. Be ruthless about current design within that scope. Do not sweep the full codebase. No stale specs, orphaned steps, orphaned tests, dead fixtures, stale implementation, or historical tombstones in scope. Boatswain MAY delete safe non-production-code artifacts such as generated files, caches, stale build output, and orphaned temp files that git ignores or that no spec references. Report unreachable production code in scope as a harbour finding in the hand-off; it defers to harbour per the "Current design only" Article and does not block the voyage.
-+- Captain trims their own notes; Boatswain MUST NOT read or edit `CAPTAIN.md`. Staging is not reading: when a `CAPTAIN.md` edit rides the voyage's role-advanced work, stage and commit it content-blind, by path alone, with `git add -- CAPTAIN.md`; never open, diff, or grep it. The path MAY ride among the other staged paths of one `git add` pathspec list. Compose deck retrieval to exclude it, by explicit paths or the `:!CAPTAIN.md` pathspec exclusion. An enforcing runtime permits exactly these staging and exclusion forms and blocks every other command that opens, searches, edits, or removes the file; prose naming it inside a quoted string and a bare metadata stat are not access and pass.
-+- **Scope.** The deck is Boatswain's one retrieval: `git status` and the diff against the base commit. Be ruthless about current design within that scope, and do not sweep the full codebase. No stale specs, orphaned steps, orphaned tests, dead fixtures, stale implementation, or historical tombstones in scope. Boatswain MAY delete safe non-production artifacts such as generated files, caches, stale build output, and orphaned temp files that git ignores or that no spec references. Report unreachable production code in scope as a harbour finding; it defers per the "Current design only" Article and does not block the voyage.
- - **Condemned scenarios.** At sea, only failing verification and a Captain perturbation create work; non-breaking cleanup is marked and deferred to harbour. Mark an obsolete scenario `@shipwright`; harbour removes it and the code its steps plank. Before marking, check the module's feature files: a `@captain` scenario is protected while it awaits review, and an existing `@shipwright` mark means the scenario is already condemned.
--- **Crew's contract is the check.** Verify each touched seam keeps Crew's contract: a `@planks(...)` annotation present, behaviour only within its planked steps' requirements, and a removed perturbation genuinely reimplemented. Error handling, logging, input validation, and supporting calls that serve a planked step are part of the seam, not extra behaviour. A failure is unfinished Crew work: report foul deck to the caller for Crew redispatch. When the finding indicts the spec rather than the change, behaviour that looks intended with no step to pin it, raise a Captain blocker with exact evidence.
-+- **Crew's contract is the check.** Verify each touched seam keeps Crew's contract: a `@planks(...)` annotation present, behaviour only within its planked steps' requirements, and a removed perturbation genuinely reimplemented. Error handling, logging, input validation, and supporting calls that serve a planked step are part of the seam, not extra behaviour. A failure is unfinished Crew work: report foul deck to the caller for Crew redispatch. When the finding indicts the spec rather than the change, raise a Captain blocker with exact evidence.
- - Dependency averse. When the diff or the rigging read surfaces a dependency fault, unneeded, redundant, duplicate, or outdated: flag it as a Captain blocker; do not change it. Version drift is a SHOULD: dependencies SHOULD be at current stable version unless the spec or a `locked` policy pins them.
--- Lint code and configuration in the diff with the project's available hygiene tools. Boatswain owns code-hygiene tool config and MAY tune it; the lint of Captain-authored specs and assets is Captain's, run at write time. Flag style violations as blockers. No exceptions for convention drift.
--- Maintain the rigging. The project configuration files that `RIGGING.md` documents are the ship's rigging. When tooling or lint configuration in scope is drifted or incoherent: tune it as hygiene. Captain selects dependencies and Shipwright installs and upgrades them; Boatswain flags dependency faults and does not change dependencies.
-+- Boatswain owns code-hygiene tool configuration and MAY tune it; the lint of Captain-authored specs and assets is Captain's, run at write time. Flag style violations as blockers. No exceptions for convention drift.
-+- Maintain the rigging. When tooling or lint configuration in scope is drifted or incoherent: tune it as hygiene. Captain selects dependencies and Shipwright installs them; Boatswain flags dependency faults and changes no dependency.
- - Undefined steps are never a custody failure. A scenario whose steps are undefined has never been verified: it is QM work waiting on the watchbill, and custody proceeds without it, in every job.
--- A plank on a touched seam has two dispositions and no third. It joins a current step-definition pattern, or it is malformed and routes to Crew for redispatch, per the Planking agreement. Uncertainty is not a third disposition: a plank whose relationship to a step cannot be established is a plank that does not join, and the join is run, never eyeballed. Raise a Captain blocker only where the finding indicts the spec rather than the change, per Crew's contract above.
-+- A plank on a touched seam has two dispositions and no third. It joins a current step-definition pattern, or it is malformed and routes to Crew for redispatch, per the Planking agreement. Uncertainty is not a third disposition: a plank whose relationship to a step cannot be established is a plank that does not join, and the join is run, never eyeballed.
- - Outbound is Captain-only. Do not push, tag, publish, release, or deploy.
- 
- ## Jobs
- 
--### Pre-clean
-+| Job | Trigger | The work | Ends in |
-+|---|---|---|---|
-+| Pre-clean | The dispatch names it, before Captain dispatches QM. Absent a dispatch, no role-advanced diff exists | Scan and flag stale production artifacts before they shape verification or implementation. Flag production code; Shipwright removes it at harbour | A report. No commit |
-+| Post-implementation | The dispatch names it, after Crew finishes and verification passes, or for harbour custody after a green full regression. Absent a dispatch, a role-advanced diff exists | Hygiene, recheck, stage intended changes, commit locally | A report to Captain |
- 
--Called by Captain before dispatching QM. Absent that caller context, self-select pre-clean when no role-advanced diff exists. Scan and flag stale production artifacts before they shape verification or implementation. Deletion scope per the Role contract. Flag production code only; Shipwright handles removal during harbour. No commit.
-+If genuinely uncertain which job, assume pre-clean: a missed commit is recoverable, a wrongful refusal on unrun verification is not. For harbour custody the role-advanced diff is the harbour-scoped edits.
- 
--### Post-implementation
-+## Opening, in both jobs
- 
--Called after Crew finishes and verification passes. Post-implementation also serves harbour custody: Captain calls it after a Shipwright harbour with a green full regression, and the role-advanced diff is the harbour-scoped edits. Absent that caller context, self-select post-implementation when a role-advanced diff exists. If genuinely uncertain, assume pre-clean; a missed commit is recoverable, a wrongful refusal on unrun verification is not. Full hygiene, verification recheck, stage intended changes, local commit, then return to the caller.
--
--## Opening
--
--1. Verify the dispatch against the Boatswain row of the Dispatch contract; on content beyond it, report contamination per the Contamination protocol and await a fresh dispatch. Read preceding role blockers, if any. This needs no retrieval: the dispatch is already in hand.
-+1. Verify the dispatch against the Boatswain row of the Dispatch contract; on content beyond it, report contamination per the Contamination protocol and await a fresh dispatch. Read preceding role blockers. This needs no retrieval.
- 
- 2. **Retrieve the rigging and the deck. One pass, before anything else.** Run:
- 
-@@ -51,55 +50,47 @@
-    cat RIGGING.md AGENTS.md && git status && git diff <base> -- . ':!CAPTAIN.md' && git log -n 5
-    ```
- 
--   `<base>` is the dispatched base commit, HEAD when none was dispatched per the dispatch contract. Nothing here depends on anything else here, so it is one run.
--
--   The `:!CAPTAIN.md` exclusion is part of the command, not an optional refinement. Captain's notes are content-blind to Boatswain, per the Role contract: a deck diff that omits the exclusion pulls their content into context and breaches the bulkhead. `git status` names the path without opening it, which is a metadata stat and passes.
-+   `<base>` is the dispatched base commit, HEAD when none was dispatched. The `:!CAPTAIN.md` exclusion is part of the command: a deck diff without it pulls Captain's notes into context and breaches the bulkhead. This output is the whole worklist, and every step below reads from it. A repository with no commits has no base to diff against, so hunk custody has no footing: stop and report to Captain, whose own bootstrap action the initial commit is.
- 
--   This output is the deck and the rigging together. The diff and untracked files are the whole worklist; `RIGGING.md` carries every command name the later steps substitute, and `AGENTS.md` carries the project standards a removed perturbation is judged against, so the one pass holds every artifact the steps below cite rather than leaving one to a runtime that may or may not supply it. Every step below reads from this output. A repository with no commits has no base to diff against, so hunk custody has no footing: stop and report to Captain, whose own bootstrap action the initial commit is, per the Captain skill.
--
--3. From that output alone, settle: the job, pre-clean or post-implementation, which the dispatch names per the Dispatch contract, the self-select heuristics in Jobs applying only without a dispatch; the touched seams; and, when a voyage run record exists at the `runrecord` path, the deck-state hash, computed once here per the Transient output policy.
-+3. From that output alone, settle the job, the touched seams, and, where a voyage run record exists at the `runrecord` path, the deck-state hash, computed once here per the Transient output policy.
- 
- ## Hygiene checks
- 
--**One evidence run answers every check in this section. Run it now**, substituting each command verbatim from the `RIGGING.md` already in hand:
-+**Run the `hygiene` method from `RIGGING.md` now.** One run answers every check in this section. Judge the checks against that output; do not run a check per question. A check Boatswain judged by reading the diff is an opinion: report it unverified and name the method that would have answered it. Reading a plank and finding it well-formed is not a plank-form check; the plank join in that run is.
- 
--```sh
--<plank-inventory> && <step-usage> && <typecheck> && <lint>
--```
--
--Where the project derives the plank rules into its conformance rule set, `<conformance>` replaces `<plank-inventory>` in that line. An underivable command reads `none` in `RIGGING.md`: drop it from the line and say so in the report.
--
--None of these commands depends on another's result, and none depends on the deck, so they are one run and not four. Their combined output, joined against the deck already retrieved, answers every check below. **Judge the checks against that output. Do not run a command per check.**
--
--A check is discharged by running the command that answers it, per the Verification policy's check-precedence rule. Boatswain reports each check with the command that answered it and what that command returned. A check Boatswain judged by reading the diff is an opinion, not a check: report it as unverified and name the command or derived check that would have answered it. Reading a plank and finding it well-formed is not a plank-form check; `plank-inventory` joined against `step-usage` is.
--Judge each of the following against the run above:
--
--- When a touched production seam has no `@planks(...)` annotation: in post-implementation, unfinished Crew work, report foul deck to the caller; the redispatch runs through QM, who carries the seam's related scenario reference, derived through `step-usage`, with the custody foul as the observed failure evidence. The foul survives a lost caller: a fresh QM re-derives it from the same touched seam and missing plank, per the QM skill, so no report channel is owed across a context clear. In pre-clean, flag it to Captain. An unplanked seam beyond the diff is harbour work. Boatswain does not delete production code; Shipwright handles removal during harbour.
--- When the diff removes a `PERTURBATION` statement, or the caller's hand-off reports a perturbation removed: verify the seam complies with current durable context: feature `Rule:` prose, `AGENTS.md` standards, `RIGGING.md` values, and available lint. A plant rides uncommitted, so the removal can leave no hunk in the diff; judge from the hand-off evidence and the seam source. A statement-only removal is sound when the Crew hand-off carries the seam audit and the seam reads compliant. A removal with no audit evidence is a foul deck: report it to the caller for Crew redispatch.
--- When a `PERTURBATION` statement stands in the diff: name it in the report. A standing token with green verification is the stale-green alarm; the quiescence check and the harbour full regression are the nets, per the Perturbation policy.
--- When a changed-file-adjacent artifact carries old requirements or unnecessary maintenance burden: flag it stale. Adjacent means files in the same directory as changed code that no current spec references; import-graph staleness is harbour work.
--- When a step definition, test, fixture, or support file in the diff is orphaned: flag it. The evidence run already answers this: a step definition `step-usage` reports with zero usage is orphaned, and that report resolves Cucumber Expressions and regular expressions that plain text search cannot match. Only where the runner has no usage report, and `step-usage` therefore reads `none`, fall back to grepping Gherkin step text across all `.feature` files; grep test and fixture references against current specs and step definitions the same way, in one run with the rest of that fallback.
--- When a plank on a touched seam is stale or malformed: unfinished Crew work, exactly as a missing one is. Report foul deck to the caller for Crew redispatch; do not commit and do not defer it to harbour. Crew wrote that seam this voyage and corrects it while the seam is in hand, and a malformed plank is the more dangerous fault, because it reads as coverage the seam does not have. Only plank drift beyond the diff defers to harbour, per the Blocker policy. The join is already in the evidence run: every `@planks` string is one of the step-definition patterns `step-usage` reported, and every `@planks-provisional` reference names a scenario that still carries `@captain`. State the commands and what they returned; a plank read by eye is unchecked.
--- When a generated coverage report is in the diff: use it for hygiene only, never as product intent or a planning artifact. It is transient.
--
--## Verification and custody
--
--- Run the minimal shape the custody step needs, per the Verification policy's run shapes, with the tag exclusions per the Rigging read contract. Targeted evidence serves custody; a full tier run is a full regression at a pivot, not a custody habit. Prefer fresh results; label cache-backed results.
--- If the verification recheck fails: do not commit. Report `Deck foul` with the failing target to the caller. A failure that is not the product's is a harness defect, per the Verification agreement: it routes for repair, never for a rerun.
--- Stage intended changes only: role-advanced hunks, the voyage's durable artifacts in flight, and Boatswain's own hygiene edits. Separate role-advanced hunks from unrelated operator edits within an in-scope file; when authorship is undecidable from the diff and the dispatch, leave the hunk unstaged and name it in the report. Leave unrelated operator work in the working tree for Captain to handle.
--- **The recheck is the one run that depends on what came before, so it earns its own pass.** It follows the planks to a scenario set, and the planks are only known once the evidence run above is judged. Select first, then run the whole selected set in one go; a scenario per turn is one selection paid many times.
--
--  Recheck selection is a lookup, not a judgment. Staged hunks select the recheck; the watchbill is not a recheck selector. The deck-state hash is the one computed in the Opening. Per staged hunk, exactly one row applies:
--  - A hunk in verification support code: its blast radius is the tier it serves, per the Planking agreement's selection rule, never the spec file it was declared beside, and no focused green covers it. Run that tier's enumeration sweep, the `broad` command from `RIGGING.md` or its tier-suffixed variant, and where none is derived run the tier unfiltered at normal concurrency without stop-on-first-failure.
--  - The caller's hand-off, or a run-record entry whose deck-state hash equals the current deck, carries a fresh focused green covering the hunk: inherit it as commit evidence; run nothing.
--  - An executable hunk has no carried evidence, or the diff contradicts the hand-off: follow its planks to the focused scenario set per the Planking agreement's selection rule and run that set fresh.
--  - A non-executable hunk, a deletion, or configuration: static discovery plus the derived `typecheck` and `lint` gates stand as its proof; they redden on a broken load or import.
--  - A scenario with undefined steps: QM work per the Role contract; custody proceeds without it.
--  When no staged hunk selects a run, no recheck runs. When a recheck runs and unrelated operator work remains unstaged, stash the unstaged changes, run the recheck against the staged state, and restore the stash.
--- Strike a spent watchbill, per the Watchbill policy: when the caller's hand-off reports the watchbill spent, or the run record corroborates every watchbill entry green at the current deck-state hash, remove `watchbill.json` and stage the removal with the custody commit. Where neither carries the evidence, run the watchbill's own entries through the `focused` command and strike on that green, exactly as recheck selection falls back to its planks. The entries name themselves, so the run is bounded by the watchbill and orders nothing wider. A watchbill whose entries do not all pass is not spent: leave it and name it in the report for Captain.
--- Commit locally in the post-implementation job only. Write the commit subject to summarize the change and reference the scenario or watch it advanced, using the repo-root-relative `<spec>.feature:<Scenario Name>` form, including the specs directory, for a scenario reference. A harbour-custody commit references the harbour session instead of a scenario. When the job was self-selected and neither is determinable, the subject summarizes the change alone, asserting no category it cannot verify.
--- Confirm working tree clean or only unrelated user work remains unstaged.
--- Return the final report to the caller. Outbound is Captain-only under Captain's own dispatched identity, never Boatswain's: do not assume Captain to reach it; name Captain in the report and let the operator dispatch next.
-+| Finding | Judgment |
-+|---|---|
-+| A touched production seam with no `@planks(...)` | Post-implementation: unfinished Crew work, report foul deck to the caller; the redispatch runs through QM, who carries the seam's related scenario reference and the foul as observed evidence. A fresh QM re-derives the foul from the same seam and missing plank, so no report channel is owed across a context clear. Pre-clean: flag to Captain. An unplanked seam beyond the diff is harbour work |
-+| A plank on a touched seam that is stale or malformed | Unfinished Crew work, exactly as a missing one is: report foul deck for Crew redispatch, do not commit, and do not defer it to harbour. Crew wrote that seam this voyage and corrects it while the seam is in hand, and a malformed plank is the more dangerous fault, because it reads as coverage the seam does not have. Only plank drift beyond the diff defers to harbour. The join is already in the run: every `@planks` string is one of the step-definition patterns it reported, and every `@planks-provisional` reference names a scenario that still carries `@captain` |
-+| The diff removes a `PERTURBATION` statement, or the hand-off reports one removed | Verify the seam complies with current durable context: feature `Rule:` prose, `AGENTS.md` standards, `RIGGING.md` values, and available lint. A plant rides uncommitted, so the removal can leave no hunk; judge from the hand-off evidence and the seam source. A statement-only removal is sound when the Crew hand-off carries the seam audit and the seam reads compliant. A removal with no audit evidence is a foul deck |
-+| A `PERTURBATION` statement stands in the diff | Name it in the report. A standing token with green verification is the stale-green alarm; the quiescence check and the harbour full regression are the nets |
-+| A changed-file-adjacent artifact carries old requirements or unnecessary maintenance burden | Flag it stale. Adjacent means files in the same directory as changed code that no current spec references; import-graph staleness is harbour work |
-+| A step definition, test, fixture, or support file in the diff is orphaned | Flag it. The run answers this: a step definition its usage part reports with zero usage is orphaned, and that report resolves Cucumber Expressions and regular expressions that plain text search cannot match. Only where the runner has no usage report at all, fall back to grepping Gherkin step text across `.feature` files, and grep test and fixture references the same way, in one run |
-+| A generated coverage report is in the diff | Use it for hygiene only, never as product intent or a planning artifact. It is transient |
-+
-+## Recheck
-+
-+The recheck is the one run that depends on what came before, so it earns its own pass: it follows the planks to a scenario set, and the planks are only known once the hygiene run is judged. Select first, then run the whole selected set in one go; a scenario per turn is one selection paid many times.
-+
-+Selection is a lookup, not a judgment. Staged hunks select the recheck; the watchbill is not a selector. Per staged hunk, exactly one row applies:
-+
-+| Staged hunk | Method | Why |
-+|---|---|---|
-+| Verification support code | `sweep` of the tier it serves, or its tier-suffixed variant | Its blast radius is that tier, never the spec file it was declared beside, and no focused green covers it |
-+| The hand-off, or a run-record entry at the current deck-state hash, carries a fresh green covering it | none | Inherit it as commit evidence; run nothing |
-+| Executable, with no carried evidence, or the diff contradicts the hand-off | `prove`, given the scenario set its planks name as `SS_SCENARIO` | Follow the planks per the Planking agreement's selection rule |
-+| Non-executable, a deletion, or configuration | `static` | It reddens on a broken load or import, which is what such a hunk needs proven |
-+| A scenario with undefined steps | none | QM work; custody proceeds without it |
-+
-+When no staged hunk selects a run, no recheck runs. When a recheck runs and unrelated operator work remains unstaged, stash it, run against the staged state, and restore the stash. If the recheck fails: do not commit, and report `Deck foul` with the failing target. A failure that is not the product's is a harness defect: it routes for repair, never for a rerun. Prefer fresh results; label cache-backed results.
-+
-+## Custody
-+
-+- Stage intended changes only: role-advanced hunks, the voyage's durable artifacts in flight, and Boatswain's own hygiene edits. Separate role-advanced hunks from unrelated operator edits within an in-scope file; when authorship is undecidable from the diff and the dispatch, leave the hunk unstaged and name it in the report. Leave unrelated operator work in the working tree for Captain.
-+- Strike a spent watchbill per the Watchbill policy: when the hand-off reports it spent, or the run record corroborates every entry green at the current deck-state hash, remove `watchbill.json` and stage the removal with the custody commit. Where neither carries the evidence, run the watchbill's own entries through `prove` and strike on that green. A watchbill whose entries do not all pass is not spent: leave it and name it in the report.
-+- Commit locally in the post-implementation job only. Write the commit subject to summarize the change and reference the scenario or watch it advanced, in the repo-root-relative `<spec>.feature:<Scenario Name>` form. A harbour-custody commit references the harbour session instead. Where the job was self-selected and neither is determinable, the subject summarizes the change alone, asserting no category it cannot verify.
-+- Confirm the working tree clean, or only unrelated user work left unstaged.
-+- Return the final report to the caller. Outbound is Captain-only under Captain's own dispatched identity: name Captain in the report and let the operator dispatch next.
- 
- ## Final report
- 
-@@ -107,12 +98,8 @@
- 
- - `All shipshape.` or `Deck foul: ...`,
- - job,
--- hygiene done, each check with the command it ran and what that command returned,
-+- hygiene done, each check with the method that answered it and what it returned,
- - cruft cleaned, stale flagged,
--- verify command/result,
--- commit hash/message if any,
--- tree status,
--- next role/blocker,
--- any claim judged by read rather than run, labelled unverified with the check it lacked.
--
--Every tree claim in this report is a command's answer, per Hand-off custody. Custody that passes a fault it never looked at is worse than no custody.
-+- recheck: the method run and its result, or the carried green inherited,
-+- commit hash, or why no commit,
-+- next role/blocker.
-diff -ru experiments/yoink-settle/skills/captain/SKILL.md experiments/methods-candidate/skills/captain/SKILL.md
---- experiments/yoink-settle/skills/captain/SKILL.md	2026-07-24 06:40:41.252197510 +0000
-+++ experiments/methods-candidate/skills/captain/SKILL.md	2026-07-26 20:20:46.450784682 +0000
-@@ -33,7 +33,7 @@
- 
- 1. **Retrieve the standing state. One pass, before anything else.** Not one of these depends on another, so they are one retrieval and not six: `AGENTS.md`, for any project-specific agent rules; `RIGGING.md`, for tooling values; `CAPTAIN.md`, if present; `watchbill.json`, if present; the tree's cleanliness; and the durable signals, `@captain` and `@shipwright` tags and live `PERTURBATION` statements, found by searching for those tokens.
- 
--   If `RIGGING.md` is absent, the project is not fitted out, and the route forks on production code. Production code present: route to Shipwright before any other work, and read no further. No production code: this is a greenfield bootstrap, so stay on deck, read the product material the tree carries, and run discovery with the user toward the Greenfield fast path below. Shipwright is never dispatched at a greenfield repository; there is nothing to derive.
-+   If `RIGGING.md` is absent, the project is not fitted out, and the route forks on production code. Production code present: route to Shipwright before any other work, and read no further. No production code: this is a greenfield bootstrap, so stay on deck, read the product material the tree carries, and run discovery with the user toward the Greenfield bootstrap below. Shipwright is never dispatched at a greenfield repository; there is nothing to derive.
- 
- 2. From that output alone, settle: the immediately preceding role's blockers and open questions, addressed first if any; and, in a fresh session with no hand-off in context, the standing state, derived from those durable signals. Then classify all applicable situations: discovery, spec maintenance, blocker resolution, unready working tree, post-Boatswain outbound.
- 
-@@ -51,56 +51,14 @@
- - If Boatswain reports passing verification, clean working tree, and local commit, summarize and offer outbound options. Outbound ships on the voyage's own focused and enumeration evidence. Captain never orders a full regression: it is a harbour action and harbour is its only trigger, per the Verification policy. Where a whole sweep before shipping is wanted, the route is harbour, which pairs the run with coverage triage and the economy audit; offer harbour, not a bare rerun.
- - Outbound actions such as push, PR, publish, release, and deploy require a clean Boatswain report and explicit user approval, nothing else. Credentials and environment are assumed fitted, never pre-checked, per the Verification policy: run the target's `ship` command from `RIGGING.md` under `## Outbound`, and an observed authentication failure is a fitting-out blocker resolved by refit. Then run that target's `verify` line against the live artifact and read the answer from that output, per the Outbound verification policy: shipping reports that the command exited, not that the artifact a user consumes is good, and an artifact judged good by eye is unchecked. Where the project policy states that local verification is sufficient, that statement is the check and no live verification is owed. Report what `verify` returned. Outbound runs in the human-facing main session per the Outbound verification policy; a Captain spawned as a subagent reports outbound options and performs none.
- - **Fitting out:** Shipwright derives `RIGGING.md` and `AGENTS.md` from the repository during harbour. If Shipwright raises a rigging blocker for a required value it cannot derive, discover the missing tooling value with the user and write it into `RIGGING.md`; resolve a tooling gap by proposing named stack-native candidates from the quality-toolchain offer in the fast-path rule, never by an open-ended ask. If Shipwright raises a blocker for missing tooling, such as an uninitialized project or a package manager not installed, install what is needed. If Shipwright blocks on a repository with no commits, make the initial commit: it is Captain's own bootstrap action, never the operator's to be sent to run, because an initial state carries no role-advanced work for commit custody to protect. Commit the initial state directly and proceed. Toolchain setup is Captain's responsibility during harbour preparation; installation itself is Shipwright's, per the Rigging read contract, and reaches Captain only where the package manager cannot provide it.
--- **Greenfield fast path:** On a repository with no production code and no `RIGGING.md`, the fast path is the route: Captain bootstraps without a fitting-out session, per the Shipwright skill's fast-path rule, discovering the five required values and the toolchain with the user in the same conversation as product intent.
--  - Stack discovery names the language and, where the choice changes the toolchain, its dialect and version, such as TypeScript against plain JavaScript and the TypeScript major, the module system, the runtime floor, and the package manager; verify a version or support claim against the live registry or environment, never recall.
--  - After the five required values, offer the stack's quality toolchain in one batched confirmation: feature lint, code lint and format, typecheck, coverage, and plank-inventory tooling, with stack-native candidates named. For a Node stack: gplint, biome, and c8, plus tsc on TypeScript.
--  - Plank inventory is `jsdoc -X` on plain JavaScript, and stays `none` at bootstrap on TypeScript, because jsdoc reads no TypeScript and an empty inventory is a false clean: the checker lands at first harbour, through QM's bespoke-checker route, and a library such as ts-morph, which reads a doc-comment's content rather than only its syntax shape, installs only when that checker needs it.
--  - A confirmed tool installs at bootstrap and populates its command slot only where the tool's own CLI yields the one-line command; a library with no CLI is never glue-scripted at bootstrap, and its slot stays `none` with the gap named. The `none` rule in full: a declined or undecided slot keeps the literal `none`; a slot the stack itself answers, such as `typecheck` on a TypeScript stack, is offered, never silently `none`d; and a value the user states in the bootstrap conversation, such as the runtime or the package manager, is a discovered value that populates its own slot, so writing `none` over what the user just said discards the discovery the fast path exists to capture.
--  - On a repository with no commits, commit the initial state first, Captain's own bootstrap action per the fitting-out rule above, with harness-install artifacts ignored or folded in. Install the harness, the rigging's own dependencies included, and confirm the runner executes before writing minimal `RIGGING.md` under the write-scope exception, per the Rigging read contract; then author specs and the watchbill and dispatch QM. The first voyage sails without methodology checks; the first harbour completes fitting out before its inventory.
--  - Voyage 1 verifies at the cheapest tier sufficient to observe the specified behaviour; a real-browser tier is adopted only when the user names it or a specified behaviour cannot be observed below it, and then as a named decision recorded in `RIGGING.md`. Where the product renders a DOM, the tier candidates are named cheapest first, as the toolchain offer names its own: for a Node stack, happy-dom, then jsdom, then a real-browser tier such as Playwright. A tier the catalog names cheaper is the tier Voyage 1 opens on, because a tier chosen by forecast is a tier no command has tested.
--  - Minimal means exactly this shape: the five required values populated, the fixed perturbation message, dependency policy `locked`, every slot a discovered value or a confirmed tool answers populated, and literally `none` in every remaining slot; no wrapper scripts, and no config files beyond the harness install and a confirmed tool's own minimal config. Every dependency installed at bootstrap lands one `dependency` line under `## Dependencies` as it installs, the runner and each confirmed tool included, so `none` stands only where nothing is installed.
--  - Where a feature lint and a code lint are both confirmed they share the one `lint` slot as a chained command, feature lint first, so one gate reddens on either fault and the shape grows no second key.
--  - The tag exclusions ride every verification command however it is recomposed: weaving an environment prefix or a runner option never drops `--tags "not @captain and not @shipwright"`.
--
--  ```markdown
--  # Rigging
--  ## Stack
--  - language: JavaScript
--  - runtime: none
--  - packageManager: none
--  ## Directories
--  - implementation: src
--  - specs: features
--  - verification: none
--  - assets: none
--  - scantlings: none
--  ## Commands
--  - discover: none
--  - focused: `ref="{scenario}"; npx cucumber-js "${ref%%:*}" --name "^${ref#*:}$" --tags "not @captain and not @shipwright"`
--  - broad: none
--  - coverage: none
--  - step-usage: none
--  - plank-inventory: none
--  - typecheck: none
--  - lint: none
--  - conformance: none
--  ## Perturbation
--  - message: `PERTURBATION: consider current durable context; remove when fixed`
--  - perturb: `throw new Error("PERTURBATION: consider current durable context; remove when fixed");`
--  ## Tiers
--  - default: none
--  - sandbox: none
--  - policy: none
--  - weather: none
--  - runrecord: none
--  ## Dependencies
--  - policy: locked
--  - dependency: @cucumber/cucumber
--  ## Outbound
--  - outbound: none
--  ```
-+- **Greenfield bootstrap:** On a repository with no production code and no `RIGGING.md`, Captain opens the project and Shipwright fits it out. Captain does the part only Captain can do, which is the conversation, then hands a fittable repository to the role whose job the rigging is.
-+  - Discover the stack with the user in the same conversation as product intent: the language and, where it changes the toolchain, its dialect and version, the module system, the runtime floor, and the package manager. Verify a version or support claim against the live registry or environment.
-+  - Offer the stack's quality toolchain in one batched confirmation, naming stack-native candidates so the user chooses rather than composes: for a Node stack gplint, biome, c8 and knip, plus tsc on TypeScript; for a Python stack uv with pyproject, ruff, mypy, coverage.py and vulture. Where the ecosystem carries a standard tool for a job, offer that tool.
-+  - Choose voyage 1's tier with the user, cheapest sufficient to observe the specified behaviour. Where the product renders a DOM the candidates run happy-dom, then jsdom, then a real-browser tier, and a real-browser tier is adopted only when the user names it or a behaviour cannot be observed below it.
-+  - On a repository with no commits, commit the initial state: Captain's own bootstrap action. Install the harness and the confirmed toolchain, recording each dependency as it installs, and confirm the runner executes.
-+  - Dispatch Shipwright to fit out. The repository now carries a manifest, a runner and directories, which is what Shipwright derives from, so the rigging, the methods, their task-runner entries, the tool rule files and their proofs are all written once, by the role that owns them, per the Shipwright skill's Fitting out.
-+  - Author the specs and the watchbill on Shipwright's return, and dispatch QM. The first voyage sails without methodology checks; the first harbour completes the inventory.
- 
--  The populated values above are one stack's derivation; yours come from the user conversation. The `none` slots are the rule.
- - **Dependencies:** Dependency selection is a product decision. When a dependency is needed, research options with the user, confirm the selection, and write it into `RIGGING.md` under `## Dependencies`. Write only the dependency name. Do not pin a version unless the scenario or the dependency policy requires it. Installation is fitting out, per the Rigging read contract. When Crew blocks on a confirmed dependency that is not installed, confirm the selection, record it, and route the install to Shipwright.
- - **Harbour:** If onboarding an existing codebase or between releases, invoke Shipwright. Enter harbour on a clean working tree: route uncommitted voyage work through Boatswain custody first. Pending outbound MAY wait through harbour: harbour work rides the next outbound, with the harbour full regression as its proof per the Verification policy. When Shipwright returns, run the Harbour review below.
- - If Boatswain flags behaviour in a planked seam that does not match its related steps, decide: update the spec, or flag for Shipwright to remove during harbour. Do not leave code that does not match its spec.
-diff -ru experiments/yoink-settle/skills/crew/SKILL.md experiments/methods-candidate/skills/crew/SKILL.md
---- experiments/yoink-settle/skills/crew/SKILL.md	2026-07-24 06:40:41.256197557 +0000
-+++ experiments/methods-candidate/skills/crew/SKILL.md	2026-07-26 17:32:34.865367177 +0000
-@@ -34,19 +34,26 @@
- 
- ## Opening
- 
--1. Verify the dispatch matches the contract: scenario references, observed failure evidence per target, a solo or parallel marker, and, for a perturbation target, the perturbed seam location. On content beyond that, stop and report contamination. Identify the dispatched failing target set. If no scenario reference is present: `No target. Crew stop.` If failure evidence is missing, report the missing evidence and stop. Observed failure evidence is runner output, observed tree facts, or a named custody foul on a seam the target's steps exercise.
--2. **First pass, one retrieval.** The dispatch's scenario references are repo-root-relative and already carry the specs directory, so the feature files are in hand without reading anything to find them. Retrieve together: `RIGGING.md`, for stack, the implementation, specs, and verification directories, the focused command with its `{scenario}` placeholder, and the `## Perturbation` message; every dispatched target's feature file, with its `Background` and `Rule:` context; and, for a perturbation target, `AGENTS.md` standards, which reimplementation draws on. Nothing in this set depends on another member of it.
-+1. Verify the dispatch matches the contract: scenario references, observed failure evidence per target, a solo or parallel marker, and, for a perturbation target, the perturbed seam location. On content beyond that, stop and report contamination. If no scenario reference is present: `No target. Crew stop.` If failure evidence is missing, report that and stop. Observed evidence is runner output, observed tree facts, or a named custody foul on a seam the target's steps exercise.
-+
-+2. **First pass, one retrieval.** The dispatch's references are repo-root-relative and carry the specs directory, so the feature files are in hand without reading anything to find them. Retrieve together: `RIGGING.md`, for the stack, the directories, the `prove` method and the `## Perturbation` message; every dispatched target's feature file with its `Background` and `Rule:` context; and, for a perturbation target, the `AGENTS.md` standards reimplementation draws on. Nothing here depends on anything else here.
- 
- 3. **Second pass, one retrieval.** The first pass names the steps and the directories, so this one is what genuinely depends on it: the step definitions and test support under the verification directory, the referenced durable spec or asset, and the directly related production files. Read only these. Note each step definition's pattern string, per the Planking agreement's Form.
- 
--4. State target and durable source of expected behaviour.
-+4. State the target and the durable source of expected behaviour.
- 
- ## Work loop
- 
- 1. Reproduce or inspect the failure. If the target passes before any edit, report the pass with the fresh run output and stop.
--2. Edit minimum production code only. Add or update `@planks(...)` annotations on every changed seam per the Role contract; for a perturbation target, the perturbation statement leaves with the reimplemented seam. A changed seam whose behaviour now exceeds its planked steps stops the work: report to QM per the Role contract.
--3. Run focused verification using the `focused` command from `RIGGING.md`.
--4. If pass, return the final report to the caller.
-+2. Edit minimum production code only. Add or update `@planks(...)` on every changed seam; for a perturbation target, the statement leaves with the reimplemented seam. A changed seam whose behaviour now exceeds its planked steps stops the work: report to QM.
-+3. Prove the target set. Substitute the `prove` method from `RIGGING.md` verbatim, giving it the dispatched targets:
-+
-+   ```sh
-+   SS_SCENARIO="<the dispatched target set>" <prove>
-+   ```
-+
-+   Its output is the green QM and Boatswain inherit, so it is run, never recalled.
-+4. If it passes, return the final report to the caller.
- 5. If blocked, or if the approach fails after one correction, report the blocker to QM and stop.
- 
- ## Final report
-diff -ru experiments/yoink-settle/skills/qm/SKILL.md experiments/methods-candidate/skills/qm/SKILL.md
---- experiments/yoink-settle/skills/qm/SKILL.md	2026-07-24 06:40:41.256197557 +0000
-+++ experiments/methods-candidate/skills/qm/SKILL.md	2026-07-26 20:29:20.337696095 +0000
-@@ -56,7 +56,18 @@
- 
- ## Work loop
- 
--1. Enforce context bulkhead. This needs no retrieval.
-+| # | Trigger | Job | Method |
-+|---|---|---|---|
-+| 1 | On open | Enforce the context bulkhead | none; the dispatch is in hand |
-+| 2 | On open | Retrieve the rigging, the watchbill and the base, one pass | none; reads and git |
-+| 3 | That output | Settle rigging, HEAD and watchbill | none |
-+| 4 | A watch names a tier tag | Enumerate that tier once | `sweep`, or its tier-suffixed variant |
-+| 5 | A watch names targets | Verify the whole set and join its planks | `verify` over the set |
-+| 6 | A target's production behaviour fails | Dispatch Crew | none |
-+| 7 | Steps made executable, or a Crew mate returned | Reverify the set | `verify` again |
-+| 8 | Every target green | End in the final report naming Boatswain | none |
-+
-+1. Enforce the context bulkhead. This needs no retrieval.
- 
- 2. **Retrieve the rigging, the watchbill, and the base. One pass, before anything else.** Run:
- 
-@@ -64,19 +75,40 @@
-    cat RIGGING.md && cat watchbill.json && git rev-parse HEAD && git status --porcelain
-    ```
- 
--   Nothing here depends on anything else here, so it is one run.
-+3. From that output alone, settle all three. `RIGGING.md`: a malformed file or a missing required value is a configuration blocker to Captain. HEAD: it matches the dispatched base commit, or, with no dispatched base commit, HEAD is the base; on mismatch, block to Captain naming both commits. An unmoved HEAD is not an empty diff: the role-advanced diff is the working tree the `git status` line reports, so uncommitted work is in hand however far back the base sits. `watchbill.json` is QM's only work channel; if absent, report the deck at rest and return to Captain. Validate the fixed shape: only `watch1`, `watch2`, and onward; each watch contains only `scenarios`; each entry is a repo-root-relative `<spec>.feature:<Scenario Name>` reference including the specs directory, or a tier tag defined under `## Tiers`. Reject malformed or free-form context.
-+
-+4. Process the watches in order; they are the whole worklist. Treat a listed green scenario as complete. A listed `@captain` or `@shipwright` scenario stays ignored: report it to Captain as a watchbill defect and continue. Block if a listed binding scenario is absent from durable specs or cannot be matched to verification. A tier-tag watch is one enumeration sweep: substitute that tier's `sweep` method from `RIGGING.md`, or its tier-suffixed variant, and run it:
-+
-+   ```sh
-+   <sweep for that tier>
-+   ```
-+ Once its red list is in hand with per-target evidence, dispatch is owed before any further executing run of that tier. Consume a long sweep within the turn, read to its summary; an environment that cannot finish it within the turn is a tooling blocker to Captain, never an open wait. Spend the watch once its red list is dispatched.
-+
-+5. **The watch names every target before a single one is read, so read them together and run them together.** In one pass, retrieve the feature files of all the watch's targets, their step definitions, and the production seam surfaces those steps exercise. Then substitute the `verify` method from `RIGGING.md` verbatim, giving the whole target set as `SS_SCENARIO`, and run it:
-+
-+   ```sh
-+   SS_SCENARIO="<the watch's whole target set>" <verify>
-+   ```
-+ The output classifies the work: a green target is complete, undefined and unimplemented steps are QM's to make executable, and a failing executable step is production work. The plank join rides in that same output: join the planks by exact string match over the seams the targets exercise, per the Planking agreement. A plank matching no current pattern is a failing target of this watch and dispatches like any other. Green scenarios do not discharge plank form, so a watch whose targets all pass is precisely where a malformed plank survives unseen.
-+
-+   Write or update step definitions so undefined steps become executable, following the scenario text exactly, then run `verify` again. Make steps executable and honest: weakening an assertion to pass is forbidden, and a step that asserts nothing observable cannot become an honest step definition, so block it to Captain as a spec-quality blocker. A directed methodology or conformance check new to execution owes its planted-red adoption proof: plant the violation, confirm the check reddens, remove the plant, then prove the green. Run any tier the work needs as fitted; a tier run that fails to authenticate is a Captain blocker, because fitting out is incomplete. Where sandbox provisioning is configured, derive or create missing disposable test resources.
-+
-+6. If production fails, dispatch Crew as an isolated subagent. Production code is Crew's write scope and never QM's, so where no dispatch route exists QM does NOT assume Crew: it ends in its final report naming Crew, the target references, the failure evidence and the base commit, and the caller dispatches, per the flat hand-off in Hand-off custody. A failure whose cause is the harness rather than the product, such as a timing race, a stale environment reference, or a propagation delay, is a harness defect and QM's own to engineer out in its verification support: fix it with a readiness gate, an isolation fix, or a reclaim at suite start, then reverify. It is never a Crew target, and never a reason to rerun until it passes.
-+
-+   A Boatswain custody foul on a touched seam is observed failure evidence: dispatch Crew with the seam's related scenario reference and the foul as the evidence. A foul needs no report channel to reach a fresh QM: a touched seam whose `@planks(...)` is missing, stale or malformed, or whose behaviour exceeds its planked steps, is the same evidence re-derived, and dispatches the same way before custody. The join answers the first three by string; the last one no string can answer, so read the touched seam against the step definitions its planks name and report it as a read rather than a check. A malformed plank is the case that needs the join to see it, because the seam's own scenarios stay green while the annotation lies about what covers it.
-+
-+   - Judge independence at the seam, not the file: targets whose fixes land on disjoint seams dispatch as parallel Crew mates by default, even within one file. Several failing targets of one watch whose evidence points into one seam cluster SHOULD batch into one dispatch: one mate, one seam, every target proven. Serial solos on a seam the evidence already names shared are the expensive fallback, never the default.
-+   - The dispatch carries the Crew row of the Dispatch contract only. Observed evidence is runner output and observed tree facts; diagnosis and seam hints stay out.
-+   - Dispatch Crew only when the failing behaviour lives in production code; route a methodology check failure by artifact ownership. A violation QM finds in its own verification support is QM's to fix in place, then reverify.
-+
-+7. Parallel mates share the deck. Interference surfaces as failing verification and routes like any other red; a stale edit fails loudly at the tool layer and the mate re-reads and retries. Dispatch every mate of one cluster in one turn, end the turn, and consume each report as it arrives. A mate is done when its report says so: QM never checks a mate's transcript, process, or files, and never arms a wait of its own.
-+
-+8. A watch is worked as a set, never target by target: the run, make-executable, and dispatch steps each take the whole remaining set at once. Repeat until the watch is spent, then continue through the watches in order unless verification, product intent, environment, or tooling blocks. Where tier-tag watches cover several tiers, a red tier's dispatches complete before a costlier tier runs. A single blocked target does not halt the run: record the blocker, continue the rest, and carry every blocker in the final report.
-+
-+9. After each fresh green run, append its line to the voyage run record at the `runrecord` path, with the deck-state hash; where the value is `none`, skip. A green a Crew mate proved and carried in its hand-off is recordable as it stands. Re-running a target Crew already proved green, to author a record line in QM's own hand, spends a run to learn what the hand-off reports.
-+
-+10. When the watchbill is spent and its targets are green, QM's work is complete. End in the final report, naming Boatswain, the advanced target references, and the base commit; the caller dispatches custody. Load Boatswain directly only when operating without subagents.
- 
--3. From that output alone, settle all three. `RIGGING.md`: a malformed file or a missing required value is a configuration blocker to Captain. HEAD: it matches the dispatched base commit, or, with no dispatched base commit, HEAD is the base per the dispatch contract; on mismatch, block to Captain naming both commits. An unmoved HEAD is not an empty diff: the role-advanced diff is the working tree the `git status` line reports, so uncommitted work is in the diff and in hand however far back the base sits. `watchbill.json`: QM's only work channel. If absent, report the deck at rest and return to Captain. Validate the fixed shape: only `watch1`, `watch2`, and onward; each watch contains only `scenarios`; each entry is a scenario reference, repo-root-relative in `<spec>.feature:<Scenario Name>` form including the specs directory, or a tier tag defined under `## Tiers` in `RIGGING.md`. Reject malformed or free-form context.
--4. The watches are the whole worklist; process them in order. Treat a listed green scenario as complete. A listed `@captain` or `@shipwright` scenario stays ignored; report it to Captain as a watchbill defect and continue. Block if a listed binding scenario is absent from durable specs or cannot be matched to verification. A tier-tag watch is an enumeration sweep per the Watchbill policy: run the tier's `broad` command from `RIGGING.md`, or its tier-suffixed variant, and where none is derived run the tier unfiltered at normal concurrency without stop-on-first-failure. One sweep enumerates the watch: once its red list is in hand with per-target evidence, dispatch is owed before any further executing run of that tier. A long-running sweep is consumed within the turn, started, read to its summary, and acted on; an environment that cannot complete the sweep within the turn is a tooling blocker to Captain, never an open wait. Spend the watch once its red list is dispatched.
--5. **The watch names every target before a single one is read, so read them together and run them together.** In one pass, retrieve the feature files of all the watch's targets, their step definitions, and the production seam surfaces those steps exercise; none of them depends on another, and a target read per turn is one worklist paid many times. Then run the `focused` command from `RIGGING.md` over the whole target set in ONE invocation, passing the list where the runner accepts one; fall back to a run per target only where it does not. The run output classifies the work: a green target is complete, undefined and unimplemented steps are QM's to make executable, and a failing executable step is production work. Run `plank-inventory` and `step-usage` from `RIGGING.md` in that same pass and join them by exact string match over the seams the watch's targets exercise, per the Planking agreement: both are cheap read-only derivations, and folded into a pass already being made they cost no invocation of their own. A plank matching no current pattern is a failing target of this watch and dispatches like any other, per step 6. Green scenarios do not discharge plank form, so a watch whose targets all pass is precisely where a malformed plank survives unseen. Write or update step definitions so undefined steps become executable, following the scenario text exactly, then rerun. Make steps executable and honest: weakening an assertion to pass is forbidden, and a step that asserts nothing observable cannot become an honest step definition, so block it to Captain as a spec-quality blocker. A directed methodology or conformance check new to execution owes its planted-red adoption proof, per the Verification policy: plant the violation, confirm the check reddens, remove the plant, then prove the green. Fitting out provisions credentials for every configured tier; run any tier the work needs as fitted. A tier run that fails to authenticate is a Captain blocker: fitting out is incomplete. If sandbox provisioning is configured, derive or create missing disposable test resources.
--6. If production fails, dispatch Crew as an isolated subagent. Production code is Crew's write scope and never QM's, so where no dispatch route exists QM does NOT assume Crew: it ends in its final report naming Crew, the target references, the failure evidence and the base commit, and the caller dispatches, per the flat hand-off in Hand-off custody, the same shape step 10 uses for Boatswain. A failure whose cause is the harness rather than the product, such as a timing race, a stale environment reference, or a registry or CDN propagation delay, is a harness defect and QM's own to engineer out in its verification support, per the Verification agreement: fix it with a readiness gate, an isolation fix, or a reclaim at suite start, then reverify. It is never a Crew target, and never a reason to rerun until it passes. A Boatswain custody foul on a touched seam is observed failure evidence: dispatch Crew with the seam's related scenario reference, derived through `step-usage`, and the foul as the evidence. A foul needs no report channel to reach a fresh QM: a touched seam in the role-advanced diff whose `@planks(...)` is missing, whose plank is stale or malformed, or whose behaviour exceeds its planked steps, is the same observed failure evidence re-derived, per the Planking agreement, and dispatches the same way before custody. The join answers the first three by string; the last one no string can answer, so read the touched seam against the step definitions its planks name, both already in hand from the diff and from `step-usage`, and report it as a read rather than a check, per the Verification policy's check-precedence rule. A malformed plank is the case that needs the join to see it, because the seam's own scenarios stay green while the annotation lies about what covers it, so a watch reported complete is no evidence against it.
--   - Judge independence at the seam, not the file: targets whose fixes land on disjoint seams dispatch as parallel Crew mates by default, even within one file. Several failing targets of one watch whose failure evidence points into one seam cluster SHOULD batch into one Crew dispatch carrying each target's reference and evidence: one mate, one seam, every target proven. Dispatch serial solos only when the failure evidence cannot place the fixes on one cluster; solos on a seam the evidence already names shared are the expensive fallback, never the default.
--   - The dispatch carries the Crew row of the Dispatch contract only: the target scenario references, the observed failure evidence per target, the solo or parallel marker, and, for a perturbation target, the perturbed seam location. Observed evidence is runner output and observed tree facts; diagnosis and seam hints stay out. No product interpretation.
--   - Dispatch Crew only when the failing behaviour lives in production code; route a methodology check failure by artifact ownership per the Blocker policy. A violation QM finds in its own verification support is QM's to fix in place, then reverify.
--7. Parallel Crew mates share the deck. Interference between mates surfaces as failing verification and routes like any other red; a stale edit fails loudly at the tool layer and the mate re-reads and retries. Dispatch every mate of one cluster in one turn, end the turn, and consume each mate's report as it arrives, per Hand-off custody. A mate is done when its report says so: QM never checks a mate's transcript, process, or files to learn whether it has finished, and never arms a wait of its own.
--8. A watch is worked as a set, never target by target: the run, make-executable, and dispatch steps above each take the whole remaining target set at once. Repeat that cycle until the watch is spent, then continue through all `watchbill.json` watches in order unless verification, product intent, environment, or tooling blocks. When tier-tag watches cover several tiers, a red tier's dispatches complete before a costlier tier runs, per the Watchbill policy. A single blocked target does not halt the run: record the blocker, continue the remaining targets, and carry every blocker in the final report.
--9. After each fresh green run, append its line to the voyage run record at the `runrecord` path from `RIGGING.md`, with the deck-state hash, per the Transient output policy; where the value is `none`, skip. A green a Crew mate proved and carried in its hand-off is recordable as it stands: append it at the current deck-state hash. Re-running a target Crew already proved green, to author a record line in QM's own hand, spends a run to learn what the hand-off already reports.
--10. When the watchbill is spent and its targets are green, QM's work is complete. End in the final report, naming Boatswain, the advanced target references, and the base commit; the caller dispatches custody, per the flat hand-off in Hand-off custody. Load Boatswain directly only when operating without subagents.
- 11. If product intent is missing or contradictory, return a concrete blocker to the caller, loading Captain in place only when operating without subagents.
- 
- ## Final report
-diff -ru experiments/yoink-settle/skills/shipshape/SKILL.md experiments/methods-candidate/skills/shipshape/SKILL.md
---- experiments/yoink-settle/skills/shipshape/SKILL.md	2026-07-25 13:44:14.511373308 +0000
-+++ experiments/methods-candidate/skills/shipshape/SKILL.md	2026-07-26 20:29:20.313695773 +0000
+# shipshape: --- experiments/yoink-settle/skills/shipshape/SKILL.md	2026-07-25 13:44:14.511373308 +0000
+# shipshape: +++ experiments/methods-candidate/skills/shipshape/SKILL.md	2026-07-26 20:29:20.313695773 +0000
 @@ -31,7 +31,7 @@
  
  When loaded bare via `/shipshape`, this skill routes to the correct role. The routing depends on the project state.
@@ -572,9 +227,348 @@ diff -ru experiments/yoink-settle/skills/shipshape/SKILL.md experiments/methods-
  
  Methodology rules can be self-enforcing. A `@conformance` scenario MAY scan verification support code for forbidden doubles, making the real-by-default rule executable and its violations discoverable. A derived methodology check is proven by a planted red: plant a violation, confirm the check reddens, remove the plant. A check that has never been red is unproven. The proof runs at adoption and QM owns it: when QM makes a promoted check's steps executable, it plants the violation, confirms the red, removes the plant, and then proves the green. Fitting out derives checks and writes skeletons without planting; the one exception is the Scantling agreement's harbour plant, for a constraint only a production violation can redden.
  
-diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods-candidate/skills/shipwright/SKILL.md
---- experiments/yoink-settle/skills/shipwright/SKILL.md	2026-07-25 13:45:47.464641515 +0000
-+++ experiments/methods-candidate/skills/shipwright/SKILL.md	2026-07-26 21:00:35.931238075 +0000
+# captain: --- experiments/yoink-settle/skills/captain/SKILL.md	2026-07-24 06:40:41.252197510 +0000
+# captain: +++ experiments/methods-candidate/skills/captain/SKILL.md	2026-07-26 20:20:46.450784682 +0000
+@@ -33,7 +33,7 @@
+ 
+ 1. **Retrieve the standing state. One pass, before anything else.** Not one of these depends on another, so they are one retrieval and not six: `AGENTS.md`, for any project-specific agent rules; `RIGGING.md`, for tooling values; `CAPTAIN.md`, if present; `watchbill.json`, if present; the tree's cleanliness; and the durable signals, `@captain` and `@shipwright` tags and live `PERTURBATION` statements, found by searching for those tokens.
+ 
+-   If `RIGGING.md` is absent, the project is not fitted out, and the route forks on production code. Production code present: route to Shipwright before any other work, and read no further. No production code: this is a greenfield bootstrap, so stay on deck, read the product material the tree carries, and run discovery with the user toward the Greenfield fast path below. Shipwright is never dispatched at a greenfield repository; there is nothing to derive.
++   If `RIGGING.md` is absent, the project is not fitted out, and the route forks on production code. Production code present: route to Shipwright before any other work, and read no further. No production code: this is a greenfield bootstrap, so stay on deck, read the product material the tree carries, and run discovery with the user toward the Greenfield bootstrap below. Shipwright is never dispatched at a greenfield repository; there is nothing to derive.
+ 
+ 2. From that output alone, settle: the immediately preceding role's blockers and open questions, addressed first if any; and, in a fresh session with no hand-off in context, the standing state, derived from those durable signals. Then classify all applicable situations: discovery, spec maintenance, blocker resolution, unready working tree, post-Boatswain outbound.
+ 
+@@ -51,56 +51,14 @@
+ - If Boatswain reports passing verification, clean working tree, and local commit, summarize and offer outbound options. Outbound ships on the voyage's own focused and enumeration evidence. Captain never orders a full regression: it is a harbour action and harbour is its only trigger, per the Verification policy. Where a whole sweep before shipping is wanted, the route is harbour, which pairs the run with coverage triage and the economy audit; offer harbour, not a bare rerun.
+ - Outbound actions such as push, PR, publish, release, and deploy require a clean Boatswain report and explicit user approval, nothing else. Credentials and environment are assumed fitted, never pre-checked, per the Verification policy: run the target's `ship` command from `RIGGING.md` under `## Outbound`, and an observed authentication failure is a fitting-out blocker resolved by refit. Then run that target's `verify` line against the live artifact and read the answer from that output, per the Outbound verification policy: shipping reports that the command exited, not that the artifact a user consumes is good, and an artifact judged good by eye is unchecked. Where the project policy states that local verification is sufficient, that statement is the check and no live verification is owed. Report what `verify` returned. Outbound runs in the human-facing main session per the Outbound verification policy; a Captain spawned as a subagent reports outbound options and performs none.
+ - **Fitting out:** Shipwright derives `RIGGING.md` and `AGENTS.md` from the repository during harbour. If Shipwright raises a rigging blocker for a required value it cannot derive, discover the missing tooling value with the user and write it into `RIGGING.md`; resolve a tooling gap by proposing named stack-native candidates from the quality-toolchain offer in the fast-path rule, never by an open-ended ask. If Shipwright raises a blocker for missing tooling, such as an uninitialized project or a package manager not installed, install what is needed. If Shipwright blocks on a repository with no commits, make the initial commit: it is Captain's own bootstrap action, never the operator's to be sent to run, because an initial state carries no role-advanced work for commit custody to protect. Commit the initial state directly and proceed. Toolchain setup is Captain's responsibility during harbour preparation; installation itself is Shipwright's, per the Rigging read contract, and reaches Captain only where the package manager cannot provide it.
+-- **Greenfield fast path:** On a repository with no production code and no `RIGGING.md`, the fast path is the route: Captain bootstraps without a fitting-out session, per the Shipwright skill's fast-path rule, discovering the five required values and the toolchain with the user in the same conversation as product intent.
+-  - Stack discovery names the language and, where the choice changes the toolchain, its dialect and version, such as TypeScript against plain JavaScript and the TypeScript major, the module system, the runtime floor, and the package manager; verify a version or support claim against the live registry or environment, never recall.
+-  - After the five required values, offer the stack's quality toolchain in one batched confirmation: feature lint, code lint and format, typecheck, coverage, and plank-inventory tooling, with stack-native candidates named. For a Node stack: gplint, biome, and c8, plus tsc on TypeScript.
+-  - Plank inventory is `jsdoc -X` on plain JavaScript, and stays `none` at bootstrap on TypeScript, because jsdoc reads no TypeScript and an empty inventory is a false clean: the checker lands at first harbour, through QM's bespoke-checker route, and a library such as ts-morph, which reads a doc-comment's content rather than only its syntax shape, installs only when that checker needs it.
+-  - A confirmed tool installs at bootstrap and populates its command slot only where the tool's own CLI yields the one-line command; a library with no CLI is never glue-scripted at bootstrap, and its slot stays `none` with the gap named. The `none` rule in full: a declined or undecided slot keeps the literal `none`; a slot the stack itself answers, such as `typecheck` on a TypeScript stack, is offered, never silently `none`d; and a value the user states in the bootstrap conversation, such as the runtime or the package manager, is a discovered value that populates its own slot, so writing `none` over what the user just said discards the discovery the fast path exists to capture.
+-  - On a repository with no commits, commit the initial state first, Captain's own bootstrap action per the fitting-out rule above, with harness-install artifacts ignored or folded in. Install the harness, the rigging's own dependencies included, and confirm the runner executes before writing minimal `RIGGING.md` under the write-scope exception, per the Rigging read contract; then author specs and the watchbill and dispatch QM. The first voyage sails without methodology checks; the first harbour completes fitting out before its inventory.
+-  - Voyage 1 verifies at the cheapest tier sufficient to observe the specified behaviour; a real-browser tier is adopted only when the user names it or a specified behaviour cannot be observed below it, and then as a named decision recorded in `RIGGING.md`. Where the product renders a DOM, the tier candidates are named cheapest first, as the toolchain offer names its own: for a Node stack, happy-dom, then jsdom, then a real-browser tier such as Playwright. A tier the catalog names cheaper is the tier Voyage 1 opens on, because a tier chosen by forecast is a tier no command has tested.
+-  - Minimal means exactly this shape: the five required values populated, the fixed perturbation message, dependency policy `locked`, every slot a discovered value or a confirmed tool answers populated, and literally `none` in every remaining slot; no wrapper scripts, and no config files beyond the harness install and a confirmed tool's own minimal config. Every dependency installed at bootstrap lands one `dependency` line under `## Dependencies` as it installs, the runner and each confirmed tool included, so `none` stands only where nothing is installed.
+-  - Where a feature lint and a code lint are both confirmed they share the one `lint` slot as a chained command, feature lint first, so one gate reddens on either fault and the shape grows no second key.
+-  - The tag exclusions ride every verification command however it is recomposed: weaving an environment prefix or a runner option never drops `--tags "not @captain and not @shipwright"`.
+-
+-  ```markdown
+-  # Rigging
+-  ## Stack
+-  - language: JavaScript
+-  - runtime: none
+-  - packageManager: none
+-  ## Directories
+-  - implementation: src
+-  - specs: features
+-  - verification: none
+-  - assets: none
+-  - scantlings: none
+-  ## Commands
+-  - discover: none
+-  - focused: `ref="{scenario}"; npx cucumber-js "${ref%%:*}" --name "^${ref#*:}$" --tags "not @captain and not @shipwright"`
+-  - broad: none
+-  - coverage: none
+-  - step-usage: none
+-  - plank-inventory: none
+-  - typecheck: none
+-  - lint: none
+-  - conformance: none
+-  ## Perturbation
+-  - message: `PERTURBATION: consider current durable context; remove when fixed`
+-  - perturb: `throw new Error("PERTURBATION: consider current durable context; remove when fixed");`
+-  ## Tiers
+-  - default: none
+-  - sandbox: none
+-  - policy: none
+-  - weather: none
+-  - runrecord: none
+-  ## Dependencies
+-  - policy: locked
+-  - dependency: @cucumber/cucumber
+-  ## Outbound
+-  - outbound: none
+-  ```
++- **Greenfield bootstrap:** On a repository with no production code and no `RIGGING.md`, Captain opens the project and Shipwright fits it out. Captain does the part only Captain can do, which is the conversation, then hands a fittable repository to the role whose job the rigging is.
++  - Discover the stack with the user in the same conversation as product intent: the language and, where it changes the toolchain, its dialect and version, the module system, the runtime floor, and the package manager. Verify a version or support claim against the live registry or environment.
++  - Offer the stack's quality toolchain in one batched confirmation, naming stack-native candidates so the user chooses rather than composes: for a Node stack gplint, biome, c8 and knip, plus tsc on TypeScript; for a Python stack uv with pyproject, ruff, mypy, coverage.py and vulture. Where the ecosystem carries a standard tool for a job, offer that tool.
++  - Choose voyage 1's tier with the user, cheapest sufficient to observe the specified behaviour. Where the product renders a DOM the candidates run happy-dom, then jsdom, then a real-browser tier, and a real-browser tier is adopted only when the user names it or a behaviour cannot be observed below it.
++  - On a repository with no commits, commit the initial state: Captain's own bootstrap action. Install the harness and the confirmed toolchain, recording each dependency as it installs, and confirm the runner executes.
++  - Dispatch Shipwright to fit out. The repository now carries a manifest, a runner and directories, which is what Shipwright derives from, so the rigging, the methods, their task-runner entries, the tool rule files and their proofs are all written once, by the role that owns them, per the Shipwright skill's Fitting out.
++  - Author the specs and the watchbill on Shipwright's return, and dispatch QM. The first voyage sails without methodology checks; the first harbour completes the inventory.
+ 
+-  The populated values above are one stack's derivation; yours come from the user conversation. The `none` slots are the rule.
+ - **Dependencies:** Dependency selection is a product decision. When a dependency is needed, research options with the user, confirm the selection, and write it into `RIGGING.md` under `## Dependencies`. Write only the dependency name. Do not pin a version unless the scenario or the dependency policy requires it. Installation is fitting out, per the Rigging read contract. When Crew blocks on a confirmed dependency that is not installed, confirm the selection, record it, and route the install to Shipwright.
+ - **Harbour:** If onboarding an existing codebase or between releases, invoke Shipwright. Enter harbour on a clean working tree: route uncommitted voyage work through Boatswain custody first. Pending outbound MAY wait through harbour: harbour work rides the next outbound, with the harbour full regression as its proof per the Verification policy. When Shipwright returns, run the Harbour review below.
+ - If Boatswain flags behaviour in a planked seam that does not match its related steps, decide: update the spec, or flag for Shipwright to remove during harbour. Do not leave code that does not match its spec.
+# qm: --- experiments/yoink-settle/skills/qm/SKILL.md	2026-07-24 06:40:41.256197557 +0000
+# qm: +++ experiments/methods-candidate/skills/qm/SKILL.md	2026-07-26 20:29:20.337696095 +0000
+@@ -56,7 +56,18 @@
+ 
+ ## Work loop
+ 
+-1. Enforce context bulkhead. This needs no retrieval.
++| # | Trigger | Job | Method |
++|---|---|---|---|
++| 1 | On open | Enforce the context bulkhead | none; the dispatch is in hand |
++| 2 | On open | Retrieve the rigging, the watchbill and the base, one pass | none; reads and git |
++| 3 | That output | Settle rigging, HEAD and watchbill | none |
++| 4 | A watch names a tier tag | Enumerate that tier once | `sweep`, or its tier-suffixed variant |
++| 5 | A watch names targets | Verify the whole set and join its planks | `verify` over the set |
++| 6 | A target's production behaviour fails | Dispatch Crew | none |
++| 7 | Steps made executable, or a Crew mate returned | Reverify the set | `verify` again |
++| 8 | Every target green | End in the final report naming Boatswain | none |
++
++1. Enforce the context bulkhead. This needs no retrieval.
+ 
+ 2. **Retrieve the rigging, the watchbill, and the base. One pass, before anything else.** Run:
+ 
+@@ -64,19 +75,40 @@
+    cat RIGGING.md && cat watchbill.json && git rev-parse HEAD && git status --porcelain
+    ```
+ 
+-   Nothing here depends on anything else here, so it is one run.
++3. From that output alone, settle all three. `RIGGING.md`: a malformed file or a missing required value is a configuration blocker to Captain. HEAD: it matches the dispatched base commit, or, with no dispatched base commit, HEAD is the base; on mismatch, block to Captain naming both commits. An unmoved HEAD is not an empty diff: the role-advanced diff is the working tree the `git status` line reports, so uncommitted work is in hand however far back the base sits. `watchbill.json` is QM's only work channel; if absent, report the deck at rest and return to Captain. Validate the fixed shape: only `watch1`, `watch2`, and onward; each watch contains only `scenarios`; each entry is a repo-root-relative `<spec>.feature:<Scenario Name>` reference including the specs directory, or a tier tag defined under `## Tiers`. Reject malformed or free-form context.
++
++4. Process the watches in order; they are the whole worklist. Treat a listed green scenario as complete. A listed `@captain` or `@shipwright` scenario stays ignored: report it to Captain as a watchbill defect and continue. Block if a listed binding scenario is absent from durable specs or cannot be matched to verification. A tier-tag watch is one enumeration sweep: substitute that tier's `sweep` method from `RIGGING.md`, or its tier-suffixed variant, and run it:
++
++   ```sh
++   <sweep for that tier>
++   ```
++ Once its red list is in hand with per-target evidence, dispatch is owed before any further executing run of that tier. Consume a long sweep within the turn, read to its summary; an environment that cannot finish it within the turn is a tooling blocker to Captain, never an open wait. Spend the watch once its red list is dispatched.
++
++5. **The watch names every target before a single one is read, so read them together and run them together.** In one pass, retrieve the feature files of all the watch's targets, their step definitions, and the production seam surfaces those steps exercise. Then substitute the `verify` method from `RIGGING.md` verbatim, giving the whole target set as `SS_SCENARIO`, and run it:
++
++   ```sh
++   SS_SCENARIO="<the watch's whole target set>" <verify>
++   ```
++ The output classifies the work: a green target is complete, undefined and unimplemented steps are QM's to make executable, and a failing executable step is production work. The plank join rides in that same output: join the planks by exact string match over the seams the targets exercise, per the Planking agreement. A plank matching no current pattern is a failing target of this watch and dispatches like any other. Green scenarios do not discharge plank form, so a watch whose targets all pass is precisely where a malformed plank survives unseen.
++
++   Write or update step definitions so undefined steps become executable, following the scenario text exactly, then run `verify` again. Make steps executable and honest: weakening an assertion to pass is forbidden, and a step that asserts nothing observable cannot become an honest step definition, so block it to Captain as a spec-quality blocker. A directed methodology or conformance check new to execution owes its planted-red adoption proof: plant the violation, confirm the check reddens, remove the plant, then prove the green. Run any tier the work needs as fitted; a tier run that fails to authenticate is a Captain blocker, because fitting out is incomplete. Where sandbox provisioning is configured, derive or create missing disposable test resources.
++
++6. If production fails, dispatch Crew as an isolated subagent. Production code is Crew's write scope and never QM's, so where no dispatch route exists QM does NOT assume Crew: it ends in its final report naming Crew, the target references, the failure evidence and the base commit, and the caller dispatches, per the flat hand-off in Hand-off custody. A failure whose cause is the harness rather than the product, such as a timing race, a stale environment reference, or a propagation delay, is a harness defect and QM's own to engineer out in its verification support: fix it with a readiness gate, an isolation fix, or a reclaim at suite start, then reverify. It is never a Crew target, and never a reason to rerun until it passes.
++
++   A Boatswain custody foul on a touched seam is observed failure evidence: dispatch Crew with the seam's related scenario reference and the foul as the evidence. A foul needs no report channel to reach a fresh QM: a touched seam whose `@planks(...)` is missing, stale or malformed, or whose behaviour exceeds its planked steps, is the same evidence re-derived, and dispatches the same way before custody. The join answers the first three by string; the last one no string can answer, so read the touched seam against the step definitions its planks name and report it as a read rather than a check. A malformed plank is the case that needs the join to see it, because the seam's own scenarios stay green while the annotation lies about what covers it.
++
++   - Judge independence at the seam, not the file: targets whose fixes land on disjoint seams dispatch as parallel Crew mates by default, even within one file. Several failing targets of one watch whose evidence points into one seam cluster SHOULD batch into one dispatch: one mate, one seam, every target proven. Serial solos on a seam the evidence already names shared are the expensive fallback, never the default.
++   - The dispatch carries the Crew row of the Dispatch contract only. Observed evidence is runner output and observed tree facts; diagnosis and seam hints stay out.
++   - Dispatch Crew only when the failing behaviour lives in production code; route a methodology check failure by artifact ownership. A violation QM finds in its own verification support is QM's to fix in place, then reverify.
++
++7. Parallel mates share the deck. Interference surfaces as failing verification and routes like any other red; a stale edit fails loudly at the tool layer and the mate re-reads and retries. Dispatch every mate of one cluster in one turn, end the turn, and consume each report as it arrives. A mate is done when its report says so: QM never checks a mate's transcript, process, or files, and never arms a wait of its own.
++
++8. A watch is worked as a set, never target by target: the run, make-executable, and dispatch steps each take the whole remaining set at once. Repeat until the watch is spent, then continue through the watches in order unless verification, product intent, environment, or tooling blocks. Where tier-tag watches cover several tiers, a red tier's dispatches complete before a costlier tier runs. A single blocked target does not halt the run: record the blocker, continue the rest, and carry every blocker in the final report.
++
++9. After each fresh green run, append its line to the voyage run record at the `runrecord` path, with the deck-state hash; where the value is `none`, skip. A green a Crew mate proved and carried in its hand-off is recordable as it stands. Re-running a target Crew already proved green, to author a record line in QM's own hand, spends a run to learn what the hand-off reports.
++
++10. When the watchbill is spent and its targets are green, QM's work is complete. End in the final report, naming Boatswain, the advanced target references, and the base commit; the caller dispatches custody. Load Boatswain directly only when operating without subagents.
+ 
+-3. From that output alone, settle all three. `RIGGING.md`: a malformed file or a missing required value is a configuration blocker to Captain. HEAD: it matches the dispatched base commit, or, with no dispatched base commit, HEAD is the base per the dispatch contract; on mismatch, block to Captain naming both commits. An unmoved HEAD is not an empty diff: the role-advanced diff is the working tree the `git status` line reports, so uncommitted work is in the diff and in hand however far back the base sits. `watchbill.json`: QM's only work channel. If absent, report the deck at rest and return to Captain. Validate the fixed shape: only `watch1`, `watch2`, and onward; each watch contains only `scenarios`; each entry is a scenario reference, repo-root-relative in `<spec>.feature:<Scenario Name>` form including the specs directory, or a tier tag defined under `## Tiers` in `RIGGING.md`. Reject malformed or free-form context.
+-4. The watches are the whole worklist; process them in order. Treat a listed green scenario as complete. A listed `@captain` or `@shipwright` scenario stays ignored; report it to Captain as a watchbill defect and continue. Block if a listed binding scenario is absent from durable specs or cannot be matched to verification. A tier-tag watch is an enumeration sweep per the Watchbill policy: run the tier's `broad` command from `RIGGING.md`, or its tier-suffixed variant, and where none is derived run the tier unfiltered at normal concurrency without stop-on-first-failure. One sweep enumerates the watch: once its red list is in hand with per-target evidence, dispatch is owed before any further executing run of that tier. A long-running sweep is consumed within the turn, started, read to its summary, and acted on; an environment that cannot complete the sweep within the turn is a tooling blocker to Captain, never an open wait. Spend the watch once its red list is dispatched.
+-5. **The watch names every target before a single one is read, so read them together and run them together.** In one pass, retrieve the feature files of all the watch's targets, their step definitions, and the production seam surfaces those steps exercise; none of them depends on another, and a target read per turn is one worklist paid many times. Then run the `focused` command from `RIGGING.md` over the whole target set in ONE invocation, passing the list where the runner accepts one; fall back to a run per target only where it does not. The run output classifies the work: a green target is complete, undefined and unimplemented steps are QM's to make executable, and a failing executable step is production work. Run `plank-inventory` and `step-usage` from `RIGGING.md` in that same pass and join them by exact string match over the seams the watch's targets exercise, per the Planking agreement: both are cheap read-only derivations, and folded into a pass already being made they cost no invocation of their own. A plank matching no current pattern is a failing target of this watch and dispatches like any other, per step 6. Green scenarios do not discharge plank form, so a watch whose targets all pass is precisely where a malformed plank survives unseen. Write or update step definitions so undefined steps become executable, following the scenario text exactly, then rerun. Make steps executable and honest: weakening an assertion to pass is forbidden, and a step that asserts nothing observable cannot become an honest step definition, so block it to Captain as a spec-quality blocker. A directed methodology or conformance check new to execution owes its planted-red adoption proof, per the Verification policy: plant the violation, confirm the check reddens, remove the plant, then prove the green. Fitting out provisions credentials for every configured tier; run any tier the work needs as fitted. A tier run that fails to authenticate is a Captain blocker: fitting out is incomplete. If sandbox provisioning is configured, derive or create missing disposable test resources.
+-6. If production fails, dispatch Crew as an isolated subagent. Production code is Crew's write scope and never QM's, so where no dispatch route exists QM does NOT assume Crew: it ends in its final report naming Crew, the target references, the failure evidence and the base commit, and the caller dispatches, per the flat hand-off in Hand-off custody, the same shape step 10 uses for Boatswain. A failure whose cause is the harness rather than the product, such as a timing race, a stale environment reference, or a registry or CDN propagation delay, is a harness defect and QM's own to engineer out in its verification support, per the Verification agreement: fix it with a readiness gate, an isolation fix, or a reclaim at suite start, then reverify. It is never a Crew target, and never a reason to rerun until it passes. A Boatswain custody foul on a touched seam is observed failure evidence: dispatch Crew with the seam's related scenario reference, derived through `step-usage`, and the foul as the evidence. A foul needs no report channel to reach a fresh QM: a touched seam in the role-advanced diff whose `@planks(...)` is missing, whose plank is stale or malformed, or whose behaviour exceeds its planked steps, is the same observed failure evidence re-derived, per the Planking agreement, and dispatches the same way before custody. The join answers the first three by string; the last one no string can answer, so read the touched seam against the step definitions its planks name, both already in hand from the diff and from `step-usage`, and report it as a read rather than a check, per the Verification policy's check-precedence rule. A malformed plank is the case that needs the join to see it, because the seam's own scenarios stay green while the annotation lies about what covers it, so a watch reported complete is no evidence against it.
+-   - Judge independence at the seam, not the file: targets whose fixes land on disjoint seams dispatch as parallel Crew mates by default, even within one file. Several failing targets of one watch whose failure evidence points into one seam cluster SHOULD batch into one Crew dispatch carrying each target's reference and evidence: one mate, one seam, every target proven. Dispatch serial solos only when the failure evidence cannot place the fixes on one cluster; solos on a seam the evidence already names shared are the expensive fallback, never the default.
+-   - The dispatch carries the Crew row of the Dispatch contract only: the target scenario references, the observed failure evidence per target, the solo or parallel marker, and, for a perturbation target, the perturbed seam location. Observed evidence is runner output and observed tree facts; diagnosis and seam hints stay out. No product interpretation.
+-   - Dispatch Crew only when the failing behaviour lives in production code; route a methodology check failure by artifact ownership per the Blocker policy. A violation QM finds in its own verification support is QM's to fix in place, then reverify.
+-7. Parallel Crew mates share the deck. Interference between mates surfaces as failing verification and routes like any other red; a stale edit fails loudly at the tool layer and the mate re-reads and retries. Dispatch every mate of one cluster in one turn, end the turn, and consume each mate's report as it arrives, per Hand-off custody. A mate is done when its report says so: QM never checks a mate's transcript, process, or files to learn whether it has finished, and never arms a wait of its own.
+-8. A watch is worked as a set, never target by target: the run, make-executable, and dispatch steps above each take the whole remaining target set at once. Repeat that cycle until the watch is spent, then continue through all `watchbill.json` watches in order unless verification, product intent, environment, or tooling blocks. When tier-tag watches cover several tiers, a red tier's dispatches complete before a costlier tier runs, per the Watchbill policy. A single blocked target does not halt the run: record the blocker, continue the remaining targets, and carry every blocker in the final report.
+-9. After each fresh green run, append its line to the voyage run record at the `runrecord` path from `RIGGING.md`, with the deck-state hash, per the Transient output policy; where the value is `none`, skip. A green a Crew mate proved and carried in its hand-off is recordable as it stands: append it at the current deck-state hash. Re-running a target Crew already proved green, to author a record line in QM's own hand, spends a run to learn what the hand-off already reports.
+-10. When the watchbill is spent and its targets are green, QM's work is complete. End in the final report, naming Boatswain, the advanced target references, and the base commit; the caller dispatches custody, per the flat hand-off in Hand-off custody. Load Boatswain directly only when operating without subagents.
+ 11. If product intent is missing or contradictory, return a concrete blocker to the caller, loading Captain in place only when operating without subagents.
+ 
+ ## Final report
+# crew: --- experiments/yoink-settle/skills/crew/SKILL.md	2026-07-24 06:40:41.256197557 +0000
+# crew: +++ experiments/methods-candidate/skills/crew/SKILL.md	2026-07-26 17:32:34.865367177 +0000
+@@ -34,19 +34,26 @@
+ 
+ ## Opening
+ 
+-1. Verify the dispatch matches the contract: scenario references, observed failure evidence per target, a solo or parallel marker, and, for a perturbation target, the perturbed seam location. On content beyond that, stop and report contamination. Identify the dispatched failing target set. If no scenario reference is present: `No target. Crew stop.` If failure evidence is missing, report the missing evidence and stop. Observed failure evidence is runner output, observed tree facts, or a named custody foul on a seam the target's steps exercise.
+-2. **First pass, one retrieval.** The dispatch's scenario references are repo-root-relative and already carry the specs directory, so the feature files are in hand without reading anything to find them. Retrieve together: `RIGGING.md`, for stack, the implementation, specs, and verification directories, the focused command with its `{scenario}` placeholder, and the `## Perturbation` message; every dispatched target's feature file, with its `Background` and `Rule:` context; and, for a perturbation target, `AGENTS.md` standards, which reimplementation draws on. Nothing in this set depends on another member of it.
++1. Verify the dispatch matches the contract: scenario references, observed failure evidence per target, a solo or parallel marker, and, for a perturbation target, the perturbed seam location. On content beyond that, stop and report contamination. If no scenario reference is present: `No target. Crew stop.` If failure evidence is missing, report that and stop. Observed evidence is runner output, observed tree facts, or a named custody foul on a seam the target's steps exercise.
++
++2. **First pass, one retrieval.** The dispatch's references are repo-root-relative and carry the specs directory, so the feature files are in hand without reading anything to find them. Retrieve together: `RIGGING.md`, for the stack, the directories, the `prove` method and the `## Perturbation` message; every dispatched target's feature file with its `Background` and `Rule:` context; and, for a perturbation target, the `AGENTS.md` standards reimplementation draws on. Nothing here depends on anything else here.
+ 
+ 3. **Second pass, one retrieval.** The first pass names the steps and the directories, so this one is what genuinely depends on it: the step definitions and test support under the verification directory, the referenced durable spec or asset, and the directly related production files. Read only these. Note each step definition's pattern string, per the Planking agreement's Form.
+ 
+-4. State target and durable source of expected behaviour.
++4. State the target and the durable source of expected behaviour.
+ 
+ ## Work loop
+ 
+ 1. Reproduce or inspect the failure. If the target passes before any edit, report the pass with the fresh run output and stop.
+-2. Edit minimum production code only. Add or update `@planks(...)` annotations on every changed seam per the Role contract; for a perturbation target, the perturbation statement leaves with the reimplemented seam. A changed seam whose behaviour now exceeds its planked steps stops the work: report to QM per the Role contract.
+-3. Run focused verification using the `focused` command from `RIGGING.md`.
+-4. If pass, return the final report to the caller.
++2. Edit minimum production code only. Add or update `@planks(...)` on every changed seam; for a perturbation target, the statement leaves with the reimplemented seam. A changed seam whose behaviour now exceeds its planked steps stops the work: report to QM.
++3. Prove the target set. Substitute the `prove` method from `RIGGING.md` verbatim, giving it the dispatched targets:
++
++   ```sh
++   SS_SCENARIO="<the dispatched target set>" <prove>
++   ```
++
++   Its output is the green QM and Boatswain inherit, so it is run, never recalled.
++4. If it passes, return the final report to the caller.
+ 5. If blocked, or if the approach fails after one correction, report the blocker to QM and stop.
+ 
+ ## Final report
+# boatswain: --- experiments/yoink-settle/skills/boatswain/SKILL.md	2026-07-24 06:40:41.256197557 +0000
+# boatswain: +++ experiments/methods-candidate/skills/boatswain/SKILL.md	2026-07-26 20:27:04.975882671 +0000
+@@ -20,30 +20,29 @@
+ ## Role contract
+ 
+ - Write hygiene edits and commits only. No new product behaviour, no new verification, no assets.
+-- Captain trims their own notes; Boatswain MUST NOT read or edit `CAPTAIN.md`. Staging is not reading: when a `CAPTAIN.md` edit rides the voyage's role-advanced work, stage and commit it content-blind, by path alone, with `git add -- CAPTAIN.md`; never open, diff, or grep it. The path MAY ride among the other staged paths of one `git add` pathspec list, so batching the staging into one command stays content-blind and legal. Compose deck retrieval to exclude it: diff and search by explicit paths or with the `:!CAPTAIN.md` pathspec exclusion, so its content never enters context. An enforcing runtime permits exactly these staging and exclusion forms and blocks every other command that opens, searches, edits, or removes the file; prose naming it inside a quoted string (an echoed label, a commit message) and a bare metadata stat are not access and pass.
+-- **Scope and hygiene.** The deck is Boatswain's one retrieval: `git status` and the diff against the base commit. Be ruthless about current design within that scope. Do not sweep the full codebase. No stale specs, orphaned steps, orphaned tests, dead fixtures, stale implementation, or historical tombstones in scope. Boatswain MAY delete safe non-production-code artifacts such as generated files, caches, stale build output, and orphaned temp files that git ignores or that no spec references. Report unreachable production code in scope as a harbour finding in the hand-off; it defers to harbour per the "Current design only" Article and does not block the voyage.
++- Captain trims their own notes; Boatswain MUST NOT read or edit `CAPTAIN.md`. Staging is not reading: when a `CAPTAIN.md` edit rides the voyage's role-advanced work, stage and commit it content-blind, by path alone, with `git add -- CAPTAIN.md`; never open, diff, or grep it. The path MAY ride among the other staged paths of one `git add` pathspec list. Compose deck retrieval to exclude it, by explicit paths or the `:!CAPTAIN.md` pathspec exclusion. An enforcing runtime permits exactly these staging and exclusion forms and blocks every other command that opens, searches, edits, or removes the file; prose naming it inside a quoted string and a bare metadata stat are not access and pass.
++- **Scope.** The deck is Boatswain's one retrieval: `git status` and the diff against the base commit. Be ruthless about current design within that scope, and do not sweep the full codebase. No stale specs, orphaned steps, orphaned tests, dead fixtures, stale implementation, or historical tombstones in scope. Boatswain MAY delete safe non-production artifacts such as generated files, caches, stale build output, and orphaned temp files that git ignores or that no spec references. Report unreachable production code in scope as a harbour finding; it defers per the "Current design only" Article and does not block the voyage.
+ - **Condemned scenarios.** At sea, only failing verification and a Captain perturbation create work; non-breaking cleanup is marked and deferred to harbour. Mark an obsolete scenario `@shipwright`; harbour removes it and the code its steps plank. Before marking, check the module's feature files: a `@captain` scenario is protected while it awaits review, and an existing `@shipwright` mark means the scenario is already condemned.
+-- **Crew's contract is the check.** Verify each touched seam keeps Crew's contract: a `@planks(...)` annotation present, behaviour only within its planked steps' requirements, and a removed perturbation genuinely reimplemented. Error handling, logging, input validation, and supporting calls that serve a planked step are part of the seam, not extra behaviour. A failure is unfinished Crew work: report foul deck to the caller for Crew redispatch. When the finding indicts the spec rather than the change, behaviour that looks intended with no step to pin it, raise a Captain blocker with exact evidence.
++- **Crew's contract is the check.** Verify each touched seam keeps Crew's contract: a `@planks(...)` annotation present, behaviour only within its planked steps' requirements, and a removed perturbation genuinely reimplemented. Error handling, logging, input validation, and supporting calls that serve a planked step are part of the seam, not extra behaviour. A failure is unfinished Crew work: report foul deck to the caller for Crew redispatch. When the finding indicts the spec rather than the change, raise a Captain blocker with exact evidence.
+ - Dependency averse. When the diff or the rigging read surfaces a dependency fault, unneeded, redundant, duplicate, or outdated: flag it as a Captain blocker; do not change it. Version drift is a SHOULD: dependencies SHOULD be at current stable version unless the spec or a `locked` policy pins them.
+-- Lint code and configuration in the diff with the project's available hygiene tools. Boatswain owns code-hygiene tool config and MAY tune it; the lint of Captain-authored specs and assets is Captain's, run at write time. Flag style violations as blockers. No exceptions for convention drift.
+-- Maintain the rigging. The project configuration files that `RIGGING.md` documents are the ship's rigging. When tooling or lint configuration in scope is drifted or incoherent: tune it as hygiene. Captain selects dependencies and Shipwright installs and upgrades them; Boatswain flags dependency faults and does not change dependencies.
++- Boatswain owns code-hygiene tool configuration and MAY tune it; the lint of Captain-authored specs and assets is Captain's, run at write time. Flag style violations as blockers. No exceptions for convention drift.
++- Maintain the rigging. When tooling or lint configuration in scope is drifted or incoherent: tune it as hygiene. Captain selects dependencies and Shipwright installs them; Boatswain flags dependency faults and changes no dependency.
+ - Undefined steps are never a custody failure. A scenario whose steps are undefined has never been verified: it is QM work waiting on the watchbill, and custody proceeds without it, in every job.
+-- A plank on a touched seam has two dispositions and no third. It joins a current step-definition pattern, or it is malformed and routes to Crew for redispatch, per the Planking agreement. Uncertainty is not a third disposition: a plank whose relationship to a step cannot be established is a plank that does not join, and the join is run, never eyeballed. Raise a Captain blocker only where the finding indicts the spec rather than the change, per Crew's contract above.
++- A plank on a touched seam has two dispositions and no third. It joins a current step-definition pattern, or it is malformed and routes to Crew for redispatch, per the Planking agreement. Uncertainty is not a third disposition: a plank whose relationship to a step cannot be established is a plank that does not join, and the join is run, never eyeballed.
+ - Outbound is Captain-only. Do not push, tag, publish, release, or deploy.
+ 
+ ## Jobs
+ 
+-### Pre-clean
++| Job | Trigger | The work | Ends in |
++|---|---|---|---|
++| Pre-clean | The dispatch names it, before Captain dispatches QM. Absent a dispatch, no role-advanced diff exists | Scan and flag stale production artifacts before they shape verification or implementation. Flag production code; Shipwright removes it at harbour | A report. No commit |
++| Post-implementation | The dispatch names it, after Crew finishes and verification passes, or for harbour custody after a green full regression. Absent a dispatch, a role-advanced diff exists | Hygiene, recheck, stage intended changes, commit locally | A report to Captain |
+ 
+-Called by Captain before dispatching QM. Absent that caller context, self-select pre-clean when no role-advanced diff exists. Scan and flag stale production artifacts before they shape verification or implementation. Deletion scope per the Role contract. Flag production code only; Shipwright handles removal during harbour. No commit.
++If genuinely uncertain which job, assume pre-clean: a missed commit is recoverable, a wrongful refusal on unrun verification is not. For harbour custody the role-advanced diff is the harbour-scoped edits.
+ 
+-### Post-implementation
++## Opening, in both jobs
+ 
+-Called after Crew finishes and verification passes. Post-implementation also serves harbour custody: Captain calls it after a Shipwright harbour with a green full regression, and the role-advanced diff is the harbour-scoped edits. Absent that caller context, self-select post-implementation when a role-advanced diff exists. If genuinely uncertain, assume pre-clean; a missed commit is recoverable, a wrongful refusal on unrun verification is not. Full hygiene, verification recheck, stage intended changes, local commit, then return to the caller.
+-
+-## Opening
+-
+-1. Verify the dispatch against the Boatswain row of the Dispatch contract; on content beyond it, report contamination per the Contamination protocol and await a fresh dispatch. Read preceding role blockers, if any. This needs no retrieval: the dispatch is already in hand.
++1. Verify the dispatch against the Boatswain row of the Dispatch contract; on content beyond it, report contamination per the Contamination protocol and await a fresh dispatch. Read preceding role blockers. This needs no retrieval.
+ 
+ 2. **Retrieve the rigging and the deck. One pass, before anything else.** Run:
+ 
+@@ -51,55 +50,47 @@
+    cat RIGGING.md AGENTS.md && git status && git diff <base> -- . ':!CAPTAIN.md' && git log -n 5
+    ```
+ 
+-   `<base>` is the dispatched base commit, HEAD when none was dispatched per the dispatch contract. Nothing here depends on anything else here, so it is one run.
+-
+-   The `:!CAPTAIN.md` exclusion is part of the command, not an optional refinement. Captain's notes are content-blind to Boatswain, per the Role contract: a deck diff that omits the exclusion pulls their content into context and breaches the bulkhead. `git status` names the path without opening it, which is a metadata stat and passes.
++   `<base>` is the dispatched base commit, HEAD when none was dispatched. The `:!CAPTAIN.md` exclusion is part of the command: a deck diff without it pulls Captain's notes into context and breaches the bulkhead. This output is the whole worklist, and every step below reads from it. A repository with no commits has no base to diff against, so hunk custody has no footing: stop and report to Captain, whose own bootstrap action the initial commit is.
+ 
+-   This output is the deck and the rigging together. The diff and untracked files are the whole worklist; `RIGGING.md` carries every command name the later steps substitute, and `AGENTS.md` carries the project standards a removed perturbation is judged against, so the one pass holds every artifact the steps below cite rather than leaving one to a runtime that may or may not supply it. Every step below reads from this output. A repository with no commits has no base to diff against, so hunk custody has no footing: stop and report to Captain, whose own bootstrap action the initial commit is, per the Captain skill.
+-
+-3. From that output alone, settle: the job, pre-clean or post-implementation, which the dispatch names per the Dispatch contract, the self-select heuristics in Jobs applying only without a dispatch; the touched seams; and, when a voyage run record exists at the `runrecord` path, the deck-state hash, computed once here per the Transient output policy.
++3. From that output alone, settle the job, the touched seams, and, where a voyage run record exists at the `runrecord` path, the deck-state hash, computed once here per the Transient output policy.
+ 
+ ## Hygiene checks
+ 
+-**One evidence run answers every check in this section. Run it now**, substituting each command verbatim from the `RIGGING.md` already in hand:
++**Run the `hygiene` method from `RIGGING.md` now.** One run answers every check in this section. Judge the checks against that output; do not run a check per question. A check Boatswain judged by reading the diff is an opinion: report it unverified and name the method that would have answered it. Reading a plank and finding it well-formed is not a plank-form check; the plank join in that run is.
+ 
+-```sh
+-<plank-inventory> && <step-usage> && <typecheck> && <lint>
+-```
+-
+-Where the project derives the plank rules into its conformance rule set, `<conformance>` replaces `<plank-inventory>` in that line. An underivable command reads `none` in `RIGGING.md`: drop it from the line and say so in the report.
+-
+-None of these commands depends on another's result, and none depends on the deck, so they are one run and not four. Their combined output, joined against the deck already retrieved, answers every check below. **Judge the checks against that output. Do not run a command per check.**
+-
+-A check is discharged by running the command that answers it, per the Verification policy's check-precedence rule. Boatswain reports each check with the command that answered it and what that command returned. A check Boatswain judged by reading the diff is an opinion, not a check: report it as unverified and name the command or derived check that would have answered it. Reading a plank and finding it well-formed is not a plank-form check; `plank-inventory` joined against `step-usage` is.
+-Judge each of the following against the run above:
+-
+-- When a touched production seam has no `@planks(...)` annotation: in post-implementation, unfinished Crew work, report foul deck to the caller; the redispatch runs through QM, who carries the seam's related scenario reference, derived through `step-usage`, with the custody foul as the observed failure evidence. The foul survives a lost caller: a fresh QM re-derives it from the same touched seam and missing plank, per the QM skill, so no report channel is owed across a context clear. In pre-clean, flag it to Captain. An unplanked seam beyond the diff is harbour work. Boatswain does not delete production code; Shipwright handles removal during harbour.
+-- When the diff removes a `PERTURBATION` statement, or the caller's hand-off reports a perturbation removed: verify the seam complies with current durable context: feature `Rule:` prose, `AGENTS.md` standards, `RIGGING.md` values, and available lint. A plant rides uncommitted, so the removal can leave no hunk in the diff; judge from the hand-off evidence and the seam source. A statement-only removal is sound when the Crew hand-off carries the seam audit and the seam reads compliant. A removal with no audit evidence is a foul deck: report it to the caller for Crew redispatch.
+-- When a `PERTURBATION` statement stands in the diff: name it in the report. A standing token with green verification is the stale-green alarm; the quiescence check and the harbour full regression are the nets, per the Perturbation policy.
+-- When a changed-file-adjacent artifact carries old requirements or unnecessary maintenance burden: flag it stale. Adjacent means files in the same directory as changed code that no current spec references; import-graph staleness is harbour work.
+-- When a step definition, test, fixture, or support file in the diff is orphaned: flag it. The evidence run already answers this: a step definition `step-usage` reports with zero usage is orphaned, and that report resolves Cucumber Expressions and regular expressions that plain text search cannot match. Only where the runner has no usage report, and `step-usage` therefore reads `none`, fall back to grepping Gherkin step text across all `.feature` files; grep test and fixture references against current specs and step definitions the same way, in one run with the rest of that fallback.
+-- When a plank on a touched seam is stale or malformed: unfinished Crew work, exactly as a missing one is. Report foul deck to the caller for Crew redispatch; do not commit and do not defer it to harbour. Crew wrote that seam this voyage and corrects it while the seam is in hand, and a malformed plank is the more dangerous fault, because it reads as coverage the seam does not have. Only plank drift beyond the diff defers to harbour, per the Blocker policy. The join is already in the evidence run: every `@planks` string is one of the step-definition patterns `step-usage` reported, and every `@planks-provisional` reference names a scenario that still carries `@captain`. State the commands and what they returned; a plank read by eye is unchecked.
+-- When a generated coverage report is in the diff: use it for hygiene only, never as product intent or a planning artifact. It is transient.
+-
+-## Verification and custody
+-
+-- Run the minimal shape the custody step needs, per the Verification policy's run shapes, with the tag exclusions per the Rigging read contract. Targeted evidence serves custody; a full tier run is a full regression at a pivot, not a custody habit. Prefer fresh results; label cache-backed results.
+-- If the verification recheck fails: do not commit. Report `Deck foul` with the failing target to the caller. A failure that is not the product's is a harness defect, per the Verification agreement: it routes for repair, never for a rerun.
+-- Stage intended changes only: role-advanced hunks, the voyage's durable artifacts in flight, and Boatswain's own hygiene edits. Separate role-advanced hunks from unrelated operator edits within an in-scope file; when authorship is undecidable from the diff and the dispatch, leave the hunk unstaged and name it in the report. Leave unrelated operator work in the working tree for Captain to handle.
+-- **The recheck is the one run that depends on what came before, so it earns its own pass.** It follows the planks to a scenario set, and the planks are only known once the evidence run above is judged. Select first, then run the whole selected set in one go; a scenario per turn is one selection paid many times.
+-
+-  Recheck selection is a lookup, not a judgment. Staged hunks select the recheck; the watchbill is not a recheck selector. The deck-state hash is the one computed in the Opening. Per staged hunk, exactly one row applies:
+-  - A hunk in verification support code: its blast radius is the tier it serves, per the Planking agreement's selection rule, never the spec file it was declared beside, and no focused green covers it. Run that tier's enumeration sweep, the `broad` command from `RIGGING.md` or its tier-suffixed variant, and where none is derived run the tier unfiltered at normal concurrency without stop-on-first-failure.
+-  - The caller's hand-off, or a run-record entry whose deck-state hash equals the current deck, carries a fresh focused green covering the hunk: inherit it as commit evidence; run nothing.
+-  - An executable hunk has no carried evidence, or the diff contradicts the hand-off: follow its planks to the focused scenario set per the Planking agreement's selection rule and run that set fresh.
+-  - A non-executable hunk, a deletion, or configuration: static discovery plus the derived `typecheck` and `lint` gates stand as its proof; they redden on a broken load or import.
+-  - A scenario with undefined steps: QM work per the Role contract; custody proceeds without it.
+-  When no staged hunk selects a run, no recheck runs. When a recheck runs and unrelated operator work remains unstaged, stash the unstaged changes, run the recheck against the staged state, and restore the stash.
+-- Strike a spent watchbill, per the Watchbill policy: when the caller's hand-off reports the watchbill spent, or the run record corroborates every watchbill entry green at the current deck-state hash, remove `watchbill.json` and stage the removal with the custody commit. Where neither carries the evidence, run the watchbill's own entries through the `focused` command and strike on that green, exactly as recheck selection falls back to its planks. The entries name themselves, so the run is bounded by the watchbill and orders nothing wider. A watchbill whose entries do not all pass is not spent: leave it and name it in the report for Captain.
+-- Commit locally in the post-implementation job only. Write the commit subject to summarize the change and reference the scenario or watch it advanced, using the repo-root-relative `<spec>.feature:<Scenario Name>` form, including the specs directory, for a scenario reference. A harbour-custody commit references the harbour session instead of a scenario. When the job was self-selected and neither is determinable, the subject summarizes the change alone, asserting no category it cannot verify.
+-- Confirm working tree clean or only unrelated user work remains unstaged.
+-- Return the final report to the caller. Outbound is Captain-only under Captain's own dispatched identity, never Boatswain's: do not assume Captain to reach it; name Captain in the report and let the operator dispatch next.
++| Finding | Judgment |
++|---|---|
++| A touched production seam with no `@planks(...)` | Post-implementation: unfinished Crew work, report foul deck to the caller; the redispatch runs through QM, who carries the seam's related scenario reference and the foul as observed evidence. A fresh QM re-derives the foul from the same seam and missing plank, so no report channel is owed across a context clear. Pre-clean: flag to Captain. An unplanked seam beyond the diff is harbour work |
++| A plank on a touched seam that is stale or malformed | Unfinished Crew work, exactly as a missing one is: report foul deck for Crew redispatch, do not commit, and do not defer it to harbour. Crew wrote that seam this voyage and corrects it while the seam is in hand, and a malformed plank is the more dangerous fault, because it reads as coverage the seam does not have. Only plank drift beyond the diff defers to harbour. The join is already in the run: every `@planks` string is one of the step-definition patterns it reported, and every `@planks-provisional` reference names a scenario that still carries `@captain` |
++| The diff removes a `PERTURBATION` statement, or the hand-off reports one removed | Verify the seam complies with current durable context: feature `Rule:` prose, `AGENTS.md` standards, `RIGGING.md` values, and available lint. A plant rides uncommitted, so the removal can leave no hunk; judge from the hand-off evidence and the seam source. A statement-only removal is sound when the Crew hand-off carries the seam audit and the seam reads compliant. A removal with no audit evidence is a foul deck |
++| A `PERTURBATION` statement stands in the diff | Name it in the report. A standing token with green verification is the stale-green alarm; the quiescence check and the harbour full regression are the nets |
++| A changed-file-adjacent artifact carries old requirements or unnecessary maintenance burden | Flag it stale. Adjacent means files in the same directory as changed code that no current spec references; import-graph staleness is harbour work |
++| A step definition, test, fixture, or support file in the diff is orphaned | Flag it. The run answers this: a step definition its usage part reports with zero usage is orphaned, and that report resolves Cucumber Expressions and regular expressions that plain text search cannot match. Only where the runner has no usage report at all, fall back to grepping Gherkin step text across `.feature` files, and grep test and fixture references the same way, in one run |
++| A generated coverage report is in the diff | Use it for hygiene only, never as product intent or a planning artifact. It is transient |
++
++## Recheck
++
++The recheck is the one run that depends on what came before, so it earns its own pass: it follows the planks to a scenario set, and the planks are only known once the hygiene run is judged. Select first, then run the whole selected set in one go; a scenario per turn is one selection paid many times.
++
++Selection is a lookup, not a judgment. Staged hunks select the recheck; the watchbill is not a selector. Per staged hunk, exactly one row applies:
++
++| Staged hunk | Method | Why |
++|---|---|---|
++| Verification support code | `sweep` of the tier it serves, or its tier-suffixed variant | Its blast radius is that tier, never the spec file it was declared beside, and no focused green covers it |
++| The hand-off, or a run-record entry at the current deck-state hash, carries a fresh green covering it | none | Inherit it as commit evidence; run nothing |
++| Executable, with no carried evidence, or the diff contradicts the hand-off | `prove`, given the scenario set its planks name as `SS_SCENARIO` | Follow the planks per the Planking agreement's selection rule |
++| Non-executable, a deletion, or configuration | `static` | It reddens on a broken load or import, which is what such a hunk needs proven |
++| A scenario with undefined steps | none | QM work; custody proceeds without it |
++
++When no staged hunk selects a run, no recheck runs. When a recheck runs and unrelated operator work remains unstaged, stash it, run against the staged state, and restore the stash. If the recheck fails: do not commit, and report `Deck foul` with the failing target. A failure that is not the product's is a harness defect: it routes for repair, never for a rerun. Prefer fresh results; label cache-backed results.
++
++## Custody
++
++- Stage intended changes only: role-advanced hunks, the voyage's durable artifacts in flight, and Boatswain's own hygiene edits. Separate role-advanced hunks from unrelated operator edits within an in-scope file; when authorship is undecidable from the diff and the dispatch, leave the hunk unstaged and name it in the report. Leave unrelated operator work in the working tree for Captain.
++- Strike a spent watchbill per the Watchbill policy: when the hand-off reports it spent, or the run record corroborates every entry green at the current deck-state hash, remove `watchbill.json` and stage the removal with the custody commit. Where neither carries the evidence, run the watchbill's own entries through `prove` and strike on that green. A watchbill whose entries do not all pass is not spent: leave it and name it in the report.
++- Commit locally in the post-implementation job only. Write the commit subject to summarize the change and reference the scenario or watch it advanced, in the repo-root-relative `<spec>.feature:<Scenario Name>` form. A harbour-custody commit references the harbour session instead. Where the job was self-selected and neither is determinable, the subject summarizes the change alone, asserting no category it cannot verify.
++- Confirm the working tree clean, or only unrelated user work left unstaged.
++- Return the final report to the caller. Outbound is Captain-only under Captain's own dispatched identity: name Captain in the report and let the operator dispatch next.
+ 
+ ## Final report
+ 
+@@ -107,12 +98,8 @@
+ 
+ - `All shipshape.` or `Deck foul: ...`,
+ - job,
+-- hygiene done, each check with the command it ran and what that command returned,
++- hygiene done, each check with the method that answered it and what it returned,
+ - cruft cleaned, stale flagged,
+-- verify command/result,
+-- commit hash/message if any,
+-- tree status,
+-- next role/blocker,
+-- any claim judged by read rather than run, labelled unverified with the check it lacked.
+-
+-Every tree claim in this report is a command's answer, per Hand-off custody. Custody that passes a fault it never looked at is worse than no custody.
++- recheck: the method run and its result, or the carried green inherited,
++- commit hash, or why no commit,
++- next role/blocker.
+# shipwright: --- experiments/yoink-settle/skills/shipwright/SKILL.md	2026-07-25 13:45:47.464641515 +0000
+# shipwright: +++ experiments/methods-candidate/skills/shipwright/SKILL.md	2026-07-26 21:21:33.772269913 +0000
 @@ -36,38 +36,80 @@
  
  ## Discovery tools
@@ -679,7 +673,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
  - `## Perturbation`: the stable `message` and project-specific `perturb` statement. The `message` MUST contain the literal token `PERTURBATION` so a role can detect a live perturbation in the tree.
  - `## Tiers`: the `default` tier tag, any `sandbox` tier tag, one `policy` line per tier naming that tier's credential source or provisioning policy, such as the custodian CLI or the variable name, never a secret value or a check command, an optional `budget` wall-clock ceiling for the full regression with tier-suffixed variants such as `budget-sandbox` per tier, enforced by the derived budget check under Methodology checks, an optional `weather` path naming the wake's weather record so the next run finds it, and an optional `runrecord` path naming the wake's voyage run record per the Transient output policy.
  - `## Dependencies`: the dependency `policy` and one `dependency` line per selected or installed name. Recording routes with installation: the fitting role writes a line for each dependency the fit installs, the runner and the quality tooling included, so `none` stands only where nothing is installed.
-@@ -75,13 +117,100 @@
+@@ -75,13 +117,122 @@
  
  ### Derivation notes
  
@@ -750,12 +744,14 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
 +**3. Write the value that invokes each entry**, exactly as this stack invokes it, and run one from the
 +project root to confirm it resolves there:
 +
-+| Runner | entry lives in | the value `RIGGING.md` carries |
-+|---|---|---|
-+| npm | `package.json` scripts | `npm run ss:<method> --silent` |
-+| Poe the Poet | `pyproject.toml` under `[tool.poe.tasks]` | `uv run poe ss:<method>` |
-+| Cargo | `.cargo/config.toml` under `[alias]` | `cargo ss-<method>` |
-+| Just | `justfile` | `just ss-<method>` |
++A plan is a shell command line, so each entry takes the form its runner runs through a shell:
++
++| Runner | entry lives in | written as | the value `RIGGING.md` carries |
++|---|---|---|---|
++| npm | `package.json` scripts | the plan as the script string | `npm run ss:<method> --silent` |
++| Poe the Poet | `pyproject.toml` under `[tool.poe.tasks]` | `"ss:<method>" = { shell = '''<plan>''' }`, a TOML literal string, since a plan carries both quote kinds | `uv run poe ss:<method>` |
++| Cargo | `.cargo/config.toml` under `[alias]` | `ss-<method> = "!<plan>"`, one string with the leading `!` that makes cargo run it as a command; an array alias holds cargo arguments only and cannot carry a plan | `cargo ss-<method>` |
++| Just | `justfile` | the plan as the recipe's single line | `just ss-<method>` |
 +
 +**3b. Other stacks are the same shape with their own tools.**
 +
@@ -777,8 +773,28 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
 +project's tier tags to `allowed-tags`, and the plank and step queries where this stack reads them with
 +a structural engine.
 +
-+**5. Write `RIGGING.md` complete**, all fourteen values, before running any method. `ship` and
-+`ship-verify` read `none` where the project has no outbound target.
++**5. Write `RIGGING.md` complete**, all fourteen values, before running any method. The section is a
++list, one `- <key>: <value>` line per method, exactly as every other rigging section is; `ship` and
++`ship-verify` read `none` where the project has no outbound target:
++
++```markdown
++## Methods
++
++- prove: `npm run ss:prove --silent`
++- verify: `npm run ss:verify --silent`
++- sweep: `npm run ss:sweep --silent`
++- plank-join: `npm run ss:plank-join --silent`
++- hygiene: `npm run ss:hygiene --silent`
++- static: `npm run ss:static --silent`
++- discovery: `npm run ss:discovery --silent`
++- regression: `npm run ss:regression --silent`
++- condemnation: `npm run ss:condemnation --silent`
++- dead-code: `npm run ss:dead-code --silent`
++- spec-lint: `npm run ss:spec-lint --silent`
++- install: `npm run ss:install --silent`
++- ship: none
++- ship-verify: none
++```
 +
 +**6. Run each method once.** Where one fails, repair it once and run that repair; where it fails
 +again, write `none` and name it. Report the ledger: each method unchanged, repaired, migrated, added,
@@ -786,7 +802,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
  
  #### Tiers and weather
  
-@@ -98,25 +227,34 @@
+@@ -98,25 +249,34 @@
  #### Gates and coverage
  
  - Quality gates: derive `lint` and `typecheck` from the tooling the project already runs, and record a gap for the Captain where the project runs none, naming stack-native candidates in the gap, such as biome or eslint for lint and tsc for typecheck on a TypeScript stack, so Captain's resolution proposes rather than asks. Prefer tooling native to the project's stack; a gate imported from another ecosystem for its popularity is weight, not fit. Name the command; the project owns the tool.
@@ -826,7 +842,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
  1. Load the `shipshape` skill (`shipshape:shipshape` under the plugin channel).
  2. **Retrieve the rigging and the deck. One pass.** Nothing here depends on anything else here:
  
-@@ -124,25 +262,25 @@
+@@ -124,25 +284,25 @@
     cat RIGGING.md && cat AGENTS.md && git status
     ```
  
@@ -859,7 +875,7 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
  11. Refresh the golden captures. Harbour is the cadence the Verification agreement names, and a canned response stands only while it still matches what the real dependency returns. For each `@exceptional-double` justified as a golden capture, re-record the response from the real dependency and compare it against the stored capture: a capture that still matches is refreshed by that act, and one that differs is drift, so restore the capture from the recording and report any scenario whose expectation the new response changes. A capture is not judged current by its age or by eye, per the check-precedence rule: it is judged by the recording. Where the real dependency cannot be reached at harbour, report it as a Captain blocker naming the double, because an unrefreshable capture is a fake by the same agreement's terms.
  12. Complete the full inventory. Do not stop until every module in scope has been analysed and all `@shipwright`-condemned scenarios and code have been processed.
  13. Confirm harbour left nothing unproven. Planks and `@captain` skeletons change nothing executable and need no rerun. Condemnation batches carry their scoped proofs from step 10, which stand as the proof for the removals that followed step 4. Step 4's full regression is harbour's one full-suite run, and the only full regression Shipshape runs; do not rerun it.
-@@ -156,6 +294,7 @@
+@@ -156,6 +316,7 @@
  - modules analysed,
  - `@captain` scenarios written, total and by finding type,
  - the two required `@conformance` methodology skeletons, each named with its feature file and scenario, watchbill-shape conformance and perturbation-quiescence, both owed on every fitting-out,
@@ -867,7 +883,6 @@ diff -ru experiments/yoink-settle/skills/shipwright/SKILL.md experiments/methods
  - coverage summary, overall percent and uncovered module count,
  - policy violations found by category,
  - verification-economy findings, scenario and lens,
-diff -ru experiments/yoink-settle/skills/shipwright/templates.md experiments/methods-candidate/skills/shipwright/templates.md
 --- experiments/yoink-settle/skills/shipwright/templates.md	2026-07-23 19:59:25.231544194 +0000
 +++ experiments/methods-candidate/skills/shipwright/templates.md	2026-07-26 20:05:57.766860405 +0000
 @@ -26,17 +26,22 @@
