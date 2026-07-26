@@ -30,7 +30,7 @@ esac
 mkdir -p .shipshape
 case "$STACK" in
   ts) cp "$HERE/assets/methods/planks-typescript.yml" .shipshape/planks.yml;;
-  py) cp "$HERE/assets/methods/planks-python.yml" .shipshape/planks.yml;;
+  py) cp "$HERE/assets/methods/planks-python.yml" .shipshape/planks.yml; cp "$HERE/assets/methods/steps-python.yml" .shipshape/steps.yml;;
   rs) cp "$HERE/assets/methods/planks-rust.yml" .shipshape/planks.yml;;
 esac
 

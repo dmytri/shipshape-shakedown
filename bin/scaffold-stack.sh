@@ -56,7 +56,7 @@ case "$STACK" in
     # uv against pyproject.toml is the shape doctrine prefers on Python: one manifest resolves,
     # locks and runs. The env is built HERE because a venv carries its absolute path inside it.
     uv sync --quiet >/dev/null 2>&1 || { echo "SCAFFOLD(py): uv sync failed"; exit 1; }
-    uv run behave >/dev/null 2>&1 || { echo "SCAFFOLD(py): behave not green"; exit 1; }
+    uv run pytest -q >/dev/null 2>&1 || { echo "SCAFFOLD(py): pytest not green"; exit 1; }
     ;;
 esac
 

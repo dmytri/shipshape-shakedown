@@ -7,12 +7,13 @@ dependencies = []
 
 [dependency-groups]
 dev = [
-  "behave>=1.2.6",
-  "coverage>=7.6",
+  "pytest>=8.3",
+  "pytest-bdd>=8.1",
+  "pytest-cov>=6.0",
   "mypy>=1.11",
   "ruff>=0.6",
-  "poethepoet>=0.29",
   "vulture>=2.11",
+  "poethepoet>=0.29",
 ]
 
 [tool.setuptools]
@@ -21,3 +22,7 @@ packages = ["src"]
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+bdd_features_base_dir = "features"
+markers = ["logic: default verification tier"]
