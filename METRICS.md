@@ -1,5 +1,29 @@
 # Metrics: how to read a shakedown
 
+## Methods candidate, 2026-07-27 (flash, 5-stack fit-out matrix)
+
+Doctrine size: 50,832 -> 50,251 tok, **-1.1%** vs 0.13.65, carrying 14 methods and 5 stacks.
+
+| round | js | ts | py | rs | go | note |
+|---|---|---|---|---|---|---|
+| r17 | PASS | PASS | PASS | 3 viol | 1 viol | first 5-stack round; worked-example repair held |
+| r18 | PASS | PASS | 1 viol | PASS | 0 viol | rs fixed by showing the whole `--run` part |
+| r19 | - | - | void | - | void | gplint absent from the toolkits: legs spent their sessions installing it |
+| r20 | **PASS** | **PASS** | **PASS** | no rigging | **PASS** | 4/5, every one 7/7 fidelity; rs authored a 234-line checker |
+
+PASS = 0 violations AND every derived method actually runs. Fidelity is reported, never gated:
+a fit reaching the job with a better tool should pass while showing as divergent.
+
+Value-shape A/B (QM probe, flash, 6 arm-matched draws per arm):
+
+| arm | ran the rigging's method | off-rigging plans composed |
+|---|---|---|
+| registered (short value -> runner entry) | 6/6 | 2, in one draw |
+| plans (full plan in `RIGGING.md`) | 6/6 | **0** |
+
+Negation audit: 649 across 71 sections. Planking agreement 45->16 (-18% tok), Role transitions
+30->6 (-17%), Boatswain Role contract 25->9.
+
 ## BASELINE MOVED: 0.13.64 -> 0.13.65 (2026-07-25) — shipped the Shipwright conformance-skeleton enforcement
 
 **`0.13.65` (`596fbf1`) is the installed/doctrine baseline now.** One change, textual footing:

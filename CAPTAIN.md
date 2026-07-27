@@ -1,6 +1,60 @@
 # Captain notes - shipshape-shakedown workstream
 
 <!-- ============================================================================= -->
+## >>> NEXT SESSION - PRIME (2026-07-27): methods candidate is 4/5 clean on flash; take it to 3 models, then pilot <<<
+
+**State.** The methods candidate lives at `experiments/methods-candidate/skills` (gitignored;
+the readable artifact is `data/methods-candidate/candidate-v3-diff.txt`). Doctrine is **-1.1%**
+vs 0.13.65 while carrying **14 methods** across **5 stacks**. Commands are retired.
+
+**The shape settled today, on dk's call and on measurement.** A method value IS the plan - one
+yoink invocation in backticks, living in `RIGGING.md` itself. The task-runner registration layer
+(npm scripts / Poe tasks / cargo aliases) is GONE: it was a second list that must agree with the
+rigging, which is the two-list drift that cost tinman two voyages. Measured with 6 arm-matched QM
+draws per arm: both arms ran the rigging's method 6/6, and the only off-rigging composition came
+from the registered arm. The older result that had favoured registration compared against a
+`{scenario}` PLACEHOLDER a role had to edit before running; inline env vars removed that pressure.
+Rust settled it empirically: cargo `[alias]` takes subcommand args only, this cargo has NO `!`
+external-alias form (verified: `cargo-!echo`), and `[env]` would set the tier filter for every
+cargo invocation.
+
+**Last round (r20, flash, 5 stacks): go, js, py, ts all PASS** - 0 violations, 12/12 methods
+running, 7/7 example fidelity. go's first clean round. rs failed by authoring a 234-line
+`plank-join.mjs` (a JS checker, in a Rust project) for want of ast-grep rules that doctrine
+promised but `templates.md` did not carry. Fixed: templates.md now ships both rule files, the
+derivation takes the structural engine first, step 4 says copy verbatim. **r21 (rs, py) was
+running at handoff - read `.eval-scratch/r21.log` first.**
+
+**Next, in order.**
+1. Confirm r21: rs and py copy the ast-grep rules rather than authoring checkers, and py copies
+   the 30-rule `.gplintrc` verbatim (it wrote 11 of 30 before step 4 said verbatim).
+2. Run the same text on **mimo** and **hy3** - dk's bar is all three models at 100%.
+   `bin/fit-matrix.sh r22 mimo hy3` (flash is the cheap canary; the others cost more).
+3. Prime a fresh session for the **2-model TodoMVC pilot** (registered rigging and scaffold
+   wiring are in place).
+
+**Doctrine sections still worth the positive-rewrite treatment** (audit ranked 649 negations
+across 71 sections; density matters more than count):
+`shipwright Work loop` 54 neg / 4487 tok, `captain Workflow` 38 / 2227,
+`shipshape Verification agreement` 35 / 2461, `shipshape Scantling agreement` 31 / 2382,
+`qm Work loop` 28 / 2132. Done so far: Planking agreement 45->16 (-18% tok), Role transitions
+30->6 (-17%), Boatswain Role contract 25->9.
+
+**Harness changes today.** Five stacks (js, ts, py, rs, **go** - godog, hermetic shared module
+cache, nothing vendored). ONE spec for all five at `fixtures/tidewatch-spec`. ONE toolkit for
+every sim: real machines have every toolchain installed, and Shipshape itself runs on Node, so
+hiding node from a py sim made the sim easier than reality. `bin/provision-toolkits.sh` installs
+everything idempotently - run it after a fresh clone.
+
+**Verified, so do not re-litigate:** `npx skills add <git url>` and `npx plugins add` both deliver
+`templates.md` alongside `SKILL.md` (tested from a clean HOME against github.com/dmytri/shipshape),
+and roles read it and copy it byte-identically.
+
+**Instrument health.** TEN instrument faults were found today against roughly four genuine
+doctrine defects - my scorers were wrong more often than the models. Before believing any
+"doctrine failure", check the instrument first, and read the transcript, never a grep.
+
+<!-- ============================================================================= -->
 ## >>> NEXT SESSION — EXECUTE AUTONOMOUSLY: `tasks/methods-candidate/PLAN.md` (dk, 2026-07-26) <<<
 dk primed a cleared session to run the **methods candidate** end-to-end WITHOUT interruption:
 build the candidate (formalize rigging commands → "methods" + composite yoink-batched methods:
