@@ -32,6 +32,15 @@ nothing else (no notes, no fixtures, no scratch).
    prompts/preamble.md); the installed-plugin validation waits for a real restart.
 3. **Scaffold**: `bin/scaffold.sh /tmp/<scratch>/tidewatchN` (never inside a real
    repo; keep sim trees in the session scratchpad).
+   **ONE FIXTURE, ALWAYS (dk, 2026-07-27).** The Gherkin and its data live once, in
+   `fixtures/tidewatch-spec`; a stack fixture carries only what is native to it - source,
+   runner wiring, manifest. A cross-stack or cross-model matrix is only a comparison if every
+   leg proved the same spec, so this is enforced rather than remembered:
+   `bin/scaffold-stack.sh` refuses a stack fixture that carries its own `features/*.feature`
+   or `data/*.json` (an EXTRA file survives the copy and silently changes what that stack
+   proves), and then asserts the scaffolded spec surface hashes equal to the single spec.
+   Verified both ways: all five stacks scaffold to `bb277b23`, and a planted stray feature
+   file exits 2 with the reason.
 4. **Run legs** per scenarios/lifecycle.md, or scenarios/probes.md for single-rule
    changes. Thin dispatches; verify tree facts between legs yourself. Pin `model`
    explicitly on every dispatched leg; nested spawns inherit the parent's model only

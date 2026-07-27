@@ -26,11 +26,31 @@ esac
 # fixtures/tidewatch-spec, so the five stacks cannot drift into proving different things. Each
 # fixture carries only what is native to it - its source, its runner wiring, its manifest.
 SPEC="$HERE/fixtures/tidewatch-spec"
+
+# A stack fixture that carries its own Gherkin or its own data is drift, even when the copy below
+# would overwrite it: an EXTRA feature file survives the copy and quietly changes what that stack
+# proves, which makes the cross-stack matrix a comparison of different things. Refuse at the source.
+for stray in "$SRC"/features/*.feature "$SRC"/data/*.json; do
+  [ -e "$stray" ] || continue
+  echo "scaffold-stack.sh: $STACK fixture carries its own spec material ($stray)." >&2
+  echo "  One spec for every stack: it lives in fixtures/tidewatch-spec and nowhere else." >&2
+  exit 2
+done
+
 mkdir -p "$TARGET"
 cp -r "$SRC/." "$TARGET/"
 mkdir -p "$TARGET/features" "$TARGET/data"
 cp "$SPEC/tides.feature" "$TARGET/features/"
 cp "$SPEC/data/"*.json "$TARGET/data/"
+
+# And prove it landed: the scaffolded spec surface must equal the single spec exactly, so a leg can
+# never be scored against a spec no other stack ran (dk, 2026-07-27: "always use a single fixture").
+scaffolded="$(cd "$TARGET" && md5sum features/*.feature data/*.json | awk '{print $1}' | sort | md5sum)"
+canonical="$(cd "$SPEC" && md5sum tides.feature data/*.json | awk '{print $1}' | sort | md5sum)"
+if [ "$scaffolded" != "$canonical" ]; then
+  echo "scaffold-stack.sh: $STACK spec surface differs from fixtures/tidewatch-spec" >&2
+  exit 2
+fi
 cd "$TARGET"
 [ -f gitignore ] && mv gitignore .gitignore
 
