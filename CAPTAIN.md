@@ -3,9 +3,16 @@
 <!-- ============================================================================= -->
 ## >>> NEXT SESSION - PRIME (2026-07-27, later): 5/5 stacks clean on flash. Next is mimo + hy3, then the pilot <<<
 
-**State.** rs is answered and the whole matrix is green: **r22 = 5/5 PASS on flash**, 0 violations,
-12/12 methods running, fidelity 8/8 on four stacks (ts 7/8, `prove` without `tsx`, and it runs).
-Banked `data/methods-candidate/r21-r22/`. Credits topped up (~$25 at handoff).
+**State. THE BAR IS MET: 15/15, three models x five stacks, 100%.** r22 (flash) + r23 (mimo, hy3),
+one doctrine text, one spec byte-identical in every sim: every leg 0 violations, 12/12 methods
+running. mimo is the fastest arm (199-357s vs flash ~508s, hy3 ~994s) and fully conformant. Banked
+`data/methods-candidate/r21-r22/` and `data/methods-candidate/r23/`. Credits topped up.
+
+**The only thing left in the matrix is three fidelity divergences, none gating:** mimo js `hygiene`
+dropped the typecheck part (a JOB missing, the one leg in fifteen doing less than the example asks),
+mimo py `install` used `.venv/bin/pip install` over `uv add --dev` (installs, but bypasses the
+manifest), and flash ts `prove` without `tsx` (runs green regardless). Decide whether the first two
+are worth doctrine text or are simply what fidelity is for.
 
 **What moved, and it made doctrine smaller.** The ast-grep route is GONE - both rule files, the
 deltas row, step 4's copy clause, the take-that-route-first sentence. Evidence: 6 of 7 legs across
@@ -23,9 +30,10 @@ no longer credits the no-op env var and accepts name-selecting or compile-only p
 every leg ignored the route. `bin/provision-toolkits.sh` now installs ast-grep (it never did).
 
 **Next, in order.**
-1. **`bin/fit-matrix.sh r23 mimo hy3`** - dk's bar is all three models at 100%. flash is the cheap
-   canary and it is clean, so this is the real gate.
-2. Prime a fresh session for the **2-model TodoMVC pilot**.
+1. **Prime a fresh session for the 2-model TodoMVC pilot.** The fit-out matrix is done; the pilot is
+   the next question and it needs a cleared session.
+2. Optional, cheap: repeat draws on the matrix. Fifteen legs is one draw per cell, and the standing
+   repeat-draws rule says a single draw is exploration for any ship-or-recommend decision.
 
 **Settled, do not re-litigate (dk, 2026-07-27): a `plank-join.mjs` in a Rust or a Go project is
 FINE.** It runs, it is the project's own verification support, and doctrine already guarantees npx on

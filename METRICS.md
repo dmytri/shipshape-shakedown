@@ -1,5 +1,35 @@
 # Metrics: how to read a shakedown
 
+## r23 + r22, 2026-07-27 — **15/15 PASS. dk's bar is MET: three models, five stacks, 100%.**
+
+One doctrine text, one spec (`fixtures/tidewatch-spec`, `bb277b23`, byte-identical in every sim),
+three models. **Every leg: 0 violations, 12/12 derived methods actually running.**
+
+| stack | flash (r22) | mimo (r23) | hy3 (r23) |
+|---|---|---|---|
+| js | PASS 8/8, 433s | PASS 7/8, 357s | PASS 8/8, 1002s |
+| ts | PASS 7/8, 447s | PASS 8/8, **199s** | PASS 8/8, 1099s |
+| py | PASS 8/8, 489s | PASS 7/8, 247s | PASS 8/8, 802s |
+| rs | PASS 8/8, 646s | PASS 8/8, 319s | PASS 8/8, 714s |
+| go | PASS 8/8, 524s | PASS 8/8, 266s | PASS 8/8, 1355s |
+
+PASS = 0 violations AND every derived method runs. Fidelity (n/8) is reported, never gated.
+**mimo is the fastest arm by far** (199-357s, mean ~278s) against flash ~508s and hy3 ~994s — and it
+is fully conformant, so speed here costs nothing in conformance. Banked `data/methods-candidate/r23/`.
+
+**The three fidelity divergences are worth reading, because they are two different things:**
+- **mimo js `hygiene` dropped the typecheck part entirely** — a JOB missing, not a tool swapped. The
+  worked example carries `tsc --noEmit --allowJs`; this fit carries only lint. The only divergence in
+  fifteen legs where the method does less work than the example asks.
+- **mimo py `install` used `.venv/bin/pip install` instead of `uv add --dev`** — it installs, but it
+  bypasses the manifest, so the dependency never lands in `pyproject.toml`. A tool swap that quietly
+  changes the dependency policy.
+- **flash ts `prove` without `tsx`** — runs green anyway; this project's cucumber config already
+  loads the loader. A divergence that costs nothing, which is exactly the case fidelity reports and
+  never gates.
+
+**Nothing shipped to `~/shipshape`.** The candidate now has three models at 100% behind it.
+
 ## r22, 2026-07-27 (flash, 5 stacks) — **5/5 PASS**, the first clean full round, on doctrine that got SMALLER
 
 | round | js | ts | py | rs | go | note |
