@@ -22,8 +22,15 @@ case "$STACK" in
 esac
 [ -d "$SRC" ] || { echo "scaffold-stack.sh: fixture missing at $SRC" >&2; exit 2; }
 
+# ONE spec for every stack (dk, 2026-07-27): the Gherkin and its data live once, in
+# fixtures/tidewatch-spec, so the five stacks cannot drift into proving different things. Each
+# fixture carries only what is native to it - its source, its runner wiring, its manifest.
+SPEC="$HERE/fixtures/tidewatch-spec"
 mkdir -p "$TARGET"
 cp -r "$SRC/." "$TARGET/"
+mkdir -p "$TARGET/features" "$TARGET/data"
+cp "$SPEC/tides.feature" "$TARGET/features/"
+cp "$SPEC/data/"*.json "$TARGET/data/"
 cd "$TARGET"
 [ -f gitignore ] && mv gitignore .gitignore
 

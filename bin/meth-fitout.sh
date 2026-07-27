@@ -31,22 +31,15 @@ BASE="$SCRATCH/$WAVE"; SIM="$BASE/sim"; LOG="$BASE/fitout.log"
 rm -rf "$BASE"; mkdir -p "$BASE"
 say(){ echo "[$(date -u +%FT%TZ)] $*" | tee -a "$LOG"; }
 
-# A non-Node stack gets an EMPTY toolkit overlay. bwrap creates the node_modules mountpoint itself,
-# so overlaying the JS toolkit into a Python sim would show the leg 160 JS packages and hand it a
-# false stack signal — the one thing a per-stack derivation test must not do.
-if [ "$STACK" = "py" ]; then
-  # A skills-ONLY toolkit: carries the `skills` CLI (eval-leg needs it, and the npx cache is
-  # VM-mortal) but no @cucumber, so eval-leg skips the node_modules overlay and a Python sim is
-  # never shown 160 JS packages. An EMPTY toolkit starved the CLI and the leg died SILENTLY with
-  # an empty log and rc=2 (2026-07-26) — the same silent-exit class as the npx-cache wipe.
-  mkdir -p "$SCRATCH/.skillsonly-nm/node_modules"
-  [ -x "$SCRATCH/.skillsonly-nm/node_modules/.bin/skills" ] || { say "skills-only toolkit missing the skills CLI"; exit 3; }
-  export EVAL_SHARED_NM="$SCRATCH/.skillsonly-nm/node_modules"
-else
-  NM="$SCRATCH/.shared-nm-$WAVE"
-  [ -d "$NM/node_modules" ] || { mkdir -p "$NM"; cp -a "$SCRATCH/.shared-nm/node_modules" "$NM/"; }
-  export EVAL_SHARED_NM="$NM/node_modules"
-fi
+# EVERY stack gets the SAME full toolkit (dk, 2026-07-27): real environments have node, uv, cargo
+# and go all installed, and doctrine mandates gplint - a node tool - on every stack, so a Shipshape
+# Python project genuinely does have node present. Hiding the other toolchains made the sim easier
+# than reality and hid the failure worth catching: a fit must derive the stack from the project's
+# own manifest, not from which binaries it can see. A py fit that writes npm scripts because
+# node_modules exists is a real doctrine failure, and this is how we find it.
+NM="$SCRATCH/.shared-nm-$WAVE"
+[ -d "$NM/node_modules" ] || { mkdir -p "$NM"; cp -a "$SCRATCH/.shared-nm/node_modules" "$NM/"; }
+export EVAL_SHARED_NM="$NM/node_modules"
 
 say "FITOUT START wave=$WAVE stack=$STACK model=$MODEL skills=$SKILLS_DIR"
 "$HERE/bin/scaffold-stack.sh" "$STACK" "$SIM" >"$BASE/scaffold.log" 2>&1 || { say "SCAFFOLD FAILED"; exit 4; }
