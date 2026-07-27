@@ -25,6 +25,11 @@ promised but `templates.md` did not carry. Fixed: templates.md now ships both ru
 derivation takes the structural engine first, step 4 says copy verbatim. **r21 (rs, py) was
 running at handoff - read `.eval-scratch/r21.log` first.**
 
+**BLOCKER at handoff: OpenRouter credits exhausted.** r21's legs both died in 2s with
+`402: Insufficient credits` (https://openrouter.ai/settings/credits). Every remaining item needs
+model calls, so top up before starting. Nothing in r21 is a doctrine or harness signal - the legs
+never ran.
+
 **Next, in order.**
 1. Confirm r21: rs and py copy the ast-grep rules rather than authoring checkers, and py copies
    the 30-rule `.gplintrc` verbatim (it wrote 11 of 30 before step 4 said verbatim).
