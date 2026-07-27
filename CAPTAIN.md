@@ -19,11 +19,16 @@ external-alias form (verified: `cargo-!echo`), and `[env]` would set the tier fi
 cargo invocation.
 
 **Last round (r20, flash, 5 stacks): go, js, py, ts all PASS** - 0 violations, 12/12 methods
-running, 7/7 example fidelity. go's first clean round. rs failed by authoring a 234-line
-`plank-join.mjs` (a JS checker, in a Rust project) for want of ast-grep rules that doctrine
-promised but `templates.md` did not carry. Fixed: templates.md now ships both rule files, the
-derivation takes the structural engine first, step 4 says copy verbatim. **r21 (rs, py) was
-running at handoff - read `.eval-scratch/r21.log` first.**
+running, 7/7 example fidelity. go's first clean round.
+
+**rs is UNKNOWN, not failed.** Its leg ran 451s and was killed mid-edit by the same OpenRouter
+402 that killed r21. The transcript shows it doing the right things: it read the deltas row
+naming `ast-grep, rules from templates.md`, opened `templates.md` six times looking for them,
+confirmed ast-grep was in node_modules, and ran `npx @ast-grep/cli --version` - the correct
+package name. Only after finding no rules there did it start writing its own 234-line
+`plank-join.mjs`. The promise doctrine broke was mine. Fixed since: templates.md ships both
+rule files, the derivation takes the structural engine first, step 4 says copy verbatim - and
+that fix is UNTESTED, because credits died before r21 ran.
 
 **BLOCKER at handoff: OpenRouter credits exhausted.** r21's legs both died in 2s with
 `402: Insufficient credits` (https://openrouter.ai/settings/credits). Every remaining item needs

@@ -9,7 +9,7 @@ Doctrine size: 50,832 -> 50,251 tok, **-1.1%** vs 0.13.65, carrying 14 methods a
 | r17 | PASS | PASS | PASS | 3 viol | 1 viol | first 5-stack round; worked-example repair held |
 | r18 | PASS | PASS | 1 viol | PASS | 0 viol | rs fixed by showing the whole `--run` part |
 | r19 | - | - | void | - | void | gplint absent from the toolkits: legs spent their sessions installing it |
-| r20 | **PASS** | **PASS** | **PASS** | no rigging | **PASS** | 4/5, every one 7/7 fidelity; rs authored a 234-line checker |
+| r20 | **PASS** | **PASS** | **PASS** | unknown | **PASS** | 4/4 that ran, all 7/7 fidelity; rs's leg was killed mid-edit by a 402 |
 
 PASS = 0 violations AND every derived method actually runs. Fidelity is reported, never gated:
 a fit reaching the job with a better tool should pass while showing as divergent.
