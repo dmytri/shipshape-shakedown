@@ -21,11 +21,17 @@ TAKES_DEPENDENCY = {"install"}
 # absent job. `none` is legitimate for ship and ship-verify (no outbound target), for condemnation
 # (nothing condemned yet) and for dead-code (no such tool on the stack). r18's py fit scored clean
 # while writing `plank-join: none`, which this now catches (2026-07-27).
-NEVER_NONE = ("prove", "verify", "sweep", "plank-join", "hygiene", "static", "discovery",
+NEVER_NONE = ("prove", "verify", "sweep", "plank-join", "hygiene", "static",
               "regression", "spec-lint", "install")
 
 # Methods whose parts run verification and therefore carry the tag exclusions.
 VERIFYING = {"prove", "verify", "sweep", "static", "discovery", "regression", "condemnation"}
+
+# The exclusions belong on a part that SELECTS SCENARIOS through the project's runner. A part that
+# reads the code instead - a structural scan, a grep, a step-definition listing - has no tier to
+# leak and no filter to carry, so requiring one there is a category error rather than a finding
+# (dk, 2026-07-27: loosen where a stack cannot express a job, hold where the spirit is at stake).
+RUNNER = re.compile(r"\bcucumber-js\b|\bpytest\b|\bcargo test\b|\bgo test\b|\bgodog\b|\bbehave\b")
 
 
 SOFT_FAIL = re.compile(r"--no-strict\b|--exit-zero\b|--no-exit-code\b|\|\|\s*true\b|--soft-fail\b|&&\s*echo\b|\|\s*grep -q\b")
@@ -154,7 +160,7 @@ def score(path):
                 viol.append(f"{name}: takes a package but names neither $SS_DEPENDENCY nor a placeholder")
             if SOFT_FAIL.search(body):
                 viol.append(f"{name}: carries a soft-fail flag, so a red reads as a pass")
-            if name in VERIFYING and not _excludes(body):
+            if name in VERIFYING and RUNNER.search(body) and not _excludes(body):
                 viol.append(f"{name}: a verifying part without the tag exclusions")
             continue
         b = body
@@ -178,7 +184,7 @@ def score(path):
             viol.append(f"{name}: takes a package but names neither $SS_DEPENDENCY nor a placeholder")
         if SOFT_FAIL.search(b):
             viol.append(f"{name}: carries a soft-fail flag, so a red reads as a pass")
-        if name in VERIFYING and not _excludes(b):
+        if name in VERIFYING and RUNNER.search(b) and not _excludes(b):
             viol.append(f"{name}: a verifying part without the tag exclusions")
     extras = [k for k in meth if k not in METHODS and not re.match(r"(sweep|regression)-", k)]
     for e in extras:
