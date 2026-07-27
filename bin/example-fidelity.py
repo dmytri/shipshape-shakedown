@@ -58,6 +58,11 @@ def entries(sim):
     if os.path.exists(cg):
         for m in re.finditer(r'ss-([\w-]+)\s*=\s*"(.*?)"\s*$', open(cg, errors="replace").read(), re.M):
             out[m.group(1)] = m.group(2)
+    mk = os.path.join(sim, "Makefile")
+    if os.path.exists(mk):
+        t = open(mk, errors="replace").read()
+        for m in re.finditer(r"^ss-([\w-]+):[^\n]*\n((?:\t.*\n)+)", t, re.M):
+            out.setdefault(m.group(1), m.group(2))
     jf = os.path.join(sim, "justfile")
     if os.path.exists(jf):
         t = open(jf, errors="replace").read()
