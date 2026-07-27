@@ -29,11 +29,51 @@ no longer credits the no-op env var and accepts name-selecting or compile-only p
 `example-fidelity` gained the `plank-join` dimension it never had, which is how r20 read 7/7 while
 every leg ignored the route. `bin/provision-toolkits.sh` now installs ast-grep (it never did).
 
-**Next, in order.**
-1. **Prime a fresh session for the 2-model TodoMVC pilot.** The fit-out matrix is done; the pilot is
-   the next question and it needs a cleared session.
-2. Optional, cheap: repeat draws on the matrix. Fifteen legs is one draw per cell, and the standing
-   repeat-draws rule says a single draw is exploration for any ship-or-recommend decision.
+**NEXT SESSION RUNS THE PILOT - THREE MODELS (dk, 2026-07-27): flash, mimo, hy3.** dk's words:
+"pilot now, might as well use all three models since they are a good set." The fit-out matrix is
+finished and green; the pilot is the open question, and it wants a cleared session.
+
+**What it tests.** The METHODS CANDIDATE as doctrine (`experiments/methods-candidate/skills`),
+against the acceptance tier. The comparison already banked is `data/todomvc-3model-compare/`, which
+ran **0.13.65 yoink-settle, NO yoink**, so the delta this pilot measures is the candidate's own -
+and the candidate's claim is LATENCY, so the numbers that matter are round-trip count (inv and tool
+calls), not just cost. flash's comparable figures there: **28/29 in ~11 voyages, 22 legs, 416 inv,
+591 tool calls, $0.58, ~48min**. mimo is the fastest arm in the matrix by a wide margin (199-357s
+per fit-out leg vs flash ~508s, hy3 ~994s) and is the driver's own default model.
+
+**Run it, three waves in parallel, each with its OWN oracle clone and port** (they collide
+otherwise - and never kill a port's process you do not own, the standing hazard):
+
+```
+for m in flash:deepseek/deepseek-v4-flash:8873 mimo:xiaomi/mimo-v2.5:8874 hy3:tencent/hy3:8875; do
+  a=${m%%:*}; id=$(echo $m | cut -d: -f2); port=${m##*:}
+  cp -r .eval-scratch/oracle-clone .eval-scratch/oracle-clone-$a     # 181M each
+  nohup setsid bash bin/eval-drive-todomvc.sh --wave P-cand-$a --model "$id" \
+    --skills-dir $PWD/experiments/methods-candidate/skills --yoink-skill $HOME/yoink/skills/yoink \
+    --clone $PWD/.eval-scratch/oracle-clone-$a --port $port --max-voyages 12 --oracle-correct \
+    > .eval-scratch/P-cand-$a.log 2>&1 < /dev/null & disown
+done
+```
+
+`--oracle-correct` is the standing playbook rule: every correction voyage pastes the EXACT oracle
+failure, no rephrase. The driver has its own breakers (voyage cap, no-improvement twice, unknown
+failure pattern) and stops rather than spinning; watch `.eval-scratch/P-cand-*/driver.log`.
+
+**DISK IS THE LIKELY KILLER: 17G free at handoff, and the driver does NOT prune.** Each QM leg's raw
+`pi.stdout` runs 430-605MB (METRICS instrument finding, newsim-02: two legs took 7.9G to 3.6G).
+Three parallel pilots will exhaust it. Prune between voyages and keep the durable layer:
+`find .eval-scratch/P-cand-* -name 'pi.stdout' -size +50M -delete` on a loop, or prune raw as each
+voyage grades. Keep session.jsonl, tree.diff, maps, leg.json, the oracle grades.
+
+**Done means:** each model's oracle trajectory to its ceiling (28/29 is the ceiling; #29 is the
+perennial pending), the three-way table in the shape of `data/todomvc-3model-compare/REPORT.md`
+(voyages, legs, inv, tool calls, tok, cache, cost, wall, trajectory), banked under
+`data/todomvc-cand-3model/`, and the candidate's latency delta against that prior table stated
+plainly. Nothing ships to `~/shipshape` without dk's word.
+
+**Also open, cheap, and NOT blocking the pilot:** the matrix is one draw per cell, so by the standing
+repeat-draws rule it is exploration-grade for a ship decision; and three fidelity divergences want a
+ruling (above).
 
 **Settled, do not re-litigate (dk, 2026-07-27): a `plank-join.mjs` in a Rust or a Go project is
 FINE.** It runs, it is the project's own verification support, and doctrine already guarantees npx on
