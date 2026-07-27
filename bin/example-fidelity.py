@@ -31,9 +31,9 @@ EXPECT = {
     # A token may be a tuple: any one of it satisfies the method. cargo-llvm-cov and cargo-machete are
     # not installable in this sim, and doctrine's answer for an uninstallable tool is `none` plus a
     # named gap - so `none` counts here exactly as the tool would.
-    "go": {"prove": ["go test", "SS_SCENARIO", "not @captain"], "hygiene": [("staticcheck", "golangci-lint"), "go vet"],
+    "go": {"prove": ["go test", "SS_SCENARIO", "~@captain"], "hygiene": [("staticcheck", "golangci-lint"), "go vet"],
            "regression": ["-cover"], "dead-code": [("deadcode", "staticcheck")], "spec-lint": ["gplint"],
-           "install": ["go get", "SS_DEPENDENCY"], "discovery": [("--dry-run", "-run", "godog"), "not @captain"]},
+           "install": [("go get", "go install"), "SS_DEPENDENCY"], "discovery": ["godog.definitions"]},
     "rs": {"prove": ["cargo test", "SS_SCENARIO", "CUCUMBER_FILTER_TAGS"], "hygiene": ["cargo check", "clippy"],
            "regression": [("llvm-cov", "tarpaulin")], "dead-code": [("machete", "udeps")],
            "spec-lint": ["gplint"], "install": ["SS_DEPENDENCY"],

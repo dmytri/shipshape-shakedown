@@ -30,6 +30,11 @@ def _excludes(cmd):
     # godog spells an exclusion `~@tag`, joined with `&&`, and rejects the Cucumber expression
     # outright: `--godog.tags="not @captain and not @shipwright"` selects NOTHING (verified
     # against godog 0.15.1), so a Go fit using its own syntax is conformant, not divergent.
+    # A part that ENUMERATES step definitions rather than selecting scenarios takes no tag filter:
+    # godog's --godog.definitions lists the step registry, so requiring exclusions on it scored a
+    # correct Go fit as divergent (2026-07-27).
+    if "godog.definitions" in cmd:
+        return True
     return (("not @captain" in cmd) or ("not captain" in cmd) or ("CUCUMBER_FILTER_TAGS" in cmd)
             or ("~@captain" in cmd))
 
