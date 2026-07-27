@@ -26,10 +26,10 @@ every leg ignored the route. `bin/provision-toolkits.sh` now installs ast-grep (
 1. **`bin/fit-matrix.sh r23 mimo hy3`** - dk's bar is all three models at 100%. flash is the cheap
    canary and it is clean, so this is the real gate.
 2. Prime a fresh session for the **2-model TodoMVC pilot**.
-3. Watch on mimo/hy3, do not fix yet: **rs and go both wrote `plank-join.mjs`**, a JavaScript checker
-   in a Rust and a Go project. Doctrine makes it legal (npx is on every stack) and it runs, but a
-   cheap model defaults to the language it knows best, not the project's. Decide after more draws
-   whether a stack-native checker is worth a sentence.
+
+**Settled, do not re-litigate (dk, 2026-07-27): a `plank-join.mjs` in a Rust or a Go project is
+FINE.** It runs, it is the project's own verification support, and doctrine already guarantees npx on
+every stack, so there is no gap to close. The checker's language is the fit's choice, not a finding.
 
 **Method note worth keeping: a fix aimed at a tool must be RUN once before it ships.** This morning's
 templates.md fix shipped unexecuted and could not have passed - the mandated `npx @ast-grep/cli`
