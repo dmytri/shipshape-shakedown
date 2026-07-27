@@ -14,7 +14,7 @@ SCRATCH="${EVAL_SCRATCH:-$HERE/.eval-scratch}"
 # Node tools every stack's methods reach for, gplint above all (doctrine mandates it everywhere).
 for t in .shared-nm; do
   mkdir -p "$SCRATCH/$t"
-  npm install --prefix "$SCRATCH/$t" gplint >/dev/null 2>&1
+  npm install --prefix "$SCRATCH/$t" gplint @ast-grep/cli >/dev/null 2>&1
 done
 
 # Rust: coverage and unused-dependency tools, plus just. Installed into /opt (bound read-only into
@@ -38,6 +38,6 @@ for b in cargo-llvm-cov cargo-machete just; do sudo ln -sfn "/opt/rust/cargo/bin
 for b in staticcheck deadcode golangci-lint godog; do sudo ln -sfn "/opt/gotools/bin/$b" "/usr/local/bin/$b" 2>/dev/null; done
 
 echo "toolkits provisioned:"
-for c in gplint just cargo-llvm-cov cargo-machete staticcheck deadcode golangci-lint godog; do
+for c in gplint ast-grep just cargo-llvm-cov cargo-machete staticcheck deadcode golangci-lint godog; do
   printf '  %-16s %s\n' "$c" "$(command -v "$c" 2>/dev/null || ls "$SCRATCH"/.shared-nm/node_modules/.bin/"$c" 2>/dev/null || echo MISSING)"
 done

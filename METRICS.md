@@ -1,5 +1,61 @@
 # Metrics: how to read a shakedown
 
+## MODEL-FREE AUDIT, 2026-07-27 — the untested templates.md fix could not have passed, and five defects were provable from the artifact
+
+**Ran before spending the top-up, on the standing `/shakedown` entry: doctrine had not moved since
+the 0.13.65 baseline, so the scope was the top open item — the UNTESTED templates.md/derivation fix
+the prime made step 1.** Every finding below is artifact-visible or executed directly against the
+r20 fixtures; no model call, no credits. `~/shipshape` untouched; the fixes are candidate-side.
+
+1. **The mandated invocation cannot run.** `templates.md` said *"Reach it through `npx
+   @ast-grep/cli`"*. Executed: `npm error could not determine executable to run` (`@ast-grep/cli@0.45.0`)
+   — the package's executable is `ast-grep`, so npx cannot infer it from the scoped package name.
+   `36b647f` correctly diagnosed that `npx ast-grep` resolves to a bogus `ast-grep@0.1.0` and replaced
+   it with a form that resolves to nothing at all. The working form, verified: `npx --package
+   @ast-grep/cli ast-grep` (0.45.0). **The invocation fix was never executed before it shipped.**
+2. **`steps.yml` did not load on Rust or Go — the two stacks the deltas table was widened for.**
+   Copied verbatim with only `language` swapped, ast-grep rejects the whole rule: *"Rule must specify
+   a set of AST kinds to match"*, because the decorator/bare-call patterns are not valid syntax in
+   those grammars. It loads on javascript, typescript and python. Cause: the `any` list carried only
+   cucumber-js calls and pytest-bdd decorators, while the fixtures declare steps as Rust attribute
+   macros (`tests/cucumber.rs:12` `#[given("the tide table for Fundy Cove")]`) and godog registrations
+   (`cucumber_test.go:68` ``sc.Given(`^the tide table for (.+)$`, s.theTideTableFor)``) — and the file's
+   only adaptation instruction named `language` and the comment kind, never the patterns. **r21 as
+   primed would have failed rs against a perfectly obedient leg.** Verified fixes now shipped in the
+   candidate: rust `#[given($$$)]` (4/4 steps, exit 1); go needs a context form, since Go has no
+   file-scope expression and a bare `$A.Given($$$)` parses to an ERROR node —
+   `context: 'func f() { $A.Given($$$) }'`, `selector: call_expression` (4/4 steps, exit 1).
+3. **Neither rule could redden.** `ast-grep scan` exits **0 on a match and 0 on no match** (executed
+   both ways) because a rule with no `severity` reports at `help`. `SKILL.md:150-153` requires
+   `plank-join` to exit non-zero on three conditions, so the copy route dead-ended at a gate that
+   cannot fail — which is exactly the pressure that sends a role back to authoring a checker.
+   `severity: error` restores the non-zero exit and is now on both rule files.
+4. **`ast-grep` was not provisioned.** `bin/provision-toolkits.sh` installed only `gplint` on the node
+   side, while step 4 and the deltas table point all five stacks at ast-grep — the identical trap that
+   voided r19 (*"gplint absent from the toolkits: legs spent their sessions installing it"*), one tool
+   later. Fixed and verified present in the shared toolkit.
+5. **THE EXAMPLE STILL TEACHES AGAINST THE PROSE, and this one is a shape question for dk, not a
+   typo.** No method value anywhere in the candidate invokes ast-grep (5 hits, all prose). Both worked
+   examples set the method to a bespoke checker — `SKILL.md:135` `node .shipshape/plank-join.mjs`,
+   `:171` `uv run python .shipshape/plank_join.py` — and step 3 tells every other stack to *"keep the
+   rest of each value as the worked example has it"*, while step 4 says copy the rules verbatim. So
+   "take the structural route first" has **no copyable target form**. Tree evidence from r20: all five
+   legs authored a checker (js 6.4K, ts 9.2K, py 5.8K, go 7.2K, rs 8.2K `.mjs`) and **not one** wrote
+   `planks.yml`/`steps.yml`. Stated honestly: r20 ran at 09:28-09:32 and the rules landed at 09:40, so
+   r20 is not evidence about the fixed text — it is evidence that the example is the channel roles
+   copy, and that **four legs scored PASS for the very act rs was faulted for**. The residue is real:
+   the two rule sets are the join's two INPUTS; the set comparison and its exit code still belong to
+   something, and nothing copyable carries them.
+6. **INSTRUMENT: the matrix cannot score the question r21 was primed to ask.** `rigging-conform.py`
+   checks only that `plank-join` is present and not `none`; `example-fidelity.py`'s `EXPECT` table has
+   **no `plank-join` row on any stack** (ast-grep appears once, under go `discovery`); nothing greps
+   for `planks.yml`/`steps.yml`. "Took the structural route" is unscored — which is why r20 could read
+   0 violations and 7/7 fidelity on four stacks while every one of them ignored the route.
+
+**Standing lesson, and it is the ninth instrument-vs-doctrine instance this week: a fix aimed at a
+tool must be RUN once before it ships.** Findings 1-4 are each a single executed command away from
+visible, and all four shipped unexecuted into a run the prime called step 1.
+
 ## Methods candidate, 2026-07-27 (flash, 5-stack fit-out matrix)
 
 Doctrine size: 50,832 -> 50,251 tok, **-1.1%** vs 0.13.65, carrying 14 methods and 5 stacks.

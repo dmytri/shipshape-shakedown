@@ -1080,8 +1080,8 @@
  - coverage summary, overall percent and uncovered module count,
  - policy violations found by category,
  - verification-economy findings, scenario and lens,
---- experiments/yoink-settle/skills/shipwright/templates.md	2026-07-23 19:59:25.231544194 +0000
-+++ experiments/methods-candidate/skills/shipwright/templates.md	2026-07-27 09:40:52.851057274 +0000
+# shipwright: --- experiments/yoink-settle/skills/shipwright/templates.md	2026-07-23 19:59:25.231544194 +0000
+# shipwright: +++ experiments/methods-candidate/skills/shipwright/templates.md	2026-07-27 10:10:40.343206606 +0000
 @@ -26,17 +26,22 @@
  - assets: <one path per line, or none>
  - scantlings: <machine-readable contract files in place, one path per line, or none>
@@ -1115,7 +1115,7 @@
  
  ## Perturbation
  
-@@ -108,3 +113,161 @@
+@@ -108,3 +113,205 @@
  
  This repository uses [Shipshape](https://github.com/dmytri/shipshape), a context-isolated spec-driven workflow for coding agents. Install with `npx skills add dmytri/shipshape --skill '*'`, or the experimental open-plugin build with `npx plugins add dmytri/shipshape`.
  ````
@@ -1253,27 +1253,71 @@
 +```yaml
 +# .shipshape/planks.yml - every plank annotation
 +id: planks
++severity: error           # a rule with no severity reports at `help` and exits zero
 +language: javascript      # typescript | python | rust | go
 +kind_note: "kind is `comment` for javascript, typescript and python; `line_comment` for rust and go"
 +rule:
-+  kind: comment
++  kind: comment           # line_comment for rust and go; the wrong kind is a load error, not a miss
 +  regex: "@planks"
 +```
++
++A step definition takes a different form in each host language, so take the `rule` block for this
++stack. Every form below is verified against its stack's runner.
 +
 +```yaml
 +# .shipshape/steps.yml - every step definition this project declares
 +id: step-usage
-+language: javascript      # typescript | python | rust | go
++severity: error           # a rule with no severity reports at `help` and exits zero
++language: javascript      # javascript | typescript: cucumber-js registration calls
 +rule:
 +  any:
 +    - pattern: 'Given($$$)'
 +    - pattern: 'When($$$)'
 +    - pattern: 'Then($$$)'
-+    - pattern: '@given($$$)'    # python decorators
++```
++
++```yaml
++id: step-usage
++severity: error
++language: python          # pytest-bdd decorators
++rule:
++  any:
++    - pattern: '@given($$$)'
 +    - pattern: '@when($$$)'
 +    - pattern: '@then($$$)'
 +```
 +
++```yaml
++id: step-usage
++severity: error
++language: rust            # cucumber-rs attribute macros
++rule:
++  any:
++    - pattern: '#[given($$$)]'
++    - pattern: '#[when($$$)]'
++    - pattern: '#[then($$$)]'
++```
++
++```yaml
++id: step-usage
++severity: error
++language: go              # godog ScenarioContext registrations
++rule:                     # Go has no file-scope expression, so each pattern carries a context
++  any:
++    - pattern:
++        context: 'func f() { $A.Given($$$) }'
++        selector: call_expression
++    - pattern:
++        context: 'func f() { $A.When($$$) }'
++        selector: call_expression
++    - pattern:
++        context: 'func f() { $A.Then($$$) }'
++        selector: call_expression
++```
++
 +Run them with the `ast-grep` binary this project already has, as `ast-grep scan --rule
-+.shipshape/planks.yml`. Reach it through `npx @ast-grep/cli`, which is the package that carries it.
-+The join is then a set comparison between the two outputs, and the `plank-join` method carries it.
++.shipshape/planks.yml`. Reach it as `npx --package @ast-grep/cli ast-grep`: the package is
++`@ast-grep/cli` and its executable is `ast-grep`, so the bare `npx @ast-grep/cli` form cannot resolve
++an executable and `npx ast-grep` resolves to an unrelated package. Each rule set is one input to the
++join, and the join itself is the set comparison between the two outputs, which the `plank-join`
++method carries.
