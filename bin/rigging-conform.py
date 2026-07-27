@@ -17,6 +17,13 @@ METHODS = ["prove", "verify", "sweep", "plank-join", "hygiene", "static", "disco
            "regression", "condemnation", "dead-code", "spec-lint", "install", "ship", "ship-verify"]
 TAKES_SCENARIO = {"prove", "verify", "condemnation"}
 TAKES_DEPENDENCY = {"install"}
+# Jobs EVERY fitted-out project has, so `none` for one of these is a missing method rather than an
+# absent job. `none` is legitimate for ship and ship-verify (no outbound target), for condemnation
+# (nothing condemned yet) and for dead-code (no such tool on the stack). r18's py fit scored clean
+# while writing `plank-join: none`, which this now catches (2026-07-27).
+NEVER_NONE = ("prove", "verify", "sweep", "plank-join", "hygiene", "static", "discovery",
+              "regression", "spec-lint", "install")
+
 # Methods whose parts run verification and therefore carry the tag exclusions.
 VERIFYING = {"prove", "verify", "sweep", "static", "discovery", "regression", "condemnation"}
 
@@ -123,6 +130,8 @@ def score(path):
             # fitting-out fault rather than a stack limit (dk, 2026-07-26).
             if name == "spec-lint":
                 viol.append("spec-lint: none, but a Gherkin linter is always available (gplint)")
+            elif name in NEVER_NONE:
+                viol.append(f"{name}: none, but every fitted-out project does this job")
             notes.append(name)
             continue
         derived += 1
