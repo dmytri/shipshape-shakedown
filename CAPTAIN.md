@@ -1,7 +1,7 @@
 # Captain notes - shipshape-shakedown workstream
 
 <!-- ============================================================================= -->
-## >>> NEXT SESSION - PRIME (2026-07-27): methods candidate is 4/5 clean on flash; take it to 3 models, then pilot <<<
+## >>> NEXT SESSION - PRIME (2026-07-27): 4/4 stacks that ran are clean on flash; TEST rs FIRST, then 3 models, then pilot <<<
 
 **State.** The methods candidate lives at `experiments/methods-candidate/skills` (gitignored;
 the readable artifact is `data/methods-candidate/candidate-v3-diff.txt`). Doctrine is **-1.1%**
@@ -36,8 +36,13 @@ model calls, so top up before starting. Nothing in r21 is a doctrine or harness 
 never ran.
 
 **Next, in order.**
-1. Confirm r21: rs and py copy the ast-grep rules rather than authoring checkers, and py copies
-   the 30-rule `.gplintrc` verbatim (it wrote 11 of 30 before step 4 said verbatim).
+1. **Test rs** - the one open question. `nohup setsid bash bin/fit-matrix.sh r21 flash --stacks rs,py
+   > .eval-scratch/r21.log 2>&1 < /dev/null & disown`. Two things to see: rs copies the ast-grep
+   rules from `templates.md` rather than authoring a `plank-join.mjs`, and py copies the 30-rule
+   `.gplintrc` verbatim (it wrote 11 of 30 before step 4 said verbatim). Score with
+   `bin/rigging-conform.py`, `bin/meth-fitout-audit.sh` and `bin/example-fidelity.py`; if either
+   stack is short, READ THE TRANSCRIPT under `<wave>/fitout.out/session/*.jsonl`, never the
+   diffstat - inferring rs's failure from a diffstat produced a confident, wrong story today.
 2. Run the same text on **mimo** and **hy3** - dk's bar is all three models at 100%.
    `bin/fit-matrix.sh r22 mimo hy3` (flash is the cheap canary; the others cost more).
 3. Prime a fresh session for the **2-model TodoMVC pilot** (registered rigging and scaffold
