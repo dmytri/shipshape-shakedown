@@ -59,11 +59,13 @@ done
 failure, no rephrase. The driver has its own breakers (voyage cap, no-improvement twice, unknown
 failure pattern) and stops rather than spinning; watch `.eval-scratch/P-cand-*/driver.log`.
 
-**DISK IS THE LIKELY KILLER: 17G free at handoff, and the driver does NOT prune.** Each QM leg's raw
-`pi.stdout` runs 430-605MB (METRICS instrument finding, newsim-02: two legs took 7.9G to 3.6G).
-Three parallel pilots will exhaust it. Prune between voyages and keep the durable layer:
-`find .eval-scratch/P-cand-* -name 'pi.stdout' -size +50M -delete` on a loop, or prune raw as each
-voyage grades. Keep session.jsonl, tree.diff, maps, leg.json, the oracle grades.
+**DISK: 59G free at handoff, and the reaper now covers both leaks.** Raw `pi.stdout` runs 430MB-18G per leg and
+`bin/raw-reaper.sh` truncates it in place above 1G; it now ALSO reaps `sim/target`, `node_modules`
+and `.venv` from any wave whose leg has ENDED, which was the bigger leak (20 waves had accumulated
+41G of cargo targets, reclaimed 2026-07-27). **Start the reaper before launching three parallel
+pilots** - `nohup setsid bash bin/raw-reaper.sh >> .eval-scratch/raw-reaper.log 2>&1 & disown` -
+and check it is running if free space starts falling. Keep session.jsonl, tree.diff, maps, leg.json
+and the oracle grades; those are the durable layer and they are small.
 
 **Done means:** each model's oracle trajectory to its ceiling (28/29 is the ceiling; #29 is the
 perennial pending), the three-way table in the shape of `data/todomvc-3model-compare/REPORT.md`
