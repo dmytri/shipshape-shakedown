@@ -19,26 +19,26 @@ SKILL = os.path.join(HERE, "experiments/methods-candidate/skills/shipwright/SKIL
 # The tool tokens each stack's example carries. Fidelity is judged on these, not on whitespace: a fit
 # may name its own paths, but the tools and the shape are the example's.
 EXPECT = {
-    "js": {"prove": ["cucumber-js", "SS_SCENARIO", "not @captain"], "hygiene": ["typecheck", "lint"],
+    "js": {"plank-join": [".shipshape"], "prove": ["cucumber-js", "SS_SCENARIO", "not @captain"], "hygiene": ["typecheck", "lint"],
            "regression": ["c8"], "dead-code": ["knip"], "spec-lint": ["gplint"], "install": ["npm install", "SS_DEPENDENCY"],
            "discovery": ["--dry-run", "not @captain"]},
-    "py": {"prove": ["pytest", "SS_SCENARIO", "not captain"], "hygiene": ["mypy", "ruff"],
+    "py": {"plank-join": [".shipshape"], "prove": ["pytest", "SS_SCENARIO", "not captain"], "hygiene": ["mypy", "ruff"],
            "regression": ["--cov"], "dead-code": ["vulture"], "spec-lint": ["gplint"], "install": ["uv add", "SS_DEPENDENCY"],
            "discovery": ["--collect-only", "not captain"]},
-    "ts": {"prove": ["cucumber-js", "tsx", "SS_SCENARIO", "not @captain"], "hygiene": ["tsc", "biome"],
+    "ts": {"plank-join": [".shipshape"], "prove": ["cucumber-js", "tsx", "SS_SCENARIO", "not @captain"], "hygiene": ["tsc", "biome"],
            "regression": ["c8"], "dead-code": ["knip"], "spec-lint": ["gplint"], "install": ["SS_DEPENDENCY"],
            "discovery": ["--dry-run", "not @captain"]},
     # A token may be a tuple: any one of it satisfies the method. cargo-llvm-cov and cargo-machete are
     # not installable in this sim, and doctrine's answer for an uninstallable tool is `none` plus a
     # named gap - so `none` counts here exactly as the tool would.
-    "go": {"prove": ["go test", "SS_SCENARIO", "~@captain"], "hygiene": [("staticcheck", "golangci-lint"), "go vet"],
+    "go": {"plank-join": [".shipshape"], "prove": ["go test", "SS_SCENARIO", "~@captain"], "hygiene": [("staticcheck", "golangci-lint"), "go vet"],
            "regression": ["-cover"], "dead-code": [("deadcode", "staticcheck")], "spec-lint": ["gplint"],
            "install": [("go get", "go install"), "SS_DEPENDENCY"],
            "discovery": [("godog.definitions", "ast-grep", "none")]},
-    "rs": {"prove": ["cargo test", "SS_SCENARIO", "CUCUMBER_FILTER_TAGS"], "hygiene": ["cargo check", "clippy"],
+    "rs": {"plank-join": [".shipshape"], "prove": ["cargo test", "SS_SCENARIO"], "hygiene": ["cargo check", "clippy"],
            "regression": [("llvm-cov", "tarpaulin")], "dead-code": [("machete", "udeps")],
            "spec-lint": ["gplint"], "install": ["SS_DEPENDENCY"],
-           "discovery": [("dry-run", "--collect-only"), "CUCUMBER_FILTER_TAGS"]},
+           "discovery": [("no-run", "dry-run")]},
 }
 
 

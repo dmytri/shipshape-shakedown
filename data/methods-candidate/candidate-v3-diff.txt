@@ -1,5 +1,5 @@
 # shipshape: --- experiments/yoink-settle/skills/shipshape/SKILL.md	2026-07-25 13:44:14.511373308 +0000
-# shipshape: +++ experiments/methods-candidate/skills/shipshape/SKILL.md	2026-07-27 09:34:38.110204194 +0000
+# shipshape: +++ experiments/methods-candidate/skills/shipshape/SKILL.md	2026-07-27 10:29:04.994022065 +0000
 @@ -31,7 +31,7 @@
  
  When loaded bare via `/shipshape`, this skill routes to the correct role. The routing depends on the project state.
@@ -305,7 +305,7 @@
 -`RIGGING.md` uses a fixed Markdown shape; the Shipwright skill carries the Rigging shape and derives the file. Roles read it on open and parse it by heading: each value is a Markdown list item `- <key>: <value>` on its own line, and a multi-value key repeats on a new line for each value. It holds values, not procedure. A context-isolated Crew mate MUST be able to succeed from `RIGGING.md` alone. The minimum required values are `language` under `## Stack`, `implementation` and `specs` under `## Directories`, `focused` under `## Commands`, and `perturb` under `## Perturbation`. Roles validate `RIGGING.md` on read. A malformed file or a missing required value is a configuration blocker to Captain. `RIGGING.md` is Shipwright's to derive and repair; Captain routes a rigging configuration blocker to Shipwright, which refits the missing values. Captain discovers a value with the user only when Shipwright cannot derive it. A command value is proven by running it, per the Verification policy's check-precedence rule. Before `RIGGING.md` is written, the deriving role runs the runner once through a derived command and confirms it executes; execution is the whole proof, and no scenario need exist yet nor pass. A command that will not execute is a tooling blocker to Captain, resolved before the next role sails. A derived command that has never run is a claim, not a value, and the role that inherits the claim is the one that pays for it.
 +`RIGGING.md` uses a fixed Markdown shape; the Shipwright skill carries the Rigging shape and derives the file. Roles read it on open and parse it by heading: each value is a Markdown list item `- <key>: <value>` on its own line, and a multi-value key repeats on a new line for each value. It holds values, not procedure. A context-isolated Crew mate MUST be able to succeed from `RIGGING.md` alone. The minimum required values are `language` under `## Stack`, `implementation` and `specs` under `## Directories`, every method the Methods section names under `## Methods`, and `perturb` under `## Perturbation`. Roles validate `RIGGING.md` on read. A malformed file or a missing required value is a configuration blocker to Captain. `RIGGING.md` is Shipwright's to derive and repair; Captain routes a rigging configuration blocker to Shipwright, which refits the missing values. Captain discovers a value with the user only when Shipwright cannot derive it. A method is proven by running it, per the Verification policy's check-precedence rule. Before `RIGGING.md` is written, the deriving role runs each derived method once and confirms it executes; execution is the whole proof, and no scenario need exist yet nor pass. A method that will not execute is a tooling blocker to Captain, resolved before the next role sails. A derived method that has never run is a claim, not a value, and the role that inherits the claim is the one that pays for it.
 +
-+Beyond the minimum, roles rely on these read-side conventions. A role runs a method verbatim from `RIGGING.md`, editing nothing inside it: a method that takes a target set or a package is given it as an inline environment value, `SS_SCENARIO` or `SS_DEPENDENCY`, and a tier's own method is its tier-suffixed name under `## Tiers`. An invented tag, a hand-rewritten flag, or a part a role adds is method drift, not composition. A target reference uses the repo-root-relative `<spec>.feature:<Scenario Name>` form, and `SS_SCENARIO` carries one reference or a list of them. Every method that runs verification carries the tag exclusions, `--tags "not @captain and not @shipwright"` or the runner's equivalent, in the parts that run it; a method missing them is a rigging fault, never a thing a role patches at the point of use. A method whose stack offers nothing to run reads `none`, and a step whose method reads `none` runs nothing and says so in its report. The `## Perturbation` `message` value always contains the literal token `PERTURBATION`, so any role finds a live perturbation by searching for that token. The `## Dependencies` `policy` value `locked` means installed versions stay pinned until a spec or a Captain decision moves them.
++Beyond the minimum, roles rely on these read-side conventions. A role runs a method verbatim from `RIGGING.md`, editing nothing inside it: a method that takes a target set or a package is given it as an inline environment value, `SS_SCENARIO` or `SS_DEPENDENCY`, and a tier's own method is its tier-suffixed name under `## Tiers`. An invented tag, a hand-rewritten flag, or a part a role adds is method drift, not composition. A target reference uses the repo-root-relative `<spec>.feature:<Scenario Name>` form, and `SS_SCENARIO` carries one reference or a list of them. Every method that runs verification carries the tag exclusions, `--tags "not @captain and not @shipwright"` or the runner's equivalent, in the parts that run it; a method missing them is a rigging fault, never a thing a role patches at the point of use. They are there so a verifying result never counts a scenario that is not yet a promise: `@captain` scenarios await promotion and `@shipwright` ones are condemned, so either one in a run makes its red or green mean something other than it says. Where a runner cannot express selection and tag filtering at once, the exclusions ride on the parts that select nothing else and the fit names that limit in its ledger, because the purpose is met when no unpromoted or condemned scenario reaches a verifying result, not when a particular flag appears. A method whose stack offers nothing to run reads `none`, and a step whose method reads `none` runs nothing and says so in its report. The `## Perturbation` `message` value always contains the literal token `PERTURBATION`, so any role finds a live perturbation by searching for that token. The `## Dependencies` `policy` value `locked` means installed versions stay pinned until a spec or a Captain decision moves them.
 +
 +The project configuration files that `RIGGING.md` documents are the ship's rigging, such as the package manifest, the lockfile, and the tooling and lint configuration. Shipwright fits the rigging during fitting out. Boatswain maintains the code and configuration hygiene tooling; Captain owns and tunes the lint configuration for Captain-authored artifacts, such as a feature lint config. Captain selects dependencies and records them under `## Dependencies`, and installation is fitting out. Every install and every upgrade is Shipwright's, at fitting out and at harbour alike, or Captain's on the greenfield fast path where no fitting-out session exists; no dependency routes through Crew. Recording routes with installation: the installing role writes its `dependency` line under `## Dependencies` in the same pass, the runner and each confirmed tool included. Crew is dispatched only for a failing target, so the rigging's own dependencies could never route through it at all: until the runner is installed no target can fail, and that route is a circle. A product dependency does not route through Crew either, for two reasons the consumer split obscured. Installing moves the lockfile, the resolution graph, and the engines constraints, a tree-wide blast radius that contradicts Crew's charter of the smallest change for one failing target. And whether a given dependency is the rigging's own or one the implementation consumes is a judgment needing tree-wide context, which the isolated role is worst placed to hold and the fitting role holds by construction. A spec that needs an uninstalled dependency is a Crew blocker to QM, raised to Captain and routed to Shipwright, one round-trip. An upgrade the dependency policy itself orders, such as a held version under a `latest-stable` policy, has no failing target and no spec ordering it: it is harbour work Shipwright takes up directly, and needs no Crew route to exist. So `none` stands under `## Dependencies` only where nothing is installed, and a `prove` method that names a runner above `dependency: none` is a contradiction the shape forbids.
  
@@ -784,7 +784,7 @@
 +- commit hash, or why no commit,
 +- next role/blocker.
 # shipwright: --- experiments/yoink-settle/skills/shipwright/SKILL.md	2026-07-25 13:45:47.464641515 +0000
-# shipwright: +++ experiments/methods-candidate/skills/shipwright/SKILL.md	2026-07-27 09:35:39.658997173 +0000
+# shipwright: +++ experiments/methods-candidate/skills/shipwright/SKILL.md	2026-07-27 10:30:28.003164100 +0000
 @@ -36,38 +36,78 @@
  
  ## Discovery tools
@@ -932,12 +932,11 @@
 +the tag exclusions, executing and static forms alike. `plank-join` runs a check that returns the
 +join, a mapping of step pattern to declaration to scenarios, exiting non-zero where a
 +behaviour-bearing seam has no plank, a plank matches no pattern, or a provisional plank names a
-+scenario that lost its `@captain` tag. Where the stack's structural engine expresses that join, it is
-+a rule set that engine runs, and `templates.md` carries those rules ready to copy: take that route
-+first, on every stack ast-grep reads. Where no structural engine reads this stack, Shipwright writes
-+the checker while fitting out, as verification support the join method runs. It is the one checker
-+Shipwright authors, and it exists because the join is a fact about the code rather than a behaviour a
-+scenario can observe. That checker is the tool doing real work, which
++scenario that lost its `@captain` tag. Shipwright writes that checker while fitting out, as
++verification support the join method runs, in whatever the stack reads most cheaply. It is the one
++checker Shipwright authors, and it exists because the join is a fact about the code rather than a
++behaviour a scenario can observe: no runner reports it, so nothing else in the rigging can. That
++checker is the tool doing real work, which
 +is what separates it from a wrapper: a plan's other parts each invoke a tool the project already
 +runs, and a part that shells to a script written only to hide a method's own commands is the shape to
 +avoid. And each part returns the tool's own exit code, so a gate can fail.
@@ -975,22 +974,23 @@
 +
 +| | TypeScript | Rust | Go |
 +|---|---|---|---|
-+| runner, executing, as the whole part | `--run 'NODE_OPTIONS="--import tsx" npx cucumber-js "${SS_SCENARIO%%:*}" --name "^${SS_SCENARIO#*:}$" --tags "not @captain and not @shipwright"' --label prove --timeout 600` | `--run 'CUCUMBER_FILTER_TAGS="not @captain and not @shipwright" cargo test --test cucumber -- -i "${SS_SCENARIO%%:*}" --name "^${SS_SCENARIO#*:}$"' --label prove --timeout 600` | `--run 'N="${SS_SCENARIO#*:}"; go test -run "TestFeatures/${N// /_}" . -args -godog.tags="~@captain && ~@shipwright"' --label prove --timeout 600` |
-+| runner, static | the same with `--dry-run` | the same with `-- --dry-run` | `go test -run TestFeatures . -args -godog.definitions` |
-+| tier exclusions | the `--tags` flag, in each runner part | `CUCUMBER_FILTER_TAGS` in the environment, on each runner part | `-godog.tags="~@captain && ~@shipwright"`, godog's own syntax |
++| runner, executing, as the whole part | `--run 'NODE_OPTIONS="--import tsx" npx cucumber-js "${SS_SCENARIO%%:*}" --name "^${SS_SCENARIO#*:}$" --tags "not @captain and not @shipwright"' --label prove --timeout 600` | `--run 'cargo test --test cucumber -- -i "${SS_SCENARIO%%:*}" --name "^${SS_SCENARIO#*:}$"' --label prove --timeout 600`, and the whole-suite parts carry `--tags "not @captain and not @shipwright"` instead | `--run 'N="${SS_SCENARIO#*:}"; go test -run "TestFeatures/${N// /_}" . -args -godog.tags="~@captain && ~@shipwright"' --label prove --timeout 600` |
++| runner, static | the same with `--dry-run` | `cargo test --no-run --test cucumber`: this runner has no dry run, and its step registry is built at compile time, so compiling it is what shows the bindings | `go test -run TestFeatures . -args -godog.definitions` |
++| tier exclusions | the `--tags` flag, in each runner part | the `--tags` flag, which this runner cannot combine with `--name`: the name-selecting parts select, and `--tags` rides the parts that run the whole suite | `-godog.tags="~@captain && ~@shipwright"`, godog's own syntax |
 +| type check | `npx tsc --noEmit` | `cargo check --all-targets` | `go build ./...` |
 +| lint | `npx biome check src features` | `cargo clippy --all-targets -- -D warnings` and `cargo fmt --check` | `go vet ./...` and `staticcheck ./...` |
 +| coverage | `npx c8 --reporter=text` before the runner | `cargo llvm-cov` | `go test -cover ./... -args -godog.tags="~@captain && ~@shipwright"` |
-+| planks and steps | ast-grep, rules from `templates.md` | ast-grep, rules from `templates.md` | ast-grep, rules from `templates.md` |
++| planks and steps | whatever reads this stack's syntax | whatever reads this stack's syntax | whatever reads this stack's syntax |
 +| unused code | `npx knip` | `cargo-machete` | `deadcode ./...` |
 +
 +Shipshape itself runs on Node: its skills install through npx and every method runs through npx yoink, so npx is available on every stack, and Node's presence says nothing about which stack this project is - the manifest does. gplint is the Gherkin linter on every stack, run through npx. A project already running a different
 +tool for a job keeps its own; a tool this environment cannot install is a gap for Captain and `none`
 +in its method, named in the report.
 +
-+**4. Copy the rule files from `templates.md` verbatim**: the Gherkin lint rule file to `.gplintrc`, adding this
-+project's tier tags to `allowed-tags`, and the plank and step queries where this stack reads them with
-+a structural engine.
++**4. Copy the Gherkin lint rule file from `templates.md` verbatim** to `.gplintrc`, adding this
++project's tier tags to `allowed-tags`. It is the maximal set on purpose: every rule there encodes a
++Scenario-writing agreement requirement, so hand-picking a subset drops agreements silently, and
++Captain tunes it afterwards with the whole set in view.
 +
 +**5. Run each method once.** Where one fails, repair it once and run that repair; where it fails
 +again, write `none` and name it. Report the ledger: each method unchanged, repaired, migrated, added,
@@ -1081,7 +1081,7 @@
  - policy violations found by category,
  - verification-economy findings, scenario and lens,
 # shipwright: --- experiments/yoink-settle/skills/shipwright/templates.md	2026-07-23 19:59:25.231544194 +0000
-# shipwright: +++ experiments/methods-candidate/skills/shipwright/templates.md	2026-07-27 10:10:40.343206606 +0000
+# shipwright: +++ experiments/methods-candidate/skills/shipwright/templates.md	2026-07-27 10:28:53.465863040 +0000
 @@ -26,17 +26,22 @@
  - assets: <one path per line, or none>
  - scantlings: <machine-readable contract files in place, one path per line, or none>
@@ -1115,7 +1115,7 @@
  
  ## Perturbation
  
-@@ -108,3 +113,205 @@
+@@ -108,3 +113,126 @@
  
  This repository uses [Shipshape](https://github.com/dmytri/shipshape), a context-isolated spec-driven workflow for coding agents. Install with `npx skills add dmytri/shipshape --skill '*'`, or the experimental open-plugin build with `npx plugins add dmytri/shipshape`.
  ````
@@ -1242,82 +1242,3 @@
 +  "use-and": "error"
 +}
 +```
-+
-+## Plank and step rule files
-+
-+The `plank-join` method reads planks and step definitions with a structural engine wherever one reads
-+this stack, and ast-grep reads all five of these. Write these two rules to `.shipshape/planks.yml` and
-+`.shipshape/steps.yml`, setting `language` and the comment kind to this project's. Copying these is
-+the route to take before writing any checker of your own.
-+
-+```yaml
-+# .shipshape/planks.yml - every plank annotation
-+id: planks
-+severity: error           # a rule with no severity reports at `help` and exits zero
-+language: javascript      # typescript | python | rust | go
-+kind_note: "kind is `comment` for javascript, typescript and python; `line_comment` for rust and go"
-+rule:
-+  kind: comment           # line_comment for rust and go; the wrong kind is a load error, not a miss
-+  regex: "@planks"
-+```
-+
-+A step definition takes a different form in each host language, so take the `rule` block for this
-+stack. Every form below is verified against its stack's runner.
-+
-+```yaml
-+# .shipshape/steps.yml - every step definition this project declares
-+id: step-usage
-+severity: error           # a rule with no severity reports at `help` and exits zero
-+language: javascript      # javascript | typescript: cucumber-js registration calls
-+rule:
-+  any:
-+    - pattern: 'Given($$$)'
-+    - pattern: 'When($$$)'
-+    - pattern: 'Then($$$)'
-+```
-+
-+```yaml
-+id: step-usage
-+severity: error
-+language: python          # pytest-bdd decorators
-+rule:
-+  any:
-+    - pattern: '@given($$$)'
-+    - pattern: '@when($$$)'
-+    - pattern: '@then($$$)'
-+```
-+
-+```yaml
-+id: step-usage
-+severity: error
-+language: rust            # cucumber-rs attribute macros
-+rule:
-+  any:
-+    - pattern: '#[given($$$)]'
-+    - pattern: '#[when($$$)]'
-+    - pattern: '#[then($$$)]'
-+```
-+
-+```yaml
-+id: step-usage
-+severity: error
-+language: go              # godog ScenarioContext registrations
-+rule:                     # Go has no file-scope expression, so each pattern carries a context
-+  any:
-+    - pattern:
-+        context: 'func f() { $A.Given($$$) }'
-+        selector: call_expression
-+    - pattern:
-+        context: 'func f() { $A.When($$$) }'
-+        selector: call_expression
-+    - pattern:
-+        context: 'func f() { $A.Then($$$) }'
-+        selector: call_expression
-+```
-+
-+Run them with the `ast-grep` binary this project already has, as `ast-grep scan --rule
-+.shipshape/planks.yml`. Reach it as `npx --package @ast-grep/cli ast-grep`: the package is
-+`@ast-grep/cli` and its executable is `ast-grep`, so the bare `npx @ast-grep/cli` form cannot resolve
-+an executable and `npx ast-grep` resolves to an unrelated package. Each rule set is one input to the
-+join, and the join itself is the set comparison between the two outputs, which the `plank-join`
-+method carries.

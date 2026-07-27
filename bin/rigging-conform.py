@@ -48,8 +48,20 @@ def _excludes(cmd):
     # correct Go fit as divergent (2026-07-27).
     if "godog.definitions" in cmd:
         return True
-    return (("not @captain" in cmd) or ("not captain" in cmd) or ("CUCUMBER_FILTER_TAGS" in cmd)
-            or ("~@captain" in cmd))
+    # cucumber-rs rejects `--tags` and `--name` in one invocation (exit 2, verified against
+    # cucumber 0.21.1), and it ignores CUCUMBER_FILTER_TAGS entirely - so a part that SELECTS ONE
+    # SCENARIO by name on that runner cannot also carry the exclusions. The purpose is that no
+    # unpromoted or condemned scenario reaches a verifying result; a part naming one scenario
+    # already selects one, so the purpose is met and requiring the flag scored a correct Rust fit
+    # as five violations (r21, 2026-07-27). The whole-suite parts still owe the exclusions.
+    if "cargo test" in cmd and "--name" in cmd:
+        return True
+    # A part that only COMPILES the suite runs no scenario, so it has no tier to leak. cucumber-rs
+    # has no dry run and builds its step registry at compile time, so `--no-run` is that stack's
+    # honest discovery part (verified against cucumber 0.21.1, r21).
+    if "--no-run" in cmd:
+        return True
+    return (("not @captain" in cmd) or ("not captain" in cmd) or ("~@captain" in cmd))
 
 
 def section(text, name):
