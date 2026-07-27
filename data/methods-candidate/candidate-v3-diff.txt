@@ -1,5 +1,5 @@
 # shipshape: --- experiments/yoink-settle/skills/shipshape/SKILL.md	2026-07-25 13:44:14.511373308 +0000
-# shipshape: +++ experiments/methods-candidate/skills/shipshape/SKILL.md	2026-07-27 09:25:30.431279568 +0000
+# shipshape: +++ experiments/methods-candidate/skills/shipshape/SKILL.md	2026-07-27 09:34:38.110204194 +0000
 @@ -31,7 +31,7 @@
  
  When loaded bare via `/shipshape`, this skill routes to the correct role. The routing depends on the project state.
@@ -38,52 +38,144 @@
  Scantling or double:
  
  - Prefer an independent tool when one discharges the constraint, such as a schema validator, a prover, or an engine from the named-engine catalog above, or when the same constraint is consumed by more than one scenario or seam. Match the engine class to the constraint class per the catalog.
-@@ -282,7 +289,7 @@
- Form:
+@@ -277,37 +284,94 @@
  
- - `@planks("<step definition pattern>")` is a documentation-comment tag on the seam declaration whose behaviour that step requires. Write it in the language's docblock form, such as `/** */` in JavaScript or TypeScript, attached to the declaration that is the seam. Docblock placement lets a docblock or AST reader inventory every plank completely, and makes plank placement an executable form check rather than a human-read judgment.
+ ## Planking agreement
+ 
+-Feature files are canon. Shipshape derives trace from current feature files, through scenarios and steps, into step definitions and production seams. An individual plank may be as small as an argument, expression, branch, call, state change, or persisted value, so trace annotations are hoisted to seams: Planks may be distributed below that boundary. Crew and Shipwright apply this agreement when planking; QM and Boatswain use it to judge planks. The "Every production seam is planked" Article carries the seam obligations: at least one `@planks(...)` annotation, and behaviour only within the related step contracts.
+-
+-Form:
+-
+-- `@planks("<step definition pattern>")` is a documentation-comment tag on the seam declaration whose behaviour that step requires. Write it in the language's docblock form, such as `/** */` in JavaScript or TypeScript, attached to the declaration that is the seam. Docblock placement lets a docblock or AST reader inventory every plank completely, and makes plank placement an executable form check rather than a human-read judgment.
 -- The plank string is exactly one of the project's current step-definition patterns, carried verbatim and unmodified, such as `@planks("I ask for the next low tide after {string}")`. Verbatim means the pattern exactly as the step definition declares it and exactly as the `step-usage` command reports it: those two are the same string, and the plank is that string with nothing added. The binding keyword is the step definition's own construct, not part of its pattern, so it is never carried into the plank. A form assembled from parts matches neither source, and every role that writes or judges a plank then pays string surgery to build it and undo it; carrying the reported pattern makes the cross-reference an exact-string set membership on every stack, and lets a stack whose runner reports no usage still check planks against the step-definition source directly. The pattern is the durable contract; a scenario's concrete example values are not, and a plank copying a concrete step line stores a second copy of a join `step-usage` already derives, then drifts with every data edit. One form makes plank form decidable. A step definition binds `Given`, `When`, or `Then`. Normalize `And` and `But` to the inherited `Given`, `When`, or `Then` when reading a scenario to find its binding.
-+- The plank string is exactly one of the project's current step-definition patterns, carried verbatim and unmodified, such as `@planks("I ask for the next low tide after {string}")`. Verbatim means the pattern exactly as the step definition declares it and exactly as the `plank-join` method reports it: those two are the same string, and the plank is that string with nothing added. The binding keyword is the step definition's own construct, not part of its pattern, so it is never carried into the plank. A form assembled from parts matches neither source, and every role that writes or judges a plank then pays string surgery to build it and undo it; carrying the reported pattern makes the cross-reference an exact-string set membership on every stack, and lets a stack whose runner reports no usage still check planks against the step-definition source directly. The pattern is the durable contract; a scenario's concrete example values are not, and a plank copying a concrete step line stores a second copy of a join `plank-join` already derives, then drifts with every data edit. One form makes plank form decidable. A step definition binds `Given`, `When`, or `Then`. Normalize `And` and `But` to the inherited `Given`, `When`, or `Then` when reading a scenario to find its binding.
- - `@planks-provisional("<scenario reference>")` is the provisional plank, a distinct annotation and never a second form of `@planks`. A seam a `@captain` skeleton describes has no step definition, so no pattern exists to name; the provisional plank names the skeleton's scenario instead, in the repo-root-relative `<spec>.feature:<Scenario Name>` form the watchbill already uses. It announces itself, and it keeps the seam findable: a plank is the durable link from a seam to its behaviour, and a link living only in a role's report dies with that context, so a promoted scenario whose seam was never planked reaches a fresh role with no pointer to the code that already implements it, and the seam is reimplemented and the original left as dead code.
- - A provisional plank liquidates itself, and Captain's disposal of the skeleton is the trigger. Captain disposes of a `@captain` skeleton in one of two ways, and each liquidates the annotation. **Promotion:** Captain removes the `@captain` tag, so a `@planks-provisional` naming a scenario that no longer carries `@captain` is red. QM finds the seam by searching for the annotation that names the promoted scenario, with no seam hunt, and dispatches Crew to replace it with `@planks(...)` carrying the pattern QM has just authored, per the QM skill's plank-only dispatch. **Discard:** Captain removes a superseded skeleton under the "Current design only" Article, so a `@planks-provisional` naming a scenario that no longer exists is spent, and it is spent with no pattern to inherit, because no step definition was ever authored for it. QM dispatches Crew to strike the annotation, and the seam is then judged as any other: a seam that keeps another `@planks(...)` is planked and complete, and a seam left with none is unplanked, which is either behaviour no current scenario describes and goes under the "Current design only" Article, or behaviour the product still needs and is a Captain blocker for the scenario that was discarded with it. Discarding a skeleton disposes of the annotation and MUST NOT be left to harbour: Captain's own act created the state, and the seam is in hand.
- - Hoist annotations to the smallest stable seam that owns the behaviour. Do not annotate individual lines, expressions, branches, or helper fragments. A plank in a line comment or on an in-body fragment is malformed; hoist it to the seam declaration.
-@@ -291,16 +298,16 @@
- 
- Judging:
+-- `@planks-provisional("<scenario reference>")` is the provisional plank, a distinct annotation and never a second form of `@planks`. A seam a `@captain` skeleton describes has no step definition, so no pattern exists to name; the provisional plank names the skeleton's scenario instead, in the repo-root-relative `<spec>.feature:<Scenario Name>` form the watchbill already uses. It announces itself, and it keeps the seam findable: a plank is the durable link from a seam to its behaviour, and a link living only in a role's report dies with that context, so a promoted scenario whose seam was never planked reaches a fresh role with no pointer to the code that already implements it, and the seam is reimplemented and the original left as dead code.
+-- A provisional plank liquidates itself, and Captain's disposal of the skeleton is the trigger. Captain disposes of a `@captain` skeleton in one of two ways, and each liquidates the annotation. **Promotion:** Captain removes the `@captain` tag, so a `@planks-provisional` naming a scenario that no longer carries `@captain` is red. QM finds the seam by searching for the annotation that names the promoted scenario, with no seam hunt, and dispatches Crew to replace it with `@planks(...)` carrying the pattern QM has just authored, per the QM skill's plank-only dispatch. **Discard:** Captain removes a superseded skeleton under the "Current design only" Article, so a `@planks-provisional` naming a scenario that no longer exists is spent, and it is spent with no pattern to inherit, because no step definition was ever authored for it. QM dispatches Crew to strike the annotation, and the seam is then judged as any other: a seam that keeps another `@planks(...)` is planked and complete, and a seam left with none is unplanked, which is either behaviour no current scenario describes and goes under the "Current design only" Article, or behaviour the product still needs and is a Captain blocker for the scenario that was discarded with it. Discarding a skeleton disposes of the annotation and MUST NOT be left to harbour: Captain's own act created the state, and the seam is in hand.
+-- Hoist annotations to the smallest stable seam that owns the behaviour. Do not annotate individual lines, expressions, branches, or helper fragments. A plank in a line comment or on an in-body fragment is malformed; hoist it to the seam declaration.
+-- A seam MAY carry Planks for several steps. A step MAY be carried by several seams. Not every step requires Planks: setup and assertion steps often use only verification support.
+-- Where several steps could carry the plank, prefer a behaviour-bearing step over a data-bearing one.
+-
+-Judging:
++Feature files are canon. Shipshape derives trace from current feature files, through scenarios and
++steps, into step definitions and production seams. A plank may be as small as an argument,
++expression, branch, call, state change or persisted value, so trace annotations hoist to seams and
++planks distribute below that boundary. Crew and Shipwright apply this agreement when planking; QM and
++Boatswain use it to judge planks. The "Every production seam is planked" Article carries the seam
++obligations.
++
++**Form.**
++
++- `@planks("<step definition pattern>")` is a documentation-comment tag on the seam declaration whose
++  behaviour that step requires, written in the language's docblock form, such as `/** */` in
++  JavaScript or TypeScript. Docblock placement lets a docblock or AST reader inventory every plank,
++  which makes plank placement an executable form check rather than a human-read judgment.
++- The plank string is exactly one of the project's current step-definition patterns, carried verbatim:
++  the pattern as the step definition declares it, which is the same string the `plank-join` method
++  reports. The plank is that string and nothing more, so the cross-reference stays an exact-string set
++  membership on every stack, and a stack whose runner reports no usage still checks planks against the
++  step-definition source. The binding keyword belongs to the step definition's own construct, so it
++  stays out of the plank. The pattern is the durable contract; a scenario's concrete example values
++  belong to the scenario, and a plank copying a concrete step line would store a second copy of a join
++  `plank-join` already derives and drift with every data edit. A step definition binds `Given`, `When`
++  or `Then`; reading a scenario, normalize `And` and `But` to the keyword they inherit.
++- `@planks-provisional("<spec>.feature:<Scenario Name>")` is the provisional plank, a distinct
++  annotation in the repo-root-relative form the watchbill uses. A seam a `@captain` skeleton describes
++  has no step definition yet, so no pattern exists to name and the provisional plank names the
++  skeleton's scenario. It keeps the seam findable: a plank is the durable link from a seam to its
++  behaviour, and a link living only in a role's report dies with that context, leaving a promoted
++  scenario whose seam gets reimplemented while the original becomes dead code.
++- Hoist each annotation to the smallest stable seam that owns the behaviour, on the declaration
++  itself. A plank on a line, expression, branch or helper fragment is malformed, and hoisting it to
++  the seam declaration corrects it.
++- A seam MAY carry planks for several steps, and a step MAY be carried by several seams. Setup and
++  assertion steps often use verification support alone. Where several steps could carry the plank,
++  prefer a behaviour-bearing step over a data-bearing one.
  
 -- Judge planks by running commands, never by reading them, per the Verification policy's check-precedence rule. `plank-inventory` lists `@planks` and `@planks-provisional` alike, and also scan for bare tokens across the implementation paths, because a token outside a docblock on a declaration is a malformed plank the docblock reader cannot see. Where the stack has no docblock or AST reader, the plank rules ride the derived verification-conformance rule set, per the Shipwright skill's Methodology checks, each proven red by a plant at adoption.
 -- The trace runs seam to plank to step definition to scenarios, and the runner owns the last hop: `step-usage` reports each pattern with the scenarios that bind it.
 -- Cross-reference each `@planks` string against the `step-usage` patterns by exact string match, with no normalization on either side: the reported pattern is the plank's whole content, so the join is set membership and nothing else. A plank matching no current pattern is stale or malformed: its step definition was deleted or renamed, or the plank carries text the pattern does not, such as a leading `Given`, `When`, or `Then`.
-+- Judge planks by running the plank join, never by reading them, per the Verification policy's check-precedence rule. The `plank-join` method lists `@planks` and `@planks-provisional` alike, and also scan for bare tokens across the implementation paths, because a token outside a docblock on a declaration is a malformed plank the docblock reader cannot see. Where the stack has no docblock or AST reader, the plank rules ride the derived verification-conformance rule set, per the Shipwright skill's Methodology checks, each proven red by a plant at adoption.
-+- The trace runs seam to plank to step definition to scenarios, and the runner owns the last hop: the `plank-join` method reports each pattern with the scenarios that bind it.
-+- Cross-reference each `@planks` string against the patterns `plank-join` reports by exact string match, with no normalization on either side: the reported pattern is the plank's whole content, so the join is set membership and nothing else. A plank matching no current pattern is stale or malformed: its step definition was deleted or renamed, or the plank carries text the pattern does not, such as a leading `Given`, `When`, or `Then`.
- - Cross-reference each `@planks-provisional` reference against the `@captain` scenarios in the specs. One naming a `@captain` scenario conforms and waits; one naming a promoted scenario is red and owes its pattern; one naming no current scenario is red and owes its removal, the skeleton having been discarded. Every member of this list carries an act; a state named here with no act is a deck no role can clear.
- - Stale and malformed planks are corrected, never trusted. On a touched seam in the role-advanced diff, a plank that is missing, stale, or malformed is the same fault, unfinished Crew work, and routes to Crew for redispatch: the role that wrote the seam this voyage is the role that corrects it, while the seam is still in hand. A malformed plank is the more dangerous of the two, because it reads as coverage the seam does not have. Only plank drift beyond the current diff defers to harbour, per the Blocker policy: harbour is where a fault no current role owns goes, never where a fault this voyage introduced is parked.
- - A plank whose pattern survives while its seam no longer serves that step is behaviour-stale and invisible to the pattern join. Harbour's coverage triage is the net; a role observing one reports it rather than trusting the join.
+-- Cross-reference each `@planks-provisional` reference against the `@captain` scenarios in the specs. One naming a `@captain` scenario conforms and waits; one naming a promoted scenario is red and owes its pattern; one naming no current scenario is red and owes its removal, the skeleton having been discarded. Every member of this list carries an act; a state named here with no act is a deck no role can clear.
+-- Stale and malformed planks are corrected, never trusted. On a touched seam in the role-advanced diff, a plank that is missing, stale, or malformed is the same fault, unfinished Crew work, and routes to Crew for redispatch: the role that wrote the seam this voyage is the role that corrects it, while the seam is still in hand. A malformed plank is the more dangerous of the two, because it reads as coverage the seam does not have. Only plank drift beyond the current diff defers to harbour, per the Blocker policy: harbour is where a fault no current role owns goes, never where a fault this voyage introduced is parked.
+-- A plank whose pattern survives while its seam no longer serves that step is behaviour-stale and invisible to the pattern join. Harbour's coverage triage is the net; a role observing one reports it rather than trusting the join.
++**A provisional plank liquidates itself**, and Captain's disposal of the skeleton is the trigger.
++Captain disposes of the skeleton in hand, while the seam is still in hand, rather than at harbour.
  
- Selection:
- 
+-Selection:
+-
 -- The planks of a touched seam select its recheck. Join the seam's plank patterns through `step-usage` to the scenarios that bind them, and run that focused set. When attribution inside a file is unclear, take every plank in the file.
-+- The planks of a touched seam select its recheck. Join the seam's plank patterns through `plank-join` to the scenarios that bind them, and run that focused set. When attribution inside a file is unclear, take every plank in the file.
- - A touched production hunk with no plank to follow is plank drift, judged per this agreement; static discovery and the derived `typecheck` and `lint` gates stand as its proof meanwhile.
- - Verification support code carries no planks, so the plank join does not reach it. It executes inside every scenario whose steps route through it, and its blast radius is the tier it serves, never the spec file the change was declared beside: a touched support hunk selects that tier's enumeration sweep. A focused run over a subset of that tier does not cover it, and neither does a green the caller carried from one: the scenarios such a run never reached are exactly where a support edit does its damage. A support edit that changes behaviour loads, imports, typechecks, and lints exactly as the old one did, so the static gates pass it through and the sweep is the only check that reaches it.
+-- A touched production hunk with no plank to follow is plank drift, judged per this agreement; static discovery and the derived `typecheck` and `lint` gates stand as its proof meanwhile.
+-- Verification support code carries no planks, so the plank join does not reach it. It executes inside every scenario whose steps route through it, and its blast radius is the tier it serves, never the spec file the change was declared beside: a touched support hunk selects that tier's enumeration sweep. A focused run over a subset of that tier does not cover it, and neither does a green the caller carried from one: the scenarios such a run never reached are exactly where a support edit does its damage. A support edit that changes behaviour loads, imports, typechecks, and lints exactly as the old one did, so the static gates pass it through and the sweep is the only check that reaches it.
++| Captain's act | The provisional plank | The act it owes |
++|---|---|---|
++| Promotion: the `@captain` tag comes off | names a scenario no longer carrying `@captain`, so it is red | QM finds the seam by the annotation naming that scenario, with no seam hunt, and dispatches Crew to replace it with `@planks(...)` carrying the pattern QM has just authored |
++| Discard: the superseded skeleton goes, under "Current design only" | names a scenario that no longer exists, so it is spent, with no pattern to inherit | QM dispatches Crew to strike it. The seam is then judged as any other: one keeping another `@planks(...)` is complete; one left with none is unplanked, and is either behaviour no current scenario describes, which goes under "Current design only", or behaviour the product still needs, which is a Captain blocker for the discarded scenario |
  
-@@ -323,16 +330,44 @@
+-Limits:
++**Judging.**
+ 
+-- Trace annotations MUST NOT define product intent, create worklists, or replace verification. Worklists come from failing verification over the watchbill's ordered scope, per the Watchbill policy.
+-- Do not trace production code to features or scenarios. Scenario coverage is derived through Cucumber's scenario-to-step mapping. Support artifacts MAY use project-appropriate comments when ownership or deletion is unclear, but they MUST NOT define product intent.
++- Judge planks by running the plank join, per the Verification policy's check-precedence rule. The
++  `plank-join` method lists `@planks` and `@planks-provisional` alike. Scan the implementation paths
++  for bare tokens too, since a token outside a docblock on a declaration is a malformed plank the
++  docblock reader passes over. Where the stack has no docblock or AST reader, the plank rules ride the
++  derived verification-conformance rule set, per the Shipwright skill's Methodology checks, each
++  proven red by a plant at adoption.
++- The trace runs seam to plank to step definition to scenarios, and the runner owns the last hop: the
++  `plank-join` method reports each pattern with the scenarios that bind it.
++- Cross-reference each `@planks` string against the patterns `plank-join` reports by exact string
++  match, with no normalization on either side: the join is set membership. A plank matching a current
++  pattern conforms. A plank matching none is stale or malformed - its step definition was deleted or
++  renamed, or it carries text the pattern lacks, such as a leading `Given`, `When` or `Then`.
++- Cross-reference each `@planks-provisional` reference against the `@captain` scenarios in the specs,
++  per the table above. Every state named there carries an act, so that a deck always has a way to
++  clear.
++- Correct stale and malformed planks. On a touched seam in the role-advanced diff, a plank that is
++  missing, stale or malformed is one fault - unfinished Crew work - and routes to Crew for redispatch,
++  so the role that wrote the seam this voyage corrects it while the seam is in hand. A malformed plank
++  is the more dangerous, because it reads as coverage the seam lacks. Plank drift beyond the current
++  diff defers to harbour, per the Blocker policy: harbour takes the faults no current role owns.
++- A plank whose pattern survives while its seam no longer serves that step is behaviour-stale, and the
++  pattern join passes it. Harbour's coverage triage is the net, and a role observing one reports it.
++
++**Selection.**
++
++- The planks of a touched seam select its recheck. Join the seam's plank patterns through `plank-join`
++  to the scenarios that bind them, and run that focused set. Where attribution inside a file is
++  unclear, take every plank in the file.
++- A touched production hunk with no plank to follow is plank drift, judged per this agreement; static
++  discovery and the derived `typecheck` and `lint` gates stand as its proof meanwhile.
++- Verification support code carries no planks, so the plank join stops short of it. It executes inside
++  every scenario whose steps route through it, so its blast radius is the tier it serves, and a
++  touched support hunk selects that tier's enumeration sweep. The sweep is what reaches it: a focused
++  run covers only the scenarios it names, a caller's green covers only the run that produced it, and a
++  support edit that changes behaviour loads, imports, typechecks and lints exactly as the old one did,
++  so the static gates pass it through.
++
++**Limits.** Trace annotations carry the seam-to-step link, and that is their whole job: product intent
++lives in the specs, worklists come from failing verification over the watchbill's ordered scope per
++the Watchbill policy, and verification is what proves behaviour. Scenario coverage derives through
++Cucumber's scenario-to-step mapping, so planks link seams to step definitions and stop there. Support
++artifacts MAY use project-appropriate comments where ownership or deletion is unclear, and the specs
++remain the place product intent is written.
+ 
+ ## Role flow
+ 
+@@ -323,16 +387,44 @@
  
  ### Role transitions
  
 -A role hands off to the next role. On any transition, the preceding role's final-report blockers and open questions are the first work item: handle blockers first, then other duties. Current hand-off evidence takes priority over older notes. How the hand-off happens depends on the coding agent.
-+A role hands off to the next role. The preceding role's final-report blockers and open questions are
-+the first work item: blockers first, then other duties. Current hand-off evidence outranks older notes.
- 
+-
 -- If the agent supports context-isolated subagents, spawn the next role as an isolated subagent. Where that mechanism exists it is the route an internal role takes, not merely the better of two. A fresh context window carries no Captain content, which satisfies the clean-context bulkhead and prevents accidental contamination. It is also the only route that carries the role's identity: a runtime enforcing any of this mechanically knows which role is acting from the dispatch, so the same act by the same skill loaded in the human-facing session is unguarded. That asymmetry is invisible where it matters, since both routes announce the same role and read the same skill, and a rule enforced on one route and not the other is worse than one enforced on neither: the guarded route teaches the operator to trust a guard the other route does not have. Where the runtime offers no such mechanism the fallback below stands, and doctrine alone carries the bulkhead there, so every read form these Articles name is obeyed as written rather than left to a guard that will not fire.
 -- A fresh context window is the isolation floor. A shared on-disk transcript is a residual side channel: discarded conversation context an internal role MUST NOT mine, and the runtime SHOULD block internal-role reads of it. A window-isolated subagent serves a routine transition; reserve a fresh session, which closes the residual fully, for opt-in strict work.
 -- If the agent supports only context-inheriting subagents, spawn an inheriting subagent. This is acceptable for QM to Crew. It MUST NOT carry Captain or human discovery context across the Captain to QM bulkhead.
 -- If the agent cannot spawn subagents, the current role temporarily assumes the next role, then returns, except where assuming would take a write scope that is not the assuming role's. The Write scopes are strict Article binds the role that is acting, not the skill text most recently read: a runtime enforcing custody reads the acting role from the dispatch, so an assumed role's writes arrive under the assuming role's identity and are denied, which is the correct outcome and not a fault to route around. Where the next role's job needs a write the current role does not hold, the current role does not assume it: it ends in its final report naming that role, the targets and the base commit, and the caller dispatches, per the flat hand-off in Hand-off custody. A role that cannot spawn is not thereby licensed to write what it could not write anyway. Captain to QM is the exception: Captain never assumes QM, because that boundary requires clean context, as the next paragraph carries. While a role assumes an internal role, it MUST ignore any human input that arrives in flight. It MUST leave that input in context for Captain to handle on return. Only Captain consumes human input.
-+**Route the hand-off by what the agent supports.**
++A role hands off to the next role. The preceding role's final-report blockers and open questions are
++the first work item: blockers first, then other duties. Current hand-off evidence outranks older notes.
  
 -Captain to QM always requires clean context. A window-isolated subagent or a fresh session both satisfy it. If the runtime provides isolation automatically, continue. If not, Captain tells the user to start a fresh session, then run `/qm`. A same-session clear resets the window but not the transcript, so it is the weaker option where the transcript persists. QM re-checks context on load and refuses if Captain or human discovery context is visible in its window.
--
++**Route the hand-off by what the agent supports.**
+ 
 -**Dispatch contract.** A dispatch carries its row and nothing else: the durable artifacts are the hand-off. Craft notes, seam hints, and expected failure modes are contamination even when labelled tooling facts. Each internal role verifies its dispatch against its row on open.
 +| The agent supports | Take this route |
 +|---|---|
@@ -121,7 +213,7 @@
  
  | Dispatch | Carries |
  |---|---|
-@@ -341,31 +376,62 @@
+@@ -341,31 +433,62 @@
  | To Boatswain | job, base commit, and the advanced target references for a post-implementation job |
  | Captain to Shipwright | role, base commit, optional scope |
  
@@ -206,7 +298,7 @@
  
  ### Harbour flow
  
-@@ -379,11 +445,73 @@
+@@ -379,11 +502,73 @@
  
  ### Rigging read contract
  
@@ -283,7 +375,7 @@
  
  ## Project policies
  
-@@ -432,7 +560,7 @@
+@@ -432,7 +617,7 @@
  
  `watchbill.json` is the verification scope order and the only channel that creates QM targets: Captain limits what is verified, and verification output over that scope creates the worklist. The watchbill selects and orders; it creates no work itself. Captain writes fixed-shape `watchbill.json` as intent lands: a new or edited scenario's entry is written with the edit, a tier tag enumerates a tier's failing set, and a perturbation's planked scenarios enter at plant time per the Perturbation policy. If `watchbill.json` and verification disagree, verification wins. A spent watchbill is struck: Boatswain removes the file and stages the removal with the custody commit that closes the voyage, per the Boatswain skill. Captain MAY withdraw intent early by removing the file; a watchbill with entries no report verifies is not spent and stays for Captain. Absent at rest is the healthy state: QM dispatched with no watchbill reports the deck at rest. A scenario the scope missed waits for the next harbour full regression, per the Verification policy.
  
@@ -292,7 +384,7 @@
  
  ### Verification policy
  
-@@ -442,16 +570,16 @@
+@@ -442,16 +627,16 @@
  
  | Question | Shape | Cost |
  |---|---|---|
@@ -499,27 +591,65 @@
  
  ## Final report
 # boatswain: --- experiments/yoink-settle/skills/boatswain/SKILL.md	2026-07-24 06:40:41.256197557 +0000
-# boatswain: +++ experiments/methods-candidate/skills/boatswain/SKILL.md	2026-07-26 20:27:04.975882671 +0000
-@@ -20,30 +20,29 @@
+# boatswain: +++ experiments/methods-candidate/skills/boatswain/SKILL.md	2026-07-27 09:34:38.114204246 +0000
+@@ -19,31 +19,62 @@
+ 
  ## Role contract
  
- - Write hygiene edits and commits only. No new product behaviour, no new verification, no assets.
+-- Write hygiene edits and commits only. No new product behaviour, no new verification, no assets.
 -- Captain trims their own notes; Boatswain MUST NOT read or edit `CAPTAIN.md`. Staging is not reading: when a `CAPTAIN.md` edit rides the voyage's role-advanced work, stage and commit it content-blind, by path alone, with `git add -- CAPTAIN.md`; never open, diff, or grep it. The path MAY ride among the other staged paths of one `git add` pathspec list, so batching the staging into one command stays content-blind and legal. Compose deck retrieval to exclude it: diff and search by explicit paths or with the `:!CAPTAIN.md` pathspec exclusion, so its content never enters context. An enforcing runtime permits exactly these staging and exclusion forms and blocks every other command that opens, searches, edits, or removes the file; prose naming it inside a quoted string (an echoed label, a commit message) and a bare metadata stat are not access and pass.
 -- **Scope and hygiene.** The deck is Boatswain's one retrieval: `git status` and the diff against the base commit. Be ruthless about current design within that scope. Do not sweep the full codebase. No stale specs, orphaned steps, orphaned tests, dead fixtures, stale implementation, or historical tombstones in scope. Boatswain MAY delete safe non-production-code artifacts such as generated files, caches, stale build output, and orphaned temp files that git ignores or that no spec references. Report unreachable production code in scope as a harbour finding in the hand-off; it defers to harbour per the "Current design only" Article and does not block the voyage.
-+- Captain trims their own notes; Boatswain MUST NOT read or edit `CAPTAIN.md`. Staging is not reading: when a `CAPTAIN.md` edit rides the voyage's role-advanced work, stage and commit it content-blind, by path alone, with `git add -- CAPTAIN.md`; never open, diff, or grep it. The path MAY ride among the other staged paths of one `git add` pathspec list. Compose deck retrieval to exclude it, by explicit paths or the `:!CAPTAIN.md` pathspec exclusion. An enforcing runtime permits exactly these staging and exclusion forms and blocks every other command that opens, searches, edits, or removes the file; prose naming it inside a quoted string and a bare metadata stat are not access and pass.
-+- **Scope.** The deck is Boatswain's one retrieval: `git status` and the diff against the base commit. Be ruthless about current design within that scope, and do not sweep the full codebase. No stale specs, orphaned steps, orphaned tests, dead fixtures, stale implementation, or historical tombstones in scope. Boatswain MAY delete safe non-production artifacts such as generated files, caches, stale build output, and orphaned temp files that git ignores or that no spec references. Report unreachable production code in scope as a harbour finding; it defers per the "Current design only" Article and does not block the voyage.
- - **Condemned scenarios.** At sea, only failing verification and a Captain perturbation create work; non-breaking cleanup is marked and deferred to harbour. Mark an obsolete scenario `@shipwright`; harbour removes it and the code its steps plank. Before marking, check the module's feature files: a `@captain` scenario is protected while it awaits review, and an existing `@shipwright` mark means the scenario is already condemned.
+-- **Condemned scenarios.** At sea, only failing verification and a Captain perturbation create work; non-breaking cleanup is marked and deferred to harbour. Mark an obsolete scenario `@shipwright`; harbour removes it and the code its steps plank. Before marking, check the module's feature files: a `@captain` scenario is protected while it awaits review, and an existing `@shipwright` mark means the scenario is already condemned.
 -- **Crew's contract is the check.** Verify each touched seam keeps Crew's contract: a `@planks(...)` annotation present, behaviour only within its planked steps' requirements, and a removed perturbation genuinely reimplemented. Error handling, logging, input validation, and supporting calls that serve a planked step are part of the seam, not extra behaviour. A failure is unfinished Crew work: report foul deck to the caller for Crew redispatch. When the finding indicts the spec rather than the change, behaviour that looks intended with no step to pin it, raise a Captain blocker with exact evidence.
-+- **Crew's contract is the check.** Verify each touched seam keeps Crew's contract: a `@planks(...)` annotation present, behaviour only within its planked steps' requirements, and a removed perturbation genuinely reimplemented. Error handling, logging, input validation, and supporting calls that serve a planked step are part of the seam, not extra behaviour. A failure is unfinished Crew work: report foul deck to the caller for Crew redispatch. When the finding indicts the spec rather than the change, raise a Captain blocker with exact evidence.
- - Dependency averse. When the diff or the rigging read surfaces a dependency fault, unneeded, redundant, duplicate, or outdated: flag it as a Captain blocker; do not change it. Version drift is a SHOULD: dependencies SHOULD be at current stable version unless the spec or a `locked` policy pins them.
+-- Dependency averse. When the diff or the rigging read surfaces a dependency fault, unneeded, redundant, duplicate, or outdated: flag it as a Captain blocker; do not change it. Version drift is a SHOULD: dependencies SHOULD be at current stable version unless the spec or a `locked` policy pins them.
 -- Lint code and configuration in the diff with the project's available hygiene tools. Boatswain owns code-hygiene tool config and MAY tune it; the lint of Captain-authored specs and assets is Captain's, run at write time. Flag style violations as blockers. No exceptions for convention drift.
 -- Maintain the rigging. The project configuration files that `RIGGING.md` documents are the ship's rigging. When tooling or lint configuration in scope is drifted or incoherent: tune it as hygiene. Captain selects dependencies and Shipwright installs and upgrades them; Boatswain flags dependency faults and does not change dependencies.
-+- Boatswain owns code-hygiene tool configuration and MAY tune it; the lint of Captain-authored specs and assets is Captain's, run at write time. Flag style violations as blockers. No exceptions for convention drift.
-+- Maintain the rigging. When tooling or lint configuration in scope is drifted or incoherent: tune it as hygiene. Captain selects dependencies and Shipwright installs them; Boatswain flags dependency faults and changes no dependency.
- - Undefined steps are never a custody failure. A scenario whose steps are undefined has never been verified: it is QM work waiting on the watchbill, and custody proceeds without it, in every job.
+-- Undefined steps are never a custody failure. A scenario whose steps are undefined has never been verified: it is QM work waiting on the watchbill, and custody proceeds without it, in every job.
 -- A plank on a touched seam has two dispositions and no third. It joins a current step-definition pattern, or it is malformed and routes to Crew for redispatch, per the Planking agreement. Uncertainty is not a third disposition: a plank whose relationship to a step cannot be established is a plank that does not join, and the join is run, never eyeballed. Raise a Captain blocker only where the finding indicts the spec rather than the change, per Crew's contract above.
-+- A plank on a touched seam has two dispositions and no third. It joins a current step-definition pattern, or it is malformed and routes to Crew for redispatch, per the Planking agreement. Uncertainty is not a third disposition: a plank whose relationship to a step cannot be established is a plank that does not join, and the join is run, never eyeballed.
- - Outbound is Captain-only. Do not push, tag, publish, release, or deploy.
+-- Outbound is Captain-only. Do not push, tag, publish, release, or deploy.
++- Write hygiene edits and commits. Product behaviour is Crew's, verification is QM's, and assets are
++  Captain's.
++- Captain trims their own notes, so `CAPTAIN.md` stays closed to Boatswain. Staging is not reading:
++  where a `CAPTAIN.md` edit rides the voyage's role-advanced work, stage and commit it content-blind,
++  by path alone, with `git add -- CAPTAIN.md`, and the path MAY ride among the other staged paths of
++  one `git add` pathspec list. Compose deck retrieval to exclude it, by explicit paths or the
++  `:!CAPTAIN.md` pathspec exclusion. An enforcing runtime permits exactly these staging and exclusion
++  forms and blocks every command that opens, searches, edits or removes the file; prose naming it
++  inside a quoted string and a bare metadata stat are not access, and pass.
++- **Scope.** The deck is Boatswain's one retrieval: `git status` and the diff against the base commit.
++  Be ruthless about current design within that scope, which is where stale specs, orphaned steps,
++  orphaned tests, dead fixtures, stale implementation and historical tombstones are judged. Boatswain
++  MAY delete safe non-production artifacts such as generated files, caches, stale build output and
++  orphaned temp files that git ignores or that no spec references. Report unreachable production code
++  in scope as a harbour finding, which defers per the "Current design only" Article and leaves the
++  voyage running.
++- **Condemned scenarios.** At sea, failing verification and a Captain perturbation are what create
++  work; non-breaking cleanup is marked and deferred to harbour. Mark an obsolete scenario
++  `@shipwright`, and harbour removes it and the code its steps plank. Before marking, check the
++  module's feature files: a `@captain` scenario is protected while it awaits review, and an existing
++  `@shipwright` mark means the scenario is already condemned.
++- **Crew's contract is the check.** Verify each touched seam keeps Crew's contract: a `@planks(...)`
++  annotation present, behaviour within its planked steps' requirements, and a removed perturbation
++  genuinely reimplemented. Error handling, logging, input validation and supporting calls that serve a
++  planked step are part of the seam. A failure is unfinished Crew work: report foul deck to the caller
++  for Crew redispatch. Where the finding indicts the spec rather than the change, raise a Captain
++  blocker with exact evidence.
++- Dependency averse. Where the diff or the rigging read surfaces a dependency fault - unneeded,
++  redundant, duplicate or outdated - flag it as a Captain blocker and leave it in place: Captain
++  selects dependencies and Shipwright installs them. Version drift is a SHOULD: dependencies SHOULD be
++  at current stable version unless the spec or a `locked` policy pins them.
++- Boatswain owns code-hygiene tool configuration and MAY tune it; the lint of Captain-authored specs
++  and assets is Captain's, run at write time. Flag every style violation as a blocker, convention
++  drift included.
++- Maintain the rigging. Where tooling or lint configuration in scope is drifted or incoherent, tune it
++  as hygiene.
++- A scenario whose steps are undefined has never been verified, so it is QM work waiting on the
++  watchbill and custody proceeds without it, in every job.
++- A plank on a touched seam has two dispositions. It joins a current step-definition pattern, or it is
++  malformed and routes to Crew for redispatch, per the Planking agreement. A plank whose relationship
++  to a step cannot be established is a plank that does not join, so run the join rather than eyeball
++  it.
++- Outbound is Captain's: push, tag, publish, release and deploy all belong to that role.
  
  ## Jobs
  
@@ -544,7 +674,7 @@
  
  2. **Retrieve the rigging and the deck. One pass, before anything else.** Run:
  
-@@ -51,55 +50,47 @@
+@@ -51,55 +82,47 @@
     cat RIGGING.md AGENTS.md && git status && git diff <base> -- . ':!CAPTAIN.md' && git log -n 5
     ```
  
@@ -636,7 +766,7 @@
  
  ## Final report
  
-@@ -107,12 +98,8 @@
+@@ -107,12 +130,8 @@
  
  - `All shipshape.` or `Deck foul: ...`,
  - job,
@@ -654,8 +784,8 @@
 +- commit hash, or why no commit,
 +- next role/blocker.
 # shipwright: --- experiments/yoink-settle/skills/shipwright/SKILL.md	2026-07-25 13:45:47.464641515 +0000
-# shipwright: +++ experiments/methods-candidate/skills/shipwright/SKILL.md	2026-07-27 09:24:41.306676146 +0000
-@@ -36,38 +36,80 @@
+# shipwright: +++ experiments/methods-candidate/skills/shipwright/SKILL.md	2026-07-27 09:34:29.538093920 +0000
+@@ -36,38 +36,78 @@
  
  ## Discovery tools
  
@@ -712,40 +842,38 @@
 +
 +### Refit
 +
-+A refit is this same derivation run again against the current repository. It repairs; it does not
-+rebuild. Both passes are smooth because a role that arrives mid-fit, or after one, finds either the
-+rigging it expects or a named blocker, never a half-written file.
++A refit is this same derivation run again against the current repository: it repairs what is there.
++Both passes are smooth because a role arriving mid-fit, or after one, finds either the rigging it
++expects or a named blocker, and always a finished file.
 +
 +| The refit finds | It does |
 +|---|---|
 +| A method correct and executing | Leaves it byte-identical. An unchanged value is not rewritten, so no diff appears where nothing moved |
-+| A method missing, or a job the Methods section names with no value at all | Derives it, registers its entry, writes its value |
-+| A method whose entry is gone, whose config is missing, or which no longer executes | Repairs the entry or the config and proves it again |
++| A method missing, or a job the Methods section names with no value at all | Derives it and writes its value |
++| A method whose config is missing, or which no longer executes | Repairs the value or the config, and proves it again |
 +| A method whose stack tooling has been replaced | Rederives it from what the project now runs, and names the change in the report |
-+| A rigging in a superseded shape: a section this doctrine no longer names, a value that invokes a task-runner entry instead of carrying its plan, a retired placeholder, a job with no method | MIGRATES it to the current shape. A project that updates Shipshape gets the current rigging with it, and is never left stuck on the shape it was fitted with |
++| A rigging in a superseded shape: a section this doctrine no longer names, a value that invokes a task-runner entry instead of carrying its plan, a retired placeholder, a job with no method | MIGRATES it to the current shape, so a project that updates Shipshape gets the current rigging with it |
 +| Tooling the ecosystem has moved past, or a dependency that is unmaintained, duplicated or out of date | Rederives the method on what the project should run now, and names the dependency finding for Captain. Current design only applies to the rigging as it does to the code |
-+| A value another role owns: a lint rule file Captain tuned, a dependency Captain selected, the perturbation message | Leaves it. A refit never reverts a tuning to its default |
++| A value another role owns: a lint rule file Captain tuned, a dependency Captain selected, the perturbation message | Leaves it as that role set it, tuning included |
 +| A required value it cannot derive | Writes every value it can and raises one Captain blocker naming the value, so the rigging is usable and the gap is legible |
 +
-+Registration is by name, never by addition: a refit replaces the entry a method already has and adds
-+no second one, so a project cannot accumulate two lists of what its methods are. Write the rigging once,
-+after the derivation is complete in hand, so no role reads a file mid-write. Prove every method the
-+refit touched by running it, and leave every method it did not touch alone: a proof spent on an
-+unchanged method buys nothing.
++A refit replaces the value a method already has, so one method keeps one value and a project keeps
++one list of what its methods are. Write the rigging once, after the derivation is complete in hand, so
++every role reads a finished file. Prove every method the refit touched by running it, and leave the
++untouched ones as they stand: a proof spent on an unchanged method buys nothing.
 +
 +Report the fit as a ledger, one line per method, each marked unchanged, repaired, migrated, added, or
 +`none` with its reason. A human reading that ledger sees exactly what moved, and a role reading it knows
 +whether its own method changed under it.
 +
-+Where the stack has no Gherkin runner, `prove`, `verify`, `sweep`, `discovery` and `plank-join` are
-+underivable: raise a Captain blocker naming the runner as a dependency decision for Captain and the
-+user. Existing non-Gherkin tests still derive `regression` and the gates the hygiene methods carry,
++Where the stack has no Gherkin runner, `prove`, `verify`, `sweep`, `discovery` and `plank-join` await
++one: raise a Captain blocker naming the runner as a dependency decision for Captain and the user. Existing non-Gherkin tests still derive `regression` and the gates the hygiene methods carry,
 +and their modules count as covered for triage only once scenarios bind them. For any required value
 +Shipwright cannot derive, or where the repository is ambiguous, raise a Captain blocker naming the
 +value and write `RIGGING.md` with every derivable one, leaving the underivable required slot empty;
 +Captain discovers it with the user and writes it. The required values are `language`,
 +`implementation`, `specs`, every method the Methods section names, and perturbation `perturb`. Leave
-+`CAPTAIN.md` to Captain: Shipwright does not create it.
++`CAPTAIN.md` to Captain, who creates it.
  
  ### Rigging shape
  
@@ -755,11 +883,11 @@
 -- `## Directories`: `implementation`, `specs`, `verification`, `assets`, and optional `scantlings` paths, one path per line with the key repeated. A `*` matches one path segment, so `packages/*/src` covers every package in a workspace. Derive each `verification` value as the narrowest directory that holds verification support, such as the step-definition and support directories, never a parent that contains the `specs` directory. A Cucumber-conventional layout keeps step definitions under the specs directory, so `features` names the specs and `features/steps` and `features/support` name the verification. List every directory that can hold a planked seam under `implementation`; the `plank-inventory` command scans exactly the `implementation` paths. Widen Crew scope only to work a falsifiable spec covers; work covered only by outbound policy stays Captain-owned. Fitting out declares content directories as assets in place and moves nothing. `scantlings` lists machine-readable contract files in place when the project carries them.
 -- `## Commands`: `discover`, `focused`, `broad`, `coverage`, `step-usage`, `plank-inventory`, `typecheck`, and `lint`. Each value is a single command, and it reads as a one-line tool invocation: checker logic beyond one expression belongs in step definitions, QM's write, never embedded in a command value. The `focused` command uses `{scenario}` as the target placeholder. Watchbill-selected runs use the `focused` command for each scenario in the watch. The `plank-inventory` command lists docblock annotations across the `implementation` paths. A project MAY add tier-suffixed command variants, such as `coverage-sandbox`. Confirmed feature lint and code lint share the one `lint` value as a chained command, feature lint first; the shape grows no second lint key. A project that carries a scantling MAY add a `conformance` command that validates or proves seams against it, so a conformance step runs a real check. All verification commands MUST exclude `@captain`-tagged and `@shipwright`-tagged scenarios.
 +- `## Directories`: `implementation`, `specs`, `verification`, `assets`, and optional `scantlings` paths, one path per line with the key repeated. A `*` matches one path segment, so `packages/*/src` covers every package in a workspace. Derive each `verification` value as the narrowest directory that holds verification support, such as the step-definition and support directories, never a parent that contains the `specs` directory. A Cucumber-conventional layout keeps step definitions under the specs directory, so `features` names the specs and `features/steps` and `features/support` name the verification. List every directory that can hold a planked seam under `implementation`; the `plank-join` method's annotation scan covers exactly the `implementation` paths. Widen Crew scope only to work a falsifiable spec covers; work covered only by outbound policy stays Captain-owned. Fitting out declares content directories as assets in place and moves nothing. `scantlings` lists machine-readable contract files in place when the project carries them.
-+- `## Methods`: every method the Methods section in the `shipshape` skill names, and no others, each a Yoink plan in the shape that section fixes. This is the project's whole executable surface: there is no `## Commands` section, and a role runs nothing this section does not carry. Derive each method's parts from this stack, per the Methods derivation notes below, and report each by name with its part count so a method written without its parts is visible in the report and not only in the file.
++- `## Methods`: every method the Methods section in the `shipshape` skill names, and no others, each a Yoink plan in the shape that section fixes. This is the project's whole executable surface: a role runs the methods this section carries. Derive each method's parts from this stack, per the Methods derivation notes below, and report each by name with its part count so a method written without its parts is visible in the report and not only in the file.
  - `## Perturbation`: the stable `message` and project-specific `perturb` statement. The `message` MUST contain the literal token `PERTURBATION` so a role can detect a live perturbation in the tree.
  - `## Tiers`: the `default` tier tag, any `sandbox` tier tag, one `policy` line per tier naming that tier's credential source or provisioning policy, such as the custodian CLI or the variable name, never a secret value or a check command, an optional `budget` wall-clock ceiling for the full regression with tier-suffixed variants such as `budget-sandbox` per tier, enforced by the derived budget check under Methodology checks, an optional `weather` path naming the wake's weather record so the next run finds it, and an optional `runrecord` path naming the wake's voyage run record per the Transient output policy.
  - `## Dependencies`: the dependency `policy` and one `dependency` line per selected or installed name. Recording routes with installation: the fitting role writes a line for each dependency the fit installs, the runner and the quality tooling included, so `none` stands only where nothing is installed.
-@@ -75,13 +117,102 @@
+@@ -75,13 +115,102 @@
  
  ### Derivation notes
  
@@ -868,7 +996,7 @@
  
  #### Tiers and weather
  
-@@ -98,25 +229,34 @@
+@@ -98,25 +227,34 @@
  #### Gates and coverage
  
  - Quality gates: derive `lint` and `typecheck` from the tooling the project already runs, and record a gap for the Captain where the project runs none, naming stack-native candidates in the gap, such as biome or eslint for lint and tsc for typecheck on a TypeScript stack, so Captain's resolution proposes rather than asks. Prefer tooling native to the project's stack; a gate imported from another ecosystem for its popularity is weight, not fit. Name the command; the project owns the tool.
@@ -909,12 +1037,12 @@
  1. Load the `shipshape` skill (`shipshape:shipshape` under the plugin channel).
  2. **Retrieve the rigging and the deck. One pass.** Nothing here depends on anything else here:
  
-@@ -124,25 +264,25 @@
+@@ -124,25 +262,25 @@
     cat RIGGING.md && cat AGENTS.md && git status
     ```
  
 -   `RIGGING.md` carries the project tooling values and `AGENTS.md` any project-specific agent rules. The tree state settles the harbour-entry guard per Harbour custody; verify it from this output. If `RIGGING.md` or `AGENTS.md` is absent, fit out first. See Fitting out. If fitted, refit: verify `RIGGING.md` carries every current command and value slot, explicitly `none` where a value is underivable, and verify every fitting-out-derived artifact exists, including the search exclusion. Refit re-derives `RIGGING.md` to the current shape from the repository; a slot from a superseded shape is dropped, not preserved. Derive what is missing. Raise a Captain blocker for anything underivable. Settle the derived command values in the same pass, by the same test the dependency policy gets: a value weaker than the stack now supports is drift Shipwright re-derives here, and a value judged current by eye is unchecked. Read what the stack supports from the project's own manifest and toolchain rather than from the value already written. `plank-inventory` standing at the token-search fallback where a docblock reader or a parser-backed checker is installable is that drift, and on TypeScript it is the case the Check tooling clause warns yields a false clean; where the fallback genuinely stands, the verification-conformance rule set carries the two plank rules that clause obligates, so a rule set missing them is incomplete rather than absent, and `conformance: none` beside a token-search inventory is a contradiction this pass resolves. Settle the dependency policy in the same pass: installation and upgrade are Shipwright's at harbour as at fitting out, per the Rigging read contract, so a version the policy holds behind current stable is drift Shipwright upgrades here, and a dependency recorded under `## Dependencies` but not installed is installed here. Ask the package manager which installed versions are behind, through its own outdated report, and read the answer from that output: an uninstalled dependency announces itself, because the code that needs it fails to resolve, while a held version is silent and shows up in no failure, so it is found only by asking. A version judged current by eye is unchecked. Neither needs a failing target, which is why neither has a Crew route. An upgrade a spec or a `locked` policy pins is a Captain blocker, not a harbour edit; so is a major-version move whose breakage the harbour regression cannot settle alone. Every upgrade is proven by step 4's full regression before harbour ends.
-+   `RIGGING.md` carries the project tooling values and `AGENTS.md` any project-specific agent rules. The tree state settles the harbour-entry guard per Harbour custody; verify it from this output. If `RIGGING.md` or `AGENTS.md` is absent, fit out first. See Fitting out. If fitted, refit: verify `RIGGING.md` carries every current command, method, and value slot, explicitly `none` where a value is underivable, prove the commands and methods still execute through the `rigging-proof` method in one invocation per the Methods section, and verify every fitting-out-derived artifact exists, including the search exclusion. Refit re-derives `RIGGING.md` to the current shape from the repository; a slot from a superseded shape is dropped, not preserved. Derive what is missing. Raise a Captain blocker for anything underivable. Settle the derived command values in the same pass, by the same test the dependency policy gets: a value weaker than the stack now supports is drift Shipwright re-derives here, and a value judged current by eye is unchecked. Read what the stack supports from the project's own manifest and toolchain rather than from the value already written. a plank join standing at the token-search fallback where a docblock reader or a parser-backed checker is installable is that drift, and on TypeScript it is the case the Check tooling clause warns yields a false clean; where the fallback genuinely stands, the verification-conformance rule set carries the two plank rules that clause obligates, so a rule set missing them is incomplete rather than absent, and `conformance: none` beside a token-search inventory is a contradiction this pass resolves. Settle the dependency policy in the same pass: installation and upgrade are Shipwright's at harbour as at fitting out, per the Rigging read contract, so a version the policy holds behind current stable is drift Shipwright upgrades here, and a dependency recorded under `## Dependencies` but not installed is installed here. Ask the package manager which installed versions are behind, through its own outdated report, and read the answer from that output: an uninstalled dependency announces itself, because the code that needs it fails to resolve, while a held version is silent and shows up in no failure, so it is found only by asking. A version judged current by eye is unchecked. Neither needs a failing target, which is why neither has a Crew route. An upgrade a spec or a `locked` policy pins is a Captain blocker, not a harbour edit; so is a major-version move whose breakage the harbour regression cannot settle alone. Every upgrade is proven by step 4's full regression before harbour ends.
++   `RIGGING.md` carries the project tooling values and `AGENTS.md` any project-specific agent rules. The tree state settles the harbour-entry guard per Harbour custody; verify it from this output. If `RIGGING.md` or `AGENTS.md` is absent, fit out first. See Fitting out. If fitted, refit: verify `RIGGING.md` carries every current method and value slot, explicitly `none` where a value is underivable, prove each method still executes by running it per the Refit contract, and verify every fitting-out-derived artifact exists, including the search exclusion. Refit re-derives `RIGGING.md` to the current shape from the repository; a slot from a superseded shape is dropped, not preserved. Derive what is missing. Raise a Captain blocker for anything underivable. Settle the derived method values in the same pass, by the same test the dependency policy gets: a value weaker than the stack now supports is drift Shipwright re-derives here, and a value judged current by eye is unchecked. Read what the stack supports from the project's own manifest and toolchain rather than from the value already written. a plank join standing at the token-search fallback where a docblock reader or a parser-backed checker is installable is that drift, and on TypeScript it is the case the Check tooling clause warns yields a false clean; where the fallback genuinely stands, the verification-conformance rule set carries the two plank rules that clause obligates, so a rule set missing them is incomplete rather than absent, and `conformance: none` beside a token-search inventory is a contradiction this pass resolves. Settle the dependency policy in the same pass: installation and upgrade are Shipwright's at harbour as at fitting out, per the Rigging read contract, so a version the policy holds behind current stable is drift Shipwright upgrades here, and a dependency recorded under `## Dependencies` but not installed is installed here. Ask the package manager which installed versions are behind, through its own outdated report, and read the answer from that output: an uninstalled dependency announces itself, because the code that needs it fails to resolve, while a held version is silent and shows up in no failure, so it is found only by asking. A version judged current by eye is unchecked. Neither needs a failing target, which is why neither has a Crew route. An upgrade a spec or a `locked` policy pins is a Captain blocker, not a harbour edit; so is a major-version move whose breakage the harbour regression cannot settle alone. Every upgrade is proven by step 4's full regression before harbour ends.
  3. Identify scope: the Captain-assigned module or directory, or the implementation directories from `RIGGING.md` when onboarding. Assets are never planked and get no `@captain` scenarios about their content. Generated and vendored code inside implementation directories is out of scope; note it in the report. A mostly-content project yields a small implementation surface and a short plank inventory; that is a finding, not a failure.
 -4. Run harbour's one full regression. Run every configured tier, cheapest tier first, each tier by its tier tag from `RIGGING.md`, through the `coverage` command rather than a separate plain test command. Compose the tier tag with the tag exclusions, for example `--tags "@sandbox and not @captain and not @shipwright"`. Report an authentication failure as a Captain blocker naming fitting out incomplete. One invocation per tier yields three outputs: the red list, harbour's census of current failures, reported to Captain; per-file and per-line coverage for triage, composed across every configured tier so a module covered only by an opt-in tier reads as covered; and per-scenario duration recorded into the wake as yesterday's weather per the Verification agreement, feeding the verification-economy audit in step 7. If `RIGGING.md` defines no coverage command, infer one from the project stack; when the stack has a coverage tool but none is configured, block to Captain as a configuration blocker; when no test suite exists at all, treat every module as zero-covered per Discovery tools and continue. Use the coverage output to prioritize: 100%-covered files with no `@planks(...)` annotations need only backfill, partially-covered files need backfill plus `@captain` gaps, 0%-covered files need full `@captain` scenarios when reachable, per the unreachable-code criterion in step 7.
 -5. Map covered code to step definitions. For each covered production file, find which step definitions import or reference it. Read those step definitions and take each one's pattern string as the plank text, per the Planking agreement's Form; it is the same string `step-usage` reports. A plank copying a concrete step line instead duplicates that join and drifts with every data edit. Save this mapping for the planking step. If multiple step definitions reference the same file, the file may carry Planks for multiple steps.
@@ -942,7 +1070,7 @@
  11. Refresh the golden captures. Harbour is the cadence the Verification agreement names, and a canned response stands only while it still matches what the real dependency returns. For each `@exceptional-double` justified as a golden capture, re-record the response from the real dependency and compare it against the stored capture: a capture that still matches is refreshed by that act, and one that differs is drift, so restore the capture from the recording and report any scenario whose expectation the new response changes. A capture is not judged current by its age or by eye, per the check-precedence rule: it is judged by the recording. Where the real dependency cannot be reached at harbour, report it as a Captain blocker naming the double, because an unrefreshable capture is a fake by the same agreement's terms.
  12. Complete the full inventory. Do not stop until every module in scope has been analysed and all `@shipwright`-condemned scenarios and code have been processed.
  13. Confirm harbour left nothing unproven. Planks and `@captain` skeletons change nothing executable and need no rerun. Condemnation batches carry their scoped proofs from step 10, which stand as the proof for the removals that followed step 4. Step 4's full regression is harbour's one full-suite run, and the only full regression Shipshape runs; do not rerun it.
-@@ -156,6 +296,7 @@
+@@ -156,6 +294,7 @@
  - modules analysed,
  - `@captain` scenarios written, total and by finding type,
  - the two required `@conformance` methodology skeletons, each named with its feature file and scenario, watchbill-shape conformance and perturbation-quiescence, both owed on every fitting-out,
