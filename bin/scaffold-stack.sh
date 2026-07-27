@@ -17,7 +17,8 @@ case "$STACK" in
   ts) SRC="$HERE/fixtures/tidewatch-ts";;
   py) SRC="$HERE/fixtures/tidewatch-py";;
   rs) SRC="$HERE/fixtures/tidewatch-rs";;
-  *) echo "scaffold-stack.sh: unknown stack '$STACK' (js|ts|py|rs)" >&2; exit 2;;
+  go) SRC="$HERE/fixtures/tidewatch-go";;
+  *) echo "scaffold-stack.sh: unknown stack '$STACK' (js|ts|py|rs|go)" >&2; exit 2;;
 esac
 [ -d "$SRC" ] || { echo "scaffold-stack.sh: fixture missing at $SRC" >&2; exit 2; }
 
@@ -48,6 +49,12 @@ case "$STACK" in
     rm -rf target
     cargo test >/dev/null 2>&1 || { echo "SCAFFOLD(rs): cargo test not green"; exit 1; }
     rm -rf target
+    ;;
+  go)
+    # Modules resolve from the SHARED read-only cache under /opt, which the leg gets by
+    # --setenv (see eval-leg.sh). Nothing is vendored: no third-party code lives in the fixture.
+    GOMODCACHE=/opt/gotools/pkg/mod GOFLAGS=-mod=mod go test ./... >/dev/null 2>&1 \
+      || { echo "SCAFFOLD(go): go test not green"; exit 1; }
     ;;
   py)
     # A venv is built HERE, at scaffold time and at the sim's own absolute path, because a venv

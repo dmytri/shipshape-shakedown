@@ -4820,6 +4820,11 @@ main tracks origin.)
 
 ## Standing decisions (dk's; do not revisit without the named change)
 
+- NEVER vendor third-party code without dk's explicit approval (2026-07-27): no
+  `vendor/` directory in a fixture, a sim or the harness. Dependencies reach a leg the
+  way the other stacks already do it - a shared read-only cache bound into the sim and
+  named in the leg's --setenv list, as node_modules and the cargo registry are.
+
 - Standards adopt WHOLE, never modified or adapted (2026-07-18): an adapted
   standard defeats the purpose - a standard is an anchor at file granularity and
   a house variant activates nothing. Conflicts with our articles resolve by

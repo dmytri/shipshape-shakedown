@@ -137,7 +137,11 @@ PI_ARGS=(-p "$TASK" --provider "$PROVIDER" --model "$MODEL" --approve --mode jso
          --session-dir "$SESSDIR")
 ENVV=(HOME="$FAKEHOME" XDG_CONFIG_HOME="$FAKEHOME/.config"
       XDG_DATA_HOME="$FAKEHOME/.local/share" XDG_CACHE_HOME="$FAKEHOME/.cache"
-      TMPDIR="$FAKEHOME/tmp" PATH="$PATH" OPENROUTER_API_KEY="$OPENROUTER_API_KEY")
+      TMPDIR="$FAKEHOME/tmp" PATH="$PATH" OPENROUTER_API_KEY="$OPENROUTER_API_KEY"
+      # Go resolves modules from a SHARED read-only cache under /opt (already --ro-bind-try'd),
+      # the analogue of the shared node_modules and the cargo registry. Nothing is vendored
+      # (dk, 2026-07-27), and a leg's build cache stays in its own XDG_CACHE_HOME.
+      GOMODCACHE="/opt/gotools/pkg/mod" GOFLAGS="-mod=mod")
 set +e
 if command -v bwrap >/dev/null 2>&1; then
   # MINIMAL read exposure (dk 2026-07-23). NOT `--ro-bind / /`: that left the ENTIRE VM

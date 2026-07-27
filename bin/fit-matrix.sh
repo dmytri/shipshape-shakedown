@@ -10,7 +10,7 @@
 set -uo pipefail
 HERE="$(cd "$(dirname "$0")/.." && pwd)"
 TAG="${1:?usage: fit-matrix.sh <tag> <model-alias>...}"; shift
-STACKS="js,ts,py,rs"
+STACKS="js,ts,py,rs,go"
 MODELS=()
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -30,6 +30,7 @@ launch() {
   local st="$1" m="$2" w="M-$TAG-$st-$m" to=1800
   [ "$m" = "hy3" ] && to=2700
   [ "$st" = "rs" ] && to=$((to + 900))
+  [ "$st" = "go" ] && to=$((to + 300))
   setsid bash -c "$HERE/bin/meth-fitout.sh --wave $w --stack $st --model $(alias_of "$m") --skills-dir $HERE/experiments/methods-candidate/skills --timeout-s $to" \
     > "$HERE/.eval-scratch/$w.nohup" 2>&1 &
   disown

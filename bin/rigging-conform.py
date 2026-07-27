@@ -27,7 +27,11 @@ SOFT_FAIL = re.compile(r"--no-strict\b|--exit-zero\b|--no-exit-code\b|\|\|\s*tru
 def _excludes(cmd):
     """The tag exclusions, however this runner spells them: cucumber tags, pytest markers, or a
     CUCUMBER_FILTER_TAGS environment value."""
-    return ("not @captain" in cmd) or ("not captain" in cmd) or ("CUCUMBER_FILTER_TAGS" in cmd)
+    # godog spells an exclusion `~@tag`, joined with `&&`, and rejects the Cucumber expression
+    # outright: `--godog.tags="not @captain and not @shipwright"` selects NOTHING (verified
+    # against godog 0.15.1), so a Go fit using its own syntax is conformant, not divergent.
+    return (("not @captain" in cmd) or ("not captain" in cmd) or ("CUCUMBER_FILTER_TAGS" in cmd)
+            or ("~@captain" in cmd))
 
 
 def section(text, name):

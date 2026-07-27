@@ -31,43 +31,32 @@ EXPECT = {
     # A token may be a tuple: any one of it satisfies the method. cargo-llvm-cov and cargo-machete are
     # not installable in this sim, and doctrine's answer for an uninstallable tool is `none` plus a
     # named gap - so `none` counts here exactly as the tool would.
+    "go": {"prove": ["go test", "SS_SCENARIO", "not @captain"], "hygiene": [("staticcheck", "golangci-lint"), "go vet"],
+           "regression": ["-cover"], "dead-code": [("deadcode", "staticcheck")], "spec-lint": ["gplint"],
+           "install": ["go get", "SS_DEPENDENCY"], "discovery": [("--dry-run", "-run", "godog"), "not @captain"]},
     "rs": {"prove": ["cargo test", "SS_SCENARIO", "CUCUMBER_FILTER_TAGS"], "hygiene": ["cargo check", "clippy"],
-           "regression": [("llvm-cov", "tarpaulin", "none")], "dead-code": [("machete", "udeps", "none")],
+           "regression": [("llvm-cov", "tarpaulin")], "dead-code": [("machete", "udeps")],
            "spec-lint": ["gplint"], "install": ["SS_DEPENDENCY"],
            "discovery": [("dry-run", "--collect-only"), "CUCUMBER_FILTER_TAGS"]},
 }
 
 
 def entries(sim):
-    """Every ss: entry body this sim registered, whatever runner holds them."""
+    """Every method value this sim's rigging carries.
+
+    Methods live in RIGGING.md itself (dk, 2026-07-27): the value IS the plan, so there is one list
+    and no runner file to reconcile. A rigging in the superseded registered shape still parses here,
+    and its short value simply fails the tool-token check, which is what a refit should report.
+    """
     out = {}
-    pkg = os.path.join(sim, "package.json")
-    if os.path.exists(pkg):
-        try:
-            for k, v in json.load(open(pkg)).get("scripts", {}).items():
-                if k.startswith("ss:"):
-                    out[k[3:]] = v
-        except Exception:
-            pass
-    pp = os.path.join(sim, "pyproject.toml")
-    if os.path.exists(pp):
-        t = open(pp, errors="replace").read()
-        for m in re.finditer(r'"ss:([\w-]+)"\s*=\s*(?:\{[^}]*?(?:shell|cmd)\s*=\s*)?(\'\'\'|"""|"|\')((?:\\.|(?!\2).)*)\2', t, re.S):
-            out[m.group(1)] = m.group(3)
-    cg = os.path.join(sim, ".cargo/config.toml")
-    if os.path.exists(cg):
-        for m in re.finditer(r'ss-([\w-]+)\s*=\s*"(.*?)"\s*$', open(cg, errors="replace").read(), re.M):
-            out[m.group(1)] = m.group(2)
-    mk = os.path.join(sim, "Makefile")
-    if os.path.exists(mk):
-        t = open(mk, errors="replace").read()
-        for m in re.finditer(r"^ss-([\w-]+):[^\n]*\n((?:\t.*\n)+)", t, re.M):
-            out.setdefault(m.group(1), m.group(2))
-    jf = os.path.join(sim, "justfile")
-    if os.path.exists(jf):
-        t = open(jf, errors="replace").read()
-        for m in re.finditer(r"^ss-([\w-]+):\n((?:\s+.*\n)+)", t, re.M):
-            out[m.group(1)] = m.group(2)
+    rig = os.path.join(sim, "RIGGING.md")
+    if not os.path.exists(rig):
+        return out
+    block = re.search(r"^## Methods\s*\n(.*?)(?=^## |\Z)", open(rig, errors="replace").read(), re.S | re.M)
+    if not block:
+        return out
+    for m in re.finditer(r"^- ([a-z][\w-]*):\s*(.+?)\s*$", block.group(1), re.M):
+        out[m.group(1)] = m.group(2).strip().strip("`")
     return out
 
 
