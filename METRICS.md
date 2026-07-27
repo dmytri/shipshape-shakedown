@@ -1,5 +1,47 @@
 # Metrics: how to read a shakedown
 
+## r22, 2026-07-27 (flash, 5 stacks) — **5/5 PASS**, the first clean full round, on doctrine that got SMALLER
+
+| round | js | ts | py | rs | go | note |
+|---|---|---|---|---|---|---|
+| r20 | PASS | PASS | PASS | unknown | PASS | rs killed mid-edit by the 402 |
+| r21 | - | - | **PASS** | 5 viol | - | rs was scored 5 violations for being RIGHT (see below) |
+| r22 | **PASS** | **PASS** | **PASS** | **PASS** | **PASS** | 0 violations, 12/12 methods run, on the deleted-route text |
+
+Fidelity 8/8 on four stacks; ts 7/8 (`prove` without `tsx`, and it runs — reported, never gated).
+Legs 433-646s. Banked `data/methods-candidate/r21-r22/`.
+
+**r21 answered the primed rs question, and the answer was that the question was aimed at the wrong
+party.** py PASSED and became **the first stack ever to copy the rule files** — 2 `templates.md`
+reads, 5 ast-grep calls, `planks.yml` and `steps.yml` written — and it **still** wrote a 9.2K
+`plank_join.py` and pointed the method at the script. rs **never opened `templates.md` at all** (0
+tool-call mentions), unlike r20 where it opened it six times looking for rules that were not yet
+there. Across r20+r21 that is **6 of 7 legs never taking the route**, and the one that took it
+gaining a second artifact and nothing else.
+
+**rs's 5 violations were the doctrine being wrong, not the model.** The leg tested the Rust column
+and reasoned in the open; the operator then verified every claim directly against cucumber 0.21.1
+rather than trusting the report: **`--tags` and `--name` together exit 2**, **`CUCUMBER_FILTER_TAGS`
+is ignored entirely** (an impossible tag still ran every scenario), and **there is no `--dry-run`**.
+Three factual errors in one column, each scored against the leg that found them. This is the
+"probe the role that does not fail" rider inverted: the role that "failed" was the instrument's
+only witness that the text was false.
+
+**The fix went DOWN in size, on dk's call — "simpler is better, less doctrine is better" — with one
+rider: "tell the agent why, so it understands the spirit of the law."** Deleted: both rule files
+(~50 lines of `templates.md`), the deltas row, step 4's copy clause, the take-that-route-first
+sentence. What replaced them is the REASON — the join is a fact about the code that no runner
+reports, so nothing else in the rigging can carry it, and Shipwright writes the checker in whatever
+the stack reads most cheapest. Likewise the exclusions rule now states its purpose (no unpromoted or
+condemned scenario reaches a verifying result), so the cucumber-rs limit **follows from** the rule
+instead of being an exception bolted onto it. **r22 is the test of that text and it is 5/5.**
+
+**Open observation, not a finding: rs and go both wrote `plank-join.mjs`** — a JavaScript checker in
+a Rust project and a Go one. Doctrine's own statement that Shipshape runs on Node and npx is on every
+stack makes it legal, and it runs; but a cheap model defaults to the language it is most fluent in,
+not the project's. Worth watching on mimo/hy3 before deciding whether the stack-native checker is
+worth a sentence.
+
 ## MODEL-FREE AUDIT, 2026-07-27 — the untested templates.md fix could not have passed, and five defects were provable from the artifact
 
 **Ran before spending the top-up, on the standing `/shakedown` entry: doctrine had not moved since

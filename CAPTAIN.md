@@ -1,7 +1,43 @@
 # Captain notes - shipshape-shakedown workstream
 
 <!-- ============================================================================= -->
-## >>> NEXT SESSION - PRIME (2026-07-27): 4/4 stacks that ran are clean on flash; TEST rs FIRST, then 3 models, then pilot <<<
+## >>> NEXT SESSION - PRIME (2026-07-27, later): 5/5 stacks clean on flash. Next is mimo + hy3, then the pilot <<<
+
+**State.** rs is answered and the whole matrix is green: **r22 = 5/5 PASS on flash**, 0 violations,
+12/12 methods running, fidelity 8/8 on four stacks (ts 7/8, `prove` without `tsx`, and it runs).
+Banked `data/methods-candidate/r21-r22/`. Credits topped up (~$25 at handoff).
+
+**What moved, and it made doctrine smaller.** The ast-grep route is GONE - both rule files, the
+deltas row, step 4's copy clause, the take-that-route-first sentence. Evidence: 6 of 7 legs across
+r20+r21 never took it, and py, the one that did, still wrote its own checker anyway. On dk's rider
+("tell the agent why, so it understands the spirit of the law") the replacement is the REASON rather
+than a rule: the join is a fact about the code that no runner reports, so nothing else in the rigging
+can carry it. Same treatment for the tag exclusions - the purpose is stated (no unpromoted or
+condemned scenario reaches a verifying result) and the cucumber-rs limit follows from it.
+
+**The Rust column was wrong three times, verified against cucumber 0.21.1 directly, and rs was scored
+5 violations for refusing it:** `--tags` + `--name` exit 2, `CUCUMBER_FILTER_TAGS` is ignored, there
+is no `--dry-run`. All three fixed with their reasons. Instrument fixed with them: `rigging-conform`
+no longer credits the no-op env var and accepts name-selecting or compile-only parts;
+`example-fidelity` gained the `plank-join` dimension it never had, which is how r20 read 7/7 while
+every leg ignored the route. `bin/provision-toolkits.sh` now installs ast-grep (it never did).
+
+**Next, in order.**
+1. **`bin/fit-matrix.sh r23 mimo hy3`** - dk's bar is all three models at 100%. flash is the cheap
+   canary and it is clean, so this is the real gate.
+2. Prime a fresh session for the **2-model TodoMVC pilot**.
+3. Watch on mimo/hy3, do not fix yet: **rs and go both wrote `plank-join.mjs`**, a JavaScript checker
+   in a Rust and a Go project. Doctrine makes it legal (npx is on every stack) and it runs, but a
+   cheap model defaults to the language it knows best, not the project's. Decide after more draws
+   whether a stack-native checker is worth a sentence.
+
+**Method note worth keeping: a fix aimed at a tool must be RUN once before it ships.** This morning's
+templates.md fix shipped unexecuted and could not have passed - the mandated `npx @ast-grep/cli`
+cannot resolve an executable at all, the step rules did not LOAD on rust or go, and neither rule
+could exit non-zero. Four defects, each one executed command away from visible.
+
+<!-- ============================================================================= -->
+## >>> SUPERSEDED PRIME (2026-07-27, morning): 4/4 stacks that ran are clean on flash; TEST rs FIRST, then 3 models, then pilot <<<
 
 **State.** The methods candidate lives at `experiments/methods-candidate/skills` (gitignored;
 the readable artifact is `data/methods-candidate/candidate-v3-diff.txt`). Doctrine is **-1.1%**
