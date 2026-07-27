@@ -784,7 +784,7 @@
 +- commit hash, or why no commit,
 +- next role/blocker.
 # shipwright: --- experiments/yoink-settle/skills/shipwright/SKILL.md	2026-07-25 13:45:47.464641515 +0000
-# shipwright: +++ experiments/methods-candidate/skills/shipwright/SKILL.md	2026-07-27 09:34:29.538093920 +0000
+# shipwright: +++ experiments/methods-candidate/skills/shipwright/SKILL.md	2026-07-27 09:35:39.658997173 +0000
 @@ -36,38 +36,78 @@
  
  ## Discovery tools
@@ -887,7 +887,7 @@
  - `## Perturbation`: the stable `message` and project-specific `perturb` statement. The `message` MUST contain the literal token `PERTURBATION` so a role can detect a live perturbation in the tree.
  - `## Tiers`: the `default` tier tag, any `sandbox` tier tag, one `policy` line per tier naming that tier's credential source or provisioning policy, such as the custodian CLI or the variable name, never a secret value or a check command, an optional `budget` wall-clock ceiling for the full regression with tier-suffixed variants such as `budget-sandbox` per tier, enforced by the derived budget check under Methodology checks, an optional `weather` path naming the wake's weather record so the next run finds it, and an optional `runrecord` path naming the wake's voyage run record per the Transient output policy.
  - `## Dependencies`: the dependency `policy` and one `dependency` line per selected or installed name. Recording routes with installation: the fitting role writes a line for each dependency the fit installs, the runner and the quality tooling included, so `none` stands only where nothing is installed.
-@@ -75,13 +115,102 @@
+@@ -75,13 +115,104 @@
  
  ### Derivation notes
  
@@ -933,9 +933,11 @@
 +join, a mapping of step pattern to declaration to scenarios, exiting non-zero where a
 +behaviour-bearing seam has no plank, a plank matches no pattern, or a provisional plank names a
 +scenario that lost its `@captain` tag. Where the stack's structural engine expresses that join, it is
-+a rule set that engine runs; where none does, Shipwright writes that checker while fitting out, as
-+verification support the join method runs. It is the one checker Shipwright authors, and it exists
-+because the join is a fact about the code rather than a behaviour a scenario can observe. That checker is the tool doing real work, which
++a rule set that engine runs, and `templates.md` carries those rules ready to copy: take that route
++first, on every stack ast-grep reads. Where no structural engine reads this stack, Shipwright writes
++the checker while fitting out, as verification support the join method runs. It is the one checker
++Shipwright authors, and it exists because the join is a fact about the code rather than a behaviour a
++scenario can observe. That checker is the tool doing real work, which
 +is what separates it from a wrapper: a plan's other parts each invoke a tool the project already
 +runs, and a part that shells to a script written only to hide a method's own commands is the shape to
 +avoid. And each part returns the tool's own exit code, so a gate can fail.
@@ -986,7 +988,7 @@
 +tool for a job keeps its own; a tool this environment cannot install is a gap for Captain and `none`
 +in its method, named in the report.
 +
-+**4. Copy the rule files from `templates.md`**: the Gherkin lint rule file to `.gplintrc`, adding this
++**4. Copy the rule files from `templates.md` verbatim**: the Gherkin lint rule file to `.gplintrc`, adding this
 +project's tier tags to `allowed-tags`, and the plank and step queries where this stack reads them with
 +a structural engine.
 +
@@ -996,7 +998,7 @@
  
  #### Tiers and weather
  
-@@ -98,25 +227,34 @@
+@@ -98,25 +229,34 @@
  #### Gates and coverage
  
  - Quality gates: derive `lint` and `typecheck` from the tooling the project already runs, and record a gap for the Captain where the project runs none, naming stack-native candidates in the gap, such as biome or eslint for lint and tsc for typecheck on a TypeScript stack, so Captain's resolution proposes rather than asks. Prefer tooling native to the project's stack; a gate imported from another ecosystem for its popularity is weight, not fit. Name the command; the project owns the tool.
@@ -1037,7 +1039,7 @@
  1. Load the `shipshape` skill (`shipshape:shipshape` under the plugin channel).
  2. **Retrieve the rigging and the deck. One pass.** Nothing here depends on anything else here:
  
-@@ -124,25 +262,25 @@
+@@ -124,25 +264,25 @@
     cat RIGGING.md && cat AGENTS.md && git status
     ```
  
@@ -1070,7 +1072,7 @@
  11. Refresh the golden captures. Harbour is the cadence the Verification agreement names, and a canned response stands only while it still matches what the real dependency returns. For each `@exceptional-double` justified as a golden capture, re-record the response from the real dependency and compare it against the stored capture: a capture that still matches is refreshed by that act, and one that differs is drift, so restore the capture from the recording and report any scenario whose expectation the new response changes. A capture is not judged current by its age or by eye, per the check-precedence rule: it is judged by the recording. Where the real dependency cannot be reached at harbour, report it as a Captain blocker naming the double, because an unrefreshable capture is a fake by the same agreement's terms.
  12. Complete the full inventory. Do not stop until every module in scope has been analysed and all `@shipwright`-condemned scenarios and code have been processed.
  13. Confirm harbour left nothing unproven. Planks and `@captain` skeletons change nothing executable and need no rerun. Condemnation batches carry their scoped proofs from step 10, which stand as the proof for the removals that followed step 4. Step 4's full regression is harbour's one full-suite run, and the only full regression Shipshape runs; do not rerun it.
-@@ -156,6 +294,7 @@
+@@ -156,6 +296,7 @@
  - modules analysed,
  - `@captain` scenarios written, total and by finding type,
  - the two required `@conformance` methodology skeletons, each named with its feature file and scenario, watchbill-shape conformance and perturbation-quiescence, both owed on every fitting-out,
@@ -1079,7 +1081,7 @@
  - policy violations found by category,
  - verification-economy findings, scenario and lens,
 --- experiments/yoink-settle/skills/shipwright/templates.md	2026-07-23 19:59:25.231544194 +0000
-+++ experiments/methods-candidate/skills/shipwright/templates.md	2026-07-27 08:03:49.106719335 +0000
++++ experiments/methods-candidate/skills/shipwright/templates.md	2026-07-27 09:40:52.851057274 +0000
 @@ -26,17 +26,22 @@
  - assets: <one path per line, or none>
  - scantlings: <machine-readable contract files in place, one path per line, or none>
@@ -1113,7 +1115,7 @@
  
  ## Perturbation
  
-@@ -108,3 +113,126 @@
+@@ -108,3 +113,161 @@
  
  This repository uses [Shipshape](https://github.com/dmytri/shipshape), a context-isolated spec-driven workflow for coding agents. Install with `npx skills add dmytri/shipshape --skill '*'`, or the experimental open-plugin build with `npx plugins add dmytri/shipshape`.
  ````
@@ -1240,3 +1242,38 @@
 +  "use-and": "error"
 +}
 +```
++
++## Plank and step rule files
++
++The `plank-join` method reads planks and step definitions with a structural engine wherever one reads
++this stack, and ast-grep reads all five of these. Write these two rules to `.shipshape/planks.yml` and
++`.shipshape/steps.yml`, setting `language` and the comment kind to this project's. Copying these is
++the route to take before writing any checker of your own.
++
++```yaml
++# .shipshape/planks.yml - every plank annotation
++id: planks
++language: javascript      # typescript | python | rust | go
++kind_note: "kind is `comment` for javascript, typescript and python; `line_comment` for rust and go"
++rule:
++  kind: comment
++  regex: "@planks"
++```
++
++```yaml
++# .shipshape/steps.yml - every step definition this project declares
++id: step-usage
++language: javascript      # typescript | python | rust | go
++rule:
++  any:
++    - pattern: 'Given($$$)'
++    - pattern: 'When($$$)'
++    - pattern: 'Then($$$)'
++    - pattern: '@given($$$)'    # python decorators
++    - pattern: '@when($$$)'
++    - pattern: '@then($$$)'
++```
++
++Run them with the `ast-grep` binary this project already has, as `ast-grep scan --rule
++.shipshape/planks.yml`. Reach it through `npx @ast-grep/cli`, which is the package that carries it.
++The join is then a set comparison between the two outputs, and the `plank-join` method carries it.
