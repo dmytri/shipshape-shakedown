@@ -71,11 +71,23 @@ run_leg() {
     echo "eval-voyage[$WAVE/$V]: leg $name INFRA/VOID (overlay-mount/no session) — aborting voyage" >&2; exit 6
   fi
   # provider-error guard (if/fi form — the &&-idiom trips set -e when empty)
-  local perr; perr="$(python3 - "$out/pi.stdout" <<'PY'
+  # Read the RECORD, not the RENDER (2026-07-28). This guard used to parse pi.stdout, the raw
+  # json-mode stream: a single "line" there can be hundreds of MB, so `for l in open(...)`
+  # allocated one colossal string and the process reached ~13G and was OOM-killed — taking the
+  # whole voyage script with it, BEFORE the self-suite ran. Correlation was exact: OOM at
+  # 10:48:48 / 11:25:50 / 12:05:52, voyages V2 / V5 / V6 of P6-ctrl-cmimo ending ~43s later with
+  # "self-suite: ?", after which the next voyage's guard found a red suite and reverted — the
+  # 26->23 "regressions" in that cell are ours, not the doctrine's.
+  # session.jsonl carries stopReason per turn in ~500K and is the durable record anyway.
+  local sess; sess="$out/session.jsonl"
+  [ -f "$sess" ] || sess="$(ls "$out"/session/*.jsonl 2>/dev/null | head -1)"
+  local perr; perr="$(python3 - "${sess:-/dev/null}" <<'PY'
 import json,sys
 msg=""
 try:
-    for l in open(sys.argv[1],encoding="utf-8"):
+    for l in open(sys.argv[1],encoding="utf-8",errors="replace"):
+        l=l.strip()
+        if not l or len(l) > 8_000_000: continue     # never hold a pathological line
         try: e=json.loads(l)
         except Exception: continue
         m=e.get("message") or {}
