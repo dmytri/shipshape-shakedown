@@ -79,51 +79,28 @@ mkdir -p "$OUT"
 FAKEHOME="$OUT/home"; SESSDIR="$OUT/session"
 mkdir -p "$FAKEHOME/.config" "$FAKEHOME/.local/share" "$FAKEHOME/.cache" "$FAKEHOME/tmp" "$SESSDIR"
 
-# UNIFORM OUTPUT BUDGET (dk, 2026-07-28). pi takes `model.max_tokens ?? 4096` from provider
-# metadata, and OpenRouter does not expose that field the way pi reads it — so xiaomi/mimo-v2.5
-# and tencent/hy3 got 131072 while deepseek-v4-flash fell back to 4096. Every flash leg was
-# running on a 32x tighter budget than its peers, which is a per-model handicap no doctrine
-# caused: candidate Captain legs truncated 9/12 on flash and 0/12 elsewhere.
+# UNIFORM OUTPUT BUDGET (dk, 2026-07-28). pi takes `max_tokens ?? 4096` from provider metadata,
+# and OpenRouter does not expose that field the way pi reads it, so xiaomi/mimo-v2.5 and
+# tencent/hy3 ran at 131072 while deepseek-v4-flash fell back to 4096. Every flash leg ran on a
+# 32x tighter budget than its peers: candidate Captain legs truncated 9/12 on flash and 0/12
+# elsewhere. That is a per-model handicap no doctrine caused, and it makes cross-model numbers
+# meaningless.
 #
-# The fix is NOT to raise flash. A tight budget is a FORCING FUNCTION: it exposes work that
-# only completes by reasoning without bound, and it makes every arm comparable. Truncated
-# Captain turns were spending ~16k characters mentally simulating render() to explain a failure
-# their tier cannot reproduce — behaviour worth surfacing, not accommodating. So cap EVERY model
-# at the same budget and let doctrine that cannot act within it show itself.
-# 32768, chosen from measured peaks rather than taste (bin/peaks.py, 2026-07-28). Every
-# PRODUCTIVE peak observed sits under it — cand-mimo v3-captain 28,295 ending in a write,
-# ctrl-chy3 sw-final 31,665 ending in a bash run, cand-hy3 v2-qm 21,377 ending in reads — while
-# the one pathological peak sits above: ctrl-cmimo v5-qm burned its full 131,072 on 564,744
-# characters of thinking and emitted NO text and NO tool call. The cap does not cause that
-# pathology, it only changes how it appears: a tight budget turns rumination into truncation
-# (flash, 9 cut-off Captain legs), a generous one lets it finish as an expensive no-op. So the
-# budget is set to admit deliberation that ENDS IN AN ACTION and to cut deliberation that does
-# not, uniformly for every model.
-# Override per run with EVAL_MAX_TOKENS; set 0 to disable the seeding entirely.
+# Seeding models-store.json did NOT work: pi refetches at launch and ignores it (verified — the
+# seeded store read 32768 while the same leg was still cut off at exactly 4096). The mechanism pi
+# actually honours is models.json, which provider-composer.js merges over the fetched metadata:
+#   providers.<provider>.modelOverrides.<model>.maxTokens   ->  maxTokens: override.maxTokens ?? model.maxTokens
+#
+# 32768 comes from measured peaks (bin/peaks.py): every PRODUCTIVE peak sits under it — 28,295
+# ending in a write, 31,665 ending in a bash run, 21,377 ending in reads — while the one
+# pathological peak sits above, a QM leg that burned its full 131,072 budget on 564,744 characters
+# of thinking and emitted no text and no tool call at all. The budget admits deliberation that
+# ENDS IN AN ACTION and cuts deliberation that does not. Override with EVAL_MAX_TOKENS; 0 disables.
 EVAL_MAX_TOKENS="${EVAL_MAX_TOKENS:-32768}"
-if [ "$EVAL_MAX_TOKENS" != "0" ] && [ -f "$HOME/.pi/agent/models-store.json" ]; then
+if [ "$EVAL_MAX_TOKENS" != "0" ]; then
   mkdir -p "$FAKEHOME/.pi/agent"
-  python3 - "$HOME/.pi/agent/models-store.json" "$FAKEHOME/.pi/agent/models-store.json" \
-           "$EVAL_MAX_TOKENS" "$(date +%s%3N)" <<'PY' || true
-import json, sys
-src, dst, cap, now = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4])
-try:
-    store = json.load(open(src))
-except Exception:
-    sys.exit(0)
-for prov in store.values():
-    if isinstance(prov, dict):
-        for m in prov.get("models", []) or []:
-            # SET, do not min(). min() lowers a model above the cap but leaves a model BELOW it
-            # exactly as it was — which preserved the very handicap this exists to remove:
-            # deepseek-v4-flash stayed at 4096 while mimo and hy3 moved to 32768, and a matrix
-            # launched that way is not one experiment, it is two. Every model gets the SAME
-            # number. (2026-07-28, caught in preflight of the R1 matrix and the run restarted.)
-            if isinstance(m, dict) and m.get("maxTokens"):
-                m["maxTokens"] = cap
-        prov["checkedAt"] = now          # fresh, so pi does not refetch and overwrite the cap
-json.dump(store, open(dst, "w"))
-PY
+  printf '{\n  "providers": {\n    "%s": {\n      "modelOverrides": {\n        "%s": { "maxTokens": %s }\n      }\n    }\n  }\n}\n' \
+    "$PROVIDER" "$MODEL" "$EVAL_MAX_TOKENS" > "$FAKEHOME/.pi/agent/models.json"
 fi
 
 # The fixture's cucumber run-log ledger (features/support/runlog.js BeforeAll) writes
@@ -147,6 +124,15 @@ INSTR="$(dirname "$WORKSPACE")/.instrument"; mkdir -p "$INSTR"
 # Resolve the `skills` CLI robustly: the shared toolkit (stable — installed by the pilot/
 # batch scripts) first, then the npx cache (EPHEMERAL — evicted between runs, which broke a
 # whole batch 2026-07-25), then $SKILLS_BIN override.
+# The toolkit resolves ITSELF (2026-07-28). EVAL_SHARED_NM was required but only ever set by the
+# driver, so every ad-hoc call — probes, one-off legs, anything run by hand — died with an empty
+# SKILLS_BIN and exit 3, which reads like a broken leg and is really a forgotten variable. That
+# mundane failure ate several investigations today. Default it to the cockpit's own toolkit, which
+# is THE one fixture (dk); an explicit EVAL_SHARED_NM still wins.
+if [ -z "${EVAL_SHARED_NM:-}" ] && [ -d "$REPO_ROOT/.eval-scratch/.shared-nm/node_modules/@cucumber" ]; then
+  export EVAL_SHARED_NM="$REPO_ROOT/.eval-scratch/.shared-nm/node_modules"
+  echo "eval-leg[$NAME]: EVAL_SHARED_NM unset — defaulting to the cockpit toolkit" >&2
+fi
 SKILLS_BIN="${SKILLS_BIN:-}"
 [ -x "$SKILLS_BIN" ] || { [ -n "${EVAL_SHARED_NM:-}" ] && [ -x "$EVAL_SHARED_NM/.bin/skills" ] && SKILLS_BIN="$EVAL_SHARED_NM/.bin/skills"; }
 [ -x "$SKILLS_BIN" ] || SKILLS_BIN="$(ls "$HOME"/.npm/_npx/*/node_modules/.bin/skills 2>/dev/null | head -1)"
