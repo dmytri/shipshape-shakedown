@@ -104,7 +104,29 @@ class AppWorld {
     this.window.eval(appSource);
     this.document.dispatchEvent(new this.window.Event('DOMContentLoaded', { bubbles: true }));
     this.window.dispatchEvent(new this.window.Event('load'));
+
+    // ROUTING. happy-dom updates location.hash but NEVER fires hashchange — measured
+    // 2026-07-28, both by assignment and by clicking an in-page anchor. A TodoMVC router
+    // listens for hashchange, so without this the filter/back-button behaviour is
+    // UNREACHABLE in this tier: one wave spent seven correction voyages implementing filter
+    // links that nothing could ever drive, stuck at 22/29 the whole way. Route the two ways a
+    // real browser changes the hash, so routing is exercisable rather than merely present.
+    const w = this.window;
+    this.document.addEventListener('click', (e) => {
+      const a = e.target && e.target.closest ? e.target.closest('a[href^="#"]') : null;
+      if (!a) return;
+      const next = a.getAttribute('href');
+      if (w.location.hash !== next) { w.location.hash = next; w.dispatchEvent(new w.Event('hashchange')); }
+    }, true);
     return this.document;
+  }
+
+  // Drive the router the way a user's address bar does.
+  navigate(hash) {
+    if (!this.window) throw new Error('verification support: navigate() before the app was loaded');
+    if (this.window.location.hash === hash) return;
+    this.window.location.hash = hash;
+    this.window.dispatchEvent(new this.window.Event('hashchange'));
   }
 
   get localStorage() { return this.window.localStorage; }
