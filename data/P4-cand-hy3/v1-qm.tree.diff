@@ -1,0 +1,45 @@
+diff --git a/scratch_exp.js b/scratch_exp.js
+new file mode 100644
+index 0000000..9a82562
+--- /dev/null
++++ b/scratch_exp.js
+@@ -0,0 +1,39 @@
++const { Window } = require('happy-dom');
++function main(){
++  const win = new Window({ url: 'http://localhost/' });
++  win.document.body.innerHTML = '<input id="n" autofocus><ul class="list"><li class="x"><label>Taste</label><button class="d"></button></li></ul><section class="main">m</section><button class="clear">clear</button>';
++  const n = win.document.getElementById('n');
++  n.focus();
++  console.log('activeElement is n:', win.document.activeElement === n);
++  // location hash + event
++  win.location.hash = '#/active';
++  console.log('hash:', win.location.hash);
++  let got = false;
++  win.addEventListener('hashchange', ()=>{ got = true; });
++  win.dispatchEvent(new win.Event('hashchange'));
++  console.log('hashchange fired:', got);
++  // keyboard event
++  let key=null;
++  n.addEventListener('keydown', (e)=>{ key = e.key; });
++  n.dispatchEvent(new win.KeyboardEvent('keydown', { key:'Enter', keyCode:13, bubbles:true }));
++  console.log('key:', key);
++  // hidden attribute
++  const main = win.document.querySelector('.main');
++  main.hidden = true;
++  console.log('main.hidden:', main.hidden, 'hasAttr:', main.hasAttribute('hidden'));
++  // inline display computed
++  const d = win.document.querySelector('.d');
++  d.style.display = 'block';
++  console.log('computed display:', win.getComputedStyle(d).display);
++  // mouseenter
++  let hovered=false;
++  const li = win.document.querySelector('li.x');
++  li.addEventListener('mouseenter', ()=>{ hovered=true; });
++  li.dispatchEvent(new win.MouseEvent('mouseenter'));
++  console.log('mouseenter:', hovered);
++  // classList toggle
++  li.classList.add('hover');
++  console.log('has hover class:', li.classList.contains('hover'));
++  win.close();
++}
++main();

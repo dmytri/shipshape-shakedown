@@ -1,0 +1,20 @@
+# banked: 2026-07-27T17:15:04Z
+# leg: {  "name": "sw-fitout",  "model": "tencent/hy3",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/P5-cand-hy3/sim",  "timeout_s": 3600,  "skills": [    "/home/exedev/shipshape-shakedown/experiments/methods-candidate/skills/shipshape",    "/home/exedev/shipshape-shakedown/experiments/methods-candidate/skills/shipwright",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== sw-fitout.session.jsonl ===
+  turns=10  wall=215.3s  in=92033  out=19677  cache_read=319232  cost=$0.0355
+  role reads: shipwright@t0 -> shipshape@t0 -> shipwright@t3 -> shipshape@t3
+  roles loaded: shipshape, shipwright
+  ~ repeated tool signature at turns [6] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    2245/303        0 $0.0005  read, read, bash
+    t1   26501/688        0 $0.0041  bash, read
+    t2    1948/1178   26496 $0.0019  read, bash
+    t3   32371/2630       0 $0.0061  read, read
+    t4   11684/1939   32576 $0.0039  read, bash
+    t5    5140/3255   44160 $0.0042  bash
+    t6    4218/999    49280 $0.0029  bash
+    t7    1597/3460   53376 $0.0041  bash
+    t8    3641/2086   54912 $0.0036  bash
+    t9    2688/3139   58432 $0.0042  -

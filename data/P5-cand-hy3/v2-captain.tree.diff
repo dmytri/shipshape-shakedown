@@ -1,0 +1,106 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..c421617
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,37 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++## Intent for the next leg
++
++The external Cypress acceptance suite reports five real product defects that the
++in-harness happy-dom suite cannot reproduce, because happy-dom re-queries the
++DOM after each step while a real browser holds element references across an
++interaction. Both root causes are browser-only, so they are pinned here as
++source-level conformance checks (matching the project's existing
++`@captain @conformance` skeleton convention), not as behavioural scenarios.
++
++## Root cause and the two fixes the Crew must make
++
++1. Element identity lost on state change (Cypress failures 1-4: mark all as
++   complete, clear complete state of all, mark item complete, unmark item
++   complete). `js/app.js` `render()` reassigns `list.innerHTML`, discarding and
++   rebuilding every item `<li>` on each toggle. The fix is to mutate the
++   existing item element in place (toggle its `completed` class and checkbox,
++   reflect the mark-all control) instead of rebuilding the list, so the node
++   stays attached across the interaction. The two `item-element-identity`
++   scenarios pin the single-item and mark-all toggle paths.
++
++2. Editing shows the non-edit controls (Cypress failure 5: "should hide other
++   controls when editing"). `index.html` ships no stylesheet, so the
++   `.editing .view { display: none }` rule that hides the checkbox, label and
++   destroy button during editing is absent. The fix is to ship the TodoMVC
++   stylesheet (or an `app.css` override) that hides the non-edit controls while
++   an item carries `editing`. The `editing-hides-controls` scenario pins it.
++
++## Watchbill
++
++`watch1` targets the three conformance scenarios above. They are `@captain`
++skeletons: QM implements the named checks, which redden on the current code and
++green after the Crew fix. Do not remove the `@captain` tag until the check is
++implemented and green.
+diff --git a/features/conformance/editing-hides-controls.feature b/features/conformance/editing-hides-controls.feature
+new file mode 100644
+index 0000000..a196082
+--- /dev/null
++++ b/features/conformance/editing-hides-controls.feature
+@@ -0,0 +1,15 @@
++@captain @conformance
++Feature: Editing hides the non-edit controls
++
++  When a task enters editing mode the app adds the "editing" class to its item
++  element and the non-edit controls (the checkbox, label and destroy button
++  inside ".view") must become not visible. A real browser applies the
++  stylesheet rule that hides ".view" for an ".editing" item; without that rule
++  the controls stay visible and the editing assertion fails. The in-harness DOM
++  does not compute stylesheet visibility, so the product behaviour must be
++  pinned by a source-level check on the shipped stylesheets.
++
++  Scenario: Editing mode hides the non-edit controls
++    Given the implementation directories from RIGGING.md
++    When the editing-controls-hidden conformance check inspects the shipped stylesheets
++    Then an item in editing mode hides its non-edit controls through a stylesheet rule
+diff --git a/features/conformance/item-element-identity.feature b/features/conformance/item-element-identity.feature
+new file mode 100644
+index 0000000..02dcd3f
+--- /dev/null
++++ b/features/conformance/item-element-identity.feature
+@@ -0,0 +1,21 @@
++@captain @conformance
++Feature: Item element identity preservation
++
++  A real browser holds references to the item elements that the app has
++  rendered. When a task's completed state changes, the app must mutate the
++  existing item element in place: toggle its "completed" class and its
++  checkbox, and reflect the mark-all control, without discarding and rebuilding
++  the rendered item list. Rebuilding the list detaches every item element the
++  browser already references, so an interaction that spans the change fails
++  with a detached-from-DOM error. The in-harness DOM re-queries after each
++  step, so it cannot see this defect; only a source-level check can pin it.
++
++  Scenario: A single item toggle preserves the item element instance
++    Given the implementation directories from RIGGING.md
++    When the item-element-identity conformance check inspects the single-item toggle path
++    Then toggling one item preserves the item element instance the browser already references
++
++  Scenario: The mark-all toggle preserves every item element instance
++    Given the implementation directories from RIGGING.md
++    When the item-element-identity conformance check inspects the mark-all toggle path
++    Then toggling all items preserves every item element instance the browser already references
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..4a7eb16
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,9 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/conformance/item-element-identity.feature:A single item toggle preserves the item element instance",
++      "features/conformance/item-element-identity.feature:The mark-all toggle preserves every item element instance",
++      "features/conformance/editing-hides-controls.feature:Editing mode hides the non-edit controls"
++    ]
++  }
++}

@@ -1,0 +1,27 @@
+diff --git a/features/todos.feature b/features/todos.feature
+index a0b9f16..5f257a1 100644
+--- a/features/todos.feature
++++ b/features/todos.feature
+@@ -111,3 +111,8 @@ Feature: Todo management
+     And it has a "section.main" with a "ul.todo-list"
+     And it has a "footer.footer" with a "span.todo-count"
+     And it has a script element with src "js/app.js"
++
++  Scenario: App signals browser readiness
++    Given the project root contains a file "js/app.js"
++    When the file is read
++    Then the content assigns the global "appHasStarted" to a truthy value
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..ee244f6
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,7 @@
++[
++  {
++    "scenarios": [
++      "features/todos.feature:App signals browser readiness"
++    ]
++  }
++]
+\ No newline at end of file

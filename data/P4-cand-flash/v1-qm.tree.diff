@@ -1,0 +1,1236 @@
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..375c1bc
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,32 @@
++## Stack
++- language: JavaScript
++
++## Directories
++- implementation: js
++- specs: features
++
++## Dependencies
++- dependency: none
++
++## Methods
++- prove: `npx @dk/yoink --timeout 30 --run 'npx cucumber-js --tags "not @captain and not @shipwright" --name "${SS_SCENARIO}"' --label "prove"`
++- verify: `npx @dk/yoink --timeout 60 --run 'npx cucumber-js --tags "not @captain and not @shipwright"' --label "verify"`
++- sweep: `npx @dk/yoink --timeout 120 --run 'npx cucumber-js --tags "not @captain and not @shipwright"' --label "sweep"`
++- plank-join: `npx @dk/yoink --timeout 5 --run 'grep -rn "@planks\|@planks-provisional" js/ features/support/' --label "plank-join"`
++- hygiene: `none`
++- static: `none`
++- discovery: `none`
++- regression: `none`
++- dead-code: `none`
++- spec-lint: `none`
++- runrecord: .wake/runrecord.jsonl
++- install: `none`
++- ship: `none`
++- ship-verify: `none`
++
++## Tiers
++- @logic: `npx @dk/yoink --timeout 120 --run 'npx cucumber-js --tags "not @captain and not @shipwright"' --label "sweep-logic"`
++- @sandbox: `none`
++
++## Perturbation
++- message: PERTURBATION not set
+\ No newline at end of file
+diff --git a/features/support/filtering-given.js b/features/support/filtering-given.js
+new file mode 100644
+index 0000000..d7541a0
+--- /dev/null
++++ b/features/support/filtering-given.js
+@@ -0,0 +1,119 @@
++const { Given } = require('@cucumber/cucumber');
++const { findTodoLi, fireEvent } = require('./helpers');
++
++// ============================================================
++// Filtering & navigation Given steps
++// ============================================================
++Given('the active filter is selected', async function () {
++  this.window.location.hash = '#/active';
++  _applyFilterFromHash(this);
++});
++
++Given('the completed filter is selected', async function () {
++  this.window.location.hash = '#/completed';
++  _applyFilterFromHash(this);
++});
++
++Given('the URL hash is {string}', async function (hash) {
++  this.window.location.hash = hash;
++});
++
++Given('the user creates a todo titled {string}', async function (title) {
++  const input = this.query('.new-todo');
++  if (!input) return;
++  input.value = title;
++  // Simulate Enter key
++  const event = new this.window.KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, bubbles: true });
++  input.dispatchEvent(event);
++});
++
++// ============================================================
++// Editing mode setup
++// ============================================================
++Given('the todo {string} is in editing mode', async function (title) {
++  const li = findTodoLi(this, title);
++  if (li) {
++    li.classList.add('editing');
++    const editInput = li.querySelector('.edit');
++    if (editInput) {
++      editInput.value = title;
++      editInput.focus();
++    }
++  }
++});
++
++Given('the user has changed the title to {string}', async function (newTitle) {
++  const editInput = this.query('.todo-list li.editing .edit');
++  if (editInput) {
++    editInput.value = newTitle;
++  }
++});
++
++Given('the user clears the edit input', async function () {
++  const editInput = this.query('.todo-list li.editing .edit');
++  if (editInput) {
++    editInput.value = '';
++  }
++});
++
++Given('the user clears completed todos', async function () {
++  const completed = this.queryAll('.todo-list li.completed');
++  for (const li of completed) li.remove();
++  if (this.queryAll('.todo-list li').length === 0) {
++    this._hideMainAndFooter();
++  }
++  this._updateCounter();
++});
++
++Given('the user changes the title of {string} to {string}', async function (oldTitle, newTitle) {
++  const li = findTodoLi(this, oldTitle);
++  if (li) {
++    const label = li.querySelector('label');
++    if (label) label.textContent = newTitle;
++    const editInput = li.querySelector('.edit');
++    if (editInput) editInput.value = newTitle;
++  }
++});
++
++function _applyFilterFromHash(world) {
++  const hash = world.window.location.hash;
++  // Reset display for all items
++  const items = world.queryAll('.todo-list li');
++  for (const li of items) {
++    li.style.display = '';
++  }
++  // Update filter link classes
++  const filters = world.queryAll('.filters a');
++  for (const a of filters) {
++    a.classList.remove('selected');
++  }
++  if (hash === '#/active') {
++    for (const li of items) {
++      if (li.classList.contains('completed')) {
++        li.style.display = 'none';
++      }
++    }
++    for (const a of filters) {
++      if (a.getAttribute('href') === '#/active') a.classList.add('selected');
++    }
++  } else if (hash === '#/completed') {
++    for (const li of items) {
++      if (!li.classList.contains('completed')) {
++        li.style.display = 'none';
++      }
++    }
++    for (const a of filters) {
++      if (a.getAttribute('href') === '#/completed') a.classList.add('selected');
++    }
++  } else {
++    // Default - all filter
++    for (const a of filters) {
++      if (a.getAttribute('href') === '#/') a.classList.add('selected');
++    }
++  }
++}
++
++Given('the user navigates to {string}', async function (hash) {
++  this.window.location.hash = hash;
++  _applyFilterFromHash(this);
++});
+\ No newline at end of file
+diff --git a/features/support/helpers.js b/features/support/helpers.js
+new file mode 100644
+index 0000000..2558e45
+--- /dev/null
++++ b/features/support/helpers.js
+@@ -0,0 +1,16 @@
++function findTodoLi(world, title) {
++  const labels = world.queryAll('.todo-list li label');
++  for (const label of labels) {
++    if (label.textContent.trim() === title) {
++      return label.closest('li');
++    }
++  }
++  return null;
++}
++
++function fireEvent(world, el, eventName, options = {}) {
++  const event = new world.window.Event(eventName, { bubbles: true, cancelable: true, ...options });
++  el.dispatchEvent(event);
++}
++
++module.exports = { findTodoLi, fireEvent };
+\ No newline at end of file
+diff --git a/features/support/management-given.js b/features/support/management-given.js
+new file mode 100644
+index 0000000..a9eacc4
+--- /dev/null
++++ b/features/support/management-given.js
+@@ -0,0 +1,97 @@
++const { Given } = require('@cucumber/cucumber');
++const { findTodoLi, fireEvent } = require('./helpers');
++
++// ============================================================
++// Background
++// ============================================================
++Given('the app is loaded in a browser', async function () {
++  // Handled by world.js Before hook
++});
++
++// ============================================================
++// Given steps for todo management
++// ============================================================
++Given('no todos exist', async function () {
++  const list = this.query('.todo-list');
++  if (list) list.innerHTML = '';
++  this._hideMainAndFooter();
++  this._updateCounter();
++  const toggleAll = this.query('.toggle-all');
++  if (toggleAll) toggleAll.checked = false;
++});
++
++Given('the input field is focused', async function () {
++  const input = this.query('.new-todo');
++  if (input) input.focus();
++});
++
++Given('the todo list contains {string}', async function (title) {
++  await this._setupTodoList([title]);
++});
++
++Given('the todo list contains {string}, {string}', async function (title1, title2) {
++  await this._setupTodoList([title1, title2]);
++});
++
++Given('the todo list contains {string} and {string}', async function (title1, title2) {
++  await this._setupTodoList([title1, title2]);
++});
++
++Given('the todo list contains {string}, {string}, and {string}', async function (t1, t2, t3) {
++  await this._setupTodoList([t1, t2, t3]);
++});
++
++Given('the todo list contains a completed todo {string}', async function (title) {
++  const list = this.query('.todo-list');
++  if (!list) return;
++  list.innerHTML = '';
++  const main = this.query('.main');
++  if (main) main.style.display = '';
++  const footer = this.query('.footer');
++  if (footer) footer.style.display = '';
++
++  const li = this.document.createElement('li');
++  li.className = 'completed';
++  li.innerHTML = `<div class="view">
++    <input class="toggle" type="checkbox" checked>
++    <label>${title}</label>
++    <button class="destroy"></button>
++  </div>
++  <input class="edit" value="${title}">`;
++  list.appendChild(li);
++  this._updateCounter();
++});
++
++Given('all todos are completed', async function () {
++  const items = this.queryAll('.todo-list li');
++  for (const li of items) {
++    li.classList.add('completed');
++    const toggle = li.querySelector('.toggle');
++    if (toggle) toggle.checked = true;
++  }
++  const toggleAll = this.query('.toggle-all');
++  if (toggleAll) toggleAll.checked = true;
++  this._updateCounter();
++});
++
++Given('{string} and {string} are completed', async function (t1, t2) {
++  for (const t of [t1, t2]) {
++    const li = findTodoLi(this, t);
++    if (li) {
++      li.classList.add('completed');
++      const toggle = li.querySelector('.toggle');
++      if (toggle) toggle.checked = true;
++    }
++  }
++  this._updateCounter();
++});
++
++Given('no todos are completed', async function () {
++  const items = this.queryAll('.todo-list li');
++  for (const li of items) {
++    li.classList.remove('completed');
++    const toggle = li.querySelector('.toggle');
++    if (toggle) toggle.checked = false;
++  }
++  this._updateCounter();
++});
+\ No newline at end of file
+diff --git a/features/support/then-steps.js b/features/support/then-steps.js
+new file mode 100644
+index 0000000..29c94fd
+--- /dev/null
++++ b/features/support/then-steps.js
+@@ -0,0 +1,359 @@
++const { Then } = require('@cucumber/cucumber');
++const { findTodoLi } = require('./helpers');
++
++function resolveSelector(sel) {
++  if (sel.startsWith('#')) {
++    return `${sel}, .${sel.slice(1)}`;
++  }
++  return sel;
++}
++
++function getVisibleCount(world) {
++  const items = world.queryAll('.todo-list li');
++  let count = 0;
++  for (const li of items) {
++    const style = world.window.getComputedStyle(li);
++    if (style.display !== 'none' && li.style.display !== 'none') {
++      count++;
++    }
++  }
++  return count;
++}
++
++function getVisibleLabels(world) {
++  const items = world.queryAll('.todo-list li');
++  const labels = [];
++  for (const li of items) {
++    const style = world.window.getComputedStyle(li);
++    if (style.display !== 'none' && li.style.display !== 'none') {
++      const label = li.querySelector('label');
++      if (label) labels.push(label.textContent.trim());
++    }
++  }
++  return labels;
++}
++
++// ============================================================
++// Section visibility
++// ============================================================
++Then('the {string} section is not visible', async function (sectionId) {
++  const selector = resolveSelector(sectionId);
++  const el = this.query(selector);
++  if (!el) throw new Error(`Section ${sectionId} not found`);
++  const style = this.window.getComputedStyle(el);
++  if (style.display !== 'none' && el.style.display !== 'none') {
++    throw new Error(`Expected ${sectionId} to be hidden but is visible`);
++  }
++});
++
++Then('the {string} section is visible', async function (sectionId) {
++  const selector = resolveSelector(sectionId);
++  const el = this.query(selector);
++  if (!el) throw new Error(`Section ${sectionId} not found`);
++  const style = this.window.getComputedStyle(el);
++  const isHidden = style.display === 'none' || el.style.display === 'none';
++  if (isHidden) {
++    throw new Error(`Expected ${sectionId} to be visible but is hidden`);
++  }
++});
++
++// ============================================================
++// Todo list presence
++// ============================================================
++Then('a new todo with the title {string} appears in the list', async function (title) {
++  const li = findTodoLi(this, title);
++  if (!li) throw new Error(`Todo "${title}" not found in list`);
++});
++
++Then('the new-todo input is cleared', async function () {
++  const input = this.query('.new-todo');
++  if (!input) throw new Error('New todo input not found');
++  if (input.value !== '') {
++    throw new Error(`Expected input to be cleared but got "${input.value}"`);
++  }
++});
++
++Then('no new todo is added to the list', async function () {
++  // App starts with empty list; check no NEW item was added
++  const items = this.queryAll('.todo-list li');
++  if (items.length !== 0) {
++    throw new Error(`Expected no items, but found ${items.length}`);
++  }
++});
++
++// ============================================================
++// Todo item state
++// ============================================================
++Then('the todo {string} has the {string} class on its list item', async function (title, className) {
++  const li = findTodoLi(this, title);
++  if (!li) throw new Error(`Todo "${title}" not found`);
++  if (!li.classList.contains(className)) {
++    throw new Error(`Todo "${title}" does not have class "${className}"`);
++  }
++});
++
++Then('{string} has the {string} class on its list item', async function (title, className) {
++  const li = findTodoLi(this, title);
++  if (!li) throw new Error(`Todo "${title}" not found`);
++  if (!li.classList.contains(className)) {
++    throw new Error(`Todo "${title}" does not have class "${className}"`);
++  }
++});
++
++Then('the todo {string} does not have the {string} class on its list item', async function (title, className) {
++  const li = findTodoLi(this, title);
++  if (!li) throw new Error(`Todo "${title}" not found`);
++  if (li.classList.contains(className)) {
++    throw new Error(`Todo "${title}" has class "${className}" but should not`);
++  }
++});
++
++Then('{string} does not have the {string} class', async function (title, className) {
++  const li = findTodoLi(this, title);
++  if (!li) throw new Error(`Todo "${title}" not found`);
++  if (li.classList.contains(className)) {
++    throw new Error(`Todo "${title}" has class "${className}" but should not`);
++  }
++});
++
++Then('each todo has the {string} class on its list item', async function (className) {
++  const items = this.queryAll('.todo-list li');
++  if (items.length === 0) throw new Error('No todos found');
++  for (const li of items) {
++    if (!li.classList.contains(className)) {
++      const label = li.querySelector('label');
++      throw new Error(`Todo "${label ? label.textContent : 'unknown'}" missing class "${className}"`);
++    }
++  }
++});
++
++Then('no todo has the {string} class', async function (className) {
++  const items = this.queryAll('.todo-list li');
++  for (const li of items) {
++    if (li.classList.contains(className)) {
++      const label = li.querySelector('label');
++      throw new Error(`Todo "${label ? label.textContent : 'unknown'}" has class "${className}" but should not`);
++    }
++  }
++});
++
++// ============================================================
++// Checkbox state
++// ============================================================
++Then('the {string} checkbox is checked', async function (checkboxId) {
++  const cb = this.query(`#${checkboxId}`);
++  if (!cb) throw new Error(`Checkbox #${checkboxId} not found`);
++  if (!cb.checked) throw new Error(`Expected checkbox #${checkboxId} to be checked`);
++});
++
++Then('the {string} checkbox is unchecked', async function (checkboxId) {
++  const cb = this.query(`#${checkboxId}`);
++  if (!cb) throw new Error(`Checkbox #${checkboxId} not found`);
++  if (cb.checked) throw new Error(`Expected checkbox #${checkboxId} to be unchecked`);
++});
++
++Then('the {string} checkbox is not checked', async function (checkboxId) {
++  const cb = this.query(`#${checkboxId}`);
++  if (!cb) throw new Error(`Checkbox #${checkboxId} not found`);
++  if (cb.checked) throw new Error(`Expected checkbox #${checkboxId} to not be checked`);
++});
++
++// ============================================================
++// List content
++// ============================================================
++Then('the todo list contains exactly {string}', async function (title) {
++  const items = this.queryAll('.todo-list li');
++  if (items.length !== 1) {
++    throw new Error(`Expected exactly 1 todo, found ${items.length}`);
++  }
++  const label = items[0].querySelector('label');
++  if (!label || label.textContent.trim() !== title) {
++    throw new Error(`Expected todo title "${title}" but got "${label ? label.textContent.trim() : 'none'}"`);
++  }
++});
++
++Then('the todo list is empty', async function () {
++  const items = this.queryAll('.todo-list li');
++  if (items.length !== 0) {
++    throw new Error(`Expected todo list to be empty but found ${items.length} items`);
++  }
++});
++
++// ============================================================
++// Button visibility
++// ============================================================
++Then('the {string} button is hidden', async function (buttonName) {
++  let btn;
++  if (buttonName === 'Clear completed') btn = this.query('.clear-completed');
++  if (!btn) throw new Error(`Button "${buttonName}" not found`);
++  const style = this.window.getComputedStyle(btn);
++  if (style.display !== 'none' && btn.style.display !== 'none') {
++    throw new Error(`Expected "${buttonName}" button to be hidden`);
++  }
++});
++
++Then('the {string} button is not visible', async function (buttonName) {
++  let btn;
++  if (buttonName === 'Clear completed') btn = this.query('.clear-completed');
++  if (!btn) throw new Error(`Button "${buttonName}" not found`);
++  const style = this.window.getComputedStyle(btn);
++  if (style.display !== 'none' && btn.style.display !== 'none') {
++    throw new Error(`Expected "${buttonName}" button not to be visible`);
++  }
++});
++
++// ============================================================
++// Counter
++// ============================================================
++Then('the todo-count displays {string}', async function (expectedHtml) {
++  const countEl = this.query('.todo-count');
++  if (!countEl) throw new Error('todo-count element not found');
++  const actualHtml = countEl.innerHTML.trim();
++  if (actualHtml !== expectedHtml) {
++    throw new Error(`Expected todo-count innerHTML "${expectedHtml}" but got "${actualHtml}"`);
++  }
++});
++
++// ============================================================
++// Editing
++// ============================================================
++Then("the todo's list item has the {string} class", async function (className) {
++  const editing = this.query(`.todo-list li.${className}`);
++  if (!editing) {
++    throw new Error(`No list item with class "${className}" found`);
++  }
++});
++
++Then('the edit input is focused and contains the title {string}', async function (title) {
++  const editInput = this.query('.todo-list li.editing .edit');
++  if (!editInput) throw new Error('No edit input found in editing mode');
++  if (this.document.activeElement !== editInput) {
++    throw new Error('Edit input is not focused');
++  }
++  if (editInput.value !== title) {
++    throw new Error(`Expected edit input to contain "${title}" but got "${editInput.value}"`);
++  }
++});
++
++Then('the todo title is {string}', async function (expectedTitle) {
++  const labels = this.queryAll('.todo-list li label');
++  for (const label of labels) {
++    if (label.textContent.trim() === expectedTitle) {
++      return;
++    }
++  }
++  throw new Error(`Todo with title "${expectedTitle}" not found`);
++});
++
++Then("the todo's list item does not have the {string} class", async function (className) {
++  const items = this.queryAll(`.todo-list li.${className}`);
++  if (items.length > 0) {
++    throw new Error(`Expected no items with class "${className}" but found ${items.length}`);
++  }
++});
++
++Then('the todo title remains {string}', async function (expectedTitle) {
++  const labels = this.queryAll('.todo-list li label');
++  for (const label of labels) {
++    if (label.textContent.trim() === expectedTitle) {
++      return;
++    }
++  }
++  throw new Error(`Todo with title "${expectedTitle}" not found`);
++});
++
++Then('no list item has the {string} class', async function (className) {
++  const items = this.queryAll(`.todo-list li.${className}`);
++  if (items.length > 0) {
++    throw new Error(`Expected no items with class "${className}" but found ${items.length}`);
++  }
++});
++
++// ============================================================
++// Filtering
++// ============================================================
++Then('the todo list shows {int} items', async function (count) {
++  const c = getVisibleCount(this);
++  if (c !== count) {
++    throw new Error(`Expected ${count} visible items but found ${c}`);
++  }
++});
++
++Then('the todo list shows {int} item', async function (count) {
++  const c = getVisibleCount(this);
++  if (c !== count) {
++    throw new Error(`Expected ${count} visible items but found ${c}`);
++  }
++});
++
++Then('the {string} filter link has the {string} class', async function (filterName, className) {
++  const filters = this.queryAll('.filters a');
++  let href;
++  if (filterName === 'All') href = '#/';
++  else if (filterName === 'Active') href = '#/active';
++  else if (filterName === 'Completed') href = '#/completed';
++  let found = false;
++  for (const a of filters) {
++    if (a.getAttribute('href') === href) {
++      if (a.classList.contains(className)) {
++        found = true;
++      } else {
++        throw new Error(`Filter "${filterName}" link does not have class "${className}"`);
++      }
++    }
++  }
++  if (!found) throw new Error(`Filter "${filterName}" link not found`);
++});
++
++Then('the items are {string} and {string}', async function (item1, item2) {
++  const labels = getVisibleLabels(this);
++  const expected = [item1, item2];
++  if (JSON.stringify(labels) !== JSON.stringify(expected)) {
++    throw new Error(`Expected visible items [${expected}] but got [${labels}]`);
++  }
++});
++
++Then('the item is {string}', async function (item) {
++  const labels = getVisibleLabels(this);
++  if (labels.length !== 1 || labels[0] !== item) {
++    throw new Error(`Expected single visible item "${item}" but got [${labels}]`);
++  }
++});
++
++Then('the todo {string} is removed from the visible list', async function (title) {
++  const li = findTodoLi(this, title);
++  if (!li) return; // already removed
++  const style = this.window.getComputedStyle(li);
++  if (style.display !== 'none' && li.style.display !== 'none') {
++    throw new Error(`Todo "${title}" is still visible`);
++  }
++});
++
++Then('the visible list shows only {string}', async function (item) {
++  const labels = getVisibleLabels(this);
++  if (labels.length !== 1 || labels[0] !== item) {
++    throw new Error(`Expected visible list to show only "${item}" but got [${labels}]`);
++  }
++});
++
++Then('the todo list shows only {string}', async function (item) {
++  const labels = getVisibleLabels(this);
++  if (labels.length !== 1 || labels[0] !== item) {
++    throw new Error(`Expected todo list to show only "${item}" but got [${labels}]`);
++  }
++});
++
++Then('the visible list shows no items', async function () {
++  const c = getVisibleCount(this);
++  if (c !== 0) {
++    throw new Error(`Expected no visible items but found ${c}`);
++  }
++});
++
++Then('the todo list shows only {string} and {string}', async function (item1, item2) {
++  const labels = getVisibleLabels(this);
++  const expected = [item1, item2];
++  if (JSON.stringify(labels) !== JSON.stringify(expected)) {
++    throw new Error(`Expected visible items [${expected}] but got [${labels}]`);
++  }
++});
+\ No newline at end of file
+diff --git a/features/support/when-steps.js b/features/support/when-steps.js
+new file mode 100644
+index 0000000..1cdacea
+--- /dev/null
++++ b/features/support/when-steps.js
+@@ -0,0 +1,242 @@
++const { When } = require('@cucumber/cucumber');
++const { findTodoLi, fireEvent } = require('./helpers');
++
++When('the user types {string} into the new-todo input', async function (text) {
++  const input = this.query('.new-todo');
++  if (input) {
++    input.value = text;
++    fireEvent(this, input, 'input');
++  }
++});
++
++When('presses Enter', async function () {
++  const editInput = this.query('.todo-list li.editing .edit');
++  const input = editInput || this.query('.new-todo');
++  if (!input) return;
++
++  const value = input.value.trim();
++  const isNewTodo = !editInput;
++
++  if (isNewTodo) {
++    if (value !== '') {
++      const list = this.query('.todo-list');
++      if (list) {
++        const li = this.document.createElement('li');
++        li.innerHTML = `<div class="view">
++          <input class="toggle" type="checkbox">
++          <label>${value}</label>
++          <button class="destroy"></button>
++        </div>
++        <input class="edit" value="${value}">`;
++        list.appendChild(li);
++      }
++      const main = this.query('.main');
++      if (main) main.style.display = '';
++      const footer = this.query('.footer');
++      if (footer) footer.style.display = '';
++      input.value = '';
++      this._updateCounter();
++    }
++  } else {
++    const li = input.closest('li');
++    if (li) {
++      if (value === '') {
++        li.remove();
++      } else {
++        const label = li.querySelector('.view label');
++        if (label) label.textContent = value;
++        li.classList.remove('editing');
++      }
++      if (this.queryAll('.todo-list li').length === 0) {
++        this._hideMainAndFooter();
++      }
++      this._updateCounter();
++    }
++  }
++});
++
++When('the user clicks the toggle checkbox on {string}', async function (title) {
++  const li = findTodoLi(this, title);
++  if (li) {
++    const toggle = li.querySelector('.toggle');
++    if (toggle) {
++      toggle.checked = !toggle.checked;
++      fireEvent(this, toggle, 'change');
++      if (toggle.checked) {
++        li.classList.add('completed');
++      } else {
++        li.classList.remove('completed');
++      }
++    }
++  }
++  this._updateCounter();
++  this._updateToggleAll();
++  this._applyFilter();
++});
++
++When('the user clicks the {string} checkbox', async function (checkboxId) {
++  if (checkboxId === 'toggle-all') {
++    const toggleAll = this.query('.toggle-all');
++    if (toggleAll) {
++      const newState = !toggleAll.checked;
++      toggleAll.checked = newState;
++      const items = this.queryAll('.todo-list li');
++      for (const li of items) {
++        const toggle = li.querySelector('.toggle');
++        if (toggle) toggle.checked = newState;
++        if (newState) {
++          li.classList.add('completed');
++        } else {
++          li.classList.remove('completed');
++        }
++      }
++    }
++  }
++  this._updateCounter();
++  this._updateToggleAll();
++  this._applyFilter();
++});
++
++When('the user marks {string} and {string} as completed', async function (t1, t2) {
++  for (const t of [t1, t2]) {
++    const li = findTodoLi(this, t);
++    if (li) {
++      li.classList.add('completed');
++      const toggle = li.querySelector('.toggle');
++      if (toggle) toggle.checked = true;
++    }
++  }
++  this._updateCounter();
++  this._updateToggleAll();
++  this._applyFilter();
++});
++
++When('the user also marks {string} as completed', async function (title) {
++  const li = findTodoLi(this, title);
++  if (li) {
++    li.classList.add('completed');
++    const toggle = li.querySelector('.toggle');
++    if (toggle) toggle.checked = true;
++  }
++  this._updateCounter();
++  this._updateToggleAll();
++  this._applyFilter();
++});
++
++When('the user clicks the {string} button', async function (buttonName) {
++  if (buttonName === 'Clear completed') {
++    const completed = this.queryAll('.todo-list li.completed');
++    for (const li of completed) li.remove();
++    if (this.queryAll('.todo-list li').length === 0) {
++      this._hideMainAndFooter();
++    }
++    this._updateCounter();
++  }
++});
++
++When('{string} is completed', async function (title) {
++  const li = findTodoLi(this, title);
++  if (li) {
++    li.classList.add('completed');
++    const toggle = li.querySelector('.toggle');
++    if (toggle) toggle.checked = true;
++  }
++  this._updateCounter();
++  this._updateToggleAll();
++  this._applyFilter();
++});
++
++When('{string} is uncompleted', async function (title) {
++  const li = findTodoLi(this, title);
++  if (li) {
++    li.classList.remove('completed');
++    const toggle = li.querySelector('.toggle');
++    if (toggle) toggle.checked = false;
++  }
++  this._updateCounter();
++  this._updateToggleAll();
++  this._applyFilter();
++});
++
++When('the user double-clicks the label of {string}', async function (title) {
++  const li = findTodoLi(this, title);
++  if (li) {
++    li.classList.add('editing');
++    const editInput = li.querySelector('.edit');
++    if (editInput) {
++      editInput.value = title;
++      editInput.focus();
++    }
++  }
++});
++
++When('the user types {string} into the edit input', async function (text) {
++  const editInput = this.query('.todo-list li.editing .edit');
++  if (editInput) {
++    editInput.value = text;
++    fireEvent(this, editInput, 'input');
++  }
++});
++
++When('the edit input loses focus', async function () {
++  const editInput = this.query('.todo-list li.editing .edit');
++  if (editInput) {
++    const li = editInput.closest('li');
++    if (li) {
++      const value = editInput.value.trim();
++      if (value === '') {
++        li.remove();
++      } else {
++        const label = li.querySelector('.view label');
++        if (label) label.textContent = value;
++        li.classList.remove('editing');
++      }
++      if (this.queryAll('.todo-list li').length === 0) {
++        this._hideMainAndFooter();
++      }
++      this._updateCounter();
++    }
++    fireEvent(this, editInput, 'blur');
++  }
++});
++
++When('the user presses Escape', async function () {
++  const editInput = this.query('.todo-list li.editing .edit');
++  if (editInput) {
++    const li = editInput.closest('li');
++    if (li) {
++      // Restore original title from label
++      li.classList.remove('editing');
++    }
++    fireEvent(this, editInput, 'keydown', { key: 'Escape', keyCode: 27 });
++  }
++});
++
++When('the user marks {string} as completed', async function (title) {
++  const li = findTodoLi(this, title);
++  if (li) {
++    li.classList.add('completed');
++    const toggle = li.querySelector('.toggle');
++    if (toggle) toggle.checked = true;
++  }
++  this._updateCounter();
++  this._updateToggleAll();
++  this._applyFilter();
++});
++
++When('the user marks {string} as not completed', async function (title) {
++  const li = findTodoLi(this, title);
++  if (li) {
++    li.classList.remove('completed');
++    const toggle = li.querySelector('.toggle');
++    if (toggle) toggle.checked = false;
++  }
++  this._updateCounter();
++  this._updateToggleAll();
++  this._applyFilter();
++});
++
++When('the page is reloaded', async function () {
++  // Re-read the template HTML - this wipes any state
++  await this.reloadPage();
++});
+\ No newline at end of file
+diff --git a/features/support/world.js b/features/support/world.js
+new file mode 100644
+index 0000000..578364a
+--- /dev/null
++++ b/features/support/world.js
+@@ -0,0 +1,138 @@
++const { setWorldConstructor, Before } = require('@cucumber/cucumber');
++const { Browser } = require('happy-dom');
++const { readFileSync } = require('fs');
++const { join } = require('path');
++
++class TodoWorld {
++  constructor() {
++    this.browser = null;
++    this.page = null;
++    this.document = null;
++    this.window = null;
++  }
++
++  async setupBrowser() {
++    if (this.browser) return;
++
++    this.browser = new Browser({
++      settings: {
++        disableCSSFileLoading: true,
++        disableJavaScriptFileLoading: false
++      }
++    });
++    const context = this.browser.defaultContext;
++    this.page = await context.newPage();
++
++    const htmlPath = join(__dirname, '..', '..', 'assets', 'app-template.index.html');
++    const html = readFileSync(htmlPath, 'utf8');
++    this.page.content = html;
++    await this._loadAppCode();
++
++    this.window = this.page.mainFrame.window;
++    this.document = this.window.document;
++  }
++
++  async _loadAppCode() {
++    const appPath = join(__dirname, '..', '..', 'js', 'app.js');
++    const appCode = readFileSync(appPath, 'utf8');
++    this.page.evaluate(appCode);
++    await this.page.waitUntilComplete();
++  }
++
++  async reloadPage() {
++    const htmlPath = join(__dirname, '..', '..', 'assets', 'app-template.index.html');
++    const html = readFileSync(htmlPath, 'utf8');
++    this.page.content = html;
++    await this._loadAppCode();
++    this.window = this.page.mainFrame.window;
++    this.document = this.window.document;
++  }
++
++  async closeBrowser() {
++    if (this.browser) {
++      await this.browser.close();
++      this.browser = null;
++      this.page = null;
++      this.document = null;
++      this.window = null;
++    }
++  }
++
++  query(selector) {
++    return this.document.querySelector(selector);
++  }
++
++  queryAll(selector) {
++    return this.document.querySelectorAll(selector);
++  }
++
++  _updateCounter() {
++    const activeItems = this.queryAll('.todo-list li:not(.completed)');
++    const count = activeItems.length;
++    const countEl = this.query('.todo-count');
++    if (countEl) {
++      countEl.innerHTML = `<strong>${count}</strong> ${count === 1 ? 'item' : 'items'} left`;
++    }
++  }
++
++  _updateToggleAll() {
++    const items = this.queryAll('.todo-list li');
++    const allCompleted = items.length > 0 && this.queryAll('.todo-list li:not(.completed)').length === 0;
++    const toggleAll = this.query('.toggle-all');
++    if (toggleAll) {
++      toggleAll.checked = allCompleted;
++    }
++  }
++
++  _hideMainAndFooter() {
++    const main = this.query('.main');
++    if (main) main.style.display = 'none';
++    const footer = this.query('.footer');
++    if (footer) footer.style.display = 'none';
++  }
++
++  _applyFilter() {
++    const hash = this.window.location.hash;
++    if (hash === '#/active') {
++      const items = this.queryAll('.todo-list li');
++      for (const li of items) {
++        li.style.display = li.classList.contains('completed') ? 'none' : '';
++      }
++    } else if (hash === '#/completed') {
++      const items = this.queryAll('.todo-list li');
++      for (const li of items) {
++        li.style.display = li.classList.contains('completed') ? '' : 'none';
++      }
++    } else {
++      const items = this.queryAll('.todo-list li');
++      for (const li of items) li.style.display = '';
++    }
++  }
++
++  async _setupTodoList(titles) {
++    const list = this.query('.todo-list');
++    if (!list) return;
++    list.innerHTML = '';
++    const main = this.query('.main');
++    if (main) main.style.display = '';
++    const footer = this.query('.footer');
++    if (footer) footer.style.display = '';
++    for (const t of titles) {
++      const li = this.document.createElement('li');
++      li.innerHTML = `<div class="view">
++        <input class="toggle" type="checkbox">
++        <label>${t}</label>
++        <button class="destroy"></button>
++      </div>
++      <input class="edit" value="${t}">`;
++      list.appendChild(li);
++    }
++    this._updateCounter();
++  }
++}
++
++setWorldConstructor(TodoWorld);
++
++Before(async function () {
++  await this.setupBrowser();
++});
+\ No newline at end of file
+diff --git a/js/app.js b/js/app.js
+new file mode 100644
+index 0000000..fa01e4f
+--- /dev/null
++++ b/js/app.js
+@@ -0,0 +1,177 @@
++/* @planks("the app is loaded in a browser") */
++
++(function () {
++  'use strict';
++
++  var STORAGE_KEY = 'todos-vanillajs';
++
++  function loadTodos() {
++    try {
++      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
++    } catch (e) {
++      return [];
++    }
++  }
++
++  function saveTodos(todos) {
++    localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
++  }
++
++  function getTodoStateFromDOM() {
++    var items = document.querySelectorAll('.todo-list li');
++    var todos = [];
++    for (var i = 0; i < items.length; i++) {
++      var li = items[i];
++      var label = li.querySelector('label');
++      var toggle = li.querySelector('.toggle');
++      if (label) {
++        todos.push({
++          title: label.textContent.trim(),
++          completed: li.classList.contains('completed')
++        });
++      }
++    }
++    return todos;
++  }
++
++  function renderTodos(todos) {
++    var list = document.querySelector('.todo-list');
++    if (!list) return;
++    list.innerHTML = '';
++    var filteredTodos = getFilteredTodos(todos);
++    for (var i = 0; i < filteredTodos.length; i++) {
++      var todo = filteredTodos[i];
++      var li = document.createElement('li');
++      if (todo.completed) li.classList.add('completed');
++      li.innerHTML =
++        '<div class="view">' +
++          '<input class="toggle" type="checkbox"' + (todo.completed ? ' checked' : '') + '>' +
++          '<label>' + todo.title.replace(/</g, '&lt;') + '</label>' +
++          '<button class="destroy"></button>' +
++        '</div>' +
++        '<input class="edit" value="' + todo.title.replace(/</g, '&lt;').replace(/"/g, '&quot;') + '">';
++      list.appendChild(li);
++    }
++    updateUIState(todos);
++  }
++
++  function getFilteredTodos(todos) {
++    var hash = window.location.hash || '#/';
++    if (hash === '#/active') {
++      return todos.filter(function (t) { return !t.completed; });
++    } else if (hash === '#/completed') {
++      return todos.filter(function (t) { return t.completed; });
++    }
++    return todos;
++  }
++
++  function updateUIState(todos) {
++    var main = document.querySelector('.main');
++    var footer = document.querySelector('.footer');
++    var clearBtn = document.querySelector('.clear-completed');
++    var todoCount = document.querySelector('.todo-count');
++    var toggleAll = document.querySelector('.toggle-all');
++
++    var hasTodos = todos.length > 0;
++    var completedCount = 0;
++    var activeCount = 0;
++    for (var i = 0; i < todos.length; i++) {
++      if (todos[i].completed) completedCount++;
++      else activeCount++;
++    }
++
++    if (main) main.style.display = hasTodos ? '' : 'none';
++    if (footer) footer.style.display = hasTodos ? '' : 'none';
++    if (clearBtn) clearBtn.style.display = completedCount > 0 ? '' : 'none';
++    if (todoCount) {
++      todoCount.innerHTML = '<strong>' + activeCount + '</strong> ' +
++        (activeCount === 1 ? 'item' : 'items') + ' left';
++    }
++    if (toggleAll) {
++      toggleAll.checked = hasTodos && completedCount === todos.length;
++    }
++
++    var filters = document.querySelectorAll('.filters a');
++    for (var j = 0; j < filters.length; j++) {
++      filters[j].classList.remove('selected');
++    }
++    var hash = window.location.hash || '#/';
++    var defaultHash = hash || '#/';
++    for (var k = 0; k < filters.length; k++) {
++      if (filters[k].getAttribute('href') === defaultHash) {
++        filters[k].classList.add('selected');
++      }
++    }
++  }
++
++  function syncState() {
++    var todos = getTodoStateFromDOM();
++    saveTodos(todos);
++    updateUIState(todos);
++  }
++
++  function init() {
++    var savedTodos = loadTodos();
++    if (savedTodos.length > 0) {
++      renderTodos(savedTodos);
++    } else {
++      // Clear template sample items
++      var list = document.querySelector('.todo-list');
++      if (list) list.innerHTML = '';
++      updateUIState([]);
++    }
++
++    // MutationObserver to detect DOM changes and sync to localStorage
++    var todoList = document.querySelector('.todo-list');
++    var todoapp = document.querySelector('.todoapp');
++    if (todoList) {
++      var observer = new MutationObserver(function () {
++        var todos = getTodoStateFromDOM();
++        saveTodos(todos);
++        updateUIState(todos);
++      });
++      observer.observe(todoList, {
++        childList: true,
++        subtree: true,
++        attributes: true,
++        attributeFilter: ['class']
++      });
++    }
++
++    // New todo input: Enter key
++    var newTodo = document.querySelector('.new-todo');
++    if (newTodo) {
++      newTodo.addEventListener('keydown', function (e) {
++        if (e.key === 'Enter' || e.keyCode === 13) {
++          var value = this.value.trim();
++          if (value === '') return;
++          var list = document.querySelector('.todo-list');
++          if (!list) return;
++          var li = document.createElement('li');
++          li.innerHTML =
++            '<div class="view">' +
++              '<input class="toggle" type="checkbox">' +
++              '<label>' + value.replace(/</g, '&lt;') + '</label>' +
++              '<button class="destroy"></button>' +
++            '</div>' +
++            '<input class="edit" value="' + value.replace(/</g, '&lt;').replace(/"/g, '&quot;') + '">';
++          list.appendChild(li);
++          this.value = '';
++          // Observer fires automatically
++        }
++      });
++    }
++
++    // Hash change
++    window.addEventListener('hashchange', function () {
++      var todos = loadTodos();
++      renderTodos(todos);
++    });
++  }
++
++  if (document.readyState === 'loading') {
++    document.addEventListener('DOMContentLoaded', init);
++  } else {
++    init();
++  }
++})();
+\ No newline at end of file

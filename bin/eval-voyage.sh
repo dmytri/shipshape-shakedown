@@ -123,14 +123,23 @@ restore_nm(){ rm -f "$SIM/node_modules" 2>/dev/null || rm -rf "$SIM/node_modules
 trap restore_nm EXIT
 rm -rf "$SIM/node_modules"; ln -s "$EVAL_SHARED_NM" "$SIM/node_modules"
 # A non-zero suite is DATA here, not a script failure: capture it and judge it below.
-( cd "$SIM" && npx cucumber-js 2>&1 | tail -6 ) > "$BASE/$V-selfsuite.txt" 2>&1 || true
-cat "$BASE/$V-selfsuite.txt"
+# Keep the WHOLE output (2026-07-27): `tail -6` on a MODULE_NOT_FOUND kept only the requireStack
+# array, so the readout parsed to "?" and the real cause (a missing test dep) was invisible.
+( cd "$SIM" && NODE_OPTIONS="--max-old-space-size=2048" npx cucumber-js 2>&1 ) > "$BASE/$V-selfsuite.txt" 2>&1 || true
+tail -20 "$BASE/$V-selfsuite.txt"
 restore_nm
 
 # Phase-1 gate as a REGRESSION guard: a red self-suite means this voyage broke the roles'
 # own watchbill — revert the whole voyage so the base stays at the last green build. Skipped
 # on --no-revert (voyage 1: a still-incomplete build is progress, not a regression to wipe).
-if [ "$NO_REVERT" = "0" ] && grep -qE '[1-9][0-9]* failed' "$BASE/$V-selfsuite.txt"; then
+# A suite that does not RUN is red too (2026-07-27): the guard only matched "N failed", so a
+# voyage whose suite died on a missing module logged VOYAGE-COMPLETE and rode into the base.
+if [ "$NO_REVERT" = "0" ] && ! grep -qE '[0-9]+ scenarios' "$BASE/$V-selfsuite.txt"; then
+  echo "eval-voyage[$WAVE/$V]: SELF-SUITE DID NOT RUN (no scenario line) — treating as RED"
+  sed -n '1,6p' "$BASE/$V-selfsuite.txt"
+  git -C "$SIM" reset --hard "$PREHEAD" >/dev/null 2>&1 || true
+  echo "eval-voyage[$WAVE/$V]: VOYAGE-REGRESSED"
+elif [ "$NO_REVERT" = "0" ] && grep -qE '[1-9][0-9]* failed' "$BASE/$V-selfsuite.txt"; then
   echo "eval-voyage[$WAVE/$V]: SELF-SUITE RED — reverting voyage to $PREHEAD (base not poisoned)"
   git -C "$SIM" reset --hard "$PREHEAD" >/dev/null 2>&1 || true
   echo "eval-voyage[$WAVE/$V]: VOYAGE-REGRESSED"

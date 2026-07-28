@@ -1,0 +1,99 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 529380a..e265644 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -19,3 +19,15 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ **Watchbill order:** W1 (add) -> W2 (complete/toggle/clear) -> W3 (edit) -> W4 (display/counter/visibility) -> W5 (routing/filter) -> W6 (persistence). W6 runs last because persistence tests reload the page, so core behaviour must be solid first.
+ 
+ **Note:** This is a greenfield first voyage. No RIGGING.md exists yet; fitting out is owed at harbour after the first working commit.
++
++## Voyage 2: Browser acceptance defect repair
++
++**Defect source:** External Cypress acceptance suite reports 5 failures. The in-harness cucumber suite passes because happy-dom re-queries the DOM after each action. The real browser holds element references across chained commands, and those references break when the app rebuilds the list.
++
++**Root cause (tests 1-4):** `render()` in `js/app.js` rebuilds the entire `<ul class="todo-list">` via `innerHTML` on every state change (toggle, toggle-all, edit-save). Existing DOM nodes are destroyed and replaced. Cypress chained commands fail on stale references.
++
++**Root cause (test 5):** The `todomvc-app-css` package is not installed, so no CSS rule hides `.view` during `.editing` mode. The toggle checkbox remains visible.
++
++**Specs written:** `specs/dom-identity.feature` (W7) pins DOM-node preservation across toggle and toggle-all. `specs/editing-visibility.feature` (W8) pins control visibility during editing.
++
++**New watchbill targets:** W7-dom-identity, W8-editing-visibility. Both require new step definitions and production fixes.
+diff --git a/specs/dom-identity.feature b/specs/dom-identity.feature
+new file mode 100644
+index 0000000..b2b4923
+--- /dev/null
++++ b/specs/dom-identity.feature
+@@ -0,0 +1,20 @@
++Feature: DOM identity preservation
++  As a user interacting with my todo list
++  I want DOM elements to persist across state changes
++  So that the interface remains stable during interaction
++
++  Rule: State changes mutate existing DOM nodes
++
++    Scenario: Toggling a todo preserves its DOM node
++      Given a todo titled "Buy milk" exists as active
++      When the user clicks the toggle checkbox on the "Buy milk" todo
++      Then the "Buy milk" todo DOM node is the same element
++      And the "Buy milk" todo is completed
++
++    Scenario: Toggling all todos preserves every DOM node
++      Given a todo titled "Buy milk" exists as active
++      And a todo titled "Buy eggs" exists as active
++      When the user clicks the toggle-all checkbox
++      Then every todo DOM node is the same element
++      And the "Buy milk" todo is completed
++      And the "Buy eggs" todo is completed
+diff --git a/specs/editing-visibility.feature b/specs/editing-visibility.feature
+new file mode 100644
+index 0000000..40cb4c6
+--- /dev/null
++++ b/specs/editing-visibility.feature
+@@ -0,0 +1,11 @@
++Feature: Editing mode hides other controls
++  As a user editing a todo
++  I want other controls hidden during editing
++  So that I can focus on the edit without distraction
++
++  Scenario: Toggle and destroy controls are hidden during editing
++    Given a todo titled "Buy milk" exists
++    When the user double-clicks the "Buy milk" todo label
++    Then the "Buy milk" todo is in editing mode
++    And the toggle checkbox is hidden during editing
++    And the destroy button is hidden during editing
+diff --git a/watchbill.json b/watchbill.json
+index 97fba28..708c881 100644
+--- a/watchbill.json
++++ b/watchbill.json
+@@ -102,6 +102,31 @@
+           ]
+         }
+       ]
++    },
++    {
++      "id": "W7-dom-identity",
++      "order": 7,
++      "targets": [
++        {
++          "spec": "specs/dom-identity.feature",
++          "scenarios": [
++            "Toggling a todo preserves its DOM node",
++            "Toggling all todos preserves every DOM node"
++          ]
++        }
++      ]
++    },
++    {
++      "id": "W8-editing-visibility",
++      "order": 8,
++      "targets": [
++        {
++          "spec": "specs/editing-visibility.feature",
++          "scenarios": [
++            "Toggle and destroy controls are hidden during editing"
++          ]
++        }
++      ]
+     }
+   ]
+ }

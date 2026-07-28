@@ -1,0 +1,23 @@
+diff --git a/features/todos.feature b/features/todos.feature
+index 5f257a1..746fe2b 100644
+--- a/features/todos.feature
++++ b/features/todos.feature
+@@ -115,4 +115,4 @@ Feature: Todo management
+   Scenario: App signals browser readiness
+     Given the project root contains a file "js/app.js"
+     When the file is read
+-    Then the content assigns the global "appHasStarted" to a truthy value
++    Then the content assigns the global "window.appHasStarted" to a truthy value
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..6048f8a
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,7 @@
++[
++  {
++    "scenarios": [
++      "features/todos.feature:App signals browser readiness"
++    ]
++  }
++]

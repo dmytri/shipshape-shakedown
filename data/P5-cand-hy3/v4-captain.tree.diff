@@ -1,0 +1,89 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index c421617..c303fdb 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -4,14 +4,14 @@
+ 
+ ## Intent for the next leg
+ 
+-The external Cypress acceptance suite reports five real product defects that the
++The external Cypress acceptance suite reports real product defects that the
+ in-harness happy-dom suite cannot reproduce, because happy-dom re-queries the
+ DOM after each step while a real browser holds element references across an
+-interaction. Both root causes are browser-only, so they are pinned here as
++interaction. The root causes are browser-only, so they are pinned here as
+ source-level conformance checks (matching the project's existing
+ `@captain @conformance` skeleton convention), not as behavioural scenarios.
+ 
+-## Root cause and the two fixes the Crew must make
++## Root cause and the three fixes the Crew must make
+ 
+ 1. Element identity lost on state change (Cypress failures 1-4: mark all as
+    complete, clear complete state of all, mark item complete, unmark item
+@@ -28,10 +28,26 @@ source-level conformance checks (matching the project's existing
+    destroy button during editing is absent. The fix is to ship the TodoMVC
+    stylesheet (or an `app.css` override) that hides the non-edit controls while
+    an item carries `editing`. The `editing-hides-controls` scenario pins it.
++   Note: `index.html` now ships the rule, so that scenario is already green.
++
++3. Empty-edit commit re-enters the render path (Cypress failure: "should remove
++   the item if an empty text string was entered"). When a user commits an edit
++   whose text is empty, `commitEdit` receives an empty title and calls
++   `destroyTask`, which calls `render`. `render` removes the item's `<li>`, and
++   that `<li>` still holds the focused `.edit` input, so the removal fires a
++   `blur`. The `focusout` handler re-matches the still-set `editingId` and calls
++   `commitEdit` again, re-entering `destroyTask` -> `render`, which calls
++   `removeChild` on the already-detached node and throws "The node to be
++   removed is no longer a child of this node". The fix is to release the editing
++   state (clear `editingId`) before the re-render that removes the focused edit
++   input, so the in-flight `blur` cannot re-match and re-enter the destroy path.
++   The `empty-edit-removal` scenario pins it as a source-level conformance
++   check, because happy-dom never fires the re-entrant blur.
+ 
+ ## Watchbill
+ 
+-`watch1` targets the three conformance scenarios above. They are `@captain`
+-skeletons: QM implements the named checks, which redden on the current code and
+-green after the Crew fix. Do not remove the `@captain` tag until the check is
+-implemented and green.
++`watchbill.json` pins the new defect from root cause 3: `watch1` targets the
++`empty-edit-removal` conformance scenario. It is a `@captain` skeleton: QM
++implements the named check, which reddens on the current code and greens after
++the Crew fix. Do not remove the `@captain` tag until the check is implemented
++and green.
+diff --git a/features/conformance/empty-edit-removal.feature b/features/conformance/empty-edit-removal.feature
+new file mode 100644
+index 0000000..cf65489
+--- /dev/null
++++ b/features/conformance/empty-edit-removal.feature
+@@ -0,0 +1,17 @@
++@captain @conformance
++Feature: Empty-edit commit removes the item without a re-entrant render
++
++  A real browser holds the edit input element focused inside the item being
++  edited. When the user commits an edit whose text is empty, the app removes
++  that item; removing the item detaches the focused edit input and fires a blur.
++  The app's blur handler must not re-enter the destroy or render path, because
++  re-entering removes an already-detached node and throws a "removeChild" error
++  ("The node to be removed is no longer a child of this node. Perhaps it was
++  moved in a 'blur' event handler?"). The in-harness DOM does not fire the
++  re-entrant blur, so this product defect is pinned by a source-level check on
++  the edit-commit and destroy path.
++
++  Scenario: Empty-edit commit removes the item without a re-entrant render
++    Given the implementation directories from RIGGING.md
++    When the empty-edit-removal conformance check inspects the edit-commit and destroy path
++    Then committing an empty edit removes the item without re-entering the render path or throwing a removeChild error
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..de8ab33
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,7 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/conformance/empty-edit-removal.feature:Empty-edit commit removes the item without a re-entrant render"
++    ]
++  }
++}

@@ -1,0 +1,22 @@
+# banked: 2026-07-27T15:57:22Z
+# leg: {  "name": "v1-captain",  "model": "xiaomi/mimo-v2.5",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/P5-cand-mimo/sim",  "timeout_s": 3600,  "skills": [    "/home/exedev/shipshape-shakedown/experiments/methods-candidate/skills/shipshape",    "/home/exedev/shipshape-shakedown/experiments/methods-candidate/skills/captain",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== v1-captain.session.jsonl ===
+  turns=13  wall=82.0s  in=41073  out=5898  cache_read=330368  cost=$0.0083
+  role reads: shipshape@t0 -> captain@t0 -> shipshape@t6
+  roles loaded: captain, shipshape
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    1842/137      512 $0.0003  read, read
+    t1   15373/150     2304 $0.0022  read, read, bash
+    t2    2898/193    17664 $0.0005  read, read, bash, bash
+    t3    2056/192    20544 $0.0004  read, read, read, read
+    t4    1704/275    22592 $0.0004  read, read, read, read, read, read
+    t5    1611/197    24256 $0.0003  bash, bash
+    t6     627/508    25856 $0.0003  read, read
+    t7    9589/455    26432 $0.0015  bash, bash
+    t8     586/1919   35968 $0.0007  edit, edit, edit, edit, edit, edit, edit, edit, edit
+    t9    2293/160    36544 $0.0005  bash
+    t10    254/918    38784 $0.0004  write
+    t11   1026/175    38976 $0.0003  bash, bash
+    t12   1214/619    39936 $0.0005  -

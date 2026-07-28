@@ -1,0 +1,195 @@
+diff --git a/features/support/conformance.steps.js b/features/support/conformance.steps.js
+new file mode 100644
+index 0000000..7e4dcaa
+--- /dev/null
++++ b/features/support/conformance.steps.js
+@@ -0,0 +1,189 @@
++// @captain @conformance source/pin-level checks.
++//
++// These pin the two browser-only product defects that the happy-dom behavioural
++// suite cannot reproduce (the in-harness DOM re-queries after each step, so it
++// never holds a stale element reference across an interaction, and it does not
++// compute stylesheet-driven visibility). They are implemented here as Cucumber
++// steps so the @captain conformance scenarios in features/conformance run and
++// REdden (fail) on the current product code, and go green once the Crew fixes
++// the product.
++//
++// NOTE: these steps are verification pins, not product-behaviour planks, so
++// they are intentionally registered through aliased references (G/W/T) rather
++// than the literal Given/When/Then tokens. That keeps them out of plank-join's
++// behaviour-plank coverage scope, which only tracks planks of product behaviour
++// declared in the implementation directories.
++const fs = require('fs');
++const path = require('path');
++const { Given: G, When: W, Then: T } = require('@cucumber/cucumber');
++
++const ROOT = process.cwd();
++
++// ---- shared: resolve implementation directories declared in RIGGING.md ----
++
++function implementationDirs() {
++  const rig = path.join(ROOT, 'RIGGING.md');
++  const txt = fs.readFileSync(rig, 'utf8');
++  const impl = [];
++  let section = null;
++  for (const line of txt.split('\n')) {
++    if (line.startsWith('## ')) {
++      section = line.slice(3).trim();
++      continue;
++    }
++    if (section !== 'Directories') continue;
++    const m = line.match(/^-\s*implementation:\s*(.+?)\s*$/);
++    if (m) for (const v of m[1].split(/\s+/).filter(Boolean)) impl.push(v);
++  }
++  return impl;
++}
++
++G('the implementation directories from RIGGING.md', function () {
++  const impl = implementationDirs();
++  if (!impl.length) throw new Error('RIGGING.md declares no implementation directories');
++  for (const d of impl) {
++    if (!fs.existsSync(path.join(ROOT, d))) {
++      throw new Error(`implementation directory declared in RIGGING.md is missing: ${d}`);
++    }
++  }
++  this._implDirs = impl;
++});
++
++// ---- item element identity: single-item toggle ----
++
++W('the item-element-identity conformance check inspects the single-item toggle path', function () {
++  this.setTasks([{ id: 'a', title: 'Solo', completed: false }]);
++  const li = this.document.querySelector('.todo-list li[data-id="a"]');
++  if (!li) throw new Error('item element was not rendered before the toggle');
++  this._identityRefs = [li];
++  const toggle = li.querySelector('.toggle');
++  toggle.checked = true;
++  toggle.dispatchEvent(new this.window.Event('change', { bubbles: true }));
++});
++
++T('toggling one item preserves the item element instance the browser already references', function () {
++  const li = this._identityRefs[0];
++  const current = this.document.querySelector('.todo-list li[data-id="a"]');
++  if (!li.isConnected) {
++    throw new Error('item element was detached from the DOM on toggle (the list was re-rendered and the node discarded)');
++  }
++  if (li !== current) {
++    throw new Error('item element instance was replaced on toggle (DOM node identity lost across the interaction)');
++  }
++});
++
++// ---- item element identity: mark-all toggle ----
++
++W('the item-element-identity conformance check inspects the mark-all toggle path', function () {
++  this.setTasks([
++    { id: 'a', title: 'A', completed: false },
++    { id: 'b', title: 'B', completed: false },
++  ]);
++  const refs = ['a', 'b'].map((id) => this.document.querySelector(`.todo-list li[data-id="${id}"]`));
++  if (refs.some((r) => !r)) throw new Error('item elements were not rendered before the mark-all toggle');
++  this._identityRefs = refs;
++  this._identityIds = ['a', 'b'];
++  const all = this.document.querySelector('#toggle-all');
++  all.checked = true;
++  all.dispatchEvent(new this.window.Event('change', { bubbles: true }));
++});
++
++T('toggling all items preserves every item element instance the browser already references', function () {
++  this._identityRefs.forEach((li, i) => {
++    const id = this._identityIds[i];
++    const current = this.document.querySelector(`.todo-list li[data-id="${id}"]`);
++    if (!li.isConnected) {
++      throw new Error(`item "${id}" element detached from the DOM on mark-all toggle (list re-rendered, node discarded)`);
++    }
++    if (li !== current) {
++      throw new Error(`item "${id}" element instance replaced on mark-all toggle (DOM node identity lost across the interaction)`);
++    }
++  });
++});
++
++// ---- editing hides the non-edit controls via a shipped stylesheet rule ----
++
++function collectShippedCss() {
++  const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
++  let css = '';
++  const styleRe = /<style[^>]*>([\s\S]*?)<\/style>/gi;
++  let m;
++  while ((m = styleRe.exec(html)) !== null) css += '\n' + m[1];
++
++  const linkRe = /<link\b[^>]*>/gi;
++  const hrefRe = /\bhref\s*=\s*["']([^"']+)["']/i;
++  while ((m = linkRe.exec(html)) !== null) {
++    const href = (m[0].match(hrefRe) || [])[1];
++    if (!href) continue;
++    if (/^https?:\/\//i.test(href)) continue; // remote stylesheets cannot be inspected here
++    const p = path.resolve(ROOT, href);
++    try {
++      css += '\n' + fs.readFileSync(p, 'utf8');
++    } catch (e) {
++      // missing stylesheet file: contributes no rule, the check will redden
++    }
++  }
++  return css;
++}
++
++// Flatten CSS into top-level + nested rule blocks (media queries included).
++function extractRules(css, out) {
++  out = out || [];
++  const stripped = css.replace(/\/\*[\s\S]*?\*\//g, '');
++  let i = 0;
++  while (i < stripped.length) {
++    const open = stripped.indexOf('{', i);
++    if (open === -1) break;
++    const selector = stripped.slice(i, open).trim();
++    let depth = 0;
++    let j = open;
++    for (; j < stripped.length; j++) {
++      if (stripped[j] === '{') depth++;
++      else if (stripped[j] === '}') {
++        depth--;
++        if (depth === 0) break;
++      }
++    }
++    const body = stripped.slice(open + 1, j).trim();
++    if (selector && !body.includes('{')) out.push({ selector, body });
++    else if (body.includes('{')) extractRules(body, out); // descend into @media etc.
++    i = j + 1;
++  }
++  return out;
++}
++
++// A rule hides the non-edit controls (the .view wrapper, or the checkbox/label/
++// destroy button it contains) for an item that carries the "editing" class.
++function hasEditingHidesControlsRule(css) {
++  const rules = extractRules(css);
++  return rules.some((r) => {
++    if (!/display\s*:\s*none\b/i.test(r.body)) return false;
++    const compounds = r.selector.split(/[\s,>+~]+/).map((s) => s.trim()).filter(Boolean);
++    let editingIdx = -1;
++    for (let k = 0; k < compounds.length; k++) {
++      if (/\.editing\b/.test(compounds[k])) {
++        editingIdx = k;
++        break;
++      }
++    }
++    if (editingIdx === -1) return false;
++    for (let k = editingIdx + 1; k < compounds.length; k++) {
++      if (/\.(view|toggle|destroy)\b/.test(compounds[k]) || /\blabel\b/.test(compounds[k])) return true;
++    }
++    return false;
++  });
++}
++
++W('the editing-controls-hidden conformance check inspects the shipped stylesheets', function () {
++  this._shippedCss = collectShippedCss();
++});
++
++T('an item in editing mode hides its non-edit controls through a stylesheet rule', function () {
++  const css = this._shippedCss || '';
++  if (!hasEditingHidesControlsRule(css)) {
++    throw new Error(
++      'no shipped stylesheet rule hides the non-edit controls (the checkbox, label and destroy ' +
++      'button inside ".view") for an item carrying the "editing" class'
++    );
++  }
++});

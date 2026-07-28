@@ -1,0 +1,535 @@
+diff --git a/.gitignore b/.gitignore
+index 3c3629e..54c567c 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -1 +1,6 @@
+ node_modules
++*.log
++coverage/
++wake/
++runrecord.json
++wake/runrecord.jsonl
+diff --git a/.gplintrc b/.gplintrc
+new file mode 100644
+index 0000000..cbeaa89
+--- /dev/null
++++ b/.gplintrc
+@@ -0,0 +1,25 @@
++{
++  "allowed-tags": ["error", {
++    "tags": ["@logic", "@captain", "@shipwright", "@conformance", "@contract", "@exceptional-double"],
++    "patterns": []
++  }],
++  "file-name": ["error", { "style": "kebab-case" }],
++  "indentation": ["error", {
++    "Feature": 0,
++    "Background": 2,
++    "Scenario": 2,
++    "Step": 4,
++    "type": "space",
++    "preferType": "space"
++  }],
++  "no-empty-file": "error",
++  "no-unnamed-features": "error",
++  "no-unnamed-scenarios": "error",
++  "no-trailing-spaces": "error",
++  "no-files-without-scenarios": "error",
++  "no-dupe-scenario-names": "error",
++  "no-dupe-feature-names": "error",
++  "max-scenarios-per-file": ["warn", { "maxScenarios": 25 }],
++  "new-line-at-eof": ["error", "yes"],
++  "one-space-between-tags": "error"
++}
+\ No newline at end of file
+diff --git a/.rgignore b/.rgignore
+new file mode 100644
+index 0000000..1295120
+--- /dev/null
++++ b/.rgignore
+@@ -0,0 +1 @@
++CAPTAIN.md
+\ No newline at end of file
+diff --git a/.shipshape/plank-join.mjs b/.shipshape/plank-join.mjs
+new file mode 100644
+index 0000000..b660d35
+--- /dev/null
++++ b/.shipshape/plank-join.mjs
+@@ -0,0 +1,202 @@
++#!/usr/bin/env node
++// plank-join.mjs – Shipshape plank join checker.
++// Reads every .feature file under features/, every step definition under features/support/,
++// and every .js file under js/. Reports:
++//   - every production seam (exported function/class) and its @planks / @planks-provisional annotation
++//   - every step definition pattern with the scenarios that bind it
++//   - planks matching no current step pattern
++//   - @planks-provisional references to scenarios that no longer carry @captain
++//   - behaviour-bearing step-definition patterns with no matching plank token
++// Exits non-zero when any error is found.
++
++import { readFileSync, readdirSync, statSync, existsSync } from 'fs';
++import { join, relative, resolve } from 'path';
++
++const ROOT = process.cwd();
++const IMPL_DIR = resolve(ROOT, 'js');
++const FEATURES_DIR = resolve(ROOT, 'features');
++const SUPPORT_DIR = resolve(ROOT, 'features/support');
++
++// ── helpers ──────────────────────────────────────────────────────────────────
++
++function walkFiles(dir, ext) {
++  const files = [];
++  if (!existsSync(dir)) return files;
++  function walk(d) {
++    for (const entry of readdirSync(d)) {
++      const p = join(d, entry);
++      if (statSync(p).isDirectory()) { walk(p); continue; }
++      if (entry.endsWith(ext)) files.push(p);
++    }
++  }
++  walk(dir);
++  return files;
++}
++
++function slurp(path) {
++  try { return readFileSync(path, 'utf8'); } catch { return ''; }
++}
++
++// ── scan step definition patterns from support files ─────────────────────────
++
++const stepFiles = walkFiles(SUPPORT_DIR, '.js');
++const stepPatterns = new Map(); // pattern -> {keyword, file, line}
++
++for (const f of stepFiles) {
++  const text = slurp(f);
++  // Match cucumber-js step definition patterns:
++  // Given(/pattern/, ...), When(/pattern/, ...), Then(/pattern/, ...), And(/pattern/, ...)
++  const re = /(Given|When|Then|And|But)\(\s*\/((?:[^/\\]|\\.)+)\/\s*,/g;
++  let m;
++  while ((m = re.exec(text)) !== null) {
++    const kw = m[1];
++    const pattern = m[2];
++    // normalize escaped slashes
++    stepPatterns.set(pattern, { keyword: kw, file: relative(ROOT, f) });
++  }
++}
++
++// ── scan scenarios from feature files ─────────────────────────────────────────
++
++const featureFiles = walkFiles(FEATURES_DIR, '.feature');
++const scenarios = new Map(); // "features/foo.feature:Scenario Name" -> {tags: [], steps[]}
++const scenarioStepMap = new Map(); // pattern -> [scenarioRefs]
++
++for (const f of featureFiles) {
++  const text = slurp(f);
++  const rel = relative(ROOT, f);
++  const lines = text.split('\n');
++  let currentScenario = null;
++  let currentTags = [];
++  // Collect @captain scenarios and their steps
++  for (let i = 0; i < lines.length; i++) {
++    const line = lines[i].trim();
++    if (line.startsWith('@')) {
++      // could be feature-level tags or scenario tags
++      // simple approach: if we're not in a scenario, accumulate
++      if (!currentScenario) {
++        currentTags = line.split(/\s+/).filter(t => t.startsWith('@'));
++      }
++      continue;
++    }
++    const scenarioMatch = line.match(/^(?:Scenario|Scenario Outline):\s*(.+)$/);
++    if (scenarioMatch) {
++      currentScenario = scenarioMatch[1];
++      scenarios.set(`${rel}:${currentScenario}`, { tags: [], steps: [] });
++      continue;
++    }
++    const stepMatch = line.match(/^(Given|When|Then|And|But)\s+(.+)$/);
++    if (currentScenario && stepMatch) {
++      const key = `${rel}:${currentScenario}`;
++      const s = scenarios.get(key);
++      if (s) s.steps.push({ keyword: stepMatch[1], text: stepMatch[2] });
++    }
++  }
++}
++
++// For each step pattern, find which scenarios bind it
++for (const [scenarioRef, data] of scenarios) {
++  for (const step of data.steps) {
++    for (const [pattern, info] of stepPatterns) {
++      try {
++        const re = new RegExp(`^${pattern}$`);
++        if (re.test(step.text)) {
++          if (!scenarioStepMap.has(pattern)) scenarioStepMap.set(pattern, []);
++          const refs = scenarioStepMap.get(pattern);
++          if (!refs.includes(scenarioRef)) refs.push(scenarioRef);
++        }
++      } catch { /* skip invalid regex */ }
++    }
++  }
++}
++
++// ── scan implementation files for @planks / @planks-provisional ───────────────
++
++const implFiles = walkFiles(IMPL_DIR, '.js');
++const planksFound = []; // { file, line, text, isProvisional, target }
++const allPlankStrings = [];
++const allProvisionalRefs = [];
++const exportedSeams = []; // { file, line, name }
++
++for (const f of implFiles) {
++  const text = slurp(f);
++  const lines = text.split('\n');
++  const rel = relative(ROOT, f);
++  for (let i = 0; i < lines.length; i++) {
++    const line = lines[i];
++    // Check for @planks(...) in docblocks
++    const plankMatch = line.match(/@planks\("(.+)"\)/);
++    if (plankMatch) {
++      planksFound.push({ file: rel, line: i + 1, text: plankMatch[1], isProvisional: false, target: null });
++      allPlankStrings.push(plankMatch[1]);
++    }
++    // Check for @planks-provisional
++    const provMatch = line.match(/@planks-provisional\("(.+)"\)/);
++    if (provMatch) {
++      planksFound.push({ file: rel, line: i + 1, text: provMatch[1], isProvisional: true, target: provMatch[1] });
++      allProvisionalRefs.push(provMatch[1]);
++    }
++    // Detect exported functions/classes as seams
++    const exportMatch = line.match(/^export\s+(?:default\s+)?(?:function|class|const|let|var)\s+(\w+)/);
++    if (exportMatch) {
++      exportedSeams.push({ file: rel, line: i + 1, name: exportMatch[1] });
++    }
++  }
++}
++
++// ── validate ─────────────────────────────────────────────────────────────────
++
++let errors = 0;
++
++// 1. Planks matching no current step pattern (for non-provisional)
++for (const plank of planksFound) {
++  if (plank.isProvisional) continue;
++  if (!stepPatterns.has(plank.text)) {
++    console.error(`ERROR: @planks("${plank.text}") at ${plank.file}:${plank.line} matches no current step-definition pattern`);
++    errors++;
++  }
++}
++
++// 2. @planks-provisional references to scenarios that no longer carry @captain
++const captainScenarios = new Set();
++for (const [ref, data] of scenarios) {
++  if (data.tags.includes('@captain')) captainScenarios.add(ref);
++}
++for (const ref of allProvisionalRefs) {
++  if (!captainScenarios.has(ref) && !scenarios.has(ref)) {
++    console.error(`ERROR: @planks-provisional("${ref}") scenario not found or no longer carries @captain`);
++    errors++;
++  }
++}
++
++// 3. Behaviour-bearing step-definition patterns with no matching plank token
++for (const [pattern] of stepPatterns) {
++  if (!allPlankStrings.includes(pattern)) {
++    console.warn(`WARN: Step pattern "/${pattern}/" has no @planks annotation in implementation`);
++  }
++}
++
++// 4. Report summary
++console.log(`\nPlank join report:\n`);
++console.log(`  Step patterns:   ${stepPatterns.size}`);
++console.log(`  Scenarios:       ${scenarios.size}`);
++console.log(`  Planks found:    ${planksFound.length}`);
++console.log(`  Exported seams:  ${exportedSeams.length}`);
++console.log(`  Errors:          ${errors}`);
++
++if (planksFound.length > 0) {
++  console.log(`\n  Plank details:`);
++  for (const p of planksFound) {
++    const label = p.isProvisional ? 'PROVISIONAL' : 'PLANK';
++    console.log(`    ${label} ${p.file}:${p.line} "${p.text}"`);
++  }
++}
++
++if (exportedSeams.length > 0) {
++  console.log(`\n  Seams:`);
++  for (const s of exportedSeams) {
++    console.log(`    ${s.file}:${s.line} export ${s.name}`);
++  }
++}
++
++process.exit(errors > 0 ? 1 : 0);
+\ No newline at end of file
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..45bad78
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,13 @@
++# todomvc-shakedown
++
++This project uses Shipshape for spec-driven development.
++
++See `RIGGING.md` for tooling values and methods.
++
++## Project
++
++A vanilla JavaScript TodoMVC implementation built from `assets/app-spec.md` and `assets/app-template.index.html`. No preprocessors. DOM-level scenarios use Cucumber and happy-dom.
++
++## Build
++
++No build step. Static files served from project root.
+\ No newline at end of file
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..d5f5ada
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,53 @@
++# Shipshape rigging for todomvc-shakedown
++
++## Stack
++
++- language: javascript
++- runtime: node
++- packageManager: npm
++
++## Directories
++
++- implementation: js/
++- specs: features/
++- verification: features/support/
++- assets: assets/
++- scantlings: scantlings/
++
++## Methods
++
++- prove: `SS_SCENARIO="{scenario}" npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js "${SS_SCENARIO%%:*}" --name "^${SS_SCENARIO#*:}$" --tags "not @captain and not @shipwright"' --label prove --timeout 600`
++- verify: `SS_SCENARIO="{scenario}" npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js "${SS_SCENARIO%%:*}" --name "^${SS_SCENARIO#*:}$" --tags "not @captain and not @shipwright"' --label prove --timeout 600 --run 'node .shipshape/plank-join.mjs' --label plank-join --timeout 120`
++- sweep: `npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js --tags "not @captain and not @shipwright"' --label sweep --timeout 900`
++- plank-join: `npx @dk/yoink --max-bytes 200000 --run 'node .shipshape/plank-join.mjs' --label plank-join --timeout 120`
++- hygiene: `npx @dk/yoink --max-bytes 200000 --run 'node .shipshape/plank-join.mjs' --label plank-join --timeout 120 --run 'npx biome check js features --no-errors-on-unmatched' --label lint --timeout 300`
++- static: `npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js --dry-run --tags "not @captain and not @shipwright"' --label discovery --timeout 300 --run 'npx biome check js features --no-errors-on-unmatched' --label lint --timeout 300`
++- discovery: `npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js --dry-run --tags "not @captain and not @shipwright"' --label discovery --timeout 300`
++- regression: `npx @dk/yoink --max-bytes 200000 --run 'npx c8 --reporter=text npx cucumber-js --tags "not @captain and not @shipwright"' --label coverage --timeout 900`
++- condemnation: `SS_SCENARIO="{scenario}" npx @dk/yoink --max-bytes 200000 --run 'npx biome check js features --no-errors-on-unmatched' --label lint --timeout 300 --run 'npx cucumber-js "${SS_SCENARIO%%:*}" --name "^${SS_SCENARIO#*:}$" --tags "not @captain and not @shipwright"' --label prove --timeout 600`
++- dead-code: `npx @dk/yoink --max-bytes 200000 --run 'npx knip' --label dead-code --timeout 300`
++- spec-lint: `npx @dk/yoink --max-bytes 200000 --run 'npx gplint -c .gplintrc features/' --label gherkin-lint --timeout 300`
++- install: `SS_DEPENDENCY="{dependency}" npx @dk/yoink --max-bytes 200000 --run 'npm install --save-dev "$SS_DEPENDENCY"' --label install --timeout 600`
++- ship: none
++- ship-verify: none
++
++## Perturbation
++
++- message: `PERTURBATION`
++- perturb: `/* PERTURBATION: <reason> */`
++
++## Tiers
++
++- default: `@logic`
++- weather: wake/weather.json
++- runrecord: wake/runrecord.jsonl
++
++## Dependencies
++
++- policy: latest-stable
++- dependency: @cucumber/cucumber
++- dependency: happy-dom
++
++## Outbound
++
++- outbound: none
+\ No newline at end of file
+diff --git a/features/conformance.feature b/features/conformance.feature
+new file mode 100644
+index 0000000..2771ac2
+--- /dev/null
++++ b/features/conformance.feature
+@@ -0,0 +1,15 @@
++Feature: Methodology conformance
++  Shipshape methodology checks for the todomvc-shakedown project.
++
++  @captain @conformance
++  Scenario: Watchbill shape conforms to spec
++    Given the project has a watchbill.json
++    When the watchbill is parsed
++    Then every watch contains only an ordered "scenarios" array
++    And each scenario reference uses the repo-root-relative form
++
++  @captain @conformance
++  Scenario: No standing perturbation token in implementation
++    Given the implementation directory is "js/"
++    When I search for "PERTURBATION" in files under "js/"
++    Then no standing perturbation token is found
+diff --git a/features/todos.feature b/features/todos.feature
+new file mode 100644
+index 0000000..4869ced
+--- /dev/null
++++ b/features/todos.feature
+@@ -0,0 +1,122 @@
++Feature: Todo management
++  A user can manage a list of todo items.
++
++  @captain
++  Scenario: Main and footer are hidden when there are no todos
++    Given the todo list is empty
++    When the application loads
++    Then "#main" is hidden
++    And "#footer" is hidden
++
++  @captain
++  Scenario: New todo is created on Enter
++    Given the new todo input is focused
++    When the user types "Buy milk" and presses Enter
++    Then a new todo item "Buy milk" appears in the list
++    And the input is cleared
++
++  @captain
++  Scenario: Empty trimmed input does not create a todo
++    Given the new todo input is focused
++    When the user types "   " and presses Enter
++    Then no new todo item is created
++
++  @captain
++  Scenario: Mark a single todo as complete
++    Given a todo item "Buy milk" exists
++    When the user clicks the checkbox for "Buy milk"
++    Then the todo item gains the "completed" class
++    And its checkbox is checked
++
++  @captain
++  Scenario: Double-clicking a todo label enters editing mode
++    Given a todo item "Buy milk" exists
++    When the user double-clicks the label for "Buy milk"
++    Then the todo item gains the "editing" class
++    And the edit input appears with the current title
++
++  @captain
++  Scenario: Editing saves on blur
++    Given the todo item "Buy milk" is in editing mode
++    When the user changes the title to "Buy eggs" and the input loses focus
++    Then the todo item title is "Buy eggs"
++    And the "editing" class is removed
++
++  @captain
++  Scenario: Editing saves on Enter
++    Given the todo item "Buy milk" is in editing mode
++    When the user changes the title to "Buy eggs" and presses Enter
++    Then the todo item title is "Buy eggs"
++    And the "editing" class is removed
++
++  @captain
++  Scenario: Empty title during edit destroys the todo
++    Given a todo item "Buy milk" exists in editing mode
++    When the user clears the title and presses Enter
++    Then the todo item is removed from the list
++
++  @captain
++  Scenario: Escape during edit discards changes
++    Given the todo item "Buy milk" is in editing mode with the title changed to "Buy eggs"
++    When the user presses Escape
++    Then the todo item title remains "Buy milk"
++    And the "editing" class is removed
++
++  @captain
++  Scenario: Mark all as complete toggles all todos
++    Given todo items "Buy milk" and "Buy eggs" exist
++    When the user clicks "Mark all as complete"
++    Then all todo items have the "completed" class
++    And the toggle-all checkbox is checked
++
++  @captain
++  Scenario: Clear completed button removes completed todos
++    Given a completed todo "Buy milk" and an active todo "Buy eggs" exist
++    When the user clicks "Clear completed"
++    Then the todo "Buy milk" is removed from the list
++    And the todo "Buy eggs" remains
++
++  @captain
++  Scenario: Clear completed button is hidden when no completed todos
++    Given all todos are active and none are completed
++    When the application renders
++    Then the "Clear completed" button is hidden
++
++  @captain
++  Scenario: Counter shows pluralized active count
++    Given two active todo items exist
++    When the application renders
++    Then the todo count shows "2 items left"
++    And the count is wrapped in a <strong> tag
++
++  @captain
++  Scenario: Counter shows singular for one active item
++    Given one active todo item exists
++    When the application renders
++    Then the todo count shows "1 item left"
++
++  @captain
++  Scenario: Todos persist across page reload
++    Given a todo item "Buy milk" exists
++    When the page is reloaded
++    Then the todo item "Buy milk" is still displayed
++
++  @captain
++  Scenario: Filter by active todos
++    Given a completed todo "Buy milk" and an active todo "Buy eggs" exist
++    When the user clicks the "Active" filter
++    Then only "Buy eggs" is displayed
++    And "Buy milk" is hidden
++
++  @captain
++  Scenario: Filter by completed todos
++    Given a completed todo "Buy milk" and an active todo "Buy eggs" exist
++    When the user clicks the "Completed" filter
++    Then only "Buy milk" is displayed
++    And "Buy eggs" is hidden
++
++  @captain
++  Scenario: All filter shows all todos
++    Given a completed todo "Buy milk" and an active todo "Buy eggs" exist
++    When the user clicks the "All" filter
++    Then both "Buy milk" and "Buy eggs" are displayed
+diff --git a/scantlings/verification-conformance.json b/scantlings/verification-conformance.json
+new file mode 100644
+index 0000000..225f4d9
+--- /dev/null
++++ b/scantlings/verification-conformance.json
+@@ -0,0 +1,39 @@
++{
++  "rules": [
++    {
++      "id": "plank-form",
++      "description": "@planks annotation must be in a docblock immediately preceding a declaration, and its string must match a current step-definition pattern exactly.",
++      "severity": "error",
++      "check": "plank-join"
++    },
++    {
++      "id": "plank-coverage",
++      "description": "Every behaviour-bearing step-definition pattern must have at least one @planks annotation in implementation.",
++      "severity": "error",
++      "check": "plank-join"
++    },
++    {
++      "id": "provisional-plank-liveness",
++      "description": "@planks-provisional reference must name a scenario that still carries @captain.",
++      "severity": "error",
++      "check": "plank-join"
++    },
++    {
++      "id": "verification-debt-no-guessed-delay",
++      "description": "Step definitions must not contain guessed literal delays (setTimeout with numeric literal). Prefer observing a signal.",
++      "severity": "warn",
++      "patterns": ["setTimeout\\(\\s*\\d+\\s*\\)", "await new Promise\\(.*setTimeout.*\\)"]
++    },
++    {
++      "id": "verification-debt-no-hard-dependency-creation",
++      "description": "Verification support must not create expensive dependencies internally; use the production creation seam.",
++      "severity": "warn",
++      "check": "manual-review"
++    }
++  ],
++  "meta": {
++    "format": "shipshape-verification-conformance-v1",
++    "engine": "text-pattern-fallback",
++    "weakness": "Text-pattern rules cannot detect AST structure; docblock placement and indirect creation are checked by plank-join mjs"
++  }
++}
+\ No newline at end of file

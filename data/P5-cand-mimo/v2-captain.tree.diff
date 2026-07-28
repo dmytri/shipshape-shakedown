@@ -1,0 +1,42 @@
+diff --git a/features/dom-stability.feature b/features/dom-stability.feature
+new file mode 100644
+index 0000000..0507446
+--- /dev/null
++++ b/features/dom-stability.feature
+@@ -0,0 +1,18 @@
++Feature: DOM element identity preservation
++  Todo items must preserve their DOM node identity across state changes.
++
++  @contract
++  Scenario: Toggling a todo preserves its DOM node
++    Given the todo application with todos "Buy milk" and "Walk the dog"
++    When the user captures the DOM node for todo "Buy milk"
++    And the user clicks the checkbox for todo "Buy milk"
++    Then the captured DOM node for todo "Buy milk" is still attached to the list
++
++  @contract
++  Scenario: Toggle all preserves DOM nodes
++    Given the todo application with todos "Buy milk" and "Walk the dog"
++    When the user captures the DOM node for todo "Buy milk"
++    And the user captures the DOM node for todo "Walk the dog"
++    And the user clicks the toggle-all checkbox
++    Then the captured DOM node for todo "Buy milk" is still attached to the list
++    And the captured DOM node for todo "Walk the dog" is still attached to the list
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..34340c6
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,12 @@
++{
++  "targets": [
++    {
++      "scenario": "features/dom-stability.feature:Toggling a todo preserves its DOM node",
++      "reason": "DOM node identity must be preserved across todo state changes; the acceptance suite fails because render() rebuilds the list via innerHTML, invalidating element references."
++    },
++    {
++      "scenario": "features/dom-stability.feature:Toggle all preserves DOM nodes",
++      "reason": "DOM node identity must be preserved when toggle-all changes all items; the acceptance suite fails because render() rebuilds the list via innerHTML, invalidating element references."
++    }
++  ]
++}

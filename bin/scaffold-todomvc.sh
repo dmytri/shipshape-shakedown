@@ -30,6 +30,10 @@ A TodoMVC app to be built following `assets/app-spec.md`, using
 `assets/app-template.index.html` as the base markup. Vanilla JS, no preprocessors.
 The test runner is Cucumber (see package.json); write DOM-level scenarios under
 `features/` and step definitions under `features/support/`.
+
+Verification support ships with the project: `features/support/world.js` loads the REAL
+`index.html` and `js/app.js` into a happy-dom window before every scenario, and exposes
+`this.document` / `this.window`. Drive the app through those; do not build a DOM by hand.
 MD
 
 cat > package.json <<'JSON'
@@ -43,6 +47,63 @@ cat > package.json <<'JSON'
 JSON
 
 printf 'node_modules\n' > .gitignore
+
+# VERIFICATION SUPPORT — the fixture's own harness, shipped because its ABSENCE was defect 6
+# (2026-07-27, P5-cand-flash). With no harness, the app-loading contract fell to whichever role
+# wrote steps first; that wave's steps built their own DOM (`new Window(); body.innerHTML = html`),
+# so its suite ran 19/21 GREEN over an EMPTY js/ while the oracle read 0/29 for twelve voyages.
+# Every doctrine obligation was discharged correctly over a product that was one boolean — the
+# tier let conformance and correctness decouple. This harness removes that possibility by
+# construction: every scenario runs against the REAL index.html with the REAL js/app.js executed,
+# and a missing or broken artifact FAILS in the roles' own tier, where the correction loop can see
+# it. Tooling belongs in the fixture (dk, 2026-07-27); the artifacts roles must author do not.
+mkdir -p features/support
+cat > features/support/world.js <<'JS'
+const fs = require('node:fs');
+const path = require('node:path');
+const { setWorldConstructor, Before } = require('@cucumber/cucumber');
+const { Window } = require('happy-dom');
+
+const ROOT = path.resolve(__dirname, '..', '..');
+
+class AppWorld {
+  // Load the REAL page and the REAL app. A missing artifact is a loud failure here, not a
+  // silently-green suite: the executable tier must exercise the production artifact.
+  loadApp() {
+    const indexPath = path.join(ROOT, 'index.html');
+    const appPath = path.join(ROOT, 'js', 'app.js');
+    if (!fs.existsSync(indexPath))
+      throw new Error(`verification support: ${indexPath} does not exist — the app has no page to load`);
+    if (!fs.existsSync(appPath))
+      throw new Error(`verification support: ${appPath} does not exist — the app has no code to run`);
+    const appSource = fs.readFileSync(appPath, 'utf8');
+    if (appSource.trim().length === 0)
+      throw new Error(`verification support: ${appPath} is empty — there is no application to verify`);
+
+    // disableJavaScriptFileLoading: the harness executes app.js itself as inline source, and a
+    // real <script src> under happy-dom attempts a network fetch (ECONNREFUSED, pilot 0.13.64).
+    this.window = new Window({
+      url: 'http://localhost/',
+      settings: { disableJavaScriptFileLoading: true },
+    });
+    this.document = this.window.document;
+    this.document.write(fs.readFileSync(indexPath, 'utf8'));
+    this.document.close();
+
+    const el = this.document.createElement('script');
+    el.textContent = appSource;
+    this.document.body.appendChild(el);
+    return this.document;
+  }
+
+  get localStorage() { return this.window.localStorage; }
+}
+
+setWorldConstructor(AppWorld);
+
+// Every scenario gets the real app. No scenario can pass without one.
+Before(function () { this.loadApp(); });
+JS
 
 # OPTIONAL vendored rigging (methods-candidate A/B, 2026-07-26). Normally the roles derive
 # RIGGING.md themselves on the greenfield fast path, and its content then varies per draw —

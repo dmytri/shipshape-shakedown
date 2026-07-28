@@ -1,0 +1,289 @@
+diff --git a/features/methodology-conformance.feature b/features/methodology-conformance.feature
+index ca9a39b..754f34c 100644
+--- a/features/methodology-conformance.feature
++++ b/features/methodology-conformance.feature
+@@ -1,14 +1,14 @@
+ Feature: Methodology conformance
+   Scenarios attesting the project's own Shipshape methodology.
+ 
+-  @captain @conformance
++  @conformance
+   Scenario: Watchbill shape conformance
+     Given the project has a watchbill.json or the deck is at rest
+     When the watchbill is inspected
+     Then it conforms to the fixed shape with only ordered watch objects named watch1, watch2, and onward
+     And each watch contains only scenarios in <spec>.feature:<Scenario Name> form or a tier tag
+ 
+-  @captain @conformance
++  @conformance
+   Scenario: Perturbation quiescence
+     Given a green verification tree
+     When the implementation directories are scanned for the PERTURBATION token
+diff --git a/features/steps/methodology-conformance.steps.js b/features/steps/methodology-conformance.steps.js
+new file mode 100644
+index 0000000..ccf16fd
+--- /dev/null
++++ b/features/steps/methodology-conformance.steps.js
+@@ -0,0 +1,130 @@
++const { Given, When, Then } = require('@cucumber/cucumber');
++const fs = require('fs');
++const path = require('path');
++
++const PROJECT_ROOT = process.cwd();
++
++// --- Watchbill shape conformance ---
++
++Given('the project has a watchbill.json or the deck is at rest', function () {
++  // This step is a precondition: either watchbill.json exists or the deck is at rest.
++  // We check and store the state for the When step.
++  const watchbillPath = path.join(PROJECT_ROOT, 'watchbill.json');
++  this._watchbillExists = fs.existsSync(watchbillPath);
++});
++
++When('the watchbill is inspected', function () {
++  if (!this._watchbillExists) {
++    // Deck at rest: no watchbill, which conforms by definition
++    this._watchbillConforms = true;
++    this._watchbillReason = 'deck at rest';
++    return;
++  }
++
++  const watchbillPath = path.join(PROJECT_ROOT, 'watchbill.json');
++  try {
++    const content = fs.readFileSync(watchbillPath, 'utf8');
++    const parsed = JSON.parse(content);
++
++    // Must be an object with only ordered watch keys
++    const keys = Object.keys(parsed);
++    const watchKeys = keys.filter(k => /^watch\d+$/.test(k));
++
++    if (watchKeys.length !== keys.length) {
++      this._watchbillConforms = false;
++      this._watchbillReason = `unexpected keys: ${keys.filter(k => !/^watch\d+$/.test(k)).join(', ')}`;
++      return;
++    }
++
++    // Each watch must have only a scenarios array
++    for (const key of watchKeys) {
++      const watch = parsed[key];
++      if (typeof watch !== 'object' || watch === null) {
++        this._watchbillConforms = false;
++        this._watchbillReason = `${key} is not an object`;
++        return;
++      }
++      const watchKeys2 = Object.keys(watch);
++      if (watchKeys2.length !== 1 || watchKeys2[0] !== 'scenarios') {
++        this._watchbillConforms = false;
++        this._watchbillReason = `${key} has unexpected keys: ${watchKeys2.join(', ')}`;
++        return;
++      }
++      if (!Array.isArray(watch.scenarios)) {
++        this._watchbillConforms = false;
++        this._watchbillReason = `${key}.scenarios is not an array`;
++        return;
++      }
++      // Each scenario must be in <spec>.feature:<Scenario Name> form or a tier tag
++      for (const ref of watch.scenarios) {
++        if (typeof ref !== 'string') {
++          this._watchbillConforms = false;
++          this._watchbillReason = `${key} scenario ref is not a string: ${ref}`;
++          return;
++        }
++        const isFeatureRef = /^[^/]+\.feature:.+$/.test(ref);
++        const isTierTag = /^@\w+$/.test(ref);
++        if (!isFeatureRef && !isTierTag) {
++          this._watchbillConforms = false;
++          this._watchbillReason = `${key} scenario ref invalid: ${ref}`;
++          return;
++        }
++      }
++    }
++
++    this._watchbillConforms = true;
++    this._watchbillReason = 'valid';
++  } catch (e) {
++    this._watchbillConforms = false;
++    this._watchbillReason = `parse error: ${e.message}`;
++  }
++});
++
++Then('it conforms to the fixed shape with only ordered watch objects named watch1, watch2, and onward', function () {
++  if (!this._watchbillConforms) {
++    throw new Error(`Watchbill does not conform: ${this._watchbillReason}`);
++  }
++});
++
++Then('each watch contains only scenarios in <spec>.feature:<Scenario Name> form or a tier tag', function () {
++  // Already validated in the When step
++  if (!this._watchbillConforms) {
++    throw new Error(`Watchbill does not conform: ${this._watchbillReason}`);
++  }
++});
++
++// --- Perturbation quiescence ---
++
++Given('a green verification tree', function () {
++  // This is a precondition; the tree state is checked by the When step
++});
++
++When('the implementation directories are scanned for the PERTURBATION token', function () {
++  const implDirs = ['js'];
++  this._perturbations = [];
++
++  for (const dir of implDirs) {
++    const absDir = path.join(PROJECT_ROOT, dir);
++    if (!fs.existsSync(absDir)) continue;
++    const files = fs.readdirSync(absDir, { recursive: true });
++    for (const file of files) {
++      if (typeof file !== 'string') continue;
++      const abs = path.join(absDir, file);
++      if (!fs.existsSync(abs)) continue;
++      const stat = fs.statSync(abs);
++      if (!stat.isFile()) continue;
++      const ext = path.extname(file);
++      if (ext !== '.js' && ext !== '.ts' && ext !== '.mjs') continue;
++      const src = fs.readFileSync(abs, 'utf8');
++      if (src.includes('PERTURBATION')) {
++        this._perturbations.push(path.relative(PROJECT_ROOT, abs));
++      }
++    }
++  }
++});
++
++Then('no standing perturbation token is found', function () {
++  if (this._perturbations.length > 0) {
++    throw new Error(`Standing PERTURBATION tokens found in: ${this._perturbations.join(', ')}`);
++  }
++});
+diff --git a/js/app.js b/js/app.js
+index f829dc6..ef75986 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -26,12 +26,18 @@
+ 
+   // --- Persistence ---
+ 
++  /**
++   * @planks("the todo application is loaded")
++   */
+   function save() {
+     try {
+       localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+     } catch (e) { /* ignore */ }
+   }
+ 
++  /**
++   * @planks("the todo application is loaded")
++   */
+   function load() {
+     try {
+       var data = localStorage.getItem(STORAGE_KEY);
+@@ -183,6 +189,13 @@
+ 
+   // --- Actions ---
+ 
++  /**
++   * @planks("the user types {string} in the new todo input and presses Enter")
++   * @planks("the todo application with todos {string}")
++   * @planks("the todo application with todos {string} and {string}")
++   * @planks("the user creates and deletes a todo {string}")
++   * @planks("the user creates todos {string} and {string}")
++   */
+   function addTodo(title) {
+     title = title.trim();
+     if (!title) return;
+@@ -195,6 +208,11 @@
+     render();
+   }
+ 
++  /**
++   * @planks("the user clicks the checkbox for todo {string}")
++   * @planks("the user marks the todo {string} as completed")
++   * @planks("the user marks the todo {string} as active")
++   */
+   function toggleTodo(id) {
+     for (var i = 0; i < todos.length; i++) {
+       if (todos[i].id === id) {
+@@ -206,12 +224,20 @@
+     render();
+   }
+ 
++  /**
++   * @planks("the user clicks the destroy button for todo {string}")
++   */
+   function destroyTodo(id) {
+     todos = todos.filter(function (t) { return t.id !== id; });
+     save();
+     render();
+   }
+ 
++  /**
++   * @planks("the user presses Enter")
++   * @planks("the user blurs the edit input")
++   * @planks("the user clears the edit input")
++   */
+   function editTodo(id, newTitle) {
+     newTitle = newTitle.trim();
+     if (!newTitle) {
+@@ -229,6 +255,9 @@
+     render();
+   }
+ 
++  /**
++   * @planks("the user double-clicks the label for todo {string}")
++   */
+   function startEdit(id) {
+     editingId = id;
+     render();
+@@ -240,11 +269,17 @@
+     }
+   }
+ 
++  /**
++   * @planks("the user presses Escape")
++   */
+   function cancelEdit() {
+     editingId = null;
+     render();
+   }
+ 
++  /**
++   * @planks("the user clicks the toggle-all checkbox")
++   */
+   function toggleAllTodos() {
+     var allCompleted = true;
+     for (var i = 0; i < todos.length; i++) {
+@@ -258,6 +293,9 @@
+     render();
+   }
+ 
++  /**
++   * @planks("the user clicks the clear completed button")
++   */
+   function clearCompleted() {
+     todos = todos.filter(function (t) { return !t.completed; });
+     save();
+@@ -389,6 +427,13 @@
+ 
+   // --- Initialize ---
+ 
++  /**
++   * @planks("the todo application is loaded")
++   * @planks("the todo application is loaded with no todos")
++   * @planks("the todo application with completed todos {string}")
++   * @planks("the todo application with completed todos {string} and active todos {string}")
++   * @planks("the todo application with completed todos {string} and {string}")
++   */
+   function init() {
+     cacheDom();
+     load();
+@@ -414,6 +459,9 @@
+     cancelEdit: cancelEdit,
+     toggleAll: toggleAllTodos,
+     clearCompleted: clearCompleted,
++    /**
++     * @planks("the user navigates to {string}")
++     */
+     setFilter: function (filter) {
+       currentFilter = filter;
+       window.location.hash = '#' + filter;

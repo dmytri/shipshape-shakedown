@@ -43,7 +43,7 @@ say(){ echo "[$(date -u +%FT%TZ)] $*" | tee -a "$LOG"; }
 SHARED_NM="${DRIVER_SHARED_NM:-$SCRATCH/.shared-nm}"
 if [ ! -e "$SHARED_NM/node_modules/@cucumber" ] || [ ! -e "$SHARED_NM/node_modules/happy-dom" ] || [ ! -e "$SHARED_NM/node_modules/.bin/skills" ]; then
   ( cd "$SHARED_NM" && [ -f package.json ] || npm init -y >/dev/null 2>&1
-    npm install --no-fund --no-audit --save-dev @cucumber/cucumber @dk/yoink happy-dom skills c8 jsdoc knip @biomejs/biome >/dev/null 2>&1 \
+    npm install --no-fund --no-audit --save-dev @cucumber/cucumber @dk/yoink happy-dom skills c8 jsdoc knip @biomejs/biome chai sinon >/dev/null 2>&1 \
     || npm install --no-fund --no-audit @cucumber/cucumber "$HOME/yoink" happy-dom skills c8 jsdoc knip @biomejs/biome >/dev/null 2>&1 )
 fi
 export EVAL_SHARED_NM="$SHARED_NM/node_modules"
@@ -248,20 +248,35 @@ run_shipwright(){ # $1=label
   local audit; audit="$(audit_planks)"
   # keep the sim GREEN — a harbour pass that breaks the self-suite is reverted (measured, not merged)
   rm -rf "$SIM/node_modules"; ln -s "$EVAL_SHARED_NM" "$SIM/node_modules"
-  local ss; ss=$( ( cd "$SIM" && npx cucumber-js 2>&1 | tail -3 ) | grep -oE '[0-9]+ scenarios \([^)]*\)' | head -1 )
+  local ssraw; ssraw=$( cd "$SIM" && NODE_OPTIONS="--max-old-space-size=2048" npx cucumber-js 2>&1 )
+  local ss; ss=$( echo "$ssraw" | grep -oE '[0-9]+ scenarios \([^)]*\)' | head -1 )
   rm -f "$SIM/node_modules"; mkdir -p "$SIM/node_modules"
-  if echo "$ss" | grep -qE 'failed'; then git -C "$SIM" reset --hard "$prehead" >/dev/null 2>&1 || true; committed="reverted(self-suite red)"; fi
+  # A suite that cannot RUN is red (2026-07-27): only "failed" was checked, so a harbour pass
+  # leaving an unrunnable suite (missing test dep) was kept and reported "self-suite:?".
+  if [ -z "$ss" ]; then
+    echo "$ssraw" | sed -n '1,6p' >&2
+    git -C "$SIM" reset --hard "$prehead" >/dev/null 2>&1 || true; committed="reverted(self-suite DID NOT RUN)"
+  elif echo "$ss" | grep -qE 'failed'; then git -C "$SIM" reset --hard "$prehead" >/dev/null 2>&1 || true; committed="reverted(self-suite red)"; fi
   say "SHIPWRIGHT[$label] $((t1-t0))s | committed=$committed | self-suite:${ss:-?} | $audit"
 }
 
 # ---- Voyage 1: build (skipped on resume) ----
+# FIT OUT FIRST (2026-07-27). The harbour pass used to run AFTER the build, which made the
+# candidate's own route impossible to follow: candidate captain/SKILL.md:54,:60 says Shipwright
+# fits out and Captain authors "on Shipwright's return", while :36 forbids dispatching Shipwright
+# at a greenfield repository — so no RIGGING.md could legally exist at voyage 1, and qm:78 makes
+# blocking on a missing required value MANDATORY. P4-cand-mimo's QM obeyed exactly that and
+# produced nothing in 16s. The operator (not Captain) dispatches this pass, so the playbook can
+# supply the fit-out the doctrine cannot reach, and the voyage measures the doctrine instead of
+# the deadlock. The doctrine contradiction itself is routed to dk, NOT worked around in the text.
 if [ "$RESUME_FROM" -eq 0 ]; then
+  say "VOYAGE 0 (fit out: Shipwright harbour pass BEFORE the build)"
+  run_shipwright fitout
   say "VOYAGE 1 (build)"
   w=$(run_voyage 1 "$HERE/tasks/pilot/captain-todomvc.task.md" "--no-revert")
   if grep -q 'PROVIDER ERROR' "$BASE/v1.log" 2>/dev/null; then say "PROVIDER ERROR on build — STOP"; echo PILOT-DONE; exit 5; fi
-  ss=$(tail -3 "$BASE/v1-selfsuite.txt" 2>/dev/null | grep -oE '[0-9]+ scenarios \([^)]*\)' | head -1)
-  say "V1 build ${w}s | self-suite: ${ss:-?} — Shipwright harbour pass #1 (before first oracle)"
-  run_shipwright prebuild
+  ss=$(grep -oE '[0-9]+ scenarios \([^)]*\)' "$BASE/v1-selfsuite.txt" 2>/dev/null | head -1)
+  say "V1 build ${w}s | self-suite: ${ss:-?}"
   read -r p t <<<"$(grade v1)"
   say "V1 (post-shipwright) | oracle ${p}/${t} | failing:"; titles v1 | sed 's/^/    /' | tee -a "$LOG" >/dev/null
   START=2
@@ -320,7 +335,7 @@ for v in $(seq "$START" "$MAXV"); do
   done
   if grep -q 'PROVIDER ERROR' "$BASE/v$v.log" 2>/dev/null; then say "PROVIDER ERROR — STOP"; break; fi
   outcome=$(grep -oE 'VOYAGE-(COMPLETE|REGRESSED)' "$BASE/v$v.log" | tail -1)
-  ss=$(tail -3 "$BASE/v$v-selfsuite.txt" 2>/dev/null | grep -oE '[0-9]+ scenarios \([^)]*\)' | head -1)
+  ss=$(grep -oE '[0-9]+ scenarios \([^)]*\)' "$BASE/v$v-selfsuite.txt" 2>/dev/null | head -1)
   read -r p t <<<"$(grade v$v)"
   cur_titles=$(titles v$v)
   say "V$v $intent ${w}s | $outcome | self-suite: ${ss:-?} | oracle ${p}/${t} | failing:"; echo "$cur_titles" | sed 's/^/    /' | tee -a "$LOG" >/dev/null

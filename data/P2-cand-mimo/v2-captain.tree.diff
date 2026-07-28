@@ -1,0 +1,94 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 3be87b6..0a9a1f0 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -20,3 +20,19 @@ Vanilla JavaScript (no preprocessors). Cucumber + happy-dom for verification. np
+ - localStorage key: `todos-vanillajs`.
+ - Routing: hash-based (`#/`, `#/active`, `#/completed`). No routing library needed; vanilla `hashchange` listener suffices.
+ - Tier: happy-dom (cheapest sufficient to observe DOM-level behaviour).
++
++## Acceptance Defects (browser-only, fixed acceptance suite)
++
++Three product defects reported by the external browser acceptance suite that happy-dom does not reproduce:
++
++1. **Variable-function name collision (`toggleAll`)**: `var toggleAll` (the `#toggle-all` DOM element) shadows `function toggleAll()`. The click handler calls the element as a function. Fix: rename one of the two — the variable to `toggleAllCheckbox` or the function to `toggleAllTodos`.
++
++2. **Full-list re-render destroys DOM nodes**: `render()` does `todoList.innerHTML = ''` then recreates all `<li>` elements. Any browser-held reference to a node becomes detached after any state change. Fix: mutate existing nodes in place (toggle classes, update checkbox `checked`) instead of destroying and recreating the list on every change.
++
++3. **Toggle-all not hidden during editing**: The app-spec says "When editing mode is activated it will hide the other controls." The `#toggle-all` checkbox is not hidden when a todo enters editing mode. Fix: set `toggleAll.style.display = 'none'` (or `.main .toggle-all` parent) when any `<li>` has the `editing` class, and restore it otherwise.
++
++## Planted Specs
++
++`specs/todos-dom-stability.feature` pins DOM node identity preservation across toggle, toggle-all, clear-completed, and add operations; and pins the toggle-all visibility during editing. These scenarios require new step definitions in `specs/support/` to verify DOM node identity (e.g. capturing a node reference, performing an action, then asserting the same reference is still in the DOM).
++
++`watchbill.json` watch5 covers these scenarios.
+diff --git a/specs/todos-dom-stability.feature b/specs/todos-dom-stability.feature
+new file mode 100644
+index 0000000..b6fcdc3
+--- /dev/null
++++ b/specs/todos-dom-stability.feature
+@@ -0,0 +1,44 @@
++Feature: Browser DOM stability
++  As a user interacting with the app in a real browser
++  I want the DOM to remain stable across state changes
++  So that my interaction flow is not interrupted by element replacement
++
++  Background:
++    Given the TodoMVC app is open
++
++  Rule: DOM node identity is preserved during toggle
++
++    Scenario: Toggling a todo preserves DOM node identity
++      Given the user has added a todo "Buy milk"
++      And the user has added a todo "Walk dog"
++      When the user toggles the todo at position 1
++      Then the todo list item at position 1 is the same DOM node as before the toggle
++
++    Scenario: Toggling all todos preserves DOM node identity
++      Given the user has added a todo "Buy milk"
++      And the user has added a todo "Walk dog"
++      When the user toggles all todos on
++      Then every todo list item is the same DOM node as before the toggle
++
++    Scenario: Clearing completed preserves DOM node identity of remaining items
++      Given the user has added a todo "Buy milk"
++      And the user has added a todo "Walk dog"
++      And the todo at position 1 is completed
++      When the user clicks clear-completed
++      Then the todo list item at position 1 is the same DOM node as before the clear
++
++    Scenario: Adding a todo preserves DOM node identity of existing items
++      Given the user has added a todo "Buy milk"
++      When the user adds a todo "Walk dog"
++      Then the todo list item at position 1 is the same DOM node as before the add
++
++  Rule: Toggle-all hidden during editing
++
++    Scenario: Toggle-all checkbox is hidden when editing a todo
++      Given the user has added a todo "Buy milk"
++      When the user double-clicks the todo at position 1
++      Then the toggle-all checkbox is not visible
++
++    Scenario: Toggle-all checkbox is visible when not editing
++      Given the user has added a todo "Buy milk"
++      Then the toggle-all checkbox is visible
+diff --git a/watchbill.json b/watchbill.json
+index e40ae2c..b95c6d1 100644
+--- a/watchbill.json
++++ b/watchbill.json
+@@ -60,5 +60,15 @@
+       "specs/todos-routing.feature:All filter link is selected on default route",
+       "specs/todos-routing.feature:Completing a todo hides it from active filter"
+     ]
++  },
++  "watch5": {
++    "scenarios": [
++      "specs/todos-dom-stability.feature:Toggling a todo preserves DOM node identity",
++      "specs/todos-dom-stability.feature:Toggling all todos preserves DOM node identity",
++      "specs/todos-dom-stability.feature:Clearing completed preserves DOM node identity of remaining items",
++      "specs/todos-dom-stability.feature:Adding a todo preserves DOM node identity of existing items",
++      "specs/todos-dom-stability.feature:Toggle-all checkbox is hidden when editing a todo",
++      "specs/todos-dom-stability.feature:Toggle-all checkbox is visible when not editing"
++    ]
+   }
+ }

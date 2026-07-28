@@ -1,0 +1,41 @@
+diff --git a/features/support/steps.js b/features/support/steps.js
+index d1ab22a..2b21d9e 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -456,9 +456,10 @@ Then(
+ 	"the content assigns the global {string} to a truthy value",
+ 	function (globalName) {
+ 		const content = this.signalsFileContent;
+-		// Check that the content assigns the named global to a truthy value
++		// Require a word boundary (start of text or whitespace) before the variable name
++		// to avoid matching "window.varName" when looking for "varName"
+ 		const pattern = new RegExp(
+-			`${globalName}\\s*=\\s*(true|1|[A-Za-z_$][A-Za-z0-9_$]*|"[^"]*"|'[^']*'|\\d+)`,
++			`(?:^|\\s)${globalName}\\s*=\\s*(true|1|[A-Za-z_$][A-Za-z0-9_$]*|"[^"]*"|'[^']*'|\\d+)`,
+ 		);
+ 		assert.ok(
+ 			pattern.test(content),
+diff --git a/features/todos.feature b/features/todos.feature
+index 746fe2b..5f257a1 100644
+--- a/features/todos.feature
++++ b/features/todos.feature
+@@ -115,4 +115,4 @@ Feature: Todo management
+   Scenario: App signals browser readiness
+     Given the project root contains a file "js/app.js"
+     When the file is read
+-    Then the content assigns the global "window.appHasStarted" to a truthy value
++    Then the content assigns the global "appHasStarted" to a truthy value
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..ee244f6
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,7 @@
++[
++  {
++    "scenarios": [
++      "features/todos.feature:App signals browser readiness"
++    ]
++  }
++]
+\ No newline at end of file

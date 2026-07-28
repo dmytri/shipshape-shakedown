@@ -1,0 +1,50 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index e5834d8..1947fcf 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -17,3 +17,10 @@ Key decisions:
+ - No framework, no build step
+ - Flatiron Director not needed; use native `hashchange` for routing
+ - localStorage key: `todos-vanilla`
++
++## Blocking finding
++
++Browser shows blank page. Root cause: no `index.html` at project root.
++`assets/app-template.index.html` is the template; a binding spec was missing.
++Authored `features/app-entry-point.feature` with `@contract` scenario pinning the entry point shape.
++Scenario added to `watchbill.json` as watch1. Steps are undefined; QM and Crew must implement.
+diff --git a/features/app-entry-point.feature b/features/app-entry-point.feature
+new file mode 100644
+index 0000000..d4142e3
+--- /dev/null
++++ b/features/app-entry-point.feature
+@@ -0,0 +1,12 @@
++Feature: App entry point
++  As a user opening the app in a browser
++  I want an index.html at the project root that renders the TodoMVC interface
++  So that the app is visible and functional without a build step
++
++  @contract
++  Scenario: The project root contains an index.html that loads the app
++    Given the project root directory
++    Then a file "index.html" exists at the project root
++    And "index.html" contains a section element with class "todoapp"
++    And "index.html" contains an input element with class "new-todo"
++    And "index.html" contains a script tag that loads "js/app.js"
+diff --git a/watchbill.json b/watchbill.json
+index ee38856..71e8462 100644
+--- a/watchbill.json
++++ b/watchbill.json
+@@ -2,6 +2,12 @@
+   "voyage": "todomvc-greenfield",
+   "base": "HEAD",
+   "features": [
++    {
++      "file": "features/app-entry-point.feature",
++      "scenarios": [
++        "The project root contains an index.html that loads the app"
++      ]
++    },
+     {
+       "file": "features/add-and-edit-todos.feature",
+       "scenarios": [

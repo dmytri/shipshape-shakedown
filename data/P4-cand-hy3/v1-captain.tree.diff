@@ -1,0 +1,295 @@
+diff --git a/.gplintrc b/.gplintrc
+new file mode 100644
+index 0000000..c181073
+--- /dev/null
++++ b/.gplintrc
+@@ -0,0 +1,13 @@
++{
++  "no-unnamed-features": "error",
++  "no-unnamed-scenarios": "error",
++  "no-trailing-spaces": "error",
++  "no-dupe-scenario-names": "error",
++  "no-files-without-scenarios": "error",
++  "no-empty-background": "error",
++  "no-scenario-outlines-without-examples": "error",
++  "one-space-between-tags": "error",
++  "new-line-at-eof": ["error", "yes"],
++  "keywords-in-logical-order": ["error", { "detectMissingKeywords": true }],
++  "indentation": "error"
++}
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..3458b46
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,24 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++Binding behaviour lives in `features/todomvc.feature` and the referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
++
++## Decisions captured
++
++- Stack: Vanilla JavaScript, no preprocessors, persists to `localStorage`. Confirmed by the user at task open.
++- Specs directory: `features/` (pinned by `README.md`; runner is Cucumber, DOM env is `happy-dom`). Feature file: `features/todomvc.feature` (28 scenario definitions, 30 runnable instances after the counter outline expands).
++- Base markup: `assets/app-template.index.html`. Keep `base.css` untouched; put overrides in `css/app.css`, minimal.
++- Persistence key: `todos-vanilla` (spec format `todos-[framework]`, framework = vanilla). Stored item shape: `id`, `title`, `completed`. Edit mode is not persisted.
++- Routing: hash routes `#/` (all, default), `#/active`, `#/completed` (`#!/` also allowed). Filter on the model; toggle `selected` on the filter links; persist active filter across reload.
++- `watchbill.json` is written and covers all 28 scenarios in eight ordered watches. No tier tags are used; all scenarios sit in the default tier.
++
++## Open questions
++
++- `RIGGING.md` and `AGENTS.md` are not yet fitted out, and no `## Methods` exist. Route to Shipwright to derive them (Cucumber `prove`/`verify`/`sweep`, `plank-join`, `hygiene`, `static`, `spec-lint`) before QM is dispatched.
++- Routing library: the spec suggests Flatiron Director from `/assets`, but it is not vendored in this tree. Confirm a minimal hand-rolled hash router is acceptable, or vendor Director.
++- Dependency install: the spec requires `todomvc-common` and `todomvc-app-css`. Confirm install at fitting out (install is Shipwright's, or Captain's on the greenfield fast path).
++
++## Next role
++
++Shipwright fits out the rigging, then QM runs this watchbill with a clean context. Context MUST clear before QM.
+diff --git a/features/todomvc.feature b/features/todomvc.feature
+new file mode 100644
+index 0000000..161bd88
+--- /dev/null
++++ b/features/todomvc.feature
+@@ -0,0 +1,172 @@
++Feature: TodoMVC
++  As a user managing tasks in the browser
++  I want to add, complete, edit, filter, and persist todos without a server
++  So that my task list stays correct across sessions and views
++
++  Scenario: Empty list hides the main and footer areas
++    Given the todo store is empty
++    When the app renders
++    Then the main section is hidden
++    And the footer is hidden
++
++  Scenario: Entering a title creates a todo and clears the entry field
++    Given the todo store is empty
++    When the user enters "Buy milk" and presses Enter
++    Then a todo titled "Buy milk" appears in the list
++    And the todo entry field is empty
++
++  Scenario: A whitespace-only title creates no todo
++    Given the todo store is empty
++    When the user enters "   " and presses Enter
++    Then the todo list is empty
++
++  Scenario: The entry field is focused on load
++    Given the todo store is empty
++    When the app renders
++    Then the todo entry field has focus
++
++  Scenario: Checking a todo marks it completed
++    Given a todo titled "Write report" is active
++    When the user checks that todo
++    Then that todo is completed
++
++  Scenario: Checking toggle-all completes every todo
++    Given the todos "a", "b", and "c" are active
++    When the user checks the toggle-all control
++    Then every todo is completed
++
++  Scenario: Unchecking toggle-all reactivates every todo
++    Given the todos "a" and "b" are completed
++    When the user unchecks the toggle-all control
++    Then every todo is active
++
++  Scenario: Toggle-all reflects a single-item change
++    Given a todo titled "a" is active
++    And a todo titled "b" is completed
++    When the user checks todo "a"
++    Then the toggle-all control is checked
++
++  Scenario: Clear completed resets the toggle-all control
++    Given a todo titled "a" is active
++    And a todo titled "b" is completed
++    When the user clicks Clear completed
++    Then only the active todo remains
++    And the toggle-all control is not checked
++
++  Scenario: Hovering a todo reveals its destroy button
++    Given a todo titled "a" exists
++    When the user hovers that todo
++    Then the destroy button is visible
++
++  Scenario: Clicking destroy removes the todo
++    Given a todo titled "a" exists
++    When the user clicks its destroy button
++    Then that todo is removed from the list
++
++  Scenario: Double-clicking a label enters edit mode
++    Given a todo titled "Old title" exists
++    When the user double-clicks its label
++    Then that todo enters edit mode with "Old title" in the edit field
++    And the edit field is focused
++
++  Scenario: Saving an edit on Enter updates the title
++    Given a todo titled "Old title" is in edit mode
++    When the user changes the title to "New title" and presses Enter
++    Then that todo's title is "New title"
++    And that todo is no longer in edit mode
++
++  Scenario: Saving an edit on blur updates the title
++    Given a todo titled "Old title" is in edit mode
++    When the user changes the title to "New title" and blurs the edit field
++    Then that todo's title is "New title"
++
++  Scenario: Editing to an empty title destroys the todo
++    Given a todo titled "Old title" is in edit mode
++    When the user clears the title and presses Enter
++    Then that todo is removed from the list
++
++  Scenario: Escape discards an in-progress edit
++    Given a todo titled "Old title" is in edit mode
++    When the user changes the title to "Changed" and presses Escape
++    Then that todo's title is still "Old title"
++    And that todo is no longer in edit mode
++
++  Scenario Outline: The counter pluralizes the active count
++    Given <active> active todos and <completed> completed todos exist
++    When the app renders
++    Then the counter shows "<expected>"
++
++    Examples:
++      | active | completed | expected     |
++      | 0      | 0         | 0 items left |
++      | 1      | 0         | 1 item left  |
++      | 2      | 0         | 2 items left |
++
++  Scenario: The active count renders inside a strong element
++    Given a todo titled "a" is active
++    When the app renders
++    Then the counter's number is wrapped in a strong element
++
++  Scenario: Clear completed removes completed todos
++    Given a todo titled "a" is active
++    And a todo titled "b" is completed
++    When the user clicks Clear completed
++    Then the todo "b" is removed
++    And the todo "a" remains
++
++  Scenario: Clear completed is hidden when nothing is completed
++    Given the todos "a" and "b" are active
++    When the app renders
++    Then the Clear completed control is not shown
++
++  Scenario: Todos survive a page reload
++    Given a todo titled "a" is active
++    And a todo titled "b" is completed
++    When the page reloads
++    Then the list shows "a" as active and "b" as completed
++
++  Scenario: Edit mode is not persisted across reload
++    Given a todo titled "Old title" is in edit mode
++    When the page reloads
++    Then that todo is not in edit mode
++
++  Scenario: The store persists under the todos-vanilla key
++    Given the app has saved the todos "a" and "b"
++    When the store is read
++    Then the localStorage key "todos-vanilla" holds todos with id, title, and completed fields
++
++  Scenario: The default route shows all todos
++    Given a todo titled "a" is active
++    And a todo titled "b" is completed
++    When the user opens the "#/" route
++    Then both todos are shown
++    And the All filter link is selected
++
++  Scenario: The active route shows only active todos
++    Given a todo titled "a" is active
++    And a todo titled "b" is completed
++    When the user opens the "#/active" route
++    Then only the active todo "a" is shown
++    And the Active filter link is selected
++
++  Scenario: The completed route shows only completed todos
++    Given a todo titled "a" is active
++    And a todo titled "b" is completed
++    When the user opens the "#/completed" route
++    Then only the completed todo "b" is shown
++    And the Completed filter link is selected
++
++  Scenario: Checking a todo in a filtered view hides it
++    Given a todo titled "a" is active
++    And a todo titled "b" is completed
++    And the "#/active" route is open
++    When the user checks todo "a"
++    Then the todo "a" is hidden from the list
++
++  Scenario: The active filter persists across reload
++    Given a todo titled "a" is active
++    And a todo titled "b" is completed
++    And the "#/active" route is open
++    When the page reloads
++    Then only the active todo "a" is shown
++    And the Active filter link is selected
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..ee6f95b
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,62 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/todomvc.feature:Empty list hides the main and footer areas",
++      "features/todomvc.feature:Entering a title creates a todo and clears the entry field",
++      "features/todomvc.feature:A whitespace-only title creates no todo",
++      "features/todomvc.feature:The entry field is focused on load"
++    ]
++  },
++  "watch2": {
++    "scenarios": [
++      "features/todomvc.feature:Checking a todo marks it completed",
++      "features/todomvc.feature:Checking toggle-all completes every todo",
++      "features/todomvc.feature:Unchecking toggle-all reactivates every todo",
++      "features/todomvc.feature:Toggle-all reflects a single-item change",
++      "features/todomvc.feature:Clear completed resets the toggle-all control"
++    ]
++  },
++  "watch3": {
++    "scenarios": [
++      "features/todomvc.feature:Hovering a todo reveals its destroy button",
++      "features/todomvc.feature:Clicking destroy removes the todo"
++    ]
++  },
++  "watch4": {
++    "scenarios": [
++      "features/todomvc.feature:Double-clicking a label enters edit mode",
++      "features/todomvc.feature:Saving an edit on Enter updates the title",
++      "features/todomvc.feature:Saving an edit on blur updates the title",
++      "features/todomvc.feature:Editing to an empty title destroys the todo",
++      "features/todomvc.feature:Escape discards an in-progress edit"
++    ]
++  },
++  "watch5": {
++    "scenarios": [
++      "features/todomvc.feature:The counter pluralizes the active count",
++      "features/todomvc.feature:The active count renders inside a strong element"
++    ]
++  },
++  "watch6": {
++    "scenarios": [
++      "features/todomvc.feature:Clear completed removes completed todos",
++      "features/todomvc.feature:Clear completed is hidden when nothing is completed"
++    ]
++  },
++  "watch7": {
++    "scenarios": [
++      "features/todomvc.feature:Todos survive a page reload",
++      "features/todomvc.feature:Edit mode is not persisted across reload",
++      "features/todomvc.feature:The store persists under the todos-vanilla key"
++    ]
++  },
++  "watch8": {
++    "scenarios": [
++      "features/todomvc.feature:The default route shows all todos",
++      "features/todomvc.feature:The active route shows only active todos",
++      "features/todomvc.feature:The completed route shows only completed todos",
++      "features/todomvc.feature:Checking a todo in a filtered view hides it",
++      "features/todomvc.feature:The active filter persists across reload"
++    ]
++  }
++}

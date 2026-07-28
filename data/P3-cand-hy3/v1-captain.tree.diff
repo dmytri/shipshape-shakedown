@@ -1,0 +1,322 @@
+diff --git a/.gplintrc b/.gplintrc
+new file mode 100644
+index 0000000..4a2ebcb
+--- /dev/null
++++ b/.gplintrc
+@@ -0,0 +1,14 @@
++{
++  "no-dupe-scenario-names": "error",
++  "no-unnamed-features": "error",
++  "no-unnamed-scenarios": "error",
++  "no-empty-background": "error",
++  "no-scenario-outlines-without-examples": "error",
++  "no-examples-in-scenarios": "error",
++  "no-multiple-empty-lines": "error",
++  "no-trailing-spaces": "error",
++  "no-partially-commented-tag-lines": "error",
++  "no-files-without-scenarios": "error",
++  "use-and": "error",
++  "one-space-between-tags": "error"
++}
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..2aeca4b
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,20 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++Binding behaviour lives in `features/todomvc.feature` and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
++
++## Standing state
++- Greenfield shakedown repo, one commit: `todomvc: empty project with spec + template assets`.
++- No `RIGGING.md`, no `AGENTS.md`. Toolchain is fitted by `README.md`: Cucumber (`@cucumber/cucumber`) plus `happy-dom`, features under `features/`, step definitions under `features/support/`.
++- User directed the build: TodoMVC per `assets/app-spec.md`, base markup `assets/app-template.index.html`, vanilla JavaScript, no preprocessors, localStorage persistence. The user released confirmation and ordered: author specs and the watchbill, then stop. No commit, push, or dispatch.
++
++## Decisions captured (so the next role needs no hidden chat)
++- Routing: implement with the native `hashchange` event, no Director dependency. This overrides the asset's Director suggestion to honour the user's vanilla-JS directive. Routes `#/`, `#/active`, `#/completed`; the app reads `location.hash` on load so the active filter survives reload.
++- localStorage store name: `todos-vanilla` (the `[framework]` token is `vanilla`).
++- Persisted item shape: keys `id`, `title`, `completed`; `editing` is runtime-only and never persisted. Pinned by the `@contract` scenario and `features/scantlings/todo-item.yaml`.
++- Keep `node_modules/todomvc-common` and `node_modules/todomvc-app-css` referenced by the template markup; keep the template's `base.css`/`index.css` links and the `css/app.css` override file. Follow the template DOM ids and classes exactly (`#main`, `#footer`, `.new-todo`, `#toggle-all`, `.todo-list`, `.toggle`, `.edit`, `.destroy`, `.todo-count`, `.filters`, `.clear-completed`).
++
++## Open
++- `package.json` does not yet list `todomvc-common` / `todomvc-app-css` as dependencies (the asset requires them). Crew or Shipwright reconciles this during the build; the files already sit in `node_modules` and the template links them.
++- No `RIGGING.md`; Shipwright fits it out at harbour. The watchbill is written but held: do not dispatch QM until the user releases this hold.
+diff --git a/features/scantlings/todo-item.yaml b/features/scantlings/todo-item.yaml
+new file mode 100644
+index 0000000..2fb1e0c
+--- /dev/null
++++ b/features/scantlings/todo-item.yaml
+@@ -0,0 +1,16 @@
++# Scantling: todo-item
++# Mechanical shape every persisted todo record must satisfy.
++# Attested by the @contract scenario in features/todomvc.feature.
++store:
++  name: todos-vanilla
++  format: json-array
++item:
++  required-keys: [id, title, completed]
++  key-types:
++    id: string
++    title: string
++    completed: boolean
++  constraints:
++    - title is the trimmed, non-empty source text of the todo
++    - completed is false for a newly created todo
++  forbidden-keys: [editing]
+diff --git a/features/todomvc.feature b/features/todomvc.feature
+new file mode 100644
+index 0000000..03305ae
+--- /dev/null
++++ b/features/todomvc.feature
+@@ -0,0 +1,194 @@
++# Source product spec: assets/app-spec.md
++# Base markup: assets/app-template.index.html
++# Build directive: vanilla JavaScript, no preprocessors, localStorage persistence.
++Feature: TodoMVC application
++  As a person keeping a task list
++  I want to capture, complete, edit, filter, and persist todo items
++  So that the list survives reloads and stays easy to scan
++
++  Rule: Empty state hides the list chrome
++
++  Scenario: No todos hides the main and footer regions
++    Given the todo app is loaded with no todos
++    Then the element "#main" is hidden
++    And the element "#footer" is hidden
++
++  Rule: Creating todos
++
++  Scenario: New todo is created and the input is cleared on Enter
++    Given the todo app is loaded with no todos
++    When the user types "  Buy milk  " into ".new-todo"
++    And the user presses Enter in ".new-todo"
++    Then the todo list contains one item with the label "Buy milk"
++    And the ".new-todo" input is empty
++
++  Scenario: New todo ignores blank input
++    Given the todo app is loaded with no todos
++    When the user types "    " into ".new-todo"
++    And the user presses Enter in ".new-todo"
++    Then the todo list contains no items
++
++  Scenario: New todo input is focused on load
++    Given the todo app is loaded with no todos
++    Then the ".new-todo" input is the active element
++
++  Rule: Completing and toggling todos
++
++  Scenario: Toggle all completes every todo
++    Given the todo app is loaded with 2 active todos
++    When the user checks "#toggle-all"
++    Then every todo item has the "completed" class
++    And every todo toggle checkbox is checked
++
++  Scenario: Toggle all clears after completed items are cleared
++    Given the todo app is loaded with 2 completed todos
++    And the user clicks ".clear-completed"
++    Then "#toggle-all" is unchecked
++
++  Scenario: Toggle all reflects all items completed
++    Given the todo app is loaded with 2 active todos
++    When the user checks each ".toggle"
++    Then "#toggle-all" is checked
++
++  Scenario: Toggle all reflects an incomplete item
++    Given the todo app is loaded with 2 active todos
++    When the user checks the first ".toggle"
++    Then "#toggle-all" is unchecked
++
++  Scenario: Checking a todo marks it completed
++    Given the todo app is loaded with 1 active todo
++    When the user checks ".toggle"
++    Then the todo item has the "completed" class
++    And the todo toggle checkbox is checked
++
++  Rule: Editing todos
++
++  Scenario: Double-clicking a label enters edit mode
++    Given the todo app is loaded with 1 active todo titled "Read a book"
++    When the user double-clicks the todo label
++    Then the todo item has the "editing" class
++    And the ".edit" input is focused
++    And the ".edit" input value is "Read a book"
++
++  Scenario: Edit saves on Enter
++    Given the todo app is loaded with 1 active todo titled "Read a book"
++    And the user double-clicks the todo label
++    When the user changes the ".edit" input to "Read two books"
++    And the user presses Enter in ".edit"
++    Then the todo item does not have the "editing" class
++    And the todo label shows "Read two books"
++
++  Scenario: Edit saves on blur
++    Given the todo app is loaded with 1 active todo titled "Read a book"
++    And the user double-clicks the todo label
++    When the user changes the ".edit" input to "Read two books"
++    And the user blurs ".edit"
++    Then the todo item does not have the "editing" class
++    And the todo label shows "Read two books"
++
++  Scenario: Edit removes the todo when blank
++    Given the todo app is loaded with 1 active todo titled "Read a book"
++    And the user double-clicks the todo label
++    When the user changes the ".edit" input to "   "
++    And the user presses Enter in ".edit"
++    Then the todo list contains no items
++
++  Scenario: Edit discards changes on Escape
++    Given the todo app is loaded with 1 active todo titled "Read a book"
++    And the user double-clicks the todo label
++    When the user changes the ".edit" input to "Read two books"
++    And the user presses Escape in ".edit"
++    Then the todo item does not have the "editing" class
++    And the todo label shows "Read a book"
++
++  Scenario: Destroy button removes a todo
++    Given the todo app is loaded with 1 active todo
++    When the user clicks the todo ".destroy" button
++    Then the todo list contains no items
++
++  Rule: Counter and clearing completed todos
++
++  Scenario Outline: Counter pluralizes the active item count
++    Given the todo app is loaded with <active> active todo and <completed> completed todo
++    Then ".todo-count" shows the number "<count>" wrapped in a strong element
++    And ".todo-count" shows the word "<word>"
++
++    Examples:
++      | active | completed | count | word  |
++      | 0      | 0         | 0     | items |
++      | 1      | 0         | 1     | item  |
++      | 2      | 0         | 2     | items |
++
++  Scenario: Clear completed removes finished todos
++    Given the todo app is loaded with 1 active todo and 1 completed todo
++    When the user clicks ".clear-completed"
++    Then the todo list contains 1 item
++    And the remaining item is active
++
++  Scenario: Clear completed is hidden with no completed todos
++    Given the todo app is loaded with 1 active todo and 0 completed todos
++    Then the ".clear-completed" button is hidden
++
++  Rule: Persistence
++
++  Scenario: Todos persist to localStorage on change
++    Given the todo app is loaded with no todos
++    When the user types "Write report" into ".new-todo"
++    And the user presses Enter in ".new-todo"
++    Then the localStorage key "todos-vanilla" holds a JSON array
++    And the first record has the keys "id", "title", and "completed"
++    And the first record title is "Write report"
++    And the first record completed is false
++
++  Scenario: Todos reload from localStorage
++    Given the localStorage key "todos-vanilla" holds one todo titled "Write report"
++    When the todo app loads
++    Then the todo list contains one item with the label "Write report"
++
++  Scenario: Editing state is not persisted across reload
++    Given the localStorage key "todos-vanilla" holds one todo titled "Write report"
++    When the todo app loads
++    Then no todo item has the "editing" class
++
++  @contract
++  Scenario: Persisted todo records conform to the item shape
++    Given the todo app is loaded with no todos
++    When the user types "Write report" into ".new-todo"
++    And the user presses Enter in ".new-todo"
++    Then each record in the "todos-vanilla" store conforms to the "todo-item" schema in "features/scantlings/todo-item.yaml"
++
++  Rule: Routing
++    The app filters the list through native hash routing. The user directed a vanilla
++    JavaScript build with no preprocessors, so routing uses the window hashchange event
++    directly and adds no Director dependency. The active filter survives reload because the
++    app reads location.hash on load.
++
++  Scenario: Active filter defaults to all on first load
++    Given the todo app is loaded with 1 active todo and 1 completed todo
++    Then the "All" filter link has the "selected" class
++    And the todo list contains 2 items
++
++  Scenario Outline: Route change filters the visible list
++    Given the todo app is loaded with 1 active todo and 1 completed todo
++    When the route changes to "<route>"
++    Then the visible list shows <visible> item
++    And the "<label>" filter link has the "selected" class
++
++    Examples:
++      | route       | visible | label   |
++      | #/          | 2       | All     |
++      | #/active    | 1       | Active  |
++      | #/completed | 1       | Completed |
++
++  Scenario: Active filter persists across reload
++    Given the todo app is loaded with 1 active todo and 1 completed todo
++    And the route is "#/active"
++    When the todo app reloads
++    Then the "Active" filter link has the "selected" class
++    And the visible list shows 1 item
++
++  Scenario: Completing an item in a filtered view hides it
++    Given the todo app is loaded with 1 active todo and 1 completed todo
++    And the route is "#/active"
++    When the user checks ".toggle"
++    Then the visible list shows 0 items
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..5a0fedc
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,48 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/todomvc.feature:No todos hides the main and footer regions",
++      "features/todomvc.feature:New todo is created and the input is cleared on Enter",
++      "features/todomvc.feature:New todo ignores blank input",
++      "features/todomvc.feature:New todo input is focused on load",
++      "features/todomvc.feature:Toggle all completes every todo",
++      "features/todomvc.feature:Toggle all clears after completed items are cleared",
++      "features/todomvc.feature:Toggle all reflects all items completed",
++      "features/todomvc.feature:Toggle all reflects an incomplete item",
++      "features/todomvc.feature:Checking a todo marks it completed"
++    ]
++  },
++  "watch2": {
++    "scenarios": [
++      "features/todomvc.feature:Double-clicking a label enters edit mode",
++      "features/todomvc.feature:Edit saves on Enter",
++      "features/todomvc.feature:Edit saves on blur",
++      "features/todomvc.feature:Edit removes the todo when blank",
++      "features/todomvc.feature:Edit discards changes on Escape",
++      "features/todomvc.feature:Destroy button removes a todo"
++    ]
++  },
++  "watch3": {
++    "scenarios": [
++      "features/todomvc.feature:Counter pluralizes the active item count",
++      "features/todomvc.feature:Clear completed removes finished todos",
++      "features/todomvc.feature:Clear completed is hidden with no completed todos"
++    ]
++  },
++  "watch4": {
++    "scenarios": [
++      "features/todomvc.feature:Todos persist to localStorage on change",
++      "features/todomvc.feature:Todos reload from localStorage",
++      "features/todomvc.feature:Editing state is not persisted across reload",
++      "features/todomvc.feature:Persisted todo records conform to the item shape"
++    ]
++  },
++  "watch5": {
++    "scenarios": [
++      "features/todomvc.feature:Active filter defaults to all on first load",
++      "features/todomvc.feature:Route change filters the visible list",
++      "features/todomvc.feature:Active filter persists across reload",
++      "features/todomvc.feature:Completing an item in a filtered view hides it"
++    ]
++  }
++}

@@ -1,0 +1,64 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 8e80dc6..644c8b4 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -6,15 +6,16 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ 
+ ## State
+ 
+-All 18 product scenarios in `features/todos.feature` have been promoted (stripped from `@captain` to ready). `@captain` retained on `features/conformance.feature` methodology scenarios.
++18 product scenarios in `features/todos.feature` are implemented and pass via happy-dom mocks.
+ 
+-`watchbill.json` authored with 3 watches:
+-- Watch 1: Core CRUD (create, display, complete, edit, escape)
+-- Watch 2: Bulk ops, counter, clear-completed
+-- Watch 3: Persistence, routing/filtering
++**New scenario added:** `App serves index.html at the project root` at line 106 of `features/todos.feature`. This pins that a real `index.html` (built from `assets/app-template.index.html`) exists at the project root, has the required TodoMVC structure (section.todoapp, .new-todo input, section.main/ul.todo-list, footer.footer/span.todo-count), and loads `js/app.js` via a script tag.
+ 
+-## Next
++Current state: No `index.html` at project root. No step definitions exist for the new scenario. Both the missing file and missing steps cause the scenario to fail.
++
++`@captain` retained on `features/conformance.feature` methodology scenarios.
+ 
+-Next role: QM. QM reads durable artifacts only. Dispatch QM with base commit `main`, carrying watchbill.
++`watchbill.json` rewritten with 1 watch targeting the new scenario.
++
++## Next
+ 
+-Blocker: No step definitions exist yet in `features/support/`. QM will block here — that is expected for a first voyage. Crew/QM will write step definitions to match the scenarios.
+\ No newline at end of file
++Next role: QM. Dispatch QM with base commit `main`, carrying watchbill. QM must write step definitions for the new file-level scenario (file existence check, HTML parsing, element selection by CSS selector and attribute). Crew then implements `index.html` at project root from `assets/app-template.index.html`.
+\ No newline at end of file
+diff --git a/features/todos.feature b/features/todos.feature
+index 2cc41d5..a0b9f16 100644
+--- a/features/todos.feature
++++ b/features/todos.feature
+@@ -102,3 +102,12 @@ Feature: Todo management
+     Given a completed todo "Buy milk" and an active todo "Buy eggs" exist
+     When the user clicks the "All" filter
+     Then both "Buy milk" and "Buy eggs" are displayed
++
++  Scenario: App serves index.html at the project root
++    Given the project root directory contains an "index.html" file
++    When the file is parsed as HTML
++    Then the document has a "section.todoapp" element
++    And it has an input with class "new-todo"
++    And it has a "section.main" with a "ul.todo-list"
++    And it has a "footer.footer" with a "span.todo-count"
++    And it has a script element with src "js/app.js"
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..b09a68f
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,9 @@
++{
++  "watches": [
++    {
++      "scenarios": [
++        "features/todos.feature:App serves index.html at the project root"
++      ]
++    }
++  ]
++}
+\ No newline at end of file

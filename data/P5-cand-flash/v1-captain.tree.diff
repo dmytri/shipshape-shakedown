@@ -1,0 +1,195 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..8e80dc6
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,20 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
++
++## State
++
++All 18 product scenarios in `features/todos.feature` have been promoted (stripped from `@captain` to ready). `@captain` retained on `features/conformance.feature` methodology scenarios.
++
++`watchbill.json` authored with 3 watches:
++- Watch 1: Core CRUD (create, display, complete, edit, escape)
++- Watch 2: Bulk ops, counter, clear-completed
++- Watch 3: Persistence, routing/filtering
++
++## Next
++
++Next role: QM. QM reads durable artifacts only. Dispatch QM with base commit `main`, carrying watchbill.
++
++Blocker: No step definitions exist yet in `features/support/`. QM will block here — that is expected for a first voyage. Crew/QM will write step definitions to match the scenarios.
+\ No newline at end of file
+diff --git a/features/todos.feature b/features/todos.feature
+index 4869ced..2cc41d5 100644
+--- a/features/todos.feature
++++ b/features/todos.feature
+@@ -1,121 +1,103 @@
+ Feature: Todo management
+   A user can manage a list of todo items.
+ 
+-  @captain
+   Scenario: Main and footer are hidden when there are no todos
+     Given the todo list is empty
+     When the application loads
+     Then "#main" is hidden
+     And "#footer" is hidden
+ 
+-  @captain
+   Scenario: New todo is created on Enter
+     Given the new todo input is focused
+     When the user types "Buy milk" and presses Enter
+     Then a new todo item "Buy milk" appears in the list
+     And the input is cleared
+ 
+-  @captain
+   Scenario: Empty trimmed input does not create a todo
+     Given the new todo input is focused
+     When the user types "   " and presses Enter
+     Then no new todo item is created
+ 
+-  @captain
+   Scenario: Mark a single todo as complete
+     Given a todo item "Buy milk" exists
+     When the user clicks the checkbox for "Buy milk"
+     Then the todo item gains the "completed" class
+     And its checkbox is checked
+ 
+-  @captain
+   Scenario: Double-clicking a todo label enters editing mode
+     Given a todo item "Buy milk" exists
+     When the user double-clicks the label for "Buy milk"
+     Then the todo item gains the "editing" class
+     And the edit input appears with the current title
+ 
+-  @captain
+   Scenario: Editing saves on blur
+     Given the todo item "Buy milk" is in editing mode
+     When the user changes the title to "Buy eggs" and the input loses focus
+     Then the todo item title is "Buy eggs"
+     And the "editing" class is removed
+ 
+-  @captain
+   Scenario: Editing saves on Enter
+     Given the todo item "Buy milk" is in editing mode
+     When the user changes the title to "Buy eggs" and presses Enter
+     Then the todo item title is "Buy eggs"
+     And the "editing" class is removed
+ 
+-  @captain
+   Scenario: Empty title during edit destroys the todo
+     Given a todo item "Buy milk" exists in editing mode
+     When the user clears the title and presses Enter
+     Then the todo item is removed from the list
+ 
+-  @captain
+   Scenario: Escape during edit discards changes
+     Given the todo item "Buy milk" is in editing mode with the title changed to "Buy eggs"
+     When the user presses Escape
+     Then the todo item title remains "Buy milk"
+     And the "editing" class is removed
+ 
+-  @captain
+   Scenario: Mark all as complete toggles all todos
+     Given todo items "Buy milk" and "Buy eggs" exist
+     When the user clicks "Mark all as complete"
+     Then all todo items have the "completed" class
+     And the toggle-all checkbox is checked
+ 
+-  @captain
+   Scenario: Clear completed button removes completed todos
+     Given a completed todo "Buy milk" and an active todo "Buy eggs" exist
+     When the user clicks "Clear completed"
+     Then the todo "Buy milk" is removed from the list
+     And the todo "Buy eggs" remains
+ 
+-  @captain
+   Scenario: Clear completed button is hidden when no completed todos
+     Given all todos are active and none are completed
+     When the application renders
+     Then the "Clear completed" button is hidden
+ 
+-  @captain
+   Scenario: Counter shows pluralized active count
+     Given two active todo items exist
+     When the application renders
+     Then the todo count shows "2 items left"
+     And the count is wrapped in a <strong> tag
+ 
+-  @captain
+   Scenario: Counter shows singular for one active item
+     Given one active todo item exists
+     When the application renders
+     Then the todo count shows "1 item left"
+ 
+-  @captain
+   Scenario: Todos persist across page reload
+     Given a todo item "Buy milk" exists
+     When the page is reloaded
+     Then the todo item "Buy milk" is still displayed
+ 
+-  @captain
+   Scenario: Filter by active todos
+     Given a completed todo "Buy milk" and an active todo "Buy eggs" exist
+     When the user clicks the "Active" filter
+     Then only "Buy eggs" is displayed
+     And "Buy milk" is hidden
+ 
+-  @captain
+   Scenario: Filter by completed todos
+     Given a completed todo "Buy milk" and an active todo "Buy eggs" exist
+     When the user clicks the "Completed" filter
+     Then only "Buy milk" is displayed
+     And "Buy eggs" is hidden
+ 
+-  @captain
+   Scenario: All filter shows all todos
+     Given a completed todo "Buy milk" and an active todo "Buy eggs" exist
+     When the user clicks the "All" filter
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..2168064
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,35 @@
++[
++  {
++    "watch": 1,
++    "scenarios": [
++      "features/todos.feature:Main and footer are hidden when there are no todos",
++      "features/todos.feature:New todo is created on Enter",
++      "features/todos.feature:Empty trimmed input does not create a todo",
++      "features/todos.feature:Mark a single todo as complete",
++      "features/todos.feature:Double-clicking a todo label enters editing mode",
++      "features/todos.feature:Editing saves on blur",
++      "features/todos.feature:Editing saves on Enter",
++      "features/todos.feature:Empty title during edit destroys the todo",
++      "features/todos.feature:Escape during edit discards changes"
++    ]
++  },
++  {
++    "watch": 2,
++    "scenarios": [
++      "features/todos.feature:Mark all as complete toggles all todos",
++      "features/todos.feature:Clear completed button removes completed todos",
++      "features/todos.feature:Clear completed button is hidden when no completed todos",
++      "features/todos.feature:Counter shows pluralized active count",
++      "features/todos.feature:Counter shows singular for one active item"
++    ]
++  },
++  {
++    "watch": 3,
++    "scenarios": [
++      "features/todos.feature:Todos persist across page reload",
++      "features/todos.feature:Filter by active todos",
++      "features/todos.feature:Filter by completed todos",
++      "features/todos.feature:All filter shows all todos"
++    ]
++  }
++]
+\ No newline at end of file

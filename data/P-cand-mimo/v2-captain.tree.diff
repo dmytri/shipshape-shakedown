@@ -1,0 +1,107 @@
+diff --git a/features/app-loading.feature b/features/app-loading.feature
+new file mode 100644
+index 0000000..94af80e
+--- /dev/null
++++ b/features/app-loading.feature
+@@ -0,0 +1,11 @@
++Feature: App loading
++  As a user
++  I want the todo app to load when I open index.html in a browser
++  So that I can interact with the todo interface
++
++  Scenario: The index.html file at the project root loads the todo app structure and application script
++    Given a file "index.html" exists at the project root
++    Then the file contains an input element with class "new-todo"
++    And the file contains a section element with class "main"
++    And the file contains a footer element with class "footer"
++    And the file contains a script tag loading "js/app.js"
+diff --git a/watchbill.json b/watchbill.json
+index 7b8e2ba..3e7ed77 100644
+--- a/watchbill.json
++++ b/watchbill.json
+@@ -1,5 +1,10 @@
+ {
+   "watch1": {
++    "scenarios": [
++      "features/app-loading.feature:The index.html file at the project root loads the todo app structure and application script"
++    ]
++  },
++  "watch2": {
+     "scenarios": [
+       "features/creating-todos.feature:A new todo is created when the user presses Enter with non-empty text",
+       "features/creating-todos.feature:A new todo is not created when the user presses Enter with empty text",
+@@ -8,21 +13,21 @@
+       "features/creating-todos.feature:Multiple todos can be created sequentially"
+     ]
+   },
+-  "watch2": {
++  "watch3": {
+     "scenarios": [
+       "features/toggling-todos.feature:Clicking the checkbox marks a todo as completed",
+       "features/toggling-todos.feature:Clicking the checkbox on a completed todo marks it as active",
+       "features/toggling-todos.feature:The completed class is toggled on the todo item"
+     ]
+   },
+-  "watch3": {
++  "watch4": {
+     "scenarios": [
+       "features/mark-all-complete.feature:The toggle-all checkbox marks all todos as completed",
+       "features/mark-all-complete.feature:The toggle-all checkbox marks all todos as active",
+       "features/mark-all-complete.feature:The toggle-all checkbox reflects the state of all todos"
+     ]
+   },
+-  "watch4": {
++  "watch5": {
+     "scenarios": [
+       "features/editing-todos.feature:Double-clicking a todo activates editing mode",
+       "features/editing-todos.feature:Pressing Enter saves the edit and exits editing mode",
+@@ -32,20 +37,20 @@
+       "features/editing-todos.feature:Saving a whitespace-only edit deletes the todo"
+     ]
+   },
+-  "watch5": {
++  "watch6": {
+     "scenarios": [
+       "features/deleting-todos.feature:Clicking the destroy button removes a todo",
+       "features/deleting-todos.feature:Deleting a todo does not affect other todos"
+     ]
+   },
+-  "watch6": {
++  "watch7": {
+     "scenarios": [
+       "features/clear-completed.feature:Clear completed removes all completed todos",
+       "features/clear-completed.feature:Clear completed is hidden when there are no completed todos",
+       "features/clear-completed.feature:Clear completed is visible when there are completed todos"
+     ]
+   },
+-  "watch7": {
++  "watch8": {
+     "scenarios": [
+       "features/counter.feature:The counter shows zero items when there are no todos",
+       "features/counter.feature:The counter shows the number of active todos",
+@@ -53,7 +58,7 @@
+       "features/counter.feature:The counter uses plural form for multiple items"
+     ]
+   },
+-  "watch8": {
++  "watch9": {
+     "scenarios": [
+       "features/filtering.feature:All todos are shown by default",
+       "features/filtering.feature:The Active filter shows only incomplete todos",
+@@ -62,14 +67,14 @@
+       "features/filtering.feature:A todo updated while filtered is hidden if it no longer matches"
+     ]
+   },
+-  "watch9": {
++  "watch10": {
+     "scenarios": [
+       "features/persistence.feature:Todos are saved to localStorage",
+       "features/persistence.feature:Completed state is persisted",
+       "features/persistence.feature:The localStorage key is \"todos-todomvc\""
+     ]
+   },
+-  "watch10": {
++  "watch11": {
+     "scenarios": [
+       "features/visibility.feature:The main section and footer are hidden when there are no todos",
+       "features/visibility.feature:The main section and footer are shown when there are todos",

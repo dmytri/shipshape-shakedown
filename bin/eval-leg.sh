@@ -141,7 +141,16 @@ ENVV=(HOME="$FAKEHOME" XDG_CONFIG_HOME="$FAKEHOME/.config"
       # Go resolves modules from a SHARED read-only cache under /opt (already --ro-bind-try'd),
       # the analogue of the shared node_modules and the cargo registry. Nothing is vendored
       # (dk, 2026-07-27), and a leg's build cache stays in its own XDG_CACHE_HOME.
-      GOMODCACHE="/opt/gotools/pkg/mod" GOFLAGS="-mod=mod")
+      GOMODCACHE="/opt/gotools/pkg/mod" GOFLAGS="-mod=mod"
+      # HEAP CAP (2026-07-27). A pilot suite reached 12.6G RSS and the kernel OOM-killed it on
+      # this 16G swapless box, taking the voyage's only evidence with it: the suite output ended
+      # "Killed" with no summary line, so the readout was unknown and the voyage was scored on
+      # nothing. The known cause class is an assertion over circular happy-dom DOM nodes (a
+      # naive deep-equal serialises the whole tree). A capped heap turns that into "JavaScript
+      # heap out of memory" INSIDE the leg — legible, attributable, and something a role can
+      # engineer out per the Verification agreement — instead of a silent kernel kill that can
+      # also take out sibling waves or the operator's own session.
+      NODE_OPTIONS="--max-old-space-size=2048")
 set +e
 if command -v bwrap >/dev/null 2>&1; then
   # MINIMAL read exposure (dk 2026-07-23). NOT `--ro-bind / /`: that left the ENTIRE VM

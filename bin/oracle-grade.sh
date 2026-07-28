@@ -38,6 +38,20 @@ grep -q "^  ${FRAMEWORK}: true," "$CLONE/cypress/e2e/spec.cy.js" || {
 grep -q "invoke('resetHistory')" "$CLONE/cypress/e2e/spec.cy.js" || {
   echo "oracle-grade.sh: spy-reset.patch NOT applied — apply fixtures/oracle/spy-reset.patch" >&2; exit 4; }
 
+# Mandatory RUNNABILITY check — the patches can be perfect while the clone cannot serve at all.
+# 2026-07-27: a broad node_modules sweep of .eval-scratch took the clone's own root deps with it,
+# so tests/server.js died on `Cannot find package 'express'` and EVERY grade came back
+# "GRADE: UNPARSEABLE" — which the driver's intent selector reads as "no servable page" and then
+# chases with page voyages forever. Three parallel pilots spent ~40 minutes and real credits
+# scoring 0/29 against a dead server; the same builds regraded 24/29 once the deps were back.
+# A grader that cannot run must exit as an infra fault (6), never emit a score-shaped lie.
+[ -d "$CLONE/node_modules" ] || {
+  echo "oracle-grade.sh: '$CLONE/node_modules' missing — run 'npm install' in the clone; refusing to grade, exit 6" >&2; exit 6; }
+( cd "$CLONE" && node -e "require.resolve('express')" >/dev/null 2>&1 ) || {
+  echo "oracle-grade.sh: the clone cannot resolve 'express' (tests/server.js would die) — run 'npm install' in the clone; refusing to grade, exit 6" >&2; exit 6; }
+git -C "$CLONE" diff --name-only --diff-filter=D -- examples | head -1 | grep -q . && {
+  echo "oracle-grade.sh: the clone has DELETED vendored files under examples/ — run 'git checkout -- examples/' in the clone; refusing to grade, exit 6" >&2; exit 6; }
+
 # Drop the build at examples/<framework>/ (served at :PORT/examples/<framework>/index.html).
 # Copy the runnable app only — never features/steps/assets/node_modules/.git.
 DEST="$CLONE/examples/$FRAMEWORK"

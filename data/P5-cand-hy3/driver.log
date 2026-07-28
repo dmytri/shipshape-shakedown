@@ -1,0 +1,32 @@
+[2026-07-27T15:23:58Z] PILOT START wave=P5-cand-hy3 model=tencent/hy3 clone=/home/exedev/shipshape-shakedown/.eval-scratch/oracle-clone-hy3 port=8875 max=12 resume=0
+[2026-07-27T15:23:58Z] VOYAGE 0 (fit out: Shipwright harbour pass BEFORE the build)
+[2026-07-27T15:41:54Z] SHIPWRIGHT[fitout] 1075s | committed=yes | self-suite:2 scenarios (2 undefined) | planks=NO-APP.JS
+[2026-07-27T15:41:54Z] VOYAGE 1 (build)
+[2026-07-27T16:12:37Z] V1 build 1843s | self-suite: 33 scenarios (31 passed, 2 undefined)
+[2026-07-27T16:13:32Z] V1 (post-shipwright) | oracle 23/29 | failing:
+    TodoMVC - shakedown -- Mark all as completed -- should allow me to mark all items as completed
+    TodoMVC - shakedown -- Mark all as completed -- should allow me to clear the complete state of all items
+    TodoMVC - shakedown -- Item -- should allow me to mark items as complete
+    TodoMVC - shakedown -- Item -- should allow me to un-mark items as complete
+    TodoMVC - shakedown -- Editing -- should hide other controls when editing
+[2026-07-27T16:13:33Z] VOYAGE 2 (oracle-correction — exact failure pasted verbatim)
+[2026-07-27T16:22:51Z] V2 oracle-correction 503s | VOYAGE-COMPLETE | self-suite: 36 scenarios (31 passed, 5 undefined) | oracle 23/29 | failing:
+    TodoMVC - shakedown -- Mark all as completed -- should allow me to mark all items as completed
+    TodoMVC - shakedown -- Mark all as completed -- should allow me to clear the complete state of all items
+    TodoMVC - shakedown -- Item -- should allow me to mark items as complete
+    TodoMVC - shakedown -- Item -- should allow me to un-mark items as complete
+    TodoMVC - shakedown -- Editing -- should hide other controls when editing
+[2026-07-27T16:22:51Z] VOYAGE 3 (oracle-correction — exact failure pasted verbatim)
+[2026-07-27T16:41:02Z] V3 oracle-correction 1055s | VOYAGE-COMPLETE | self-suite: 36 scenarios (34 passed, 2 undefined) | oracle 27/29 | failing:
+    TodoMVC - shakedown -- Editing -- should remove the item if an empty text string was entered
+[2026-07-27T16:41:02Z] VOYAGE 4 (oracle-correction — exact failure pasted verbatim)
+[2026-07-27T16:51:29Z] V4 oracle-correction 592s | VOYAGE-COMPLETE | self-suite: 37 scenarios (34 passed, 3 undefined) | oracle 27/29 | failing:
+    TodoMVC - shakedown -- Editing -- should remove the item if an empty text string was entered
+[2026-07-27T16:51:29Z]   (no change vs prior voyage: stuck=1)
+[2026-07-27T16:51:29Z] VOYAGE 5 (oracle-correction — exact failure pasted verbatim)
+[2026-07-27T17:04:31Z] V5 oracle-correction 748s | VOYAGE-COMPLETE | self-suite: 37 scenarios (35 passed, 2 undefined) | oracle 28/29 | failing:
+    
+[2026-07-27T17:04:31Z] REACHED 28/29 — Shipwright harbour pass #2 (after 28/29)
+[2026-07-27T17:13:36Z] SHIPWRIGHT[final] 544s | committed=yes | self-suite:40 scenarios (35 passed, 5 undefined) | planks=43 on-seam=24 hoisted=19 | @captain=5 @conformance=5
+[2026-07-27T17:14:11Z] POST-SHIPWRIGHT oracle 28/29 — STILL 28/29 (shipwright did not regress) — DONE
+[2026-07-27T17:14:11Z] PILOT END wave=P5-cand-hy3 final=28/29

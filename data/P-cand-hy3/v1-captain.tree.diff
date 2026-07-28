@@ -1,0 +1,350 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..25d1445
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,22 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++Binding behaviour lives in `features/todomvc.feature` and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
++
++## Build handoff (Shipwright / Crew)
++
++- **Stack:** Vanilla JavaScript. No preprocessors (no Sass/CoffeeScript/TS build). ES modules or a single `js/app.js` are both acceptable; keep components split where it reads well (`js/models/todo.js`, `js/controllers/todos.js`).
++- **Markup:** Start from `assets/app-template.index.html`. Remove the HTML comments when done. Keep `node_modules/todomvc-common/base.css` untouched; put any overrides in `css/app.css` (minimal). Double-quotes in HTML, single-quotes in JS/CSS (per spec).
++- **Persistence:** Vanilla `localStorage`, key `todos-vanilla`. Each item uses keys `id`, `title`, `completed`. Do NOT persist editing state.
++- **Routing:** Hash routing `#/` (all), `#/active`, `#/completed` (also allow `#!/`). Use a `hashchange` listener (no need for Director in vanilla). Active filter persists across reload naturally via `location.hash`; confirm the scenario `Active filter persists across reload` still holds.
++- **Constants:** use `var ENTER_KEY = 13;` (and an ESC_KEY constant) rather than raw keyCodes.
++- **Dependencies:** README/package already name `todomvc-common` + `todomvc-app-css`; ensure `node_modules` vendoring keeps only files the app loads (see `.gitignore` convention). Test runner is Cucumber + happy-dom (step defs under `features/support/`).
++
++## Coverage gaps closed this pass
++
++Added three scenarios the spec required but the prior draft omitted: editing input focus on activation, edit-save on blur (besides Enter), and the `<strong>`-wrapped counter number.
++
++## Open
++
++- None blocking. Awaiting QM on the watchbill, then Shipwright for the build.
+diff --git a/features/todomvc.feature b/features/todomvc.feature
+new file mode 100644
+index 0000000..e806f04
+--- /dev/null
++++ b/features/todomvc.feature
+@@ -0,0 +1,253 @@
++Feature: TodoMVC
++  As a task-bearing user
++  I want a browser todo list that adds, completes, edits, filters, and remembers my items
++  So that I can track work without losing it between sessions
++
++  Rule: Adding and removing todos
++
++  Scenario: Empty list hides the main and footer sections
++    Given the app loads with no todos
++    Then the main section is hidden
++    And the footer is hidden
++
++  Scenario: New todo input is focused on page load
++    Given the app loads with no todos
++    Then the new todo input is focused
++
++  Scenario: Entering a title creates and appends a todo
++    Given the app loads with no todos
++    When I enter "Buy milk" in the new todo input and press Enter
++    Then the todo list shows 1 item
++    And the item titled "Buy milk" is present
++
++  Scenario: New todo title is trimmed before storing
++    Given the app loads with no todos
++    When I enter "  Walk the dog  " in the new todo input and press Enter
++    Then the todo list shows 1 item
++    And the item titled "Walk the dog" is present
++
++  Scenario: Whitespace-only new todo is ignored
++    Given the app loads with no todos
++    When I enter "   " in the new todo input and press Enter
++    Then the todo list shows 0 items
++
++  Scenario: Each todo item exposes a destroy button
++    Given the app loads with the following todos:
++      | title | completed |
++      | Tidy  | false     |
++    Then the todo "Tidy" has a destroy button
++
++  Rule: Completing todos
++
++  Scenario: Toggling a todo marks it completed
++    Given the app loads with the following todos:
++      | title      | completed |
++      | Write code | false     |
++    When I toggle the todo "Write code"
++    Then the todo "Write code" is marked completed
++
++  Scenario: Toggle-all completes every todo
++    Given the app loads with the following todos:
++      | title | completed |
++      | A     | false     |
++      | B     | false     |
++    When I toggle the toggle-all checkbox
++    Then the todo "A" is marked completed
++    And the todo "B" is marked completed
++    And the toggle-all checkbox is checked
++
++  Scenario: Toggle-all reflects all todos completed individually
++    Given the app loads with the following todos:
++      | title | completed |
++      | A     | false     |
++      | B     | false     |
++    When I toggle the todo "A"
++    And I toggle the todo "B"
++    Then the toggle-all checkbox is checked
++
++  Scenario: Unchecking one todo unchecks toggle-all
++    Given the app loads with the following todos:
++      | title | completed |
++      | A     | true      |
++      | B     | true      |
++    When I toggle the todo "A"
++    Then the toggle-all checkbox is unchecked
++
++  Rule: Editing todos
++
++  Scenario: Double-clicking a label enters editing mode
++    Given the app loads with the following todos:
++      | title      | completed |
++      | Read book  | false     |
++    When I double-click the label of "Read book"
++    Then the todo "Read book" is in editing mode
++
++  Scenario: Editing saves the trimmed title on Enter
++    Given the app loads with the following todos:
++      | title     | completed |
++      | Old title | false     |
++    When I edit the todo "Old title" to "  New title  " and press Enter
++    Then the todo list shows 1 item
++    And the item titled "New title" is present
++    And the todo "New title" is not in editing mode
++
++  Scenario: Editing to empty destroys the todo
++    Given the app loads with the following todos:
++      | title   | completed |
++      | Doomed  | false     |
++    When I edit the todo "Doomed" to "" and press Enter
++    Then the todo list shows 0 items
++
++  Scenario: Escape during edit discards the change
++    Given the app loads with the following todos:
++      | title    | completed |
++      | Keep me  | false     |
++    When I edit the todo "Keep me" to "Changed" and press Escape
++    Then the todo list shows 1 item
++    And the item titled "Keep me" is present
++    And the todo "Keep me" is not in editing mode
++
++  Scenario: Editing input receives focus when entering edit mode
++    Given the app loads with the following todos:
++      | title    | completed |
++      | Focus me | false     |
++    When I double-click the label of "Focus me"
++    Then the edit input of "Focus me" is focused
++
++  Scenario: Editing saves the trimmed title on blur
++    Given the app loads with the following todos:
++      | title     | completed |
++      | Old title | false     |
++    When I edit the todo "Old title" to "  Blur title  " and blur the input
++    Then the todo list shows 1 item
++    And the item titled "Blur title" is present
++    And the todo "Blur title" is not in editing mode
++
++  Rule: Counting and clearing
++
++  Scenario: Counter shows singular "item" for one active todo
++    Given the app loads with the following todos:
++      | title | completed |
++      | Only  | false     |
++    Then the counter reads "1 item left"
++
++  Scenario: Counter shows plural "items" for multiple active todos
++    Given the app loads with the following todos:
++      | title | completed |
++      | A     | false     |
++      | B     | false     |
++    Then the counter reads "2 items left"
++
++  Scenario: Counter excludes completed todos from the active count
++    Given the app loads with the following todos:
++      | title | completed |
++      | A     | true      |
++      | B     | false     |
++    Then the counter reads "1 item left"
++
++  Scenario: Counter number is rendered inside a strong element
++    Given the app loads with the following todos:
++      | title | completed |
++      | A     | false     |
++      | B     | false     |
++    Then the counter number is wrapped in a strong element
++
++  Scenario: Clear completed removes completed todos
++    Given the app loads with the following todos:
++      | title | completed |
++      | A     | true      |
++      | B     | false     |
++    When I click the clear completed button
++    Then the todo list shows 1 item
++    And the item titled "B" is present
++
++  Scenario: Clear completed is hidden when nothing is completed
++    Given the app loads with the following todos:
++      | title | completed |
++      | A     | false     |
++      | B     | false     |
++    Then the clear completed button is hidden
++
++  Scenario: Clear completed unchecks toggle-all
++    Given the app loads with the following todos:
++      | title | completed |
++      | A     | true      |
++      | B     | true      |
++    When I click the clear completed button
++    Then the toggle-all checkbox is unchecked
++
++  Rule: Persistence
++
++  Scenario: Todos and their completed state survive a page reload
++    Given the app loads with the following todos:
++      | title       | completed |
++      | Persist me  | false     |
++    When I complete the todo "Persist me"
++    And I reload the app
++    Then the todo list shows 1 item
++    And the item titled "Persist me" is present
++    And the todo "Persist me" is marked completed
++
++  Scenario: Todos persist under the todos-vanilla localStorage key
++    Given the app loads with the following todos:
++      | title    | completed |
++      | Store me | false     |
++    Then the localStorage key "todos-vanilla" holds a JSON array of objects
++    And every object in that array has the string keys "id", "title", and "completed"
++
++  Rule: Routing and filtering
++
++  Scenario: Active filter shows only incomplete todos
++    Given the app loads with the following todos:
++      | title | completed |
++      | A     | true      |
++      | B     | false     |
++    When I open the "Active" filter
++    Then the todo list shows 1 item
++    And the item titled "B" is present
++
++  Scenario: Completed filter shows only completed todos
++    Given the app loads with the following todos:
++      | title | completed |
++      | A     | true      |
++      | B     | false     |
++    When I open the "Completed" filter
++    Then the todo list shows 1 item
++    And the item titled "A" is present
++
++  Scenario: All filter shows every todo
++    Given the app loads with the following todos:
++      | title | completed |
++      | A     | true      |
++      | B     | false     |
++    When I open the "All" filter
++    Then the todo list shows 2 items
++
++  Scenario: Selected filter link reflects the active route
++    Given the app loads with the following todos:
++      | title | completed |
++      | A     | false     |
++      | B     | false     |
++    When I open the "Active" filter
++    Then the "Active" filter link is selected
++
++  Scenario: Active filter persists across reload
++    Given the app loads with the following todos:
++      | title | completed |
++      | A     | true      |
++      | B     | false     |
++    When I open the "Completed" filter
++    And I reload the app
++    Then the "Completed" filter link is selected
++    And the todo list shows 1 item
++    And the item titled "A" is present
++
++  Scenario: Completing a todo in the active filter hides it
++    Given the app loads with the following todos:
++      | title | completed |
++      | A     | false     |
++      | B     | false     |
++    When I open the "Active" filter
++    And I complete the todo "A"
++    Then the todo list shows 1 item
++    And the item titled "B" is present
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..0070216
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,57 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/todomvc.feature:Empty list hides the main and footer sections",
++      "features/todomvc.feature:New todo input is focused on page load",
++      "features/todomvc.feature:Entering a title creates and appends a todo",
++      "features/todomvc.feature:New todo title is trimmed before storing",
++      "features/todomvc.feature:Whitespace-only new todo is ignored",
++      "features/todomvc.feature:Each todo item exposes a destroy button"
++    ]
++  },
++  "watch2": {
++    "scenarios": [
++      "features/todomvc.feature:Toggling a todo marks it completed",
++      "features/todomvc.feature:Toggle-all completes every todo",
++      "features/todomvc.feature:Toggle-all reflects all todos completed individually",
++      "features/todomvc.feature:Unchecking one todo unchecks toggle-all"
++    ]
++  },
++  "watch3": {
++    "scenarios": [
++      "features/todomvc.feature:Double-clicking a label enters editing mode",
++      "features/todomvc.feature:Editing input receives focus when entering edit mode",
++      "features/todomvc.feature:Editing saves the trimmed title on Enter",
++      "features/todomvc.feature:Editing saves the trimmed title on blur",
++      "features/todomvc.feature:Editing to empty destroys the todo",
++      "features/todomvc.feature:Escape during edit discards the change"
++    ]
++  },
++  "watch4": {
++    "scenarios": [
++      "features/todomvc.feature:Counter shows singular \"item\" for one active todo",
++      "features/todomvc.feature:Counter shows plural \"items\" for multiple active todos",
++      "features/todomvc.feature:Counter excludes completed todos from the active count",
++      "features/todomvc.feature:Counter number is rendered inside a strong element",
++      "features/todomvc.feature:Clear completed removes completed todos",
++      "features/todomvc.feature:Clear completed is hidden when nothing is completed",
++      "features/todomvc.feature:Clear completed unchecks toggle-all"
++    ]
++  },
++  "watch5": {
++    "scenarios": [
++      "features/todomvc.feature:Todos and their completed state survive a page reload",
++      "features/todomvc.feature:Todos persist under the todos-vanilla localStorage key"
++    ]
++  },
++  "watch6": {
++    "scenarios": [
++      "features/todomvc.feature:Active filter shows only incomplete todos",
++      "features/todomvc.feature:Completed filter shows only completed todos",
++      "features/todomvc.feature:All filter shows every todo",
++      "features/todomvc.feature:Selected filter link reflects the active route",
++      "features/todomvc.feature:Active filter persists across reload",
++      "features/todomvc.feature:Completing a todo in the active filter hides it"
++    ]
++  }
++}

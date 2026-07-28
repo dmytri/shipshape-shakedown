@@ -1,0 +1,1027 @@
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..55d8d49
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,41 @@
++# RIGGING
++
++## Stack
++- language: javascript
++
++## Directories
++- implementation: .
++- specs: features
++- verification: features/support
++- wake: .wake
++- runrecord: none
++
++## Methods
++- prove: npx @dk/yoink --run 'npx cucumber-js "features/**/*.feature" --name "$SS_SCENARIO"' --label "prove" --timeout 30
++- verify: npx @dk/yoink --run 'npx cucumber-js "features/**/*.feature" --name "$SS_SCENARIO"' --label "verify" --timeout 60
++- sweep: npx @dk/yoink --run 'npx cucumber-js "features/**/*.feature" --tags "$SS_TIER"' --label "sweep" --timeout 120
++- plank-join: npx @dk/yoink --run 'grep -rn "@planks" --include="*.js" --include="*.ts" --include="*.mjs" .' --label "plank-join" --timeout 10
++- hygiene: npx @dk/yoink --run 'npx biome check .' --label "hygiene" --timeout 30
++- static: npx @dk/yoink --run 'echo "static: no static analysis configured"' --label "static" --timeout 5
++- discovery: npx @dk/yoink --run 'npx cucumber-js "features/**/*.feature" --dry-run' --label "discovery" --timeout 30
++- regression: npx @dk/yoink --run 'npx cucumber-js "features/**/*.feature"' --label "regression" --timeout 120
++- condemnation: npx @dk/yoink --run 'npx cucumber-js "features/**/*.feature" --name "$SS_SCENARIO"' --label "condemnation" --timeout 30
++- dead-code: npx @dk/yoink --run 'echo "dead-code: no dead-code tool configured"' --label "dead-code" --timeout 5
++- spec-lint: none
++- install: npx @dk/yoink --run 'npm install "$SS_DEPENDENCY"' --label "install" --timeout 60
++- ship: none
++- ship-verify: none
++
++## Tiers
++- @logic: npx @dk/yoink --run 'npx cucumber-js "features/**/*.feature"' --label "logic-sweep" --timeout 120
++
++## Perturbation
++- perturb: echo "PERTURBATION: $SS_SEAM"
++- message: PERTURBATION
++
++## Dependencies
++- policy: locked
++- dependency: @cucumber/cucumber
++- dependency: happy-dom
++- dependency: todomvc-app-css
++- dependency: todomvc-common
+\ No newline at end of file
+diff --git a/features/support/steps.js b/features/support/steps.js
+new file mode 100644
+index 0000000..24ea6b0
+--- /dev/null
++++ b/features/support/steps.js
+@@ -0,0 +1,527 @@
++const { Given, When, Then, Before, After } = require('@cucumber/cucumber');
++const { Window } = require('happy-dom');
++const fs = require('fs');
++const path = require('path');
++
++const TEMPLATE_PATH = path.resolve(__dirname, '../../assets/app-template.index.html');
++const APP_JS_PATH = path.resolve(__dirname, '../../js/app.js');
++
++let window, document, localStorage;
++
++Before(function () {
++  const html = fs.readFileSync(TEMPLATE_PATH, 'utf8');
++  window = new Window({ url: 'http://localhost/' });
++  document = window.document;
++  localStorage = window.localStorage;
++
++  document.body.innerHTML = html.match(/<body[^>]*>([\s\S]*)<\/body>/i)[1];
++  document.head.innerHTML = html.match(/<head[^>]*>([\s\S]*)<\/head>/i)[1];
++
++  let hash = '';
++  Object.defineProperty(window, 'location', {
++    value: {
++      get hash() { return hash; },
++      set hash(v) {
++        hash = v;
++        this._triggerHashChange();
++      },
++      _triggerHashChange() {
++        const event = new window.Event('hashchange');
++        window.dispatchEvent(event);
++      },
++      href: 'http://localhost/',
++      pathname: '/',
++      search: ''
++    },
++    configurable: true
++  });
++
++  this.window = window;
++  this.document = document;
++  this.localStorage = localStorage;
++
++  if (fs.existsSync(APP_JS_PATH)) {
++    try {
++      const appCode = fs.readFileSync(APP_JS_PATH, 'utf8');
++      window.eval(appCode);
++    } catch (e) {
++      console.error('App load error:', e.message);
++    }
++  }
++});
++
++After(function () {
++  if (window) {
++    window.close();
++  }
++});
++
++// ===== HELPERS =====
++
++function getTodoItems() {
++  return Array.from(document.querySelectorAll('.todo-list li'));
++}
++
++function findTodoItem(title) {
++  return getTodoItems().find(li =>
++    li.querySelector('label')?.textContent?.trim() === title
++  );
++}
++
++function getNewTodoInput() {
++  return document.querySelector('.new-todo');
++}
++
++function getTodoCount() {
++  return document.querySelector('.todo-count');
++}
++
++function getMainSection() {
++  return document.querySelector('.main');
++}
++
++function getFooter() {
++  return document.querySelector('.footer');
++}
++
++function getFilterLink(name) {
++  const links = document.querySelectorAll('.filters a');
++  return Array.from(links).find(a => a.textContent.trim() === name);
++}
++
++function setupTodosViaStorage(todosArray) {
++  // Save todos to localStorage and trigger re-render via load event
++  localStorage.setItem('todos-vanillajs', JSON.stringify(todosArray));
++  window.dispatchEvent(new window.Event('load'));
++}
++
++function readTodosFromStorage() {
++  try {
++    var stored = localStorage.getItem('todos-vanillajs');
++    return stored ? JSON.parse(stored) : [];
++  } catch (e) {
++    return [];
++  }
++}
++
++// ===== GIVEN =====
++
++Given('the page is loaded with a fresh todo list', function () {
++  const list = document.querySelector('.todo-list');
++  if (list) list.innerHTML = '';
++  localStorage.clear();
++  window.dispatchEvent(new window.Event('load'));
++});
++
++Given('the new-todo input contains {string}', function (value) {
++  const input = getNewTodoInput();
++  if (input) input.value = value;
++});
++
++Given('the todo list contains {string}', function (title) {
++  var todos = readTodosFromStorage();
++  todos.push({ id: Date.now() + Math.random().toString(36).substr(2, 5), title: title, completed: false });
++  setupTodosViaStorage(todos);
++});
++
++Given('the todo list contains {string} and {string}', function (title1, title2) {
++  var todos = readTodosFromStorage();
++  [title1, title2].forEach(function(title) {
++    todos.push({ id: Date.now() + Math.random().toString(36).substr(2, 5), title: title, completed: false });
++  });
++  setupTodosViaStorage(todos);
++});
++
++Given('the todo list contains {string} and {string} and {string}', function (title1, title2, title3) {
++  var todos = readTodosFromStorage();
++  [title1, title2, title3].forEach(function(title) {
++    todos.push({ id: Date.now() + Math.random().toString(36).substr(2, 5), title: title, completed: false });
++  });
++  setupTodosViaStorage(todos);
++});
++
++Given('{string} is completed', function (title) {
++  var todos = readTodosFromStorage();
++  todos.forEach(function(t) {
++    if (t.title === title) t.completed = true;
++  });
++  setupTodosViaStorage(todos);
++});
++
++Given('the user is on the {string} route', function (route) {
++  window.location.hash = route;
++});
++
++Given('the user is on the Active filter', function () {
++  window.location.hash = '#/active';
++});
++
++Given('the page URL has no hash fragment', function () {
++  window.location.hash = '';
++});
++
++// Used as both Given (setup) and Then (assertion) - define once, Cucumber matches all keywords
++Given('the todo list is empty', function () {
++  localStorage.clear();
++  window.dispatchEvent(new window.Event('load'));
++  const items = getTodoItems();
++  if (items.length !== 0) {
++    throw new Error(`Expected empty todo list, got ${items.length} items`);
++  }
++});
++
++Given('the user is editing {string}', function (title) {
++  const item = findTodoItem(title);
++  if (item) {
++    item.classList.add('editing');
++    const editInput = item.querySelector('.edit');
++    if (editInput) {
++      editInput.value = title;
++      editInput.focus();
++    }
++  }
++});
++
++Given('the user is editing {string} to {string}', function (title, newTitle) {
++  const item = findTodoItem(title);
++  if (item) {
++    item.classList.add('editing');
++    const editInput = item.querySelector('.edit');
++    if (editInput) {
++      editInput.value = newTitle;
++      editInput.focus();
++    }
++  }
++});
++
++// ===== WHEN =====
++
++When('the user presses Enter', function () {
++  var input = document.querySelector('.new-todo');
++  if (!input) input = document.querySelector('.todo-list li.editing .edit');
++  if (input) {
++    input.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, which: 13, bubbles: true }));
++    input.dispatchEvent(new window.KeyboardEvent('keyup', { key: 'Enter', keyCode: 13, which: 13, bubbles: true }));
++  }
++});
++
++When('the page loads', function () {
++  window.dispatchEvent(new window.Event('load'));
++});
++
++When('the user clicks the {string} filter', function (name) {
++  const link = getFilterLink(name);
++  if (link) link.click();
++});
++
++When('the user clicks the toggle checkbox on {string}', function (title) {
++  const item = findTodoItem(title);
++  if (item) {
++    const toggle = item.querySelector('.toggle');
++    if (toggle) toggle.click();
++  }
++});
++
++When('the user double-clicks the label for {string}', function (title) {
++  const item = findTodoItem(title);
++  if (item) {
++    const label = item.querySelector('label');
++    if (label) {
++      label.dispatchEvent(new window.MouseEvent('dblclick', { bubbles: true }));
++    }
++  }
++});
++
++When('the user types {string} and presses Enter', function (value) {
++  const editingInput = document.querySelector('.todo-list li.editing .edit');
++  if (editingInput) {
++    editingInput.value = value;
++    editingInput.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, which: 13, bubbles: true }));
++    editingInput.dispatchEvent(new window.KeyboardEvent('keypress', { key: 'Enter', keyCode: 13, which: 13, bubbles: true }));
++    editingInput.dispatchEvent(new window.KeyboardEvent('keyup', { key: 'Enter', keyCode: 13, which: 13, bubbles: true }));
++  }
++});
++
++When('the user types {string} and the edit input loses focus', function (value) {
++  const editingInput = document.querySelector('.todo-list li.editing .edit');
++  if (editingInput) {
++    editingInput.value = value;
++    editingInput.dispatchEvent(new window.FocusEvent('blur', { bubbles: true }));
++  }
++});
++
++When('the user clears the input and presses Enter', function () {
++  const editingInput = document.querySelector('.todo-list li.editing .edit');
++  if (editingInput) {
++    editingInput.value = '';
++    editingInput.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, which: 13, bubbles: true }));
++    editingInput.dispatchEvent(new window.KeyboardEvent('keypress', { key: 'Enter', keyCode: 13, which: 13, bubbles: true }));
++    editingInput.dispatchEvent(new window.KeyboardEvent('keyup', { key: 'Enter', keyCode: 13, which: 13, bubbles: true }));
++  }
++});
++
++When('the user presses Escape', function () {
++  const editingInput = document.querySelector('.todo-list li.editing .edit');
++  if (editingInput) {
++    editingInput.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, which: 27, bubbles: true }));
++    editingInput.dispatchEvent(new window.KeyboardEvent('keyup', { key: 'Escape', keyCode: 27, which: 27, bubbles: true }));
++  }
++});
++
++When('the user clicks the destroy button on {string}', function (title) {
++  const item = findTodoItem(title);
++  if (item) {
++    const destroy = item.querySelector('.destroy');
++    if (destroy) destroy.click();
++  }
++});
++
++When('the user clicks the toggle-all checkbox', function () {
++  const toggleAll = document.querySelector('.toggle-all');
++  if (toggleAll) toggleAll.click();
++});
++
++When('the user clicks the {string} button', function (name) {
++  const buttons = document.querySelectorAll('button');
++  const btn = Array.from(buttons).find(b => b.textContent.trim() === name);
++  if (btn) btn.click();
++});
++
++When('the page is reloaded', function () {
++  // Save current state to localStorage, then reload
++  const appData = {};
++  const keys = Object.keys(localStorage);
++  keys.forEach(k => { appData[k] = localStorage.getItem(k); });
++
++  // Clear and reset
++  const list = document.querySelector('.todo-list');
++  if (list) list.innerHTML = '';
++  localStorage.clear();
++
++  // Restore localStorage data
++  Object.keys(appData).forEach(k => {
++    localStorage.setItem(k, appData[k]);
++  });
++
++  // Re-trigger page load to re-render from localStorage
++  window.dispatchEvent(new window.Event('load'));
++
++  // Re-apply hash state
++  if (window.location.hash) {
++    window.dispatchEvent(new window.Event('hashchange'));
++  }
++});
++
++// ===== THEN =====
++
++Then('the todo list contains {int} item with title {string}', function (count, title) {
++  const items = getTodoItems();
++  if (items.length !== count) {
++    throw new Error(`Expected ${count} items, got ${items.length}`);
++  }
++  const item = findTodoItem(title);
++  if (!item) {
++    throw new Error(`Expected item with title "${title}" not found`);
++  }
++});
++
++Then('the new-todo input is empty', function () {
++  const input = getNewTodoInput();
++  if (input && input.value !== '') {
++    throw new Error(`Expected empty input, got "${input.value}"`);
++  }
++});
++
++Then('the {string} item has class {string}', function (title, cls) {
++  const item = findTodoItem(title);
++  if (!item) throw new Error(`Item "${title}" not found`);
++  if (!item.classList.contains(cls)) {
++    throw new Error(`Item "${title}" does not have class "${cls}"`);
++  }
++});
++
++Then('the {string} item does not have class {string}', function (title, cls) {
++  const item = findTodoItem(title);
++  if (!item) throw new Error(`Item "${title}" not found`);
++  if (item.classList.contains(cls)) {
++    throw new Error(`Item "${title}" should not have class "${cls}"`);
++  }
++});
++
++Then('the {string} toggle checkbox is checked', function (title) {
++  const item = findTodoItem(title);
++  if (!item) throw new Error(`Item "${title}" not found`);
++  const toggle = item.querySelector('.toggle');
++  if (!toggle || !toggle.checked) {
++    throw new Error(`Toggle for "${title}" is not checked`);
++  }
++});
++
++Then('the edit input is focused', function () {
++  const editInput = document.querySelector('.todo-list li.editing .edit');
++  if (!editInput) throw new Error('No editing input found');
++  if (document.activeElement !== editInput) {
++    throw new Error('Edit input is not focused');
++  }
++});
++
++Then('the todo-count shows {string}', function (expected) {
++  const countEl = getTodoCount();
++  if (!countEl) throw new Error('Todo count element not found');
++  const text = countEl.textContent.trim();
++  if (text !== expected) {
++    throw new Error(`Expected todo-count "${expected}", got "${text}"`);
++  }
++});
++
++Then('the main section is visible', function () {
++  const main = getMainSection();
++  if (!main) throw new Error('Main section not found');
++  if (main.style.display === 'none' || main.hidden) {
++    throw new Error('Main section is hidden');
++  }
++});
++
++Then('the main section is not visible', function () {
++  const main = getMainSection();
++  if (!main) return;
++  if (main.style.display !== 'none' && !main.hidden) {
++    throw new Error('Main section is visible');
++  }
++});
++
++Then('the footer section is visible', function () {
++  const footer = getFooter();
++  if (!footer) throw new Error('Footer section not found');
++  if (footer.style.display === 'none' || footer.hidden) {
++    throw new Error('Footer section is hidden');
++  }
++});
++
++Then('the footer section is not visible', function () {
++  const footer = getFooter();
++  if (!footer) return;
++  if (footer.style.display !== 'none' && !footer.hidden) {
++    throw new Error('Footer section is visible');
++  }
++});
++
++Then('the {string} filter link has class {string}', function (name, cls) {
++  const link = getFilterLink(name);
++  if (!link) throw new Error(`Filter link "${name}" not found`);
++  if (!link.classList.contains(cls)) {
++    throw new Error(`Filter link "${name}" does not have class "${cls}"`);
++  }
++});
++
++Then('the {string} filter link does not have class {string}', function (name, cls) {
++  const link = getFilterLink(name);
++  if (!link) throw new Error(`Filter link "${name}" not found`);
++  if (link.classList.contains(cls)) {
++    throw new Error(`Filter link "${name}" should not have class "${cls}"`);
++  }
++});
++
++Then('all todo items have class {string}', function (cls) {
++  const items = getTodoItems();
++  if (items.length === 0) throw new Error('No todo items');
++  items.forEach((item, i) => {
++    if (!item.classList.contains(cls)) {
++      throw new Error(`Item ${i} does not have class "${cls}"`);
++    }
++  });
++});
++
++Then('the toggle-all checkbox is checked', function () {
++  const toggleAll = document.querySelector('.toggle-all');
++  if (!toggleAll) throw new Error('Toggle-all checkbox not found');
++  if (!toggleAll.checked) {
++    throw new Error('Toggle-all checkbox is not checked');
++  }
++});
++
++Then('the clear-completed button is hidden', function () {
++  const btn = getClearCompleted();
++  if (!btn) return;
++  if (btn.style.display !== 'none' && !btn.hidden) {
++    throw new Error('Clear completed button is visible');
++  }
++});
++
++Then('{string} is no longer visible in the filtered view', function (title) {
++  const item = findTodoItem(title);
++  if (item && item.style.display !== 'none') {
++    throw new Error(`Item "${title}" is still visible`);
++  }
++});
++
++Then('the todo list shows {int} items', function (count) {
++  const items = getTodoItems().filter(li => li.style.display !== 'none');
++  if (items.length !== count) {
++    throw new Error(`Expected ${count} visible items, got ${items.length}`);
++  }
++});
++
++Then('the todo list shows {int} item with title {string}', function (count, title) {
++  const items = getTodoItems().filter(li => li.style.display !== 'none');
++  if (items.length !== count) {
++    throw new Error(`Expected ${count} visible items, got ${items.length}`);
++  }
++  const item = items.find(li => li.querySelector('label')?.textContent?.trim() === title);
++  if (!item) {
++    throw new Error(`Expected item with title "${title}" not found among visible items`);
++  }
++});
++
++Then('the todo list contains {int} items', function (count) {
++  const items = getTodoItems();
++  if (items.length !== count) {
++    throw new Error(`Expected ${count} items, got ${items.length}`);
++  }
++});
++
++Then('the title of item {int} is {string}', function (index, expectedTitle) {
++  const items = getTodoItems();
++  const idx = index - 1;
++  if (idx < 0 || idx >= items.length) {
++    throw new Error(`Item index ${index} out of range (0-${items.length})`);
++  }
++  const label = items[idx].querySelector('label');
++  const title = label ? label.textContent.trim() : '';
++  if (title !== expectedTitle) {
++    throw new Error(`Item ${index} title expected "${expectedTitle}", got "${title}"`);
++  }
++});
++
++Then('item {int} is not completed', function (index) {
++  const items = getTodoItems();
++  const idx = index - 1;
++  if (idx < 0 || idx >= items.length) {
++    throw new Error(`Item index ${index} out of range (0-${items.length})`);
++  }
++  if (items[idx].classList.contains('completed')) {
++    throw new Error(`Item ${index} should not be completed`);
++  }
++});
++
++Then('item {int} is completed', function (index) {
++  const items = getTodoItems();
++  const idx = index - 1;
++  if (idx < 0 || idx >= items.length) {
++    throw new Error(`Item index ${index} out of range (0-${items.length})`);
++  }
++  if (!items[idx].classList.contains('completed')) {
++    throw new Error(`Item ${index} should be completed`);
++  }
++});
++
++Then('the localStorage key is {string}', function (expectedKey) {
++  const keys = Object.keys(localStorage);
++  const todoKeys = keys.filter(k => k.startsWith('todos-'));
++  if (todoKeys.length === 0) {
++    throw new Error(`No localStorage key matching "todos-*" found. Keys: ${keys.join(', ') || 'none'}`);
++  }
++  if (todoKeys[0] !== expectedKey) {
++    throw new Error(`Expected localStorage key "${expectedKey}", got "${todoKeys[0]}"`);
++  }
++});
+\ No newline at end of file
+diff --git a/js/app.js b/js/app.js
+new file mode 100644
+index 0000000..17b3e12
+--- /dev/null
++++ b/js/app.js
+@@ -0,0 +1,438 @@
++/**
++ * @planks("the page is loaded with a fresh todo list")
++ * @planks("the new-todo input contains {string}")
++ * @planks("the user presses Enter")
++ * @planks("the todo list is empty")
++ * @planks("the todo list contains {string}")
++ * @planks("the todo list contains {string} and {string}")
++ * @planks("the todo list contains {string} and {string} and {string}")
++ * @planks("{string} is completed")
++ * @planks("the user is on the {string} route")
++ * @planks("the user is on the Active filter")
++ * @planks("the page URL has no hash fragment")
++ * @planks("the user is editing {string}")
++ * @planks("the user is editing {string} to {string}")
++ * @planks("the page loads")
++ * @planks("the user clicks the {string} filter")
++ * @planks("the user clicks the toggle checkbox on {string}")
++ * @planks("the user double-clicks the label for {string}")
++ * @planks("the user types {string} and presses Enter")
++ * @planks("the user types {string} and the edit input loses focus")
++ * @planks("the user clears the input and presses Enter")
++ * @planks("the user presses Escape")
++ * @planks("the user clicks the destroy button on {string}")
++ * @planks("the user clicks the toggle-all checkbox")
++ * @planks("the user clicks the {string} button")
++ * @planks("the page is reloaded")
++ * @planks("the todo list contains {int} item with title {string}")
++ * @planks("the new-todo input is empty")
++ * @planks("the {string} item has class {string}")
++ * @planks("the {string} item does not have class {string}")
++ * @planks("the {string} toggle checkbox is checked")
++ * @planks("the edit input is focused")
++ * @planks("the todo-count shows {string}")
++ * @planks("the main section is visible")
++ * @planks("the main section is not visible")
++ * @planks("the footer section is visible")
++ * @planks("the footer section is not visible")
++ * @planks("the {string} filter link has class {string}")
++ * @planks("the {string} filter link does not have class {string}")
++ * @planks("all todo items have class {string}")
++ * @planks("the toggle-all checkbox is checked")
++ * @planks("the clear-completed button is hidden")
++ * @planks("{string} is no longer visible in the filtered view")
++ * @planks("the todo list shows {int} items")
++ * @planks("the todo list shows {int} item with title {string}")
++ * @planks("the todo list contains {int} items")
++ * @planks("the title of item {int} is {string}")
++ * @planks("item {int} is not completed")
++ * @planks("item {int} is completed")
++ * @planks("the localStorage key is {string}")
++ */
++(function () {
++  'use strict';
++
++  var STORAGE_KEY = 'todos-vanillajs';
++  var ENTER_KEY = 13;
++  var ESCAPE_KEY = 27;
++
++  // --- Model ---
++  var todos = [];
++
++  function loadTodos() {
++    try {
++      var stored = localStorage.getItem(STORAGE_KEY);
++      todos = stored ? JSON.parse(stored) : [];
++    } catch (e) {
++      todos = [];
++    }
++  }
++
++  function saveTodos() {
++    localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
++  }
++
++  function generateId() {
++    return Date.now() + Math.random().toString(36).substr(2, 5);
++  }
++
++  function addTodo(title) {
++    todos.push({
++      id: generateId(),
++      title: title,
++      completed: false
++    });
++    saveTodos();
++  }
++
++  function removeTodo(id) {
++    todos = todos.filter(function (t) { return t.id !== id; });
++    saveTodos();
++  }
++
++  function toggleTodo(id) {
++    todos.forEach(function (t) {
++      if (t.id === id) t.completed = !t.completed;
++    });
++    saveTodos();
++  }
++
++  function toggleAll(completed) {
++    todos.forEach(function (t) { t.completed = completed; });
++    saveTodos();
++  }
++
++  function updateTodo(id, title) {
++    todos.forEach(function (t) {
++      if (t.id === id) t.title = title;
++    });
++    saveTodos();
++  }
++
++  function clearCompleted() {
++    todos = todos.filter(function (t) { return !t.completed; });
++    saveTodos();
++  }
++
++  var activeRoute = 'all';
++
++  function getFilteredTodos() {
++    if (activeRoute === 'active') {
++      return todos.filter(function (t) { return !t.completed; });
++    }
++    if (activeRoute === 'completed') {
++      return todos.filter(function (t) { return t.completed; });
++    }
++    return todos;
++  }
++
++  function getActiveCount() {
++    return todos.filter(function (t) { return !t.completed; }).length;
++  }
++
++  function getCompletedCount() {
++    return todos.filter(function (t) { return t.completed; }).length;
++  }
++
++  // --- View ---
++  function render() {
++    var todoList = document.querySelector('.todo-list');
++    var main = document.querySelector('.main');
++    var footer = document.querySelector('.footer');
++    var toggleAll = document.querySelector('.toggle-all');
++    var todoCount = document.querySelector('.todo-count');
++    var clearCompleted = document.querySelector('.clear-completed');
++
++    if (!todoList) return;
++
++    var filtered = getFilteredTodos();
++    todoList.innerHTML = '';
++
++    filtered.forEach(function (todo) {
++      var li = document.createElement('li');
++      if (todo.completed) li.classList.add('completed');
++
++      li.innerHTML =
++        '<div class="view">' +
++          '<input class="toggle" type="checkbox"' + (todo.completed ? ' checked' : '') + '>' +
++          '<label>' + escapeHtml(todo.title) + '</label>' +
++          '<button class="destroy"></button>' +
++        '</div>' +
++        '<input class="edit" value="' + escapeHtml(todo.title) + '">';
++
++      todoList.appendChild(li);
++    });
++
++    // Main and footer visibility
++    if (todos.length === 0) {
++      if (main) main.style.display = 'none';
++      if (footer) footer.style.display = 'none';
++    } else {
++      if (main) main.style.display = 'block';
++      if (footer) footer.style.display = 'block';
++    }
++
++    // Toggle-all
++    if (toggleAll) {
++      toggleAll.checked = todos.length > 0 && getActiveCount() === 0;
++    }
++
++    // Todo count
++    if (todoCount) {
++      var count = getActiveCount();
++      var word = count === 1 ? 'item' : 'items';
++      todoCount.innerHTML = '<strong>' + count + '</strong> ' + word + ' left';
++    }
++
++    // Clear completed
++    if (clearCompleted) {
++      clearCompleted.style.display = getCompletedCount() > 0 ? 'block' : 'none';
++    }
++
++    // Filter links
++    var filters = document.querySelectorAll('.filters a');
++    filters.forEach(function (a) {
++      var route = a.getAttribute('href').replace('#/', '') || 'all';
++      if (route === activeRoute) {
++        a.classList.add('selected');
++      } else {
++        a.classList.remove('selected');
++      }
++    });
++
++    // Filter visibility
++    var items = todoList.querySelectorAll('li');
++    items.forEach(function (li) {
++      var label = li.querySelector('label');
++      var title = label ? label.textContent.trim() : '';
++      var todo = todos.filter(function (t) { return t.title === title; })[0];
++      if (!todo) return;
++
++      if (activeRoute === 'active' && todo.completed) {
++        li.style.display = 'none';
++      } else if (activeRoute === 'completed' && !todo.completed) {
++        li.style.display = 'none';
++      } else {
++        li.style.display = '';
++      }
++    });
++  }
++
++  function escapeHtml(str) {
++    var div = document.createElement('div');
++    div.appendChild(document.createTextNode(str));
++    return div.innerHTML;
++  }
++
++  // --- Controller / Event Binding ---
++  function init() {
++    loadTodos();
++    activeRoute = getPersistedFilter();
++    render();
++
++    var newTodo = document.querySelector('.new-todo');
++    var todoList = document.querySelector('.todo-list');
++    var toggleAll = document.querySelector('.toggle-all');
++    var clearCompleted = document.querySelector('.clear-completed');
++
++    // New todo: Enter key
++    if (newTodo) {
++      newTodo.addEventListener('keydown', function (e) {
++        if (e.keyCode === ENTER_KEY) {
++          var title = newTodo.value.trim();
++          if (title) {
++            addTodo(title);
++            newTodo.value = '';
++            render();
++          }
++        }
++      });
++    }
++
++    // Event delegation for todo-list items
++    if (todoList) {
++      todoList.addEventListener('click', function (e) {
++        var li = e.target.closest('li');
++        if (!li) return;
++        var label = li.querySelector('label');
++        var title = label ? label.textContent.trim() : '';
++        var todo = todos.filter(function (t) { return t.title === title; })[0];
++        if (!todo) return;
++
++        // Toggle checkbox
++        if (e.target.classList.contains('toggle')) {
++          toggleTodo(todo.id);
++          render();
++          return;
++        }
++
++        // Destroy button
++        if (e.target.classList.contains('destroy')) {
++          removeTodo(todo.id);
++          render();
++          return;
++        }
++      });
++
++      todoList.addEventListener('dblclick', function (e) {
++        var label = e.target.closest('label');
++        if (!label) return;
++        var li = label.closest('li');
++        if (!li) return;
++
++        // Activate editing mode
++        li.classList.add('editing');
++        var editInput = li.querySelector('.edit');
++        if (editInput) {
++          editInput.value = label.textContent.trim();
++          editInput.focus();
++          editInput.setSelectionRange(editInput.value.length, editInput.value.length);
++        }
++      });
++
++      // Event delegation for edit input
++      todoList.addEventListener('keydown', function (e) {
++        var editingLi = todoList.querySelector('li.editing');
++        if (!editingLi) return;
++        var editInput = editingLi.querySelector('.edit');
++        if (!editInput) return;
++
++        if (e.keyCode === ENTER_KEY) {
++          var newTitle = editInput.value.trim();
++          var label = editingLi.querySelector('label');
++          var oldTitle = label ? label.textContent.trim() : '';
++          var todo = todos.filter(function (t) { return t.title === oldTitle; })[0];
++          if (!todo) return;
++
++          if (newTitle) {
++            updateTodo(todo.id, newTitle);
++          } else {
++            removeTodo(todo.id);
++          }
++          editingLi.classList.remove('editing');
++          render();
++        }
++
++        if (e.keyCode === ESCAPE_KEY) {
++          editingLi.classList.remove('editing');
++          if (editInput) {
++            var label = editingLi.querySelector('label');
++            editInput.value = label ? label.textContent.trim() : '';
++          }
++        }
++      });
++
++      todoList.addEventListener('focusout', function (e) {
++        var editInput = e.target.closest('.edit');
++        if (!editInput) return;
++        var editingLi = editInput.closest('li.editing');
++        if (!editingLi) return;
++
++        var newTitle = editInput.value.trim();
++        var label = editingLi.querySelector('label');
++        var oldTitle = label ? label.textContent.trim() : '';
++        var todo = todos.filter(function (t) { return t.title === oldTitle; })[0];
++        if (!todo) return;
++
++        if (newTitle) {
++          updateTodo(todo.id, newTitle);
++        } else {
++          removeTodo(todo.id);
++        }
++        editingLi.classList.remove('editing');
++        render();
++      });
++    }
++
++    // Toggle-all
++    if (toggleAll) {
++      (function(toggleAllEl) {
++        toggleAllEl.addEventListener('change', function () {
++          toggleAllEl.checked ? setAllTodosCompleted() : setAllTodosNotCompleted();
++        });
++
++        function setAllTodosCompleted() {
++          var allCompleted = todos.every(function (t) { return t.completed; });
++          setAllCompletedState(!allCompleted);
++          render();
++        }
++
++        function setAllTodosNotCompleted() {
++          setAllCompletedState(false);
++          render();
++        }
++      })(toggleAll);
++    }
++
++    // Clear completed
++    if (clearCompleted) {
++      (function(clearCompletedEl) {
++        clearCompletedEl.addEventListener('click', function () {
++          removeCompletedTodos();
++          render();
++        });
++      })(clearCompleted);
++    }
++
++    // Filter links
++    var filters = document.querySelectorAll('.filters a');
++    filters.forEach(function (a) {
++      a.addEventListener('click', function (e) {
++        e.preventDefault();
++        var route = a.getAttribute('href').replace('#/', '') || 'all';
++        activeRoute = route;
++        persistFilter(route);
++        render();
++      });
++    });
++
++    // Hash change
++    window.addEventListener('hashchange', function () {
++      var hash = window.location.hash.replace('#/', '') || 'all';
++      activeRoute = hash;
++      persistFilter(hash);
++      render();
++    });
++
++    // Load event
++    window.addEventListener('load', function () {
++      loadTodos();
++      render();
++    });
++  }
++
++  // --- Filter persistence ---
++  function persistFilter(route) {
++    try {
++      localStorage.setItem(STORAGE_KEY + '-filter', route);
++    } catch (e) {}
++  }
++
++  function getPersistedFilter() {
++    try {
++      var filter = localStorage.getItem(STORAGE_KEY + '-filter');
++      if (filter === 'all' || filter === 'active' || filter === 'completed') {
++        return filter;
++      }
++    } catch (e) {}
++    return 'all';
++  }
++
++  // --- Toggle-all helper ---
++  function setAllCompletedState(completed) {
++    todos.forEach(function (t) { t.completed = completed; });
++    saveTodos();
++  }
++
++  function removeCompletedTodos() {
++    todos = todos.filter(function (t) { return !t.completed; });
++    saveTodos();
++  }
++
++  // Initialize when DOM is ready
++  if (document.readyState === 'loading') {
++    document.addEventListener('DOMContentLoaded', init);
++  } else {
++    init();
++  }
++})();
+\ No newline at end of file

@@ -1,0 +1,262 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..c717e2d
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,19 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
++
++## Standing state
++
++- `RIGGING.md` is not fitted yet. Greenfield bootstrap: production code and rigging are absent. Shipwright fits out `RIGGING.md` and `AGENTS.md` (specs dir `features/`, runner `cucumber-js`, DOM `happy-dom`, `prove`/`verify`/`sweep`/`plank-join` methods, and tiers) before any tier-tagged QM watch runs. The current `watchbill.json` references scenarios by path only, no tier tags, so it runs under the default tier once rigging exists.
++- The `features/` specs-directory convention and the `cucumber-js` + `happy-dom` runner are fixed by `README.md`. Step definitions belong under `features/support/` (QM's job).
++
++## Decisions captured in durable specs
++
++- Persistence key name is `todos-vanilla` (the TodoMVC `todos-[framework]` convention for the vanilla example). Pinned by `features/persistence.feature:Todos are stored under the todos-vanilla key with id, title and completed`.
++- Routing is hash-based (`#/`, `#/active`, `#/completed`). The spec names the Flatiron Director library for non-framework apps, but no Director bundle is present in the tree, so the implementation is expected to use a vanilla `hashchange` listener. Crew decides at implementation; behaviour is pinned by `features/routing.feature`.
++
++## Open questions
++
++- None blocking. Awaiting Shipwright fit-out of `RIGGING.md` before outbound or harbour.
+diff --git a/features/persistence.feature b/features/persistence.feature
+new file mode 100644
+index 0000000..0a7f4a5
+--- /dev/null
++++ b/features/persistence.feature
+@@ -0,0 +1,29 @@
++Feature: Todo persistence
++  As a user of the TodoMVC app
++  I want my todos to persist across reloads
++  So that I do not lose my list
++
++  Scenario: Todos persist to localStorage across reload
++    Given the app loads with todos:
++      | title  | completed |
++      | First  | false     |
++      | Second | true      |
++    When the user reloads the page
++    Then the todo list contains "First"
++    And the todo list contains "Second"
++    And the todo "Second" has class "completed"
++
++  Scenario: Todos are stored under the todos-vanilla key with id, title and completed
++    Given the app loads with todos:
++      | title  | completed |
++      | First  | false     |
++    Then localStorage item "todos-vanilla" is a JSON array
++    And each stored todo has the keys "id", "title" and "completed"
++
++  Scenario: Editing state is not persisted across reload
++    Given the app loads with todos:
++      | title  | completed |
++      | First  | false     |
++    When the user begins editing the todo "First"
++    And the user reloads the page
++    Then the todo "First" does not have class "editing"
+diff --git a/features/routing.feature b/features/routing.feature
+new file mode 100644
+index 0000000..10f574c
+--- /dev/null
++++ b/features/routing.feature
+@@ -0,0 +1,52 @@
++Feature: Todo routing and filtering
++  As a user of the TodoMVC app
++  I want to filter todos by route
++  So that I can focus on active or completed items
++
++  Scenario: Default route shows all todos and selects the All filter
++    Given the app loads with todos:
++      | title  | completed |
++      | First  | false     |
++      | Second | true      |
++    Then the "All" filter link has class "selected"
++    And the todo list contains "First"
++    And the todo list contains "Second"
++
++  Scenario: Active route shows only incomplete todos
++    Given the app loads with todos:
++      | title  | completed |
++      | First  | false     |
++      | Second | true      |
++    When the user navigates to "#/active"
++    Then the "Active" filter link has class "selected"
++    And the todo list contains "First"
++    And the todo list does not contain "Second"
++
++  Scenario: Completed route shows only completed todos
++    Given the app loads with todos:
++      | title  | completed |
++      | First  | false     |
++      | Second | true      |
++    When the user navigates to "#/completed"
++    Then the "Completed" filter link has class "selected"
++    And the todo list contains "Second"
++    And the todo list does not contain "First"
++
++  Scenario: Checking a todo in the Active filter hides it
++    Given the app loads with todos:
++      | title  | completed |
++      | First  | false     |
++      | Second | true      |
++    When the user navigates to "#/active"
++    And the user toggles the todo "First"
++    Then the todo list does not contain "First"
++
++  Scenario: Active filter persists across reload
++    Given the app loads with todos:
++      | title  | completed |
++      | First  | false     |
++      | Second | true      |
++    When the user navigates to "#/active"
++    And the user reloads the page
++    Then the "Active" filter link has class "selected"
++    And the todo list contains "First"
+diff --git a/features/todos.feature b/features/todos.feature
+new file mode 100644
+index 0000000..76c5daa
+--- /dev/null
++++ b/features/todos.feature
+@@ -0,0 +1,97 @@
++Feature: Todo list core behaviour
++  As a user of the TodoMVC app
++  I want to manage my todos in the DOM
++  So that I can track what needs to be done
++
++  Scenario: Empty list hides the main and footer sections
++    Given the app loads with no todos
++    Then the "main" section is hidden
++    And the "footer" section is hidden
++
++  Scenario: Creating a todo adds it and clears the input
++    Given the app loads with no todos
++    When the user creates a todo with title "Buy milk"
++    Then the todo list contains "Buy milk"
++    And the new-todo input is empty
++    And the "main" section is visible
++
++  Scenario: Creating a todo trims whitespace and ignores empty input
++    Given the app loads with no todos
++    When the user creates a todo with title "   "
++    Then the todo list is empty
++
++  Scenario: Toggling a todo marks it completed
++    Given the app loads with todos:
++      | title  | completed |
++      | First  | false     |
++    When the user toggles the todo "First"
++    Then the todo "First" has class "completed"
++
++  Scenario: Toggling all completes every todo
++    Given the app loads with todos:
++      | title  | completed |
++      | First  | false     |
++      | Second | false     |
++    When the user toggles all todos
++    Then every todo has class "completed"
++
++  Scenario: Toggle-all reflects when all todos are complete
++    Given the app loads with todos:
++      | title  | completed |
++      | First  | true      |
++      | Second | true      |
++    Then the toggle-all checkbox is checked
++
++  Scenario: Counter shows the active todo count pluralized
++    Given the app loads with todos:
++      | title  | completed |
++      | First  | false     |
++      | Second | false     |
++      | Third  | true      |
++    Then the todo-count shows "2 items left"
++
++  Scenario: Clear completed removes completed todos
++    Given the app loads with todos:
++      | title  | completed |
++      | First  | false     |
++      | Second | true      |
++    When the user clears completed todos
++    Then the todo list contains only "First"
++
++  Scenario: Clear completed is hidden when no completed todos exist
++    Given the app loads with todos:
++      | title  | completed |
++      | First  | false     |
++    Then the clear-completed button is hidden
++
++  Scenario: Beginning to edit a todo enters editing mode
++    Given the app loads with todos:
++      | title  | completed |
++      | First  | false     |
++    When the user begins editing the todo "First"
++    Then the todo "First" has class "editing"
++
++  Scenario: Editing saves the trimmed new title
++    Given the app loads with todos:
++      | title  | completed |
++      | First  | false     |
++    When the user begins editing the todo "First"
++    And the user renames the todo "First" to "First edited"
++    Then the todo list contains "First edited"
++
++  Scenario: Editing to empty destroys the todo
++    Given the app loads with todos:
++      | title  | completed |
++      | First  | false     |
++    When the user begins editing the todo "First"
++    And the user renames the todo "First" to "   "
++    Then the todo list is empty
++
++  Scenario: Escape cancels editing and discards changes
++    Given the app loads with todos:
++      | title  | completed |
++      | First  | false     |
++    When the user begins editing the todo "First"
++    And the user cancels editing of the todo "First"
++    Then the todo list contains "First"
++    And the todo "First" does not have class "editing"
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..ecdfe38
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,35 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/todos.feature:Empty list hides the main and footer sections",
++      "features/todos.feature:Creating a todo adds it and clears the input",
++      "features/todos.feature:Creating a todo trims whitespace and ignores empty input",
++      "features/todos.feature:Toggling a todo marks it completed",
++      "features/todos.feature:Toggling all completes every todo",
++      "features/todos.feature:Toggle-all reflects when all todos are complete",
++      "features/todos.feature:Counter shows the active todo count pluralized",
++      "features/todos.feature:Clear completed removes completed todos",
++      "features/todos.feature:Clear completed is hidden when no completed todos exist",
++      "features/todos.feature:Beginning to edit a todo enters editing mode",
++      "features/todos.feature:Editing saves the trimmed new title",
++      "features/todos.feature:Editing to empty destroys the todo",
++      "features/todos.feature:Escape cancels editing and discards changes"
++    ]
++  },
++  "watch2": {
++    "scenarios": [
++      "features/persistence.feature:Todos persist to localStorage across reload",
++      "features/persistence.feature:Todos are stored under the todos-vanilla key with id, title and completed",
++      "features/persistence.feature:Editing state is not persisted across reload"
++    ]
++  },
++  "watch3": {
++    "scenarios": [
++      "features/routing.feature:Default route shows all todos and selects the All filter",
++      "features/routing.feature:Active route shows only incomplete todos",
++      "features/routing.feature:Completed route shows only completed todos",
++      "features/routing.feature:Checking a todo in the Active filter hides it",
++      "features/routing.feature:Active filter persists across reload"
++    ]
++  }
++}

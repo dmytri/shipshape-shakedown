@@ -1,0 +1,22 @@
+# banked: 2026-07-27T13:29:13Z
+# verdict: PENDING
+# leg: {  "name": "v1-captain",  "model": "deepseek/deepseek-v4-flash",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/P-cand-flash/sim",  "timeout_s": 1500,  "skills": [    "/home/exedev/shipshape-shakedown/experiments/methods-candidate/skills/shipshape",    "/home/exedev/shipshape-shakedown/experiments/methods-candidate/skills/captain",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== v1-captain.session.jsonl ===
+  turns=11  wall=98.2s  in=169916  out=8338  cache_read=148736  cost=$0.0203
+  role reads: shipshape@t0 -> captain@t0 -> shipshape@t1
+  roles loaded: captain, shipshape
+  ~ repeated tool signature at turns [1, 3] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    1786/314      256 $0.0002  read, read, read, read
+    t1   18122/348     1792 $0.0018  read, bash, bash, bash
+    t2   28784/460      512 $0.0028  read, read, read, bash
+    t3   10316/1041   19712 $0.0015  bash, bash
+    t4   31120/354        0 $0.0030  bash
+    t5    1566/760    29952 $0.0009  bash
+    t6     803/1412   31488 $0.0009  write
+    t7   33752/1244       0 $0.0034  write, write
+    t8    2325/1458   32768 $0.0011  write, write
+    t9    4382/175    32256 $0.0010  bash, bash
+    t10  36960/772        0 $0.0036  -

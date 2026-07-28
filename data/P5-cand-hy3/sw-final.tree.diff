@@ -1,0 +1,120 @@
+diff --git a/.shipshape/plank-join.mjs b/.shipshape/plank-join.mjs
+index 832249f..c5a6c01 100644
+--- a/.shipshape/plank-join.mjs
++++ b/.shipshape/plank-join.mjs
+@@ -126,26 +126,29 @@ function patternMatches(plankPat, stepText) {
+ 
+ function scenarioHasCaptain(ref, specs) {
+   // ref form: <spec>.feature:<Scenario Name>
++  // Gherkin places tags on the lines immediately above the Scenario, so a tag
++  // is captured into pendingTags and associated with the next Scenario line.
+   const m = ref.match(/^(.+?):(.+)$/);
+   if (!m) return false;
+   const featurePath = path.join(ROOT, m[1]);
+   if (!fs.existsSync(featurePath)) return false;
+   const txt = fs.readFileSync(featurePath, 'utf8');
+   const lines = txt.split('\n');
+-  let inTarget = false;
++  let pendingTags = [];
+   for (const line of lines) {
+     const tags = line.match(/^\s*@(\S+)/g);
+     const scen = line.match(/^\s*Scenario:\s*(.+?)\s*$/);
+-    if (scen) {
+-      inTarget = normalize(scen[1]) === normalize(m[2]);
++    if (/^\s*(Feature|Background|Rule|Scenario Outline|Examples):/.test(line)) {
++      pendingTags = [];
+       continue;
+     }
+-    if (/^\s*(Feature|Background|Rule|Scenario Outline|Examples):/.test(line)) {
+-      inTarget = false;
++    if (tags) {
++      for (const t of tags) pendingTags.push(t.trim());
+       continue;
+     }
+-    if (inTarget && tags) {
+-      if (tags.some((t) => t.trim() === '@captain')) return true;
++    if (scen) {
++      if (normalize(scen[1]) === normalize(m[2]) && pendingTags.includes('@captain')) return true;
++      pendingTags = [];
+     }
+   }
+   return false;
+diff --git a/features/destroy-task.feature b/features/destroy-task.feature
+new file mode 100644
+index 0000000..5b15383
+--- /dev/null
++++ b/features/destroy-task.feature
+@@ -0,0 +1,13 @@
++Feature: Removing a task with its destroy control
++
++  Each rendered task carries a destroy control that removes that single task
++  from the list and persists the change. The control is reachable through the
++  item's view, independent of the edit and clear-completed paths.
++
++  @captain
++  Scenario: Clicking a task's destroy button removes the task
++    Given the app is open
++    And the task list contains "Buy milk" and "Walk the dog"
++    When the user clicks the destroy button for "Buy milk"
++    Then the task "Buy milk" is not present
++    And the task "Walk the dog" is present
+diff --git a/features/html-escaping.feature b/features/html-escaping.feature
+new file mode 100644
+index 0000000..5b36858
+--- /dev/null
++++ b/features/html-escaping.feature
+@@ -0,0 +1,11 @@
++Feature: HTML escaping of task titles
++
++  A task title that contains HTML markup must render as escaped text so the
++  markup is not interpreted as live elements in the list. The view renders the
++  title through the escaping helper before inserting it into the DOM.
++
++  @captain
++  Scenario: A task title with HTML markup renders escaped
++    Given the app is open
++    And the task list contains "<img src=x onerror=alert(1)>"
++    Then the task "<img src=x onerror=alert(1)>" renders its title as escaped text
+diff --git a/features/toggle-completion.feature b/features/toggle-completion.feature
+index 748473d..3c5ea27 100644
+--- a/features/toggle-completion.feature
++++ b/features/toggle-completion.feature
+@@ -27,3 +27,10 @@ Feature: Marking tasks complete
+     Given the task list contains "Buy milk" and "Walk the dog"
+     And the task "Buy milk" is marked completed
+     Then the mark-all control is unchecked
++
++  @captain
++  Scenario: Mark-all control shows an indeterminate state when some tasks are complete
++    Given the app is open
++    And the task list contains "Buy milk" and "Walk the dog"
++    And the task "Buy milk" is marked completed
++    Then the mark-all control shows an indeterminate state
+diff --git a/js/app.js b/js/app.js
+index f9a963d..3ce7b15 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -67,6 +67,7 @@
+     return tasks;
+   }
+ 
++  /** @planks-provisional("features/html-escaping.feature:A task title with HTML markup renders escaped") */
+   function escapeHtml(s) {
+     return String(s).replace(/[&<>"']/g, function (c) {
+       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+@@ -98,6 +99,7 @@
+   /** @planks("the task .* is visible") */
+   /** @planks("the task .* is not visible") */
+   /** @planks("the .* filter link is selected") */
++  /** @planks-provisional("features/toggle-completion.feature:Mark-all control shows an indeterminate state when some tasks are complete") */
+   function render() {
+     var main = doc.querySelector('.main');
+     var footer = doc.querySelector('.footer');
+@@ -233,6 +235,7 @@
+     render();
+   }
+ 
++  /** @planks-provisional("features/destroy-task.feature:Clicking a task's destroy button removes the task") */
+   function destroyTask(id) {
+     tasks = tasks.filter(function (t) { return t.id !== id; });
+     saveTasks();

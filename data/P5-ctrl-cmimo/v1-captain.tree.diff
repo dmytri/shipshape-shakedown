@@ -1,0 +1,144 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..bd5a679
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,38 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++## Voyage: TodoMVC app build
++
++All 11 feature files authored and `@captain`-tagged. No QM, Crew, or Boatswain work has run.
++Watchbill written with 10 ordered watches covering every product scenario plus methodology conformance.
++Deck is clean. No production code exists in `js/` yet.
++
++### Scenario inventory
++
++| Feature file | Scenarios | Lane |
++|---|---|---|
++| todo-visibility.feature | 2 | product |
++| new-todo.feature | 4 | product |
++| editing.feature | 5 | product |
++| todo-item.feature | 3 | product |
++| toggle-all.feature | 2 | product |
++| counter.feature | 3 | product |
++| clear-completed.feature | 2 | product |
++| persistence.feature | 2 | product |
++| routing.feature | 5 | product |
++| methodology-conformance.feature | 2 | conformance |
++| **Total** | **30** | **28 product, 2 conformance** |
++
++### Watchbill order
++
++1. structure — DOM rendering, section visibility
++2. new-todo — input, creation, trimming
++3. item-interactions — checkbox, double-click, hover
++4. toggle-all — mark-all-complete
++5. counter — pluralized count
++6. clear-completed — button visibility and removal
++7. editing — save, blur, destroy, cancel, trim
++8. persistence — localStorage survival across reloads
++9. routing — hash-based filters, selected class, persistence
++10. methodology — watchbill shape, perturbation quiescence
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..99e694a
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,94 @@
++{
++  "watches": [
++    {
++      "name": "structure",
++      "description": "App skeleton, DOM rendering, and section visibility",
++      "scenarios": [
++        "features/todo-visibility.feature:No todos hides main and footer",
++        "features/todo-visibility.feature:Adding a todo shows main and footer",
++        "features/counter.feature:Counter shows zero items",
++        "features/counter.feature:Counter uses strong tag"
++      ]
++    },
++    {
++      "name": "new-todo",
++      "description": "New todo input, creation, and trimming",
++      "scenarios": [
++        "features/new-todo.feature:New todo input is focused on page load",
++        "features/new-todo.feature:Pressing Enter creates a todo",
++        "features/new-todo.feature:Whitespace-only input does not create a todo",
++        "features/new-todo.feature:Input is trimmed before creating a todo"
++      ]
++    },
++    {
++      "name": "item-interactions",
++      "description": "Todo item toggling, double-click edit activation, and hover destroy",
++      "scenarios": [
++        "features/todo-item.feature:Clicking checkbox marks todo complete",
++        "features/todo-item.feature:Double-clicking label activates editing mode",
++        "features/todo-item.feature:Hovering shows destroy button"
++      ]
++    },
++    {
++      "name": "toggle-all",
++      "description": "Mark-all-complete checkbox and its interaction with clear completed",
++      "scenarios": [
++        "features/toggle-all.feature:Toggle all marks all todos complete",
++        "features/toggle-all.feature:Toggle all clears when all todos are cleared"
++      ]
++    },
++    {
++      "name": "counter",
++      "description": "Active item counter with correct pluralization",
++      "scenarios": [
++        "features/counter.feature:Counter shows pluralized item count"
++      ]
++    },
++    {
++      "name": "clear-completed",
++      "description": "Clear completed button visibility and behaviour",
++      "scenarios": [
++        "features/clear-completed.feature:Clear completed button hidden when no completed todos",
++        "features/clear-completed.feature:Clear completed removes completed todos"
++      ]
++    },
++    {
++      "name": "editing",
++      "description": "Inline editing: save on Enter, save on blur, destroy on empty, cancel on Escape",
++      "scenarios": [
++        "features/editing.feature:Editing saves on Enter",
++        "features/editing.feature:Editing saves on blur",
++        "features/editing.feature:Empty edit destroys the todo",
++        "features/editing.feature:Escape cancels edit",
++        "features/editing.feature:Edit input is trimmed"
++      ]
++    },
++    {
++      "name": "persistence",
++      "description": "localStorage persistence of todo list and completed state",
++      "scenarios": [
++        "features/persistence.feature:Todos persist across page reload",
++        "features/persistence.feature:Completed state persists across reload"
++      ]
++    },
++    {
++      "name": "routing",
++      "description": "Hash-based routing, filter display, and filter persistence",
++      "scenarios": [
++        "features/routing.feature:Default route shows all todos",
++        "features/routing.feature:Active route shows only active todos",
++        "features/routing.feature:Completed route shows only completed todos",
++        "features/routing.feature:Active filter link has selected class",
++        "features/routing.feature:Active filter persists on reload"
++      ]
++    },
++    {
++      "name": "methodology",
++      "description": "Methodology conformance checks",
++      "scenarios": [
++        "features/methodology-conformance.feature:Watchbill shape conformance",
++        "features/methodology-conformance.feature:Perturbation quiescence"
++      ]
++    }
++  ]
++}

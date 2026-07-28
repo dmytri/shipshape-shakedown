@@ -1,0 +1,348 @@
+diff --git a/features/active-count.feature b/features/active-count.feature
+new file mode 100644
+index 0000000..a282fe7
+--- /dev/null
++++ b/features/active-count.feature
+@@ -0,0 +1,16 @@
++Feature: Active task counter
++
++  The footer counter shows the number of incomplete tasks, wrapped so the
++  count is emphasized, and uses correct pluralization of "item".
++
++  Scenario Outline: Counter shows the remaining count with correct pluralization
++    Given the app is open
++    And the task list contains <total> tasks of which <active> are active
++    Then the counter reads "<count> <noun> left"
++
++    Examples:
++      | total | active | count | noun  |
++      | 0     | 0      | 0     | items |
++      | 1     | 1      | 1     | item  |
++      | 2     | 1      | 1     | item  |
++      | 2     | 2      | 2     | items |
+diff --git a/features/clear-completed.feature b/features/clear-completed.feature
+new file mode 100644
+index 0000000..91f453f
+--- /dev/null
++++ b/features/clear-completed.feature
+@@ -0,0 +1,30 @@
++Feature: Clearing completed tasks
++
++  The clear-completed control removes every completed task, stays hidden while
++  no completed task exists, and resets the mark-all control when used.
++
++  Background:
++    Given the app is open
++
++  Scenario: Clear completed removes every completed task
++    Given the task list contains "Buy milk" and "Walk the dog"
++    And the task "Buy milk" is marked completed
++    When the user clicks clear completed
++    Then the task "Buy milk" is not present
++    And the task "Walk the dog" is present
++
++  Scenario: Clear completed control is hidden with no completed tasks
++    Given the task list contains "Buy milk"
++    Then the clear completed control is hidden
++
++  Scenario: Clear completed control is shown with completed tasks
++    Given the task list contains "Buy milk"
++    And the task "Buy milk" is marked completed
++    Then the clear completed control is shown
++
++  Scenario: Clearing completed resets the mark-all control
++    Given the task list contains "Buy milk" and "Walk the dog"
++    And the task "Buy milk" is marked completed
++    And the task "Walk the dog" is marked completed
++    When the user clicks clear completed
++    Then the mark-all control is unchecked
+diff --git a/features/edit-todo.feature b/features/edit-todo.feature
+new file mode 100644
+index 0000000..c64a5d5
+--- /dev/null
++++ b/features/edit-todo.feature
+@@ -0,0 +1,42 @@
++Feature: Editing a task
++
++  Double-clicking a task enters edit mode with the title focused; the edit is
++  saved on Enter or blur, an empty edit destroys the task, and Escape discards
++  the change.
++
++  Background:
++    Given the app is open
++
++  Scenario: Double-click enters editing mode and focuses the title
++    Given the task list contains "Buy milk"
++    When the user double-clicks the task "Buy milk"
++    Then the task "Buy milk" is in editing mode
++    And the edit field for "Buy milk" has focus
++
++  Scenario: Saving an edit on Enter keeps the new title
++    Given the task list contains "Buy milk"
++    When the user double-clicks the task "Buy milk"
++    And the user changes the edit field to "Buy soy milk" and presses Enter
++    Then the task "Buy soy milk" is present
++    And the task "Buy milk" is not present
++    And the task "Buy soy milk" is not in editing mode
++
++  Scenario: Saving an edit on blur keeps the new title
++    Given the task list contains "Buy milk"
++    When the user double-clicks the task "Buy milk"
++    And the user changes the edit field to "Buy oat milk" and blurs it
++    Then the task "Buy oat milk" is present
++
++  Scenario: An empty edit destroys the task
++    Given the task list contains "Buy milk"
++    When the user double-clicks the task "Buy milk"
++    And the user changes the edit field to "   " and presses Enter
++    Then the task "Buy milk" is not present
++
++  Scenario: Escape cancels the edit and keeps the original title
++    Given the task list contains "Buy milk"
++    When the user double-clicks the task "Buy milk"
++    And the user changes the edit field to "Buy almond milk" and presses Escape
++    Then the task "Buy milk" is present
++    And the task "Buy almond milk" is not present
++    And the task "Buy milk" is not in editing mode
+diff --git a/features/filtering.feature b/features/filtering.feature
+new file mode 100644
+index 0000000..72bbf94
+--- /dev/null
++++ b/features/filtering.feature
+@@ -0,0 +1,48 @@
++Feature: Filtering the visible tasks
++
++  The hash routes all, active, and completed filter the visible list, keep the
++  matching filter link selected, update as items change, and survive reload.
++
++  Background:
++    Given the app is open
++
++  Scenario: Active filter shows only incomplete tasks
++    Given the task list contains "Buy milk" and "Walk the dog"
++    And the task "Buy milk" is marked completed
++    When the user opens the "active" filter
++    Then the task "Walk the dog" is visible
++    And the task "Buy milk" is not visible
++
++  Scenario: Completed filter shows only completed tasks
++    Given the task list contains "Buy milk" and "Walk the dog"
++    And the task "Buy milk" is marked completed
++    When the user opens the "completed" filter
++    Then the task "Buy milk" is visible
++    And the task "Walk the dog" is not visible
++
++  Scenario: All filter shows every task
++    Given the task list contains "Buy milk" and "Walk the dog"
++    And the task "Buy milk" is marked completed
++    When the user opens the "all" filter
++    Then the task "Buy milk" is visible
++    And the task "Walk the dog" is visible
++
++  Scenario: Completing a task hides it under the active filter
++    Given the task list contains "Buy milk"
++    When the user opens the "active" filter
++    And the user checks the task "Buy milk"
++    Then the task "Buy milk" is not visible
++
++  Scenario: The selected filter link carries the selected class
++    Given the task list contains "Buy milk"
++    When the user opens the "completed" filter
++    Then the "completed" filter link is selected
++
++  Scenario: The active filter persists across reload
++    Given the task list contains "Buy milk" and "Walk the dog"
++    And the task "Buy milk" is marked completed
++    And the active filter is "completed"
++    When the app reloads
++    Then the "completed" filter link is selected
++    And the task "Buy milk" is visible
++    And the task "Walk the dog" is not visible
+diff --git a/features/new-todo.feature b/features/new-todo.feature
+new file mode 100644
+index 0000000..9924214
+--- /dev/null
++++ b/features/new-todo.feature
+@@ -0,0 +1,19 @@
++Feature: Adding a new task
++
++  The new task input creates a task when the user submits non-empty text,
++  appends it to the list, clears the field, and ignores whitespace-only input.
++
++  Background:
++    Given the app is open
++
++  Scenario: Submitting text adds the task and clears the input
++    Given the task list is empty
++    When the user types "Buy milk" and presses Enter in the new task field
++    Then the list shows 1 task
++    And the list item "Buy milk" is present
++    And the new task field is empty
++
++  Scenario: Whitespace-only input adds no task
++    Given the task list is empty
++    When the user types "   " and presses Enter in the new task field
++    Then the list shows 0 tasks
+diff --git a/features/persistence.feature b/features/persistence.feature
+new file mode 100644
+index 0000000..28c0ecc
+--- /dev/null
++++ b/features/persistence.feature
+@@ -0,0 +1,26 @@
++Feature: Persisting tasks
++
++  Tasks survive a page reload through localStorage, stored under the
++  tasks-vanilla key as items with id, title, and completed fields. Editing
++  state is not persisted.
++
++  Background:
++    Given the app is open
++
++  Scenario: Tasks reload from localStorage after a reload
++    Given the task list contains "Buy milk" and "Walk the dog"
++    When the app reloads
++    Then the task "Buy milk" is present
++    And the task "Walk the dog" is present
++
++  Scenario: Tasks are stored under the tasks-vanilla key
++    Given the task list contains "Buy milk"
++    Then localStorage holds a "tasks-vanilla" entry
++    And the "tasks-vanilla" entry is a JSON array
++    And each stored item has an "id", a "title", and a "completed" field
++
++  Scenario: Editing state is not persisted across reload
++    Given the task list contains "Buy milk"
++    When the user double-clicks the task "Buy milk"
++    And the app reloads
++    Then the task "Buy milk" is not in editing mode
+diff --git a/features/todo-display.feature b/features/todo-display.feature
+new file mode 100644
+index 0000000..28039ca
+--- /dev/null
++++ b/features/todo-display.feature
+@@ -0,0 +1,22 @@
++Feature: Task list display
++
++  The app reveals the main list, the counter, and the filters only when at
++  least one task exists; with an empty list those regions stay hidden and the
++  new task field receives focus on load.
++
++  Background:
++    Given the app is open
++
++  Scenario: Empty list hides the main and footer regions
++    Given the task list is empty
++    Then the main region is hidden
++    And the footer region is hidden
++
++  Scenario: New task field is focused when the app loads
++    Given the task list is empty
++    Then the new task field has focus
++
++  Scenario: Tasks render as list items
++    Given the task list contains "Buy milk" and "Walk the dog"
++    Then the list shows 2 tasks
++    And the list item "Buy milk" is present
+diff --git a/features/toggle-completion.feature b/features/toggle-completion.feature
+new file mode 100644
+index 0000000..748473d
+--- /dev/null
++++ b/features/toggle-completion.feature
+@@ -0,0 +1,29 @@
++Feature: Marking tasks complete
++
++  A single task toggles its completed state when its checkbox is clicked, and
++  the mark-all control toggles every task to match itself and reflects the set.
++
++  Background:
++    Given the app is open
++
++  Scenario: Checking a task marks it completed
++    Given the task list contains "Buy milk"
++    When the user checks the task "Buy milk"
++    Then the task "Buy milk" is marked completed
++
++  Scenario: Mark all as complete toggles every task
++    Given the task list contains "Buy milk" and "Walk the dog"
++    When the user checks the mark-all control
++    Then the task "Buy milk" is marked completed
++    And the task "Walk the dog" is marked completed
++
++  Scenario: Mark all control reflects every task being completed
++    Given the task list contains "Buy milk" and "Walk the dog"
++    And the task "Buy milk" is marked completed
++    And the task "Walk the dog" is marked completed
++    Then the mark-all control is checked
++
++  Scenario: Mark all control is unchecked when any task is incomplete
++    Given the task list contains "Buy milk" and "Walk the dog"
++    And the task "Buy milk" is marked completed
++    Then the mark-all control is unchecked
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..df90108
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,62 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/todo-display.feature:Empty list hides the main and footer regions",
++      "features/todo-display.feature:New task field is focused when the app loads",
++      "features/todo-display.feature:Tasks render as list items"
++    ]
++  },
++  "watch2": {
++    "scenarios": [
++      "features/new-todo.feature:Submitting text adds the task and clears the input",
++      "features/new-todo.feature:Whitespace-only input adds no task"
++    ]
++  },
++  "watch3": {
++    "scenarios": [
++      "features/toggle-completion.feature:Checking a task marks it completed",
++      "features/toggle-completion.feature:Mark all as complete toggles every task",
++      "features/toggle-completion.feature:Mark all control reflects every task being completed",
++      "features/toggle-completion.feature:Mark all control is unchecked when any task is incomplete"
++    ]
++  },
++  "watch4": {
++    "scenarios": [
++      "features/edit-todo.feature:Double-click enters editing mode and focuses the title",
++      "features/edit-todo.feature:Saving an edit on Enter keeps the new title",
++      "features/edit-todo.feature:Saving an edit on blur keeps the new title",
++      "features/edit-todo.feature:An empty edit destroys the task",
++      "features/edit-todo.feature:Escape cancels the edit and keeps the original title"
++    ]
++  },
++  "watch5": {
++    "scenarios": [
++      "features/active-count.feature:Counter shows the remaining count with correct pluralization"
++    ]
++  },
++  "watch6": {
++    "scenarios": [
++      "features/clear-completed.feature:Clear completed removes every completed task",
++      "features/clear-completed.feature:Clear completed control is hidden with no completed tasks",
++      "features/clear-completed.feature:Clear completed control is shown with completed tasks",
++      "features/clear-completed.feature:Clearing completed resets the mark-all control"
++    ]
++  },
++  "watch7": {
++    "scenarios": [
++      "features/filtering.feature:Active filter shows only incomplete tasks",
++      "features/filtering.feature:Completed filter shows only completed tasks",
++      "features/filtering.feature:All filter shows every task",
++      "features/filtering.feature:Completing a task hides it under the active filter",
++      "features/filtering.feature:The selected filter link carries the selected class",
++      "features/filtering.feature:The active filter persists across reload"
++    ]
++  },
++  "watch8": {
++    "scenarios": [
++      "features/persistence.feature:Tasks reload from localStorage after a reload",
++      "features/persistence.feature:Tasks are stored under the tasks-vanilla key",
++      "features/persistence.feature:Editing state is not persisted across reload"
++    ]
++  }
++}

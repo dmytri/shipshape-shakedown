@@ -1,0 +1,870 @@
+diff --git a/.gitignore b/.gitignore
+index 3c3629e..1f9440a 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -1 +1,2 @@
+ node_modules
++.wake
+diff --git a/.gplintrc b/.gplintrc
+new file mode 100644
+index 0000000..ac2de60
+--- /dev/null
++++ b/.gplintrc
+@@ -0,0 +1,100 @@
++{
++  "allowed-tags": [
++    "error",
++    {
++      "tags": [
++        "@logic",
++        "@sandbox",
++        "@contract",
++        "@conformance",
++        "@captain",
++        "@shipwright",
++        "@exceptional-double"
++      ]
++    }
++  ],
++  "file-name": [
++    "error",
++    {
++      "style": "kebab-case"
++    }
++  ],
++  "indentation": [
++    "error",
++    {
++      "Feature": 0,
++      "Background": 2,
++      "Rule": 2,
++      "Scenario": 2,
++      "Step": 4,
++      "Examples": 4,
++      "example": 6,
++      "given": 4,
++      "when": 4,
++      "then": 4,
++      "and": 4,
++      "but": 4
++    }
++  ],
++  "keywords-in-logical-order": "error",
++  "max-keywords": [
++    "error",
++    {
++      "given": 5,
++      "when": 3,
++      "then": 5,
++      "ignoreConjunctions": false
++    }
++  ],
++  "max-tags-lines": [
++    "error",
++    {
++      "feature": 1,
++      "scenario": 1
++    }
++  ],
++  "name-length": [
++    "error",
++    {
++      "Feature": 90,
++      "Rule": 90,
++      "Scenario": 90,
++      "Step": 120
++    }
++  ],
++  "new-line-at-eof": [
++    "error",
++    "yes"
++  ],
++  "no-background-only-scenario": "error",
++  "no-dupe-feature-names": "error",
++  "no-dupe-scenario-names": [
++    "error",
++    "anywhere"
++  ],
++  "no-duplicate-tags": "error",
++  "no-empty-background": "error",
++  "no-empty-file": "error",
++  "no-examples-in-scenarios": "error",
++  "no-files-without-scenarios": "error",
++  "no-multiple-empty-lines": "error",
++  "no-partially-commented-tag-lines": "error",
++  "no-scenario-outlines-without-examples": "error",
++  "no-superfluous-tags": "error",
++  "no-trailing-spaces": "error",
++  "no-unnamed-features": "error",
++  "no-unnamed-scenarios": "error",
++  "no-unused-variables": "error",
++  "one-space-between-tags": "error",
++  "scenario-size": [
++    "error",
++    {
++      "steps-length": {
++        "Background": 5,
++        "Scenario": 10
++      }
++    }
++  ],
++  "table-align": "error",
++  "use-and": "error"
++}
+diff --git a/.rgignore b/.rgignore
+new file mode 100644
+index 0000000..9a013ae
+--- /dev/null
++++ b/.rgignore
+@@ -0,0 +1,2 @@
++AGENTS.md
++.wake
+diff --git a/.shipshape/plank-join.mjs b/.shipshape/plank-join.mjs
+new file mode 100644
+index 0000000..c28c5f2
+--- /dev/null
++++ b/.shipshape/plank-join.mjs
+@@ -0,0 +1,251 @@
++#!/usr/bin/env node
++/**
++ * plank-join.mjs
++ *
++ * Joins @planks and @planks-provisional annotations to step-definition patterns
++ * and @captain scenarios. Reddens where:
++ *   1. A plank pattern matches no current step definition.
++ *   2. A behaviour-bearing step definition has no matching plank.
++ *   3. A @planks-provisional names a scenario that no longer carries @captain.
++ *   4. A @planks or @planks-provisional token appears outside a docblock on a declaration.
++ *
++ * Exit codes: 0 = clean, 1 = red findings, 2 = tool error.
++ */
++
++import fs from "fs";
++import path from "path";
++
++const PROJECT_ROOT = process.cwd();
++
++// --- Discover specs and implementation directories from RIGGING.md ---
++function parseRigging() {
++  const riggingPath = path.join(PROJECT_ROOT, "RIGGING.md");
++  if (!fs.existsSync(riggingPath)) {
++    console.error("plank-join: RIGGING.md not found");
++    process.exit(2);
++  }
++  const content = fs.readFileSync(riggingPath, "utf8");
++  const impl = [];
++  const specs = [];
++  const verification = [];
++  let currentSection = null;
++
++  for (const line of content.split("\n")) {
++    const sectionMatch = line.match(/^## (\w+)/);
++    if (sectionMatch) {
++      currentSection = sectionMatch[1];
++      continue;
++    }
++    const itemMatch = line.match(/^- (\w+):\s*(.+)/);
++    if (itemMatch && currentSection === "Directories") {
++      const [, key, value] = itemMatch;
++      const clean = value.trim();
++      if (key === "implementation") impl.push(clean);
++      if (key === "specs") specs.push(clean);
++      if (key === "verification") verification.push(clean);
++    }
++  }
++
++  return { impl, specs, verification };
++}
++
++// --- Discover step-definition patterns from verification support ---
++function discoverStepPatterns(verificationDirs) {
++  const patterns = new Set();
++  for (const dir of verificationDirs) {
++    const absDir = path.join(PROJECT_ROOT, dir);
++    if (!fs.existsSync(absDir)) continue;
++    const files = fs.readdirSync(absDir, { recursive: true });
++    for (const file of files) {
++      if (typeof file !== "string") continue;
++      const abs = path.join(absDir, file);
++      if (!fs.existsSync(abs)) continue;
++      const stat = fs.statSync(abs);
++      if (!stat.isFile()) continue;
++      const ext = path.extname(file);
++      if (ext !== ".js" && ext !== ".ts" && ext !== ".mjs") continue;
++      const src = fs.readFileSync(abs, "utf8");
++      // Match Given/When/Then definitions: .Given("...", .When("...", .Then("..."
++      const re = /\.(?:Given|When|Then)\(\s*["`']([^"`']+)["`']/g;
++      let m;
++      while ((m = re.exec(src)) !== null) {
++        patterns.add(m[1]);
++      }
++    }
++  }
++  return patterns;
++}
++
++// --- Discover @captain scenarios from specs ---
++function discoverCaptainScenarios(specsDirs) {
++  const scenarios = new Set();
++  for (const dir of specsDirs) {
++    const absDir = path.join(PROJECT_ROOT, dir);
++    if (!fs.existsSync(absDir)) continue;
++    const files = fs.readdirSync(absDir, { recursive: true });
++    for (const file of files) {
++      if (typeof file !== "string") continue;
++      if (!file.endsWith(".feature")) continue;
++      const abs = path.join(absDir, file);
++      if (!fs.existsSync(abs)) continue;
++      const src = fs.readFileSync(abs, "utf8");
++      const rel = path.relative(PROJECT_ROOT, abs).replace(/\\/g, "/");
++
++      // Collect all lines, find @captain tags and Scenario keywords
++      const lines = src.split("\n");
++      let captainPending = false;
++
++      for (const line of lines) {
++        const trimmed = line.trim();
++
++        // Tag line: check for @captain
++        if (trimmed.startsWith("@")) {
++          if (/^@captain\b/.test(trimmed)) {
++            captainPending = true;
++          }
++          continue;
++        }
++
++        // Scenario line
++        const scenarioMatch = trimmed.match(/^Scenario(?:\s+Outline)?:\s*(.+)/);
++        if (scenarioMatch) {
++          if (captainPending) {
++            scenarios.add(`${rel}:${scenarioMatch[1].trim()}`);
++          }
++          captainPending = false;
++          continue;
++        }
++
++        // Blank lines or non-tag content: reset pending captain
++        if (trimmed === "" || (!trimmed.startsWith("@"))) {
++          captainPending = false;
++        }
++      }
++    }
++  }
++  return scenarios;
++}
++
++// --- Scan implementation for @planks annotations ---
++function scanPlanks(implDirs) {
++  const planks = []; // { file, line, pattern, type, lineNum }
++
++  for (const dir of implDirs) {
++    const absDir = path.join(PROJECT_ROOT, dir);
++    if (!fs.existsSync(absDir)) continue;
++    const files = fs.readdirSync(absDir, { recursive: true });
++    for (const file of files) {
++      if (typeof file !== "string") continue;
++      const abs = path.join(absDir, file);
++      if (!fs.existsSync(abs)) continue;
++      const stat = fs.statSync(abs);
++      if (!stat.isFile()) continue;
++      const ext = path.extname(file);
++      if (ext !== ".js" && ext !== ".ts" && ext !== ".mjs" && ext !== ".jsx" && ext !== ".tsx") continue;
++
++      const src = fs.readFileSync(abs, "utf8");
++      const lines = src.split("\n");
++      const rel = path.relative(PROJECT_ROOT, abs).replace(/\\/g, "/");
++
++      for (let i = 0; i < lines.length; i++) {
++        const line = lines[i];
++
++        // Check for @planks-provisional outside docblock (line comment)
++        const provLineComment = line.match(/\/\/\s*@planks-provisional\(["']([^"']+)["']\)/);
++        if (provLineComment) {
++          planks.push({ file: rel, line: i + 1, reference: provLineComment[1], type: "provisional", inDocblock: false });
++          continue;
++        }
++
++        // Check for @planks outside docblock (line comment)
++        const planksLineComment = line.match(/\/\/\s*@planks\(["']([^"']+)["']\)/);
++        if (planksLineComment) {
++          planks.push({ file: rel, line: i + 1, pattern: planksLineComment[1], type: "planks", inDocblock: false });
++          continue;
++        }
++
++        // Check for docblock-style planks (/** ... */)
++        const docblockStart = line.match(/\/\*\*/);
++        if (docblockStart) {
++          let j = i;
++          let docblockContent = "";
++          while (j < lines.length) {
++            docblockContent += lines[j] + "\n";
++            if (lines[j].includes("*/")) break;
++            j++;
++          }
++
++          const provMatch = docblockContent.match(/@planks-provisional\(["']([^"']+)["']\)/);
++          if (provMatch) {
++            planks.push({ file: rel, line: i + 1, reference: provMatch[1], type: "provisional", inDocblock: true });
++          }
++
++          const planksMatch = docblockContent.match(/@planks\(["']([^"']+)["']\)/);
++          if (planksMatch) {
++            planks.push({ file: rel, line: i + 1, pattern: planksMatch[1], type: "planks", inDocblock: true });
++          }
++        }
++      }
++    }
++  }
++  return planks;
++}
++
++// --- Main ---
++function main() {
++  const { impl, specs, verification } = parseRigging();
++
++  if (impl.length === 0) {
++    console.log("plank-join: no implementation directories");
++    process.exit(0);
++  }
++
++  const stepPatterns = discoverStepPatterns(verification);
++  const captainScenarios = discoverCaptainScenarios(specs);
++  const planks = scanPlanks(impl);
++
++  const findings = [];
++
++  for (const plank of planks) {
++    if (plank.type === "provisional") {
++      // Check the referenced scenario still has @captain
++      if (!captainScenarios.has(plank.reference)) {
++        findings.push(`MALFORMED-PROVISIONAL ${plank.file}:${plank.line} @planks-provisional("${plank.reference}") references scenario without @captain`);
++      }
++    } else {
++      // Check pattern matches a current step definition
++      if (!stepPatterns.has(plank.pattern)) {
++        findings.push(`STALE-PLANK ${plank.file}:${plank.line} @planks("${plank.pattern}") matches no current step definition`);
++      }
++    }
++  }
++
++  // Check docblock form: planks-provisional must be in a docblock
++  for (const plank of planks) {
++    if (plank.type === "provisional" && !plank.inDocblock) {
++      findings.push(`MALFORMED-PLANK-FORM ${plank.file}:${plank.line} @planks-provisional outside docblock on declaration`);
++    }
++    if (plank.type === "planks" && !plank.inDocblock) {
++      findings.push(`MALFORMED-PLANK-FORM ${plank.file}:${plank.line} @planks outside docblock on declaration`);
++    }
++  }
++
++  // Check coverage: step definitions without planks
++  const plankedPatterns = new Set(planks.filter(p => p.type === "planks").map(p => p.pattern));
++  for (const pattern of stepPatterns) {
++    if (!plankedPatterns.has(pattern)) {
++      findings.push(`UNPLANKED-STEP pattern "${pattern}" has no matching @planks annotation`);
++    }
++  }
++
++  if (findings.length > 0) {
++    console.log("plank-join: " + findings.length + " finding(s)");
++    for (const f of findings) console.log("  " + f);
++    process.exit(1);
++  }
++
++  console.log("plank-join: clean (" + planks.length + " plank(s), " + stepPatterns.size + " pattern(s), " + captainScenarios.size + " @captain scenario(s))");
++  process.exit(0);
++}
++
++main();
+diff --git a/.shipshape/verification-conformance-rules.json b/.shipshape/verification-conformance-rules.json
+new file mode 100644
+index 0000000..97e2aa5
+--- /dev/null
++++ b/.shipshape/verification-conformance-rules.json
+@@ -0,0 +1,38 @@
++{
++  "rules": [
++    {
++      "id": "plank-form-docblock",
++      "description": "@planks and @planks-provisional must appear in a docblock (/** ... */) immediately preceding a declaration, not as line comments or inline tokens",
++      "pattern": "@planks|@planks-provisional",
++      "engine": "text",
++      "severity": "error"
++    },
++    {
++      "id": "plank-coverage",
++      "description": "Every behaviour-bearing step-definition pattern must have a matching @planks annotation somewhere in the implementation",
++      "join": "plank-join",
++      "severity": "error"
++    },
++    {
++      "id": "no-forbidden-doubles",
++      "description": "Verification support must not use test doubles except where justified inline with @exceptional-double",
++      "pattern": "double|mock|stub|fake|spy|sinon|jest\\.fn|jest\\.spyOn|vi\\.fn|vi\\.spyOn",
++      "exclude": "@exceptional-double",
++      "engine": "text",
++      "severity": "warning"
++    },
++    {
++      "id": "no-guessed-delays",
++      "description": "Step definitions must not use arbitrary timeouts where a signal is observable; use polling with signal observation instead",
++      "pattern": "setTimeout|sleep|delay|wait\\(\\d",
++      "engine": "text",
++      "severity": "warning"
++    },
++    {
++      "id": "step-in-dependency",
++      "description": "Step definitions must not create expensive resources outside the one scenario that asserts them",
++      "join": "plank-join",
++      "severity": "warning"
++    }
++  ]
++}
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..754f55d
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,21 @@
++# Agent Instructions
++
++This project uses Shipshape, a context-isolated spec-driven workflow for coding agents.
++
++Agent opening this project: ensure Shipshape is installed, then load the `shipshape` skill (`shipshape:shipshape` under the plugin channel) and follow its routing before other work. Decide how to involve the human per your configured preferences.
++
++Tooling values such as stack, directories, and commands live in `RIGGING.md`.
++
++Install with the open skills CLI, which works across most agent runtimes:
++
++```bash
++npx skills add dmytri/shipshape --skill '*'
++```
++
++If your runtime supports the open-plugin format, such as Claude Code or Cursor, install the experimental plugin build instead:
++
++```bash
++npx plugins add dmytri/shipshape
++```
++
++Update Shipshape at a voyage boundary with `npx skills update` for the skills install, or re-run `npx plugins add dmytri/shipshape` for the plugin build.
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..3cab853
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,60 @@
++# Rigging
++
++Project tooling values for Shipshape roles. Values only, not procedure.
++Procedure lives in the skills. Every role reads this on open.
++
++## Stack
++
++- language: JavaScript
++- runtime: Node.js
++- packageManager: npm
++
++## Directories
++
++- implementation: js
++- specs: features
++- verification: features/steps
++- verification: features/support
++- assets: assets
++- scantlings: .shipshape/verification-conformance-rules.json
++
++## Methods
++
++- prove: `SS_SCENARIO="{scenario}" npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js "${SS_SCENARIO%%:*}" --name "^${SS_SCENARIO#*:}$" --tags "not @captain and not @shipwright"' --label prove --timeout 600`
++- verify: `SS_SCENARIO="{scenario}" npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js "${SS_SCENARIO%%:*}" --name "^${SS_SCENARIO#*:}$" --tags "not @captain and not @shipwright"' --label prove --timeout 600 --run 'node .shipshape/plank-join.mjs' --label plank-join --timeout 120`
++- sweep: `npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js --tags "not @captain and not @shipwright"' --label sweep --timeout 900`
++- plank-join: `npx @dk/yoink --max-bytes 200000 --run 'node .shipshape/plank-join.mjs' --label plank-join --timeout 120`
++- hygiene: `npx @dk/yoink --max-bytes 200000 --run 'node .shipshape/plank-join.mjs' --label plank-join --timeout 120 --run 'npx cucumber-js --tags "not @captain and not @shipwright"' --label lint --timeout 300`
++- static: `npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js --dry-run --tags "not @captain and not @shipwright"' --label discovery --timeout 300 --run 'npx cucumber-js --tags "not @captain and not @shipwright"' --label lint --timeout 300`
++- discovery: `npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js --dry-run --tags "not @captain and not @shipwright"' --label discovery --timeout 300`
++- regression: `npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js --tags "not @captain and not @shipwright"' --label coverage --timeout 900`
++- condemnation: `SS_SCENARIO="{scenario}" npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js "${SS_SCENARIO%%:*}" --name "^${SS_SCENARIO#*:}$" --tags "not @captain and not @shipwright"' --label prove --timeout 600`
++- dead-code: `npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js --dry-run --tags "not @captain and not @shipwright"' --label dead-code --timeout 300`
++- spec-lint: `npx @dk/yoink --max-bytes 200000 --run 'npx gplint -c .gplintrc features/' --label gherkin-lint --timeout 300`
++- install: `SS_DEPENDENCY="{dependency}" npx @dk/yoink --max-bytes 200000 --run 'npm install --save-dev "$SS_DEPENDENCY"' --label install --timeout 600`
++- ship: none
++- ship-verify: none
++
++## Perturbation
++
++- message: `PERTURBATION: consider current durable context; remove when fixed`
++- perturb: `throw new Error("PERTURBATION: consider current durable context; remove when fixed");`
++
++## Tiers
++
++- default: @logic
++- policy: @logic - no external credentials required
++- weather: .wake/weather.json
++- runrecord: .wake/runrecord.json
++
++## Dependencies
++
++- policy: locked
++- dependency: @cucumber/cucumber
++- dependency: happy-dom
++
++## Outbound
++
++- outbound: none
++- ship: none
++- ship-verify: none
+diff --git a/features/clear-completed.feature b/features/clear-completed.feature
+new file mode 100644
+index 0000000..5c09b89
+--- /dev/null
++++ b/features/clear-completed.feature
+@@ -0,0 +1,19 @@
++Feature: Clear completed button
++  The clear completed button removes completed todos and hides when none exist.
++
++  @captain
++  Scenario: Clear completed removes completed todos
++    Given the todo application with completed todos "Buy milk" and active todos "Walk the dog"
++    When the user clicks the clear completed button
++    Then a todo with text "Buy milk" is not visible in the list
++    And a todo with text "Walk the dog" is visible in the list
++
++  @captain
++  Scenario: Clear completed hides when no completed todos
++    Given the todo application with todos "Buy milk"
++    Then the clear completed button is not visible
++
++  @captain
++  Scenario: Clear completed shows when completed todos exist
++    Given the todo application with completed todos "Buy milk"
++    Then the clear completed button is visible
+diff --git a/features/counter.feature b/features/counter.feature
+new file mode 100644
+index 0000000..bbca72b
+--- /dev/null
++++ b/features/counter.feature
+@@ -0,0 +1,30 @@
++Feature: Active todo counter
++  The footer displays the count of active todos with correct pluralization.
++
++  @captain
++  Scenario: Counter shows zero items when empty
++    Given the todo application is loaded
++    Then the counter shows "0 items left"
++
++  @captain
++  Scenario: Counter shows singular for one item
++    Given the todo application with todos "Buy milk"
++    Then the counter shows "1 item left"
++
++  @captain
++  Scenario: Counter shows plural for multiple items
++    Given the todo application with todos "Buy milk" and "Walk the dog"
++    Then the counter shows "2 items left"
++
++  @captain
++  Scenario: Counter excludes completed items
++    Given the todo application with todos "Buy milk" and "Walk the dog"
++    When the user marks the todo "Buy milk" as completed
++    Then the counter shows "1 item left"
++
++  @captain
++  Scenario: Counter updates after deletion
++    Given the todo application with todos "Buy milk" and "Walk the dog"
++    When the user hovers over the todo "Buy milk"
++    And the user clicks the destroy button for todo "Buy milk"
++    Then the counter shows "1 item left"
+diff --git a/features/empty-state.feature b/features/empty-state.feature
+new file mode 100644
+index 0000000..0c78f67
+--- /dev/null
++++ b/features/empty-state.feature
+@@ -0,0 +1,13 @@
++Feature: Empty state
++  The application behaves correctly when no todos exist.
++
++  @captain
++  Scenario: Main and footer hidden when no todos
++    Given the todo application is loaded with no todos
++    Then the main section is not visible
++    And the footer is not visible
++
++  @captain
++  Scenario: Input is focused on page load
++    Given the todo application is loaded with no todos
++    Then the new todo input is focused
+diff --git a/features/mark-all-complete.feature b/features/mark-all-complete.feature
+new file mode 100644
+index 0000000..72c18f1
+--- /dev/null
++++ b/features/mark-all-complete.feature
+@@ -0,0 +1,34 @@
++Feature: Mark all as complete
++  The toggle-all checkbox controls the completion state of all todos.
++
++  @captain
++  Scenario: Toggle all marks all todos as completed
++    Given the todo application with todos "Buy milk" and "Walk the dog"
++    When the user clicks the toggle-all checkbox
++    Then all todos are marked as completed
++
++  @captain
++  Scenario: Toggle all clears when all todos are completed
++    Given the todo application with completed todos "Buy milk" and "Walk the dog"
++    When the user clicks the toggle-all checkbox
++    Then all todos are marked as active
++
++  @captain
++  Scenario: Toggle all checks when all todos become completed
++    Given the todo application with todos "Buy milk" and "Walk the dog"
++    When the user marks the todo "Buy milk" as completed
++    And the user marks the todo "Walk the dog" as completed
++    Then the toggle-all checkbox is checked
++
++  @captain
++  Scenario: Toggle all unchecks when any todo becomes active
++    Given the todo application with completed todos "Buy milk" and "Walk the dog"
++    When the user marks the todo "Buy milk" as active
++    Then the toggle-all checkbox is unchecked
++
++  @captain
++  Scenario: Toggle all clears checked state after clear completed
++    Given the todo application with completed todos "Buy milk" and "Walk the dog"
++    When the user clicks the toggle-all checkbox
++    And the user clicks the clear completed button
++    Then the toggle-all checkbox is unchecked
+diff --git a/features/methodology-conformance.feature b/features/methodology-conformance.feature
+new file mode 100644
+index 0000000..ca9a39b
+--- /dev/null
++++ b/features/methodology-conformance.feature
+@@ -0,0 +1,15 @@
++Feature: Methodology conformance
++  Scenarios attesting the project's own Shipshape methodology.
++
++  @captain @conformance
++  Scenario: Watchbill shape conformance
++    Given the project has a watchbill.json or the deck is at rest
++    When the watchbill is inspected
++    Then it conforms to the fixed shape with only ordered watch objects named watch1, watch2, and onward
++    And each watch contains only scenarios in <spec>.feature:<Scenario Name> form or a tier tag
++
++  @captain @conformance
++  Scenario: Perturbation quiescence
++    Given a green verification tree
++    When the implementation directories are scanned for the PERTURBATION token
++    Then no standing perturbation token is found
+diff --git a/features/new-todo.feature b/features/new-todo.feature
+new file mode 100644
+index 0000000..77d680e
+--- /dev/null
++++ b/features/new-todo.feature
+@@ -0,0 +1,36 @@
++Feature: New todo
++  Users can create new todo items through the input field.
++
++  @captain
++  Scenario: Creating a todo by pressing Enter
++    Given the todo application is loaded
++    When the user types "Buy milk" in the new todo input and presses Enter
++    Then a todo with text "Buy milk" is visible in the list
++    And the new todo input is cleared
++
++  @captain
++  Scenario: Creating a todo trims whitespace
++    Given the todo application is loaded
++    When the user types "  Buy milk  " in the new todo input and presses Enter
++    Then a todo with text "Buy milk" is visible in the list
++
++  @captain
++  Scenario: Empty todo is not created
++    Given the todo application is loaded
++    When the user types "" in the new todo input and presses Enter
++    Then no todo items are visible in the list
++
++  @captain
++  Scenario: Whitespace-only todo is not created
++    Given the todo application is loaded
++    When the user types "   " in the new todo input and presses Enter
++    Then no todo items are visible in the list
++
++  @captain
++  Scenario: Multiple todos can be created
++    Given the todo application is loaded
++    When the user types "Buy milk" in the new todo input and presses Enter
++    And the user types "Walk the dog" in the new todo input and presses Enter
++    Then the todo list contains 2 items
++    And a todo with text "Buy milk" is visible in the list
++    And a todo with text "Walk the dog" is visible in the list
+diff --git a/features/persistence.feature b/features/persistence.feature
+new file mode 100644
+index 0000000..880a6b0
+--- /dev/null
++++ b/features/persistence.feature
+@@ -0,0 +1,31 @@
++Feature: Persistence
++  Todos persist to localStorage across page reloads.
++
++  @captain
++  Scenario: Todos are saved to localStorage
++    Given the todo application is loaded
++    When the user types "Buy milk" in the new todo input and presses Enter
++    And the user reloads the page
++    Then a todo with text "Buy milk" is visible in the list
++
++  @captain
++  Scenario: Completed state persists across reload
++    Given the todo application is loaded
++    When the user types "Buy milk" in the new todo input and presses Enter
++    And the user marks the todo "Buy milk" as completed
++    And the user reloads the page
++    Then the todo "Buy milk" has the completed class
++
++  @captain
++  Scenario: Deleted todos do not reappear on reload
++    Given the todo application is loaded
++    When the user creates and deletes a todo "Buy milk"
++    And the user reloads the page
++    Then no todo items are visible in the list
++
++  @captain
++  Scenario: Multiple todos persist across reload
++    Given the todo application is loaded
++    When the user creates todos "Buy milk" and "Walk the dog"
++    And the user reloads the page
++    Then the todo list contains 2 items
+diff --git a/features/routing.feature b/features/routing.feature
+new file mode 100644
+index 0000000..cc6610a
+--- /dev/null
++++ b/features/routing.feature
+@@ -0,0 +1,44 @@
++Feature: Routing
++  The application supports filtering todos by route hash.
++
++  @captain
++  Scenario: All todos shown on default route
++    Given the todo application with completed todos "Buy milk" and active todos "Walk the dog"
++    When the user navigates to "#/"
++    Then a todo with text "Buy milk" is visible in the list
++    And a todo with text "Walk the dog" is visible in the list
++
++  @captain
++  Scenario: Active filter shows only active todos
++    Given the todo application with completed todos "Buy milk" and active todos "Walk the dog"
++    When the user navigates to "#/active"
++    Then a todo with text "Buy milk" is not visible in the list
++    And a todo with text "Walk the dog" is visible in the list
++
++  @captain
++  Scenario: Completed filter shows only completed todos
++    Given the todo application with completed todos "Buy milk" and active todos "Walk the dog"
++    When the user navigates to "#/completed"
++    Then a todo with text "Buy milk" is visible in the list
++    And a todo with text "Walk the dog" is not visible in the list
++
++  @captain
++  Scenario: Active filter link is selected on active route
++    Given the todo application is loaded
++    When the user navigates to "#/active"
++    Then the "Active" filter link has the selected class
++
++  @captain
++  Scenario: Filtering hides completed items in active view
++    Given the todo application with todos "Buy milk" and "Walk the dog"
++    When the user marks the todo "Buy milk" as completed
++    And the user navigates to "#/active"
++    Then a todo with text "Buy milk" is not visible in the list
++    And a todo with text "Walk the dog" is visible in the list
++
++  @captain
++  Scenario: Routing persists on reload
++    Given the todo application is loaded
++    When the user navigates to "#/active"
++    And the user reloads the page
++    Then the "Active" filter link has the selected class
+diff --git a/features/todo-editing.feature b/features/todo-editing.feature
+new file mode 100644
+index 0000000..88c6027
+--- /dev/null
++++ b/features/todo-editing.feature
+@@ -0,0 +1,52 @@
++Feature: Todo editing
++  Users can edit existing todo titles.
++
++  @captain
++  Scenario: Editing saves on Enter
++    Given the todo application with todos "Buy milk"
++    When the user double-clicks the label for todo "Buy milk"
++    And the user types "Buy oat milk" in the edit input
++    And the user presses Enter
++    Then a todo with text "Buy oat milk" is visible in the list
++    And the todo "Buy oat milk" is not in editing mode
++
++  @captain
++  Scenario: Editing saves on blur
++    Given the todo application with todos "Buy milk"
++    When the user double-clicks the label for todo "Buy milk"
++    And the user types "Buy oat milk" in the edit input
++    And the user blurs the edit input
++    Then a todo with text "Buy oat milk" is visible in the list
++
++  @captain
++  Scenario: Editing discards on Escape
++    Given the todo application with todos "Buy milk"
++    When the user double-clicks the label for todo "Buy milk"
++    And the user types "Buy oat milk" in the edit input
++    And the user presses Escape
++    Then a todo with text "Buy milk" is visible in the list
++    And the todo "Buy milk" is not in editing mode
++
++  @captain
++  Scenario: Empty edit destroys the todo
++    Given the todo application with todos "Buy milk"
++    When the user double-clicks the label for todo "Buy milk"
++    And the user clears the edit input
++    And the user presses Enter
++    Then no todo items are visible in the list
++
++  @captain
++  Scenario: Edit trims whitespace
++    Given the todo application with todos "Buy milk"
++    When the user double-clicks the label for todo "Buy milk"
++    And the user types "  Buy oat milk  " in the edit input
++    And the user presses Enter
++    Then a todo with text "Buy oat milk" is visible in the list
++
++  @captain
++  Scenario: Whitespace-only edit destroys the todo
++    Given the todo application with todos "Buy milk"
++    When the user double-clicks the label for todo "Buy milk"
++    And the user types "   " in the edit input
++    And the user presses Enter
++    Then no todo items are visible in the list
+diff --git a/features/todo-item.feature b/features/todo-item.feature
+new file mode 100644
+index 0000000..90d224b
+--- /dev/null
++++ b/features/todo-item.feature
+@@ -0,0 +1,21 @@
++Feature: Todo item interactions
++  Individual todo items support completion, editing, and deletion.
++
++  @captain
++  Scenario: Clicking checkbox marks todo as completed
++    Given the todo application with todos "Buy milk"
++    When the user clicks the checkbox for todo "Buy milk"
++    Then the todo "Buy milk" has the completed class
++
++  @captain
++  Scenario: Double-clicking label activates editing mode
++    Given the todo application with todos "Buy milk"
++    When the user double-clicks the label for todo "Buy milk"
++    Then the todo "Buy milk" is in editing mode
++    And the edit input for todo "Buy milk" is focused
++
++  @captain
++  Scenario: Destroy button appears on hover
++    Given the todo application with todos "Buy milk"
++    When the user hovers over the todo "Buy milk"
++    Then the destroy button for todo "Buy milk" is visible

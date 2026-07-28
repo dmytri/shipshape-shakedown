@@ -1,0 +1,29 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index c303fdb..31294d5 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -46,8 +46,9 @@ source-level conformance checks (matching the project's existing
+ 
+ ## Watchbill
+ 
+-`watchbill.json` pins the new defect from root cause 3: `watch1` targets the
+-`empty-edit-removal` conformance scenario. It is a `@captain` skeleton: QM
+-implements the named check, which reddens on the current code and greens after
+-the Crew fix. Do not remove the `@captain` tag until the check is implemented
+-and green.
++`watchbill.json` pins the empty-edit-removal defect: `watch1` targets the
++`empty-edit-removal` conformance scenario, now a binding `@conformance` target
++(promoted from its `@captain` skeleton so the standard verification runs it and
++it reddens on the current code). QM implements the named source-level check
++(the `When`/`Then` steps), which reddens on the current code and greens after
++the Crew fix. The Crew fix is the root-cause 3 product change below.
+diff --git a/features/conformance/empty-edit-removal.feature b/features/conformance/empty-edit-removal.feature
+index cf65489..b977a38 100644
+--- a/features/conformance/empty-edit-removal.feature
++++ b/features/conformance/empty-edit-removal.feature
+@@ -1,4 +1,4 @@
+-@captain @conformance
++@conformance
+ Feature: Empty-edit commit removes the item without a re-entrant render
+ 
+   A real browser holds the edit input element focused inside the item being

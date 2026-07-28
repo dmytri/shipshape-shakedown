@@ -1,0 +1,539 @@
+diff --git a/.gplintrc b/.gplintrc
+new file mode 100644
+index 0000000..d3d9557
+--- /dev/null
++++ b/.gplintrc
+@@ -0,0 +1,114 @@
++{
++  "allowed-tags": [
++    "error",
++    {
++      "tags": [
++        "@logic",
++        "@sandbox",
++        "@contract",
++        "@conformance",
++        "@captain",
++        "@shipwright",
++        "@exceptional-double"
++      ]
++    }
++  ],
++  "file-name": [
++    "error",
++    {
++      "style": "kebab-case"
++    }
++  ],
++  "indentation": [
++    "error",
++    {
++      "Feature": 0,
++      "Background": 2,
++      "Rule": 2,
++      "Scenario": 2,
++      "Step": 4,
++      "Examples": 4,
++      "example": 6,
++      "given": 4,
++      "when": 4,
++      "then": 4,
++      "and": 4,
++      "but": 4
++    }
++  ],
++  "keywords-in-logical-order": "error",
++  "max-keywords": [
++    "error",
++    {
++      "given": 5,
++      "when": 3,
++      "then": 5,
++      "ignoreConjunctions": false
++    }
++  ],
++  "max-tags-lines": [
++    "error",
++    {
++      "feature": 1,
++      "scenario": 1
++    }
++  ],
++  "name-length": [
++    "error",
++    {
++      "Feature": 90,
++      "Rule": 90,
++      "Scenario": 90,
++      "Step": 120
++    }
++  ],
++  "new-line-at-eof": [
++    "error",
++    "yes"
++  ],
++  "no-background-only-scenario": "error",
++  "no-dupe-feature-names": "error",
++  "no-dupe-scenario-names": [
++    "error",
++    "anywhere"
++  ],
++  "no-duplicate-tags": "error",
++  "no-empty-background": "error",
++  "no-empty-file": "error",
++  "no-examples-in-scenarios": "error",
++  "no-files-without-scenarios": "error",
++  "no-homogenous-tags": "error",
++  "no-multiple-empty-lines": "error",
++  "no-partially-commented-tag-lines": "error",
++  "no-restricted-patterns": [
++    "error",
++    {
++      "Global": [
++        "^\\s*#",
++        "should probably",
++        "\\bmight\\b",
++        "\\bmaybe\\b",
++        "\\bTODO\\b",
++        "\\bTBD\\b"
++      ]
++    }
++  ],
++  "no-scenario-outlines-without-examples": "error",
++  "no-superfluous-tags": "error",
++  "no-trailing-spaces": "error",
++  "no-unnamed-features": "error",
++  "no-unnamed-scenarios": "error",
++  "no-unused-variables": "error",
++  "one-space-between-tags": "error",
++  "scenario-size": [
++    "error",
++    {
++      "steps-length": {
++        "Background": 5,
++        "Scenario": 10
++      }
++    }
++  ],
++  "table-align": "error",
++  "use-and": "error"
++}
+diff --git a/.rgignore b/.rgignore
+new file mode 100644
+index 0000000..ba910ba
+--- /dev/null
++++ b/.rgignore
+@@ -0,0 +1 @@
++CAPTAIN.md
+diff --git a/.shipshape/plank-join.mjs b/.shipshape/plank-join.mjs
+new file mode 100644
+index 0000000..832249f
+--- /dev/null
++++ b/.shipshape/plank-join.mjs
+@@ -0,0 +1,262 @@
++#!/usr/bin/env node
++// Shipwright-authored plank join + methodology conformance checker.
++// The one checker Shipwright authors: it reports facts about the code that no
++// runner reports (plank coverage, plank form, provisional drift) and carries
++// the two required methodology conformance checks (watchbill-shape,
++// perturbation-quiescence) plus the two text-pattern plank rules the
++// Verification agreement obligates for a token-search annotation scan.
++//
++// Token-search fallback note (text-search weakness): the annotation scan below
++// finds @planks/@planks-provisional tokens by regex over file text. It can miss
++// a plank hidden inside a multiline string literal or a comment that is not a
++// declaration-adjacent docblock, and it cannot tell whether a token sits in a
++// docblock immediately preceding a declaration. A docblock/parser reader would
++// close that gap; until one is installed this checker reports the join from
++// token search and the two plank rules below keep the contract decidable.
++
++import fs from 'node:fs';
++import path from 'node:path';
++
++const ROOT = process.cwd();
++const RIGGING = path.join(ROOT, 'RIGGING.md');
++
++function fail(msg) {
++  console.error(`plank-join: ${msg}`);
++  process.exit(1);
++}
++
++function readRiggingDirs() {
++  if (!fs.existsSync(RIGGING)) fail('RIGGING.md not found; run fitting out first');
++  const txt = fs.readFileSync(RIGGING, 'utf8');
++  const impl = [];
++  const specs = [];
++  let section = null;
++  for (const line of txt.split('\n')) {
++    if (line.startsWith('## ')) {
++      section = line.slice(3).trim();
++      continue;
++    }
++    if (section !== 'Directories') continue;
++    const m = line.match(/^-\s*(implementation|specs):\s*(.+?)\s*$/);
++    if (m) {
++      for (const v of m[2].split(/\s+/).filter(Boolean)) {
++        (m[1] === 'implementation' ? impl : specs).push(v);
++      }
++    }
++  }
++  return { impl, specs };
++}
++
++function walk(dir) {
++  const out = [];
++  if (!fs.existsSync(dir)) return out;
++  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
++    const p = path.join(dir, e.name);
++    if (e.isDirectory()) out.push(...walk(p));
++    else out.push(p);
++  }
++  return out;
++}
++
++function listFiles(dirs) {
++  const out = [];
++  for (const d of dirs) {
++    const p = path.join(ROOT, d);
++    if (!fs.existsSync(p)) continue;
++    if (fs.statSync(p).isDirectory()) out.push(...walk(p));
++    else out.push(p);
++  }
++  return out;
++}
++
++const PLANK_RE = /@planks(?:-provisional)?\(\s*"([^"]+)"\s*\)/g;
++
++function collectPlanks(files) {
++  const planks = [];
++  for (const f of files) {
++    if (!/\.(js|mjs|cjs|ts|tsx|html|vue|jsx)$/.test(f)) continue;
++    const txt = fs.readFileSync(f, 'utf8');
++    let m;
++    PLANK_RE.lastIndex = 0;
++    while ((m = PLANK_RE.exec(txt))) {
++      const line = txt.slice(0, m.index).split('\n').length;
++      const provisional = m[0].startsWith('@planks-provisional');
++      planks.push({ file: f, line, pattern: m[1], provisional });
++    }
++  }
++  return planks;
++}
++
++function collectStepPatterns(specs) {
++  const patterns = [];
++  for (const f of listFiles(specs)) {
++    if (f.endsWith('.feature')) {
++      const txt = fs.readFileSync(f, 'utf8');
++      for (const line of txt.split('\n')) {
++        const m = line.match(/^\s*(Given|When|Then|And|But)\s+(.+?)\s*$/);
++        if (m) patterns.push({ text: m[2].trim(), file: f, bound: false });
++      }
++    } else if (/\.(js|mjs|cjs|ts)$/.test(f)) {
++      const txt = fs.readFileSync(f, 'utf8');
++      const re = /(Given|When|Then)\(\s*(`[^`]+`|'[^']+'|"[^"]+"|\/.*?\/)\s*\)/g;
++      let m;
++      while ((m = re.exec(txt))) {
++        let p = m[2].replace(/^`|`$|^'|'$|^"|"$|^\/|\/$/g, '');
++        patterns.push({ text: p, file: f, bound: true });
++      }
++    }
++  }
++  return patterns;
++}
++
++function normalize(s) {
++  return s.replace(/\s+/g, ' ').trim();
++}
++
++function patternMatches(plankPat, stepText) {
++  const a = normalize(plankPat);
++  const b = normalize(stepText);
++  if (a === b) return true;
++  try {
++    return new RegExp(plankPat).test(stepText);
++  } catch {
++    return false;
++  }
++}
++
++function scenarioHasCaptain(ref, specs) {
++  // ref form: <spec>.feature:<Scenario Name>
++  const m = ref.match(/^(.+?):(.+)$/);
++  if (!m) return false;
++  const featurePath = path.join(ROOT, m[1]);
++  if (!fs.existsSync(featurePath)) return false;
++  const txt = fs.readFileSync(featurePath, 'utf8');
++  const lines = txt.split('\n');
++  let inTarget = false;
++  for (const line of lines) {
++    const tags = line.match(/^\s*@(\S+)/g);
++    const scen = line.match(/^\s*Scenario:\s*(.+?)\s*$/);
++    if (scen) {
++      inTarget = normalize(scen[1]) === normalize(m[2]);
++      continue;
++    }
++    if (/^\s*(Feature|Background|Rule|Scenario Outline|Examples):/.test(line)) {
++      inTarget = false;
++      continue;
++    }
++    if (inTarget && tags) {
++      if (tags.some((t) => t.trim() === '@captain')) return true;
++    }
++  }
++  return false;
++}
++
++function runJoin() {
++  const { impl, specs } = readRiggingDirs();
++  const planks = collectPlanks(listFiles(impl));
++  const steps = collectStepPatterns(specs);
++  const boundPatterns = steps.filter((s) => s.bound).map((s) => s.text);
++  const violations = [];
++
++  // plank-form: every plank pattern resolves to a current step pattern
++  for (const pk of planks) {
++    if (pk.provisional) {
++      if (!scenarioHasCaptain(pk.pattern, specs)) {
++        violations.push(`provisional plank names a scenario without @captain: ${pk.file}:${pk.line} -> ${pk.pattern}`);
++      }
++    } else if (!steps.some((s) => patternMatches(pk.pattern, s.text))) {
++      violations.push(`plank matches no current step pattern: ${pk.file}:${pk.line} -> "${pk.pattern}"`);
++    }
++  }
++
++  // plank-coverage: every behaviour-bearing (bound) step pattern has a plank
++  for (const bp of boundPatterns) {
++    if (!planks.some((pk) => !pk.provisional && patternMatches(pk.pattern, bp))) {
++      violations.push(`behaviour-bearing step has no plank: "${bp}" (${steps.find((s) => s.text === bp)?.file})`);
++    }
++  }
++
++  const join = {};
++  for (const s of steps) {
++    (join[s.text] ||= { scenarios: [], bound: s.bound });
++    join[s.text].bound = s.bound || join[s.text].bound;
++  }
++  for (const pk of planks) {
++    (join[pk.pattern] ||= { scenarios: [], bound: false, plank: [] });
++    join[pk.pattern].plank = join[pk.pattern].plank || [];
++    join[pk.pattern].plank.push(`${pk.file}:${pk.line}${pk.provisional ? ' (provisional)' : ''}`);
++  }
++
++  console.log(JSON.stringify({ planks: planks.length, stepPatterns: steps.length, bound: boundPatterns.length, join, violations }, null, 2));
++  if (violations.length) fail(`${violations.length} plank-join violation(s)`);
++  console.log('plank-join: clean');
++  process.exit(0);
++}
++
++function checkWatchbillShape() {
++  const f = path.join(ROOT, 'watchbill.json');
++  if (!fs.existsSync(f)) {
++    console.log('watchbill absent: conforms (deck at rest)');
++    process.exit(0);
++  }
++  let data;
++  try {
++    data = JSON.parse(fs.readFileSync(f, 'utf8'));
++  } catch (e) {
++    fail(`watchbill.json is not valid JSON: ${e.message}`);
++  }
++  if (typeof data !== 'object' || data === null || Array.isArray(data)) {
++    fail('watchbill.json must be an object of watch entries');
++  }
++  const tierTags = new Set(['@logic', '@sandbox']);
++  const violations = [];
++  const keys = Object.keys(data);
++  const watchRe = /^watch\d+$/;
++  for (const k of keys) {
++    if (!watchRe.test(k)) {
++      violations.push(`watch entry key "${k}" is not "watchN"`);
++      continue;
++    }
++    const v = data[k];
++    if (typeof v !== 'object' || v === null || Array.isArray(v) || !('scenarios' in v)) {
++      violations.push(`watch "${k}" must be an object with a "scenarios" array`);
++      continue;
++    }
++    if (!Array.isArray(v.scenarios)) {
++      violations.push(`watch "${k}".scenarios must be an array`);
++      continue;
++    }
++    for (const s of v.scenarios) {
++      if (typeof s !== 'string') {
++        violations.push(`watch "${k}" has a non-string scenario entry`);
++        continue;
++      }
++      const isRef = /^[^\s].*\.feature:.*$/.test(s);
++      const isTier = tierTags.has(s);
++      if (!isRef && !isTier) {
++        violations.push(`watch "${k}" entry "${s}" is neither a <spec>.feature:<Scenario> ref nor a tier tag`);
++      }
++    }
++  }
++  if (violations.length) fail(violations.join('; '));
++  console.log('watchbill-shape: conforms');
++  process.exit(0);
++}
++
++function checkPerturbationQuiescence() {
++  const { impl } = readRiggingDirs();
++  const found = [];
++  for (const f of listFiles(impl)) {
++    if (fs.readFileSync(f, 'utf8').includes('PERTURBATION')) found.push(f);
++  }
++  if (found.length) fail(`standing PERTURBATION token in: ${found.join(', ')}`);
++  console.log('perturbation-quiescence: clean');
++  process.exit(0);
++}
++
++const idx = process.argv.indexOf('--check');
++const check = idx >= 0 ? process.argv[idx + 1] : null;
++if (check === 'watchbill-shape') checkWatchbillShape();
++if (check === 'perturbation-quiescence') checkPerturbationQuiescence();
++if (check) fail(`unknown --check value: ${check}`);
++runJoin();
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..754f55d
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,21 @@
++# Agent Instructions
++
++This project uses Shipshape, a context-isolated spec-driven workflow for coding agents.
++
++Agent opening this project: ensure Shipshape is installed, then load the `shipshape` skill (`shipshape:shipshape` under the plugin channel) and follow its routing before other work. Decide how to involve the human per your configured preferences.
++
++Tooling values such as stack, directories, and commands live in `RIGGING.md`.
++
++Install with the open skills CLI, which works across most agent runtimes:
++
++```bash
++npx skills add dmytri/shipshape --skill '*'
++```
++
++If your runtime supports the open-plugin format, such as Claude Code or Cursor, install the experimental plugin build instead:
++
++```bash
++npx plugins add dmytri/shipshape
++```
++
++Update Shipshape at a voyage boundary with `npx skills update` for the skills install, or re-run `npx plugins add dmytri/shipshape` for the plugin build.
+diff --git a/README.md b/README.md
+index bc32f07..dc4f98b 100644
+--- a/README.md
++++ b/README.md
+@@ -4,3 +4,7 @@ A TodoMVC app to be built following `assets/app-spec.md`, using
+ `assets/app-template.index.html` as the base markup. Vanilla JS, no preprocessors.
+ The test runner is Cucumber (see package.json); write DOM-level scenarios under
+ `features/` and step definitions under `features/support/`.
++
++## Built with Shipshape
++
++This repository uses [Shipshape](https://github.com/dmytri/shipshape), a context-isolated spec-driven workflow for coding agents. Install with `npx skills add dmytri/shipshape --skill '*'`, or the experimental open-plugin build with `npx plugins add dmytri/shipshape`.
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..967d868
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,61 @@
++# Rigging
++
++Project tooling values for Shipshape roles. Values only, not procedure.
++Procedure lives in the skills. Every role reads this on open.
++
++## Stack
++
++- language: JavaScript
++- runtime: Node
++- packageManager: npm
++
++## Directories
++
++- implementation: js
++- implementation: index.html
++- specs: features
++- verification: features/support
++- assets: assets
++- scantlings: none
++
++## Methods
++
++- prove: `SS_SCENARIO="{scenario}" npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js "${SS_SCENARIO%%:*}" --name "^${SS_SCENARIO#*:}$" --tags "not @captain and not @shipwright"' --label prove --timeout 600`
++- verify: `SS_SCENARIO="{scenario}" npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js "${SS_SCENARIO%%:*}" --name "^${SS_SCENARIO#*:}$" --tags "not @captain and not @shipwright"' --label prove --timeout 600 --run 'node .shipshape/plank-join.mjs' --label plank-join --timeout 120`
++- sweep: `npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js --tags "not @captain and not @shipwright"' --label sweep --timeout 900`
++- plank-join: `npx @dk/yoink --max-bytes 200000 --run 'node .shipshape/plank-join.mjs' --label plank-join --timeout 120`
++- hygiene: `npx @dk/yoink --max-bytes 200000 --run 'node .shipshape/plank-join.mjs' --label plank-join --timeout 120`
++- static: `npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js --dry-run --tags "not @captain and not @shipwright"' --label discovery --timeout 300 --run 'node .shipshape/plank-join.mjs' --label plank-join --timeout 120`
++- discovery: `npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js --dry-run --tags "not @captain and not @shipwright"' --label discovery --timeout 300`
++- regression: `npx @dk/yoink --max-bytes 200000 --run 'npx c8 --temp-directory node_modules/.cache/c8 --report-dir node_modules/.cache/c8-report --reporter=text npx cucumber-js --tags "not @captain and not @shipwright"' --label coverage --timeout 900`
++- condemnation: `SS_SCENARIO="{scenario}" npx @dk/yoink --max-bytes 200000 --run 'node .shipshape/plank-join.mjs' --label plank-join --timeout 120 --run 'npx cucumber-js "${SS_SCENARIO%%:*}" --name "^${SS_SCENARIO#*:}$" --tags "not @captain and not @shipwright"' --label prove --timeout 600`
++- dead-code: `npx @dk/yoink --max-bytes 200000 --run 'npx knip' --label dead-code --timeout 300`
++- spec-lint: `npx @dk/yoink --max-bytes 200000 --run 'npx gplint -c .gplintrc features/' --label gherkin-lint --timeout 300`
++- install: `SS_DEPENDENCY="{dependency}" npx @dk/yoink --max-bytes 200000 --run 'npm install --save-dev "$SS_DEPENDENCY"' --label install --timeout 600`
++- ship: none
++- ship-verify: none
++
++## Perturbation
++
++- message: `PERTURBATION: consider current durable context; remove when fixed`
++- perturb: `throw new Error("PERTURBATION: consider current durable context; remove when fixed");`
++
++## Tiers
++
++- default: @logic
++- sandbox: none
++- policy: `@logic: cucumber-js runs locally under happy-dom; no external accounts or credentials`
++- weather: none
++- runrecord: none
++
++## Dependencies
++
++- policy: latest-stable
++- dependency: @cucumber/cucumber
++- dependency: happy-dom
++
++## Outbound
++
++- outbound: none
++- ship: none
++- verify: none
+diff --git a/features/conformance/perturbation-quiescence.feature b/features/conformance/perturbation-quiescence.feature
+new file mode 100644
+index 0000000..bc4d8ab
+--- /dev/null
++++ b/features/conformance/perturbation-quiescence.feature
+@@ -0,0 +1,13 @@
++Feature: Perturbation quiescence
++
++  Methodology check required on every fitting-out. A green tree carries no
++  PERTURBATION token; a standing token beside green verification is the
++  stale-green alarm the Perturbation policy names. A live plant rides
++  uncommitted with its own watchbill entries, so quiescence reddens only
++  where a standing token is a fault.
++
++  @captain @conformance
++  Scenario: No PERTURBATION token stands in implementation
++    Given the implementation directories from RIGGING.md
++    When the perturbation-quiescence check searches them for "PERTURBATION"
++    Then no standing PERTURBATION token is found
+diff --git a/features/conformance/watchbill-shape.feature b/features/conformance/watchbill-shape.feature
+new file mode 100644
+index 0000000..4443e70
+--- /dev/null
++++ b/features/conformance/watchbill-shape.feature
+@@ -0,0 +1,13 @@
++Feature: Watchbill shape conformance
++
++  Methodology check required on every fitting-out. An absent watchbill
++  conforms (deck at rest); a present watchbill must match the fixed shape:
++  an object of "watchN" entries, each an object with a "scenarios" array of
++  "<spec>.feature:<Scenario Name>" references or a tier tag.
++
++  @captain @conformance
++  Scenario: Watchbill conforms to the fixed shape
++    Given the project watchbill at "watchbill.json"
++    When the watchbill-shape conformance check runs
++    Then every entry is "watchN" with a "scenarios" array of references or tier tags
++    And an absent watchbill conforms
