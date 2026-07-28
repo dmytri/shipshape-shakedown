@@ -90,12 +90,17 @@ mkdir -p "$FAKEHOME/.config" "$FAKEHOME/.local/share" "$FAKEHOME/.cache" "$FAKEH
 # Captain turns were spending ~16k characters mentally simulating render() to explain a failure
 # their tier cannot reproduce — behaviour worth surfacing, not accommodating. So cap EVERY model
 # at the same budget and let doctrine that cannot act within it show itself.
-# 8192, not 4096 (dk): hy3 averages ~1980 output tokens/turn at 79% reasoning, so the flash
-# default would truncate it constantly and we would be measuring the cap instead of the
-# doctrine. Double it: still a real budget that punishes unbounded rumination, still uniform
-# across arms and models, but loose enough that a high-reasoning model can finish a turn.
+# 32768, chosen from measured peaks rather than taste (bin/peaks.py, 2026-07-28). Every
+# PRODUCTIVE peak observed sits under it — cand-mimo v3-captain 28,295 ending in a write,
+# ctrl-chy3 sw-final 31,665 ending in a bash run, cand-hy3 v2-qm 21,377 ending in reads — while
+# the one pathological peak sits above: ctrl-cmimo v5-qm burned its full 131,072 on 564,744
+# characters of thinking and emitted NO text and NO tool call. The cap does not cause that
+# pathology, it only changes how it appears: a tight budget turns rumination into truncation
+# (flash, 9 cut-off Captain legs), a generous one lets it finish as an expensive no-op. So the
+# budget is set to admit deliberation that ENDS IN AN ACTION and to cut deliberation that does
+# not, uniformly for every model.
 # Override per run with EVAL_MAX_TOKENS; set 0 to disable the seeding entirely.
-EVAL_MAX_TOKENS="${EVAL_MAX_TOKENS:-8192}"
+EVAL_MAX_TOKENS="${EVAL_MAX_TOKENS:-32768}"
 if [ "$EVAL_MAX_TOKENS" != "0" ] && [ -f "$HOME/.pi/agent/models-store.json" ]; then
   mkdir -p "$FAKEHOME/.pi/agent"
   python3 - "$HOME/.pi/agent/models-store.json" "$FAKEHOME/.pi/agent/models-store.json" \
@@ -157,11 +162,14 @@ env -i HOME="$FAKEHOME" XDG_CONFIG_HOME="$FAKEHOME/.config" \
   || { echo "eval-leg[$NAME]: 'skills add' failed (see $OUT/skills-add.log)" >&2; exit 3; }
 
 # Leg meta (banked with the raw so a fold knows what produced it).
-python3 - "$OUT/leg.json" "$NAME" "$MODEL" "$PROVIDER" "$WORKSPACE" "$TIMEOUT_S" "${SKILLS[@]}" <<'PY'
+python3 - "$OUT/leg.json" "$NAME" "$MODEL" "$PROVIDER" "$WORKSPACE" "$TIMEOUT_S" "$EVAL_MAX_TOKENS" "${SKILLS[@]}" <<'PY'
 import json, sys
-out, name, model, provider, ws, timeout, *skills = sys.argv[1:]
+# max_tokens is recorded per leg so a later reader can tell what budget a result was produced
+# under. A peak near the cap means the budget shaped the run; a peak far below means it did not.
+out, name, model, provider, ws, timeout, maxtok, *skills = sys.argv[1:]
 json.dump({"name": name, "model": model, "provider": provider,
-           "workspace": ws, "timeout_s": int(timeout), "skills": skills},
+           "workspace": ws, "timeout_s": int(timeout), "max_tokens": int(maxtok),
+           "skills": skills},
           open(out, "w"), indent=2)
 PY
 
