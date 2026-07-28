@@ -114,8 +114,13 @@ except Exception:
 for prov in store.values():
     if isinstance(prov, dict):
         for m in prov.get("models", []) or []:
+            # SET, do not min(). min() lowers a model above the cap but leaves a model BELOW it
+            # exactly as it was — which preserved the very handicap this exists to remove:
+            # deepseek-v4-flash stayed at 4096 while mimo and hy3 moved to 32768, and a matrix
+            # launched that way is not one experiment, it is two. Every model gets the SAME
+            # number. (2026-07-28, caught in preflight of the R1 matrix and the run restarted.)
             if isinstance(m, dict) and m.get("maxTokens"):
-                m["maxTokens"] = min(int(m["maxTokens"]), cap)
+                m["maxTokens"] = cap
         prov["checkedAt"] = now          # fresh, so pi does not refetch and overwrite the cap
 json.dump(store, open(dst, "w"))
 PY
