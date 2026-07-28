@@ -64,3 +64,31 @@ INCREASES and the oracle score is unchanged, log it as VOYAGE-NOOP (undefined +N
 VOYAGE-COMPLETE. Do not auto-revert: the scenarios themselves may be legitimate work a later
 voyage makes executable. The point is that the operator and the report must be able to see that a
 correction produced no reddable target.
+
+## 5. NO memory bound is available on this box — the fixture harness is the only remedy
+
+Three OOM kills on 2026-07-28, each ~13.5G RSS on a 16G swapless VM:
+- P5-ctrl-cmimo v1 suite: killed, output ended "Killed", no summary line -> self-suite "?"
+- P5-ctrl-cmimo v3: killed MID-VOYAGE. eval-voyage.sh died after "leg v3-qm banked", so the
+  self-suite file is EMPTY, the revert gate never ran, and the driver logged a blank outcome.
+  A voyage's gate was LOST to a memory kill — this is data loss, not just noise.
+- a python3 at 13.6G (a leg's own command; legs may run python freely inside bwrap).
+
+What does NOT work, each checked:
+- `NODE_OPTIONS=--max-old-space-size=2048` DOES reach the suite (verified 2240MB limit through
+  npx) but bounds only V8's old space; ~13.5G of the growth is outside it, so the process still
+  takes the box down. My earlier "cap verified" claim was overstated and is corrected here.
+- `systemd-run --user --scope -p MemoryMax=` — "Failed to connect to bus": no systemd user bus.
+- cgroup v2 — /sys/fs/cgroup not writable.
+- `ulimit -v` — unusable for node, which reserves tens of GB of virtual address space; a VA cap
+  kills it outright rather than bounding it.
+
+So there is no operator-side hard bound available. The remedy is to remove the CAUSE, which the
+fixture harness now does: an undisposed happy-dom Window per scenario was the growth, and the
+shipped world.js closes it in an After hook (measured: 60 scenarios, peak RSS 181MB, flat).
+That only protects waves scaffolded after the harness landed (07:42Z), so every wave in the
+running control arm remains exposed and may lose a voyage gate the same way.
+
+Operational rule until a bound exists: keep concurrency at 3 waves, and treat a blank voyage
+outcome or an empty selfsuite file as a possible memory kill — check `dmesg` before reading
+either as a doctrine or model signal.
