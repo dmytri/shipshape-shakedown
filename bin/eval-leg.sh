@@ -79,6 +79,43 @@ mkdir -p "$OUT"
 FAKEHOME="$OUT/home"; SESSDIR="$OUT/session"
 mkdir -p "$FAKEHOME/.config" "$FAKEHOME/.local/share" "$FAKEHOME/.cache" "$FAKEHOME/tmp" "$SESSDIR"
 
+# UNIFORM OUTPUT BUDGET (dk, 2026-07-28). pi takes `model.max_tokens ?? 4096` from provider
+# metadata, and OpenRouter does not expose that field the way pi reads it — so xiaomi/mimo-v2.5
+# and tencent/hy3 got 131072 while deepseek-v4-flash fell back to 4096. Every flash leg was
+# running on a 32x tighter budget than its peers, which is a per-model handicap no doctrine
+# caused: candidate Captain legs truncated 9/12 on flash and 0/12 elsewhere.
+#
+# The fix is NOT to raise flash. A tight budget is a FORCING FUNCTION: it exposes work that
+# only completes by reasoning without bound, and it makes every arm comparable. Truncated
+# Captain turns were spending ~16k characters mentally simulating render() to explain a failure
+# their tier cannot reproduce — behaviour worth surfacing, not accommodating. So cap EVERY model
+# at the same budget and let doctrine that cannot act within it show itself.
+# 8192, not 4096 (dk): hy3 averages ~1980 output tokens/turn at 79% reasoning, so the flash
+# default would truncate it constantly and we would be measuring the cap instead of the
+# doctrine. Double it: still a real budget that punishes unbounded rumination, still uniform
+# across arms and models, but loose enough that a high-reasoning model can finish a turn.
+# Override per run with EVAL_MAX_TOKENS; set 0 to disable the seeding entirely.
+EVAL_MAX_TOKENS="${EVAL_MAX_TOKENS:-8192}"
+if [ "$EVAL_MAX_TOKENS" != "0" ] && [ -f "$HOME/.pi/agent/models-store.json" ]; then
+  mkdir -p "$FAKEHOME/.pi/agent"
+  python3 - "$HOME/.pi/agent/models-store.json" "$FAKEHOME/.pi/agent/models-store.json" \
+           "$EVAL_MAX_TOKENS" "$(date +%s%3N)" <<'PY' || true
+import json, sys
+src, dst, cap, now = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4])
+try:
+    store = json.load(open(src))
+except Exception:
+    sys.exit(0)
+for prov in store.values():
+    if isinstance(prov, dict):
+        for m in prov.get("models", []) or []:
+            if isinstance(m, dict) and m.get("maxTokens"):
+                m["maxTokens"] = min(int(m["maxTokens"]), cap)
+        prov["checkedAt"] = now          # fresh, so pi does not refetch and overwrite the cap
+json.dump(store, open(dst, "w"))
+PY
+fi
+
 # The fixture's cucumber run-log ledger (features/support/runlog.js BeforeAll) writes
 # to a `.instrument` dir in the sim's PARENT, OUTSIDE the project root — the deckstate
 # run-record pattern. Under bwrap's --ro-bind / / that parent is read-only, so mkdirSync
