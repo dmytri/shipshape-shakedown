@@ -1,0 +1,99 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 78680b9..ed5cdad 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -12,7 +12,7 @@ Cucumber/happy-dom suite did not previously pin:
+ 1. `Item - should allow me to mark items as complete` -- `cy.find()` on a detached node.
+ 2. `Item - should allow me to un-mark items as complete` -- same detach.
+ 
+-The supplied verbatim output names ONLY these two. The third item the earlier planning called out
++The supplied verbatim output names ONLY these two. The third item the planning called out
+ (editing-label visibility) is NOT present in this output, so it is out of scope and stays off this
+ leg's watchbill. Treat failures 1 and 2 as the only product defects this leg must close.
+ 
+@@ -26,34 +26,42 @@ node detach, so a chained `cy.find()` fails. Fix: mutate the existing node in pl
+ 
+ ## Durable artifacts this leg
+ 
+-- `features/todo-dom-stability.feature` pins the behaviour. The first two scenarios map 1:1 to the two
+-  acceptance failures:
++- `features/todo-dom-stability.feature` already pins the behaviour. The first two scenarios map 1:1 to
++  the two acceptance failures:
+   - `Completing a todo keeps the same element in the DOM`  -> failure 1
+   - `Uncompleting a todo keeps the same element in the DOM` -> failure 2
+   The third scenario, `Editing a todo hides its label`, is intentionally LEFT OFF this leg's
+   watchbill (not in the acceptance output).
+-- A NEW `@conformance` scenario, `The completion-toggle seams do not rebuild the list on a
+-  same-visibility toggle`, guards the invariant at the SOURCE level: `completeTodo` and
+-  `toggleAllTodos` must mutate the toggled `<li>` in place and must not rebuild the list when the
+-  item stays visible. This is the source-level conformance check for the browser-only defect: the
+-  happy-dom harness cannot exercise a real browser's detach, so a structural guard is the durable
+-  backstop that survives a rebuild of the app code. QM implements the structural check (bespoke
+-  parser or ast-grep over `js/app.js`) as verification support.
+-- `watchbill.json` is re-established: `watch1` references the two behavioural scenarios; `watch2`
+-  references the `@conformance` source-level scenario. (It was struck as spent after the prior leg.)
+-
+-## Falsifiability
+-
+-The two behavioural scenarios are genuinely falsifiable: a happy-dom probe confirms a node held before
+-an `innerHTML` rebuild is detached afterwards (`held !== re-queried`, `isConnected === false`), while
+-in-place mutation keeps the same node (`held === re-queried`, `isConnected === true`). So both the
+-behavioural scenarios and the `@conformance` guard redden against a defective re-rendering build and
+-go green only when the seam mutates in place.
++- A `@conformance` scenario, `The completion-toggle seams do not rebuild the list on a same-visibility
++  toggle`, guards the invariant at the SOURCE level: `completeTodo` and `toggleAllTodos` must mutate
++  the toggled `<li>` in place and must not rebuild the list when the item stays visible. This is the
++  source-level conformance check for the browser-only defect: the happy-dom harness can exercise a
++  detach, but the structural guard is the durable backstop that survives a rebuild of the app code.
++  QM implements the structural check (over `js/app.js`) as verification support; it already exists in
++  `features/support/steps.js`.
++- `watchbill.json` was struck as spent after the prior leg (commit 71fdcbe). This leg RE-ESTABLISHES
++  it: `watch1` references the two behavioural scenarios; `watch2` references the `@conformance`
++  source-level scenario.
++
++## Falsifiability (verified this leg, not committed)
++
++A throwaway harness loaded a deliberately broken `app.js` (rebuilds the list on every completion
++toggle). All three watchbill scenarios went red:
++- `Completing a todo keeps the same element in the DOM` -- held reference detached (rebuilt list).
++- `Uncompleting a todo keeps the same element in the DOM` -- same.
++- `@conformance ...` -- structural check caught `completeTodo` rebuilding via `renderList()` on a
++  same-visibility path.
++The out-of-scope `Editing a todo hides its label` stayed green, confirming the watchbill scopes to the
++two acceptance failures only.
++
++Against the current repo build (`js/app.js` already carries the in-place mutation), all four
++dom-stability scenarios pass. So the specs are calibrated: red on the defective build the acceptance
++suite exercises, green on the fixed build.
+ 
+ ## Decision
+ 
+-QM re-verifies `watch1` then `watch2`. QM/Crew confirm `js/app.js` mutates the list element in place
+-on a completion toggle that leaves the item visible under the current filter (the "all" route), and
+-does not rebuild the list. No production code is written here; Captain's scope is the durable specs,
+-`watchbill.json`, and these notes. No `RIGGING.md` edit is warranted -- this is a behaviour fix, not
+-tooling.
++QM re-verifies `watch1` then `watch2` against the build the acceptance suite runs. QM/Crew confirm
++`js/app.js` mutates the list element in place on a completion toggle that leaves the item visible under
++the current filter (the "all" route), and does not rebuild the list. No production code is written
++here; Captain's scope is the durable specs, `watchbill.json`, and these notes. No `RIGGING.md` edit is
++warranted -- this is a behaviour fix, not tooling.
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..febec97
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,13 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/todo-dom-stability.feature:Completing a todo keeps the same element in the DOM",
++      "features/todo-dom-stability.feature:Uncompleting a todo keeps the same element in the DOM"
++    ]
++  },
++  "watch2": {
++    "scenarios": [
++      "features/todo-dom-stability.feature:The completion-toggle seams do not rebuild the list on a same-visibility toggle"
++    ]
++  }
++}

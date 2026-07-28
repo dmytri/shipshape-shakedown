@@ -1,0 +1,351 @@
+diff --git a/features/support/steps.js b/features/support/steps.js
+index b0a0c59..6831b51 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -308,6 +308,19 @@ Then('the todo {string} has a destroy button', function (title) {
+   }
+ });
+ 
++Then('the view container of the todo {string} is not visible', function (title) {
++  const li = todoByTitle(this.document, title);
++  if (!li) throw new Error(`Todo "${title}" not found`);
++  const view = li.querySelector('.view');
++  if (!view) throw new Error(`Todo "${title}" has no view container`);
++  const style = this.document.defaultView.getComputedStyle(view);
++  if (style.display !== 'none' && !view.classList.contains('hidden')) {
++    if (style.visibility !== 'hidden' && style.opacity !== '0') {
++      throw new Error(`View container of "${title}" is visible`);
++    }
++  }
++});
++
+ Then('the edit input of {string} contains {string}', function (title, value) {
+   const li = todoByTitle(this.document, title);
+   if (!li) throw new Error(`Todo "${title}" not found`);
+diff --git a/js/app.js b/js/app.js
+index 4312029..ea257db 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -245,6 +245,7 @@
+ 
+     if (e.key === 'Enter' || e.keyCode === 13) {
+       editTodo(id, target.value);
++      li.classList.remove('editing');
+     } else if (e.key === 'Escape' || e.keyCode === 27) {
+       target.value = li.querySelector('.view label').textContent;
+       li.classList.remove('editing');
+@@ -259,6 +260,7 @@
+     if (!li.classList.contains('editing')) return;
+     var id = findTodoId(li);
+     editTodo(id, target.value);
++    li.classList.remove('editing');
+   }, true);
+ 
+   // Toggle all
+diff --git a/step-usage.txt b/step-usage.txt
+new file mode 100644
+index 0000000..b09cca0
+--- /dev/null
++++ b/step-usage.txt
+@@ -0,0 +1,294 @@
++┌──────────────────────────────────────────────────────────────────────────────────────────┬──────────┬───────────────────────────────────────┐
++│ Pattern / Text                                                                           │ Duration │ Location                              │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the app is loaded                                                                        │ -        │ features/support/steps.js:57          │
++│   the app is loaded                                                                      │ -        │ features/clear-completed.feature:7    │
++│   the app is loaded                                                                      │ -        │ features/clear-completed.feature:7    │
++│   the app is loaded                                                                      │ -        │ features/clear-completed.feature:7    │
++│   the app is loaded                                                                      │ -        │ features/counter.feature:7            │
++│   the app is loaded                                                                      │ -        │ features/counter.feature:7            │
++│   59 more                                                                                │          │                                       │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ I have added a todo {string}                                                             │ -        │ features/support/steps.js:67          │
++│   I have added a todo "Buy milk"                                                         │ -        │ features/counter.feature:15           │
++│   I have added a todo "Buy milk"                                                         │ -        │ features/counter.feature:38           │
++│   I have added a todo "Buy milk"                                                         │ -        │ features/counter.feature:51           │
++│   I have added a todo "Buy milk"                                                         │ -        │ features/editing-behaviour.feature:12 │
++│   I have added a todo "Buy milk"                                                         │ -        │ features/editing-behaviour.feature:20 │
++│   21 more                                                                                │          │                                       │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ I have added todos {string} and {string}                                                 │ -        │ features/support/steps.js:71          │
++│   I have added todos "Buy milk" and "Walk the dog"                                       │ -        │ features/clear-completed.feature:12   │
++│   I have added todos "Buy milk" and "Walk the dog"                                       │ -        │ features/clear-completed.feature:21   │
++│   I have added todos "Buy milk" and "Walk the dog"                                       │ -        │ features/counter.feature:19           │
++│   I have added todos "Buy milk" and "Walk the dog"                                       │ -        │ features/counter.feature:25           │
++│   I have added todos "Buy milk" and "Walk the dog"                                       │ -        │ features/counter.feature:30           │
++│   17 more                                                                                │          │                                       │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ I have added todos {string} and {string} and {string}                                    │ -        │ features/support/steps.js:76          │
++│   I have added todos "Buy milk" and "Walk the dog" and "Buy eggs"                        │ -        │ features/clear-completed.feature:29   │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ all todos are completed                                                                  │ -        │ features/support/steps.js:82          │
++│   all todos are completed                                                                │ -        │ features/clear-completed.feature:22   │
++│   all todos are completed                                                                │ -        │ features/counter.feature:31           │
++│   all todos are completed                                                                │ -        │ features/dom-stability.feature:31     │
++│   all todos are completed                                                                │ -        │ features/toggle-all.feature:14        │
++│   all todos are completed                                                                │ -        │ features/toggle-all.feature:21        │
++│   2 more                                                                                 │          │                                       │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the todo {string} is completed                                                           │ -        │ features/support/steps.js:90          │
++│   the todo "Buy eggs" is completed                                                       │ -        │ features/clear-completed.feature:31   │
++│   the todo "Buy milk" is completed                                                       │ -        │ features/clear-completed.feature:13   │
++│   the todo "Buy milk" is completed                                                       │ -        │ features/clear-completed.feature:30   │
++│   the todo "Buy milk" is completed                                                       │ -        │ features/item-interactions.feature:14 │
++│   the todo "Buy milk" is completed                                                       │ -        │ features/item-interactions.feature:18 │
++│   7 more                                                                                 │          │                                       │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the todo {string} is in editing mode                                                     │ -        │ features/support/steps.js:96          │
++│   the todo "Buy milk" is in editing mode                                                 │ -        │ features/dom-stability.feature:41     │
++│   the todo "Buy milk" is in editing mode                                                 │ -        │ features/editing-behaviour.feature:14 │
++│   the todo "Buy milk" is in editing mode                                                 │ -        │ features/editing-behaviour.feature:21 │
++│   the todo "Buy milk" is in editing mode                                                 │ -        │ features/editing-controls.feature:14  │
++│   the todo "Buy milk" is in editing mode                                                 │ -        │ features/editing.feature:13           │
++│   7 more                                                                                 │          │                                       │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ I press Enter in the new-todo input                                                      │ -        │ features/support/steps.js:110         │
++│   I press Enter in the new-todo input                                                    │ -        │ features/new-todo.feature:12          │
++│   I press Enter in the new-todo input                                                    │ -        │ features/new-todo.feature:17          │
++│   I press Enter in the new-todo input                                                    │ -        │ features/new-todo.feature:24          │
++│   I press Enter in the new-todo input                                                    │ -        │ features/new-todo.feature:31          │
++│   I press Enter in the new-todo input                                                    │ -        │ features/new-todo.feature:38          │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ I type {string} in the new-todo input                                                    │ -        │ features/support/steps.js:115         │
++│   I type "   " in the new-todo input                                                     │ -        │ features/new-todo.feature:16          │
++│   I type "  Buy milk  " in the new-todo input                                            │ -        │ features/new-todo.feature:30          │
++│   I type "Buy milk" in the new-todo input                                                │ -        │ features/new-todo.feature:23          │
++│   I type "Buy milk" in the new-todo input                                                │ -        │ features/new-todo.feature:37          │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ I click the toggle-all checkbox                                                          │ -        │ features/support/steps.js:120         │
++│   I click the toggle-all checkbox                                                        │ -        │ features/dom-stability.feature:23     │
++│   I click the toggle-all checkbox                                                        │ -        │ features/toggle-all.feature:13        │
++│   I click the toggle-all checkbox                                                        │ -        │ features/toggle-all.feature:22        │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ I click the checkbox of the todo {string}                                                │ -        │ features/support/steps.js:124         │
++│   I click the checkbox of the todo "Buy milk"                                            │ -        │ features/dom-stability.feature:15     │
++│   I click the checkbox of the todo "Buy milk"                                            │ -        │ features/item-interactions.feature:13 │
++│   I click the checkbox of the todo "Buy milk"                                            │ -        │ features/item-interactions.feature:19 │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ I double-click the label of the todo {string}                                            │ -        │ features/support/steps.js:129         │
++│   I double-click the label of the todo "Buy milk"                                        │ -        │ features/editing-behaviour.feature:13 │
++│   I double-click the label of the todo "Buy milk"                                        │ -        │ features/editing-controls.feature:13  │
++│   I double-click the label of the todo "Buy milk"                                        │ -        │ features/item-interactions.feature:26 │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ I click the clear-completed button                                                       │ -        │ features/support/steps.js:137         │
++│   I click the clear-completed button                                                     │ -        │ features/clear-completed.feature:14   │
++│   I click the clear-completed button                                                     │ -        │ features/clear-completed.feature:23   │
++│   I click the clear-completed button                                                     │ -        │ features/clear-completed.feature:32   │
++│   I click the clear-completed button                                                     │ -        │ features/toggle-all.feature:45        │
++│   I click the clear-completed button                                                     │ -        │ features/visibility.feature:41        │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ I complete the todo {string}                                                             │ -        │ features/support/steps.js:141         │
++│   I complete the todo "Buy milk"                                                         │ -        │ features/counter.feature:26           │
++│   I complete the todo "Buy milk"                                                         │ -        │ features/routing.feature:49           │
++│   I complete the todo "Buy milk"                                                         │ -        │ features/toggle-all.feature:30        │
++│   I complete the todo "Walk the dog"                                                     │ -        │ features/toggle-all.feature:31        │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ I uncomplete the todo {string}                                                           │ -        │ features/support/steps.js:149         │
++│   I uncomplete the todo "Buy milk"                                                       │ -        │ features/counter.feature:32           │
++│   I uncomplete the todo "Buy milk"                                                       │ -        │ features/dom-stability.feature:33     │
++│   I uncomplete the todo "Buy milk"                                                       │ -        │ features/toggle-all.feature:37        │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ I destroy the todo {string}                                                              │ -        │ features/support/steps.js:157         │
++│   I destroy the todo "Buy milk"                                                          │ -        │ features/dom-stability.feature:53     │
++│   I destroy the todo "Buy milk"                                                          │ -        │ features/persistence.feature:30       │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ I clear the edit input of {string}                                                       │ -        │ features/support/steps.js:162         │
++│   I clear the edit input of "Buy milk"                                                   │ -        │ features/dom-stability.feature:43     │
++│   I clear the edit input of "Buy milk"                                                   │ -        │ features/editing-behaviour.feature:22 │
++│   I clear the edit input of "Buy milk"                                                   │ -        │ features/editing.feature:14           │
++│   I clear the edit input of "Buy milk"                                                   │ -        │ features/editing.feature:26           │
++│   I clear the edit input of "Buy milk"                                                   │ -        │ features/editing.feature:36           │
++│   3 more                                                                                 │          │                                       │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ I type {string} in the edit input of {string}                                            │ -        │ features/support/steps.js:169         │
++│   I type "   " in the edit input of "Buy milk"                                           │ -        │ features/editing.feature:44           │
++│   I type "  Buy eggs  " in the edit input of "Buy milk"                                  │ -        │ features/editing.feature:65           │
++│   I type "Buy eggs" in the edit input of "Buy milk"                                      │ -        │ features/dom-stability.feature:44     │
++│   I type "Buy eggs" in the edit input of "Buy milk"                                      │ -        │ features/editing.feature:15           │
++│   I type "Buy eggs" in the edit input of "Buy milk"                                      │ -        │ features/editing.feature:27           │
++│   1 more                                                                                 │          │                                       │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ I press Enter in the edit input of {string}                                              │ -        │ features/support/steps.js:175         │
++│   I press Enter in the edit input of "Buy milk"                                          │ -        │ features/dom-stability.feature:45     │
++│   I press Enter in the edit input of "Buy milk"                                          │ -        │ features/editing.feature:16           │
++│   I press Enter in the edit input of "Buy milk"                                          │ -        │ features/editing.feature:37           │
++│   I press Enter in the edit input of "Buy milk"                                          │ -        │ features/editing.feature:45           │
++│   I press Enter in the edit input of "Buy milk"                                          │ -        │ features/editing.feature:66           │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ I press Escape in the edit input of {string}                                             │ -        │ features/support/steps.js:181         │
++│   I press Escape in the edit input of "Buy milk"                                         │ -        │ features/editing.feature:55           │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ I blur the edit input of {string}                                                        │ -        │ features/support/steps.js:187         │
++│   I blur the edit input of "Buy milk"                                                    │ -        │ features/editing-behaviour.feature:23 │
++│   I blur the edit input of "Buy milk"                                                    │ -        │ features/editing.feature:28           │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ I navigate to {string}                                                                   │ -        │ features/support/steps.js:193         │
++│   I navigate to "#/"                                                                     │ -        │ features/routing.feature:14           │
++│   I navigate to "#/active"                                                               │ -        │ features/routing.feature:23           │
++│   I navigate to "#/active"                                                               │ -        │ features/routing.feature:39           │
++│   I navigate to "#/active"                                                               │ -        │ features/routing.feature:48           │
++│   I navigate to "#/active"                                                               │ -        │ features/routing.feature:57           │
++│   1 more                                                                                 │          │                                       │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the page is reloaded                                                                     │ -        │ features/support/steps.js:197         │
++│   the page is reloaded                                                                   │ -        │ features/persistence.feature:14       │
++│   the page is reloaded                                                                   │ -        │ features/persistence.feature:23       │
++│   the page is reloaded                                                                   │ -        │ features/persistence.feature:31       │
++│   the page is reloaded                                                                   │ -        │ features/persistence.feature:46       │
++│   the page is reloaded                                                                   │ -        │ features/routing.feature:58           │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the todo list is empty                                                                   │ -        │ features/support/steps.js:205         │
++│   the todo list is empty                                                                 │ -        │ features/clear-completed.feature:24   │
++│   the todo list is empty                                                                 │ -        │ features/editing-behaviour.feature:24 │
++│   the todo list is empty                                                                 │ -        │ features/editing.feature:38           │
++│   the todo list is empty                                                                 │ -        │ features/editing.feature:46           │
++│   the todo list is empty                                                                 │ -        │ features/new-todo.feature:13          │
++│   1 more                                                                                 │          │                                       │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the todo list contains {int} item                                                        │ -        │ features/support/steps.js:212         │
++│   the todo list contains 1 item                                                          │ -        │ features/clear-completed.feature:15   │
++│   the todo list contains 1 item                                                          │ -        │ features/clear-completed.feature:33   │
++│   the todo list contains 1 item                                                          │ -        │ features/editing.feature:17           │
++│   the todo list contains 1 item                                                          │ -        │ features/new-todo.feature:25          │
++│   the todo list contains 1 item                                                          │ -        │ features/persistence.feature:32       │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the todo list contains {int} items                                                       │ -        │ features/support/steps.js:219         │
++│   the todo list contains 2 items                                                         │ -        │ features/persistence.feature:15       │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the first todo has title {string}                                                        │ -        │ features/support/steps.js:226         │
++│   the first todo has title "Buy eggs"                                                    │ -        │ features/editing.feature:18           │
++│   the first todo has title "Buy eggs"                                                    │ -        │ features/editing.feature:29           │
++│   the first todo has title "Buy eggs"                                                    │ -        │ features/editing.feature:67           │
++│   the first todo has title "Buy milk"                                                    │ -        │ features/editing.feature:56           │
++│   the first todo has title "Buy milk"                                                    │ -        │ features/new-todo.feature:26          │
++│   5 more                                                                                 │          │                                       │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the first todo is not completed                                                          │ -        │ features/support/steps.js:235         │
++│   the first todo is not completed                                                        │ -        │ features/new-todo.feature:39          │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the new-todo input is empty                                                              │ -        │ features/support/steps.js:243         │
++│   the new-todo input is empty                                                            │ -        │ features/new-todo.feature:27          │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the new-todo input has focus                                                             │ -        │ features/support/steps.js:250         │
++│   the new-todo input has focus                                                           │ -        │ features/new-todo.feature:44          │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ all todos are not completed                                                              │ -        │ features/support/steps.js:259         │
++│   all todos are not completed                                                            │ -        │ features/toggle-all.feature:23        │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the toggle-all checkbox is checked                                                       │ -        │ features/support/steps.js:268         │
++│   the toggle-all checkbox is checked                                                     │ -        │ features/toggle-all.feature:15        │
++│   the toggle-all checkbox is checked                                                     │ -        │ features/toggle-all.feature:32        │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the toggle-all checkbox is not checked                                                   │ -        │ features/support/steps.js:275         │
++│   the toggle-all checkbox is not checked                                                 │ -        │ features/toggle-all.feature:24        │
++│   the toggle-all checkbox is not checked                                                 │ -        │ features/toggle-all.feature:38        │
++│   the toggle-all checkbox is not checked                                                 │ -        │ features/toggle-all.feature:46        │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the todo {string} is not completed                                                       │ -        │ features/support/steps.js:284         │
++│   the todo "Buy milk" is not completed                                                   │ -        │ features/item-interactions.feature:20 │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the todo {string} is not in editing mode                                                 │ -        │ features/support/steps.js:294         │
++│   the todo "Buy eggs" is not in editing mode                                             │ -        │ features/editing.feature:19           │
++│   the todo "Buy milk" is not in editing mode                                             │ -        │ features/editing.feature:57           │
++│   the todo "Buy milk" is not in editing mode                                             │ -        │ features/persistence.feature:47       │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the todo {string} has a destroy button                                                   │ -        │ features/support/steps.js:302         │
++│   the todo "Buy milk" has a destroy button                                               │ -        │ features/item-interactions.feature:34 │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the edit input of {string} contains {string}                                             │ -        │ features/support/steps.js:311         │
++│   the edit input of "Buy milk" contains "Buy milk"                                       │ -        │ features/item-interactions.feature:28 │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the counter shows {string}                                                               │ -        │ features/support/steps.js:320         │
++│   the counter shows "0 items left"                                                       │ -        │ features/counter.feature:12           │
++│   the counter shows "0 items left"                                                       │ -        │ features/counter.feature:42           │
++│   the counter shows "1 item left"                                                        │ -        │ features/counter.feature:16           │
++│   the counter shows "1 item left"                                                        │ -        │ features/counter.feature:27           │
++│   the counter shows "1 item left"                                                        │ -        │ features/counter.feature:33           │
++│   3 more                                                                                 │          │                                       │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the counter number is wrapped in a strong tag                                            │ -        │ features/support/steps.js:327         │
++│   the counter number is wrapped in a strong tag                                          │ -        │ features/counter.feature:52           │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the main section is hidden                                                               │ -        │ features/support/steps.js:338         │
++│   the main section is hidden                                                             │ -        │ features/visibility.feature:12        │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the main section is visible                                                              │ -        │ features/support/steps.js:349         │
++│   the main section is visible                                                            │ -        │ features/visibility.feature:21        │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the footer is hidden                                                                     │ -        │ features/support/steps.js:356         │
++│   the footer is hidden                                                                   │ -        │ features/visibility.feature:15        │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the footer is visible                                                                    │ -        │ features/support/steps.js:366         │
++│   the footer is visible                                                                  │ -        │ features/visibility.feature:25        │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the clear-completed button is hidden                                                     │ -        │ features/support/steps.js:373         │
++│   the clear-completed button is hidden                                                   │ -        │ features/visibility.feature:31        │
++│   the clear-completed button is hidden                                                   │ -        │ features/visibility.feature:42        │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the clear-completed button is visible                                                    │ -        │ features/support/steps.js:385         │
++│   the clear-completed button is visible                                                  │ -        │ features/visibility.feature:36        │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the todo {string} is visible                                                             │ -        │ features/support/steps.js:392         │
++│   the todo "Buy milk" is visible                                                         │ -        │ features/routing.feature:15           │
++│   the todo "Buy milk" is visible                                                         │ -        │ features/routing.feature:33           │
++│   the todo "Walk the dog" is visible                                                     │ -        │ features/routing.feature:16           │
++│   the todo "Walk the dog" is visible                                                     │ -        │ features/routing.feature:25           │
++│   the todo "Walk the dog" is visible                                                     │ -        │ features/routing.feature:51           │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the todo {string} is hidden                                                              │ -        │ features/support/steps.js:400         │
++│   the todo "Buy milk" is hidden                                                          │ -        │ features/routing.feature:24           │
++│   the todo "Buy milk" is hidden                                                          │ -        │ features/routing.feature:50           │
++│   the todo "Walk the dog" is hidden                                                      │ -        │ features/routing.feature:34           │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ localStorage contains a key {string}                                                     │ -        │ features/support/steps.js:409         │
++│   localStorage contains a key "todos-vanillajs"                                          │ -        │ features/persistence.feature:39       │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the {string} filter link is selected                                                     │ -        │ features/support/steps.js:415         │
++│   the "Active" filter link is selected                                                   │ -        │ features/routing.feature:40           │
++│   the "Active" filter link is selected                                                   │ -        │ features/routing.feature:59           │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the {string} filter link is not selected                                                 │ -        │ features/support/steps.js:424         │
++│   the "All" filter link is not selected                                                  │ -        │ features/routing.feature:41           │
++│   the "Completed" filter link is not selected                                            │ -        │ features/routing.feature:42           │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ I remember the DOM node of the todo {string}                                             │ -        │ features/support/steps.js:437         │
++│   I remember the DOM node of the todo "Buy milk"                                         │ -        │ features/dom-stability.feature:22     │
++│   I remember the DOM node of the todo "Walk the dog"                                     │ -        │ features/dom-stability.feature:14     │
++│   I remember the DOM node of the todo "Walk the dog"                                     │ -        │ features/dom-stability.feature:32     │
++│   I remember the DOM node of the todo "Walk the dog"                                     │ -        │ features/dom-stability.feature:42     │
++│   I remember the DOM node of the todo "Walk the dog"                                     │ -        │ features/dom-stability.feature:52     │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the remembered DOM node is still in the document                                         │ -        │ features/support/steps.js:444         │
++│   the remembered DOM node is still in the document                                       │ -        │ features/dom-stability.feature:16     │
++│   the remembered DOM node is still in the document                                       │ -        │ features/dom-stability.feature:24     │
++│   the remembered DOM node is still in the document                                       │ -        │ features/dom-stability.feature:34     │
++│   the remembered DOM node is still in the document                                       │ -        │ features/dom-stability.feature:46     │
++│   the remembered DOM node is still in the document                                       │ -        │ features/dom-stability.feature:54     │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the remembered DOM node has the {string} class                                           │ -        │ features/support/steps.js:456         │
++│   the remembered DOM node has the "completed" class                                      │ -        │ features/dom-stability.feature:25     │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the remembered DOM node does not have the {string} class                                 │ -        │ features/support/steps.js:466         │
++│   the remembered DOM node does not have the "completed" class                            │ -        │ features/dom-stability.feature:35     │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the project depends on {string}                                                          │ -        │ features/support/steps.js:480         │
++│   the project depends on "todomvc-app-css"                                               │ -        │ features/editing-controls.feature:19  │
++│   the project depends on "todomvc-common"                                                │ -        │ features/editing-controls.feature:22  │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the file {string} exists                                                                 │ -        │ features/support/steps.js:492         │
++│   the file "node_modules/todomvc-app-css/index.css" exists                               │ -        │ features/editing-controls.feature:25  │
++│   the file "node_modules/todomvc-common/base.css" exists                                 │ -        │ features/editing-controls.feature:28  │
++├──────────────────────────────────────────────────────────────────────────────────────────┼──────────┼───────────────────────────────────────┤
++│ the file {string} contains the rule {string}                                             │ -        │ features/support/steps.js:499         │
++│   the file "node_modules/todomvc-app-css/index.css" contains the rule "li.editing .view" │ -        │ features/editing-controls.feature:31  │
++└──────────────────────────────────────────────────────────────────────────────────────────┴──────────┴───────────────────────────────────────┘
+diff --git a/wake/runrecord.json b/wake/runrecord.json
+index e15de9a..659fbb3 100644
+--- a/wake/runrecord.json
++++ b/wake/runrecord.json
+@@ -1 +1,2 @@
+ {"targets":["features/new-todo.feature:Pressing Enter with an empty input creates no todo","features/new-todo.feature:Whitespace-only input is trimmed and rejected","features/new-todo.feature:Pressing Enter creates a todo from the input value","features/new-todo.feature:Input is trimmed before creating a todo","features/new-todo.feature:A newly created todo is not completed","features/new-todo.feature:The input has focus when the page loads","features/toggle-all.feature:Clicking toggle-all when all items are active marks all completed","features/toggle-all.feature:Clicking toggle-all when all items are completed marks all active","features/toggle-all.feature:Toggle-all becomes checked when all items are individually completed","features/toggle-all.feature:Toggle-all becomes unchecked when any item is individually unchecked","features/toggle-all.feature:Toggle-all is unchecked after clearing completed items","features/item-interactions.feature:Clicking the toggle checkbox marks the todo as completed","features/item-interactions.feature:Clicking the toggle checkbox again unmarks the todo","features/item-interactions.feature:Double-clicking a todo label enters editing mode","features/item-interactions.feature:The destroy button is present on each todo","features/editing.feature:Pressing Enter saves the edited title","features/editing.feature:Blurring the edit input saves the edited title","features/editing.feature:Saving an empty edit removes the todo","features/editing.feature:Saving a whitespace-only edit removes the todo","features/editing.feature:Pressing Escape reverts to the original title","features/editing.feature:Trailing and leading whitespace is removed from edits","features/counter.feature:Counter shows zero items left when no todos exist","features/counter.feature:Counter shows one item left","features/counter.feature:Counter shows two items left","features/counter.feature:Counter decrements when a todo is completed","features/counter.feature:Counter increments when a todo is uncompleted","features/counter.feature:The count number is bold","features/visibility.feature:The main section is hidden when the todo list is empty","features/visibility.feature:The footer is hidden when the todo list is empty","features/visibility.feature:The main section is visible when a todo is added","features/visibility.feature:The footer is visible when a todo is added","features/visibility.feature:Clear completed button is hidden when no completed todos","features/visibility.feature:Clear completed button is visible when completed todos exist","features/visibility.feature:Clear completed button hides after all completed are cleared","features/clear-completed.feature:Clicking clear-completed removes all completed todos","features/clear-completed.feature:Active todos remain after clearing","features/clear-completed.feature:Only completed items are removed","features/persistence.feature:Added todos persist after page reload","features/persistence.feature:Completed state persists after page reload","features/persistence.feature:Destroyed todos do not reappear after reload","features/persistence.feature:Todos are stored under the correct key","features/persistence.feature:A todo in editing mode is saved without editing class on reload","features/routing.feature:All todos are visible on the default route","features/routing.feature:Completed todos are hidden on the active filter","features/routing.feature:Active todos are hidden on the completed filter","features/routing.feature:The selected class is applied to the active filter link","features/routing.feature:Completing an item on the active filter hides it","features/routing.feature:The active filter is maintained after page reload"],"command":"npx cucumber-js --tags \"not @captain and not @shipwright\"","result":"pass","hash":"f1cd0c649823272ea1cac5b1c2023269c270845f"}
++{"targets":["features/editing.feature:Pressing Enter saves the edited title","features/editing.feature:Blurring the edit input saves the edited title","features/editing.feature:Saving an empty edit removes the todo","features/editing.feature:Saving a whitespace-only edit removes the todo","features/editing.feature:Pressing Escape reverts to the original title","features/editing.feature:Trailing and leading whitespace is removed from edits"],"command":"npx cucumber-js --tags \"not @captain and not @shipwright\" features/editing.feature","result":"pass","hash":"b85ea2d60667cf54cca6f4710de70b5680855ce1"}

@@ -1,0 +1,19 @@
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..febec97
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,13 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/todo-dom-stability.feature:Completing a todo keeps the same element in the DOM",
++      "features/todo-dom-stability.feature:Uncompleting a todo keeps the same element in the DOM"
++    ]
++  },
++  "watch2": {
++    "scenarios": [
++      "features/todo-dom-stability.feature:The completion-toggle seams do not rebuild the list on a same-visibility toggle"
++    ]
++  }
++}

@@ -1,0 +1,35 @@
+# banked: 2026-07-28T11:25:39Z
+# verdict: PENDING
+# leg: {  "name": "v5-qm",  "model": "xiaomi/mimo-v2.5",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/P6-ctrl-cmimo/sim",  "timeout_s": 3600,  "skills": [    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills/shipshape",    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills/qm",    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills/crew",    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills/boatswain",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== v5-qm.session.jsonl ===
+  turns=24  wall=133.0s  in=55673  out=139751  cache_read=830784  cost=$0.0493
+  role reads: shipshape@t0 -> qm@t0 -> shipshape@t1 -> crew@t15 -> boatswain@t19
+  roles loaded: boatswain, crew, qm, shipshape
+  ~ repeated tool signature at turns [1] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    1870/161      512 $0.0003  read, read
+    t1   14059/139     2368 $0.0020  read, bash
+    t2    9642/334    16384 $0.0015  bash, bash, bash
+    t3    5946/169    25984 $0.0010  bash
+    t4     370/137    31872 $0.0002  bash
+    t5     315/148    32192 $0.0002  bash
+    t6     351/135    32448 $0.0002  bash
+    t7     300/163    32768 $0.0002  bash
+    t8     367/115    33024 $0.0002  bash
+    t9     272/138    33344 $0.0002  bash
+    t10    285/149    33600 $0.0002  bash
+    t11    324/168    33856 $0.0002  bash
+    t12   1212/409    34176 $0.0004  bash
+    t13   1311/361    35328 $0.0004  bash, bash, bash
+    t14   1496/154    36608 $0.0004  read, read, bash
+    t15   3118/1339   38080 $0.0009  read
+    t16   3012/400    41152 $0.0006  bash
+    t17    863/339    44160 $0.0003  bash
+    t18    385/54     44992 $0.0002  bash
+    t19    134/632    45312 $0.0003  read
+    t20   4488/724    45440 $0.0010  read
+    t21   2668/2148   49920 $0.0011  edit
+    t22   2237/163    52544 $0.0005  bash
+    t23    648/131072  54720 $0.0369  -

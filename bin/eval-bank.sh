@@ -30,12 +30,18 @@ done
 DEST="$HERE/data/$WAVE"; mkdir -p "$DEST"
 P="$DEST/$NAME"
 
-# Structured transcript (full fidelity) + rendered stdout + meta + status.
-# EVAL_NO_STDOUT=1 skips the heavy rendered stdout (~50-75MB/leg) for large golden-set
-# runs — session.jsonl carries full structured fidelity, so analysis loses nothing; the
-# raw render is gitignored and BorgBase-covered anyway. Without it an 84-leg run ENOSPCs.
+# Structured transcript (full fidelity) + meta + status.
+# RAW STDOUT IS NOT BANKED BY DEFAULT (2026-07-28). The old default was to copy it and skip
+# only when EVAL_NO_STDOUT=1 — so every ordinary bank dragged the raw render into data/, which
+# is the layer meant to SURVIVE. Measured: data/ reached 19G, with single files at 40G apparent
+# (data/P6-ctrl-cmimo/v6-qm.stdout.json), and it twice took this box to 99% and voided a live
+# cell. json-mode streaming re-emits accumulated state per event, so the render grows without
+# bound while session.jsonl for the same leg is ~500K.
+# session.jsonl carries full structured fidelity — thinking, tool calls, results, per-turn usage
+# — so analysis loses nothing. The raw render is BorgBase's job. Opt IN with EVAL_KEEP_STDOUT=1
+# when a specific investigation needs the rendered stream.
 [ -f "$OUT/session.jsonl" ] && cp "$OUT/session.jsonl" "$P.session.jsonl"
-[ -f "$OUT/pi.stdout" ] && [ "${EVAL_NO_STDOUT:-0}" != "1" ] && cp "$OUT/pi.stdout" "$P.stdout.json"
+[ -f "$OUT/pi.stdout" ] && [ "${EVAL_KEEP_STDOUT:-0}" = "1" ] && cp "$OUT/pi.stdout" "$P.stdout.json"
 [ -f "$OUT/pi.stderr" ] && [ -s "$OUT/pi.stderr" ] && cp "$OUT/pi.stderr" "$P.stderr.txt"
 [ -f "$OUT/leg.json" ]      && cp "$OUT/leg.json"      "$P.leg.json"
 [ -f "$OUT/tree.status" ]   && cp "$OUT/tree.status"   "$P.tree.status"

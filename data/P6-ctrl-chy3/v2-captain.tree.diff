@@ -1,0 +1,145 @@
+diff --git a/.gplintrc b/.gplintrc
+index 1f2f318..95de8d9 100644
+--- a/.gplintrc
++++ b/.gplintrc
+@@ -8,6 +8,6 @@
+   "no-files-without-scenarios": "error",
+   "no-trailing-spaces": "error",
+   "new-line-at-eof": ["error", "yes"],
+-  "allowed-tags": ["error", { "tags": ["@contract"] }],
++  "allowed-tags": ["error", { "tags": ["@contract", "@conformance"] }],
+   "no-restricted-tags": "off"
+ }
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..7446b7f
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,42 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
++
++## Acceptance-suite defects pinned (TodomVC shakedown)
++
++The fixed Cypress browser acceptance suite reports 8 failures. Two clusters; both are real
++product defects, not test errors.
++
++### Cluster B — persisted filter overrides the live hash (failures 6, 7, 8)
++`currentFilter()` reads the persisted `todos-vanilla-filter` key BEFORE `location.hash`, so
++after navigating to a filter and back to All, the stale persisted filter wins. Reproducible in
++the happy-dom harness. Pinned by three behaviour scenarios in `features/todos-routing.feature`
++under `Rule: Filter follows the live hash, not the persisted filter`. They fail now
++(`3 failed`): wrong visible count after returning to All, and `All` filter link not `selected`.
++
++### Cluster A — list render destroys node identity (failures 1, 2, 3, 4)
++`render()` clears `list.innerHTML` and rebuilds every `<li>` on each state change. A real
++browser holds a node reference across the click, then finds it detached (`cy.eq`/`cy.find`
++detached). happy-dom re-queries per access and cannot see this, so it is browser-only. Pinned
++by a source-level `@conformance` scenario in `features/todos-item.feature`
++(`The list render preserves the identity of unchanged item nodes`). QM implements the bespoke
++source-level checker for the `list-render stability seam`: it must fail while `render` clears
++and recreates item nodes, and pass once the app mutates existing nodes in place.
++
++### Cluster C — edit mode hides other controls (failure 5)
++Entering edit mode adds `.editing` and focuses, but never hides the item's `.view`
++(toggle + label). No CSS exists, so a real browser keeps the toggle visible. Browser-only
++visual concern. Pinned by a source-level `@conformance` scenario in
++`features/todos-editing.feature` (`Entering edit mode hides the item's view controls`). QM
++implements the `edit-mode visibility seam` checker: fail while edit mode leaves the view
++controls visible; pass once edit mode hides them.
++
++## Watchbill
++`watchbill.json` lists all five pinned scenarios under `watch1`. They are the QM targets.
++
++## Next role
++QM. Base commit is HEAD. Context MUST clear before QM per the Captain to QM bulkhead. QM builds
++the two bespoke conformance checkers for the `@conformance` scenarios; Crew fixes the product
++(app-side) so a real browser passes. Captain writes no production code.
+diff --git a/features/todos-editing.feature b/features/todos-editing.feature
+index 2578e18..80ad735 100644
+--- a/features/todos-editing.feature
++++ b/features/todos-editing.feature
+@@ -49,3 +49,13 @@ Feature: Edit a todo
+     Then the item "Buy milk" is present
+     And the item "Buy something else" is absent
+     And the list item for "Buy milk" does not have the "editing" class
++
++  Rule: Edit mode hides other controls
++
++  @conformance
++  Scenario: Entering edit mode hides the item's view controls
++    Given the todo list contains the items:
++      | title    | completed |
++      | Buy milk | false     |
++    When the verifier checks the edit-mode visibility seam
++    Then edit mode hides the view controls of the edited item
+diff --git a/features/todos-item.feature b/features/todos-item.feature
+index 37f0f44..6062958 100644
+--- a/features/todos-item.feature
++++ b/features/todos-item.feature
+@@ -72,3 +72,14 @@ Feature: Complete, count, and remove todos
+     When I click the destroy button for the item "Buy milk"
+     Then the todo list contains 2 items
+     And the item "Buy milk" is absent
++
++  Rule: List render stability
++
++  @conformance
++  Scenario: The list render preserves the identity of unchanged item nodes
++    Given the todo list contains the items:
++      | title    | completed |
++      | Buy milk | false     |
++      | Walk dog | false     |
++    When the verifier checks the list-render stability seam
++    Then the list render does not destroy and recreate item list elements on a state change
+diff --git a/features/todos-routing.feature b/features/todos-routing.feature
+index c2ca2a4..ee82158 100644
+--- a/features/todos-routing.feature
++++ b/features/todos-routing.feature
+@@ -47,3 +47,26 @@ Feature: Filter routes
+     And I reload the app
+     Then the visible todo list contains 2 items
+     And the filter link "Active" has the "selected" class
++
++  Rule: Filter follows the live hash, not the persisted filter
++
++  Scenario: Returning to the All route shows every item
++    When I navigate to "#/completed"
++    Then the visible todo list contains 1 item
++    When I navigate to "#/"
++    Then the visible todo list contains 3 items
++    And the item "Buy milk" is visible
++    And the item "Walk dog" is visible
++
++  Scenario: Returning to the All route restores the selected filter link
++    When I navigate to "#/completed"
++    Then the filter link "Completed" has the "selected" class
++    When I navigate to "#/"
++    Then the filter link "All" has the "selected" class
++    And the filter link "Completed" does not have the "selected" class
++
++  Scenario: The back button restores the route it returns to
++    When I navigate to "#/active"
++    Then the visible todo list contains 2 items
++    When I navigate to "#/"
++    Then the visible todo list contains 3 items
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..1599b1b
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,11 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/todos-routing.feature:Returning to the All route shows every item",
++      "features/todos-routing.feature:Returning to the All route restores the selected filter link",
++      "features/todos-routing.feature:The back button restores the route it returns to",
++      "features/todos-item.feature:The list render preserves the identity of unchanged item nodes",
++      "features/todos-editing.feature:Entering edit mode hides the item's view controls"
++    ]
++  }
++}

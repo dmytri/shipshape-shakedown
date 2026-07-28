@@ -1,0 +1,289 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 60370c0..7770607 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -48,3 +48,29 @@ Deck is clean. No production code exists in `js/` yet.
+ **Verification:** Scenario fails red as expected -- `Given the root index.html exists at the project root` asserts file existence and the file is absent. Dry-run: 31 scenarios, 125 steps, all parsable.
+ 
+ **Handoff to QM:** Red target is `features/root-index-html.feature:Root index.html exists with correct structure and script`. Crew must create a root `index.html` built from `assets/app-template.index.html` that loads `js/app.js` via a script tag. The scenario will go green when the file exists with the correct structure.
++
++### Voyage: Browser acceptance suite defect triage
++
++**Problem:** An external Cypress acceptance suite runs against the built app in a real browser. The in-harness suite (happy-dom) passes all 31 scenarios, but the browser suite reports 6 failures. These are real product defects invisible to the in-harness DOM.
++
++**Root causes identified:**
++
++1. **DOM node replacement on state change** (Cypress failures 1-4): `render()` in `app.js` calls `todoList.innerHTML = ''` and recreates every `<li>` from scratch. When Cypress clicks a checkbox, the click handler calls `toggleTodo()` which calls `render()`, destroying all DOM nodes. Cypress holds a stale reference and throws `element-has-detached-from-dom`. The in-harness suite does not catch this because its step definitions call `findTodoByTitle()` after every action, re-querying the DOM.
++
++2. **Toggle control visible during editing** (Cypress failure 5): The acceptance test asserts the `.toggle` input is hidden when editing mode is active. The current app does not hide the toggle control during editing. The in-harness suite does not check CSS display state on the toggle during editing.
++
++3. **Copy-paste error in filter link class** (Cypress failure 6): Line 104 of `app.js` reads `link.classList.add('completed')` instead of `link.classList.add('selected')`. The Completed filter link gets class `completed` instead of `selected` when `#/completed` is active.
++
++**Specs authored:**
++
++| New spec | Scenario | Pins |
++|---|---|---|
++| `features/dom-stability.feature` | Toggling a todo preserves DOM node identity | DOM nodes must remain attached across toggle |
++| `features/dom-stability.feature` | Toggle all preserves DOM node identity for each item | DOM nodes must remain attached across toggle-all |
++| `features/dom-stability.feature` | Clearing completed preserves DOM node identity for remaining items | DOM nodes must remain attached across clear-completed |
++| `features/editing.feature:47` | Toggle control is hidden when editing | `.toggle` input must have `display: none` when `li.editing` |
++| `features/routing.feature:31` | Completed filter link has selected class | Completed link must get class `selected` |
++
++**Verification:** All 5 new scenarios fail red against current code. All 31 original scenarios pass. 32 pass, 5 fail total.
++
++**Handoff to QM:** Three product defects, five red targets. DOM stability requires incremental DOM updates in `app.js` — mutate existing nodes in place instead of rebuilding the list. Editing visibility requires hiding the `.toggle` input when the `li` has class `editing`. Filter class requires fixing line 104: `completed` → `selected`.
+diff --git a/features/dom-stability.feature b/features/dom-stability.feature
+new file mode 100644
+index 0000000..3d7e825
+--- /dev/null
++++ b/features/dom-stability.feature
+@@ -0,0 +1,25 @@
++Feature: DOM stability during state changes
++  As a TodoMVC user
++  I want the app to update todo items in place when their state changes
++  So that the interface feels responsive and browser-held element references remain valid
++
++  Scenario: Toggling a todo preserves its DOM node identity
++    Given I have a todo "Buy milk"
++    When I click the checkbox for todo "Buy milk"
++    Then todo "Buy milk" has class "completed"
++    And the DOM node for todo "Buy milk" is the same element as before the click
++
++  Scenario: Toggle all preserves DOM node identity for each item
++    Given I have todos "Buy milk" and "Walk dog"
++    When I check the toggle-all checkbox
++    Then all todos are marked complete
++    And the DOM node for todo "Buy milk" is the same element as before the click
++    And the DOM node for todo "Walk dog" is the same element as before the click
++
++  Scenario: Clearing completed preserves DOM node identity for remaining items
++    Given I have todos "Buy milk" and "Walk dog"
++    And I mark todo "Buy milk" as complete
++    When I click the clear completed button
++    Then todo "Buy milk" does not exist
++    And todo "Walk dog" is visible
++    And the DOM node for todo "Walk dog" is the same element as before the click
+diff --git a/features/editing.feature b/features/editing.feature
+index 4673233..1d244be 100644
+--- a/features/editing.feature
++++ b/features/editing.feature
+@@ -43,3 +43,8 @@ Feature: Editing todos
+     And I type "  Buy bread  " in the edit input
+     And I press Enter
+     Then todo "Buy bread" exists in the list
++
++  Scenario: Toggle control is hidden when editing
++    Given I have a todo "Buy milk"
++    When I double-click the label for todo "Buy milk"
++    Then the toggle input for todo "Buy milk" is not visible
+diff --git a/features/routing.feature b/features/routing.feature
+index 5793d0d..7d8e02a 100644
+--- a/features/routing.feature
++++ b/features/routing.feature
+@@ -28,6 +28,14 @@ Feature: Routing
+     When I navigate to "#/active"
+     Then the "Active" filter link has class "selected"
+ 
++  Scenario: Completed filter link has selected class
++    When I navigate to "#/completed"
++    Then the "Completed" filter link has class "selected"
++
++  Scenario: All filter link has selected class
++    When I navigate to "#/"
++    Then the "All" filter link has class "selected"
++
+   Scenario: Active filter persists on reload
+     Given I have a todo "Buy milk"
+     And I mark todo "Buy milk" as complete
+diff --git a/features/support/steps.js b/features/support/steps.js
+index 9acc2dd..e3b26db 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -65,6 +65,7 @@ When('I press Enter', function () {
+ });
+ 
+ When('I click the checkbox for todo {string}', function (title) {
++  this.snapshotDom('before-action');
+   const li = this.findTodoByTitle(title);
+   const checkbox = li.querySelector('.toggle');
+   checkbox.click();
+@@ -87,11 +88,17 @@ When('I mark todo {string} as complete', function (title) {
+ });
+ 
+ When('I check the toggle-all checkbox', function () {
++  this.snapshotDom('before-action');
+   const checkbox = this.document.querySelector('.toggle-all');
+   checkbox.click();
+ });
+ 
++Then('the DOM node for todo {string} is the same element as before the click', function (title) {
++  this.assertDomUnchanged('before-action');
++});
++
+ When('I click the clear completed button', function () {
++  this.snapshotDom('before-action');
+   const btn = this.document.querySelector('.clear-completed');
+   btn.click();
+ });
+@@ -264,6 +271,15 @@ Then('the destroy button for todo {string} is visible', function (title) {
+   assert.ok(destroyBtn, 'Destroy button should exist');
+ });
+ 
++Then('the toggle input for todo {string} is not visible', function (title) {
++  const li = this.findTodoByTitle(title);
++  assert.ok(li, 'Todo "' + title + '" should exist');
++  const toggle = li.querySelector('.toggle');
++  assert.ok(toggle, 'Toggle input should exist');
++  const style = this.window.getComputedStyle(toggle);
++  assert.strictEqual(style.display, 'none', 'Toggle input should be hidden (display: none) during editing');
++});
++
+ Then('the check passes', function () {
+   assert.strictEqual(this._checkResult, true, 'Check should pass');
+ });
+diff --git a/features/support/world.js b/features/support/world.js
+index 128178f..1e926f5 100644
+--- a/features/support/world.js
++++ b/features/support/world.js
+@@ -2,12 +2,33 @@ const { World, setWorldConstructor } = require('@cucumber/cucumber');
+ const { Window } = require('happy-dom');
+ const fs = require('fs');
+ const path = require('path');
++const assert = require('assert');
+ 
+ class TodoWorld extends World {
+   constructor(options) {
+     super(options);
+     this.window = null;
+     this.document = null;
++    this._domSnapshots = {};
++  }
++
++  snapshotDom(label) {
++    const todoList = this.document.querySelector('.todo-list');
++    const items = this.getTodoItems();
++    this._domSnapshots[label] = items.map(li => ({
++      id: li.dataset.id,
++      node: li,
++      todoList: todoList
++    }));
++  }
++
++  assertDomUnchanged(label) {
++    const before = this._domSnapshots[label];
++    if (!before) throw new Error('No DOM snapshot found for: ' + label);
++    before.forEach(entry => {
++      assert.ok(entry.node.parentNode === entry.todoList,
++        'DOM node for todo with id ' + entry.id + ' must remain attached to the todo list (not replaced by re-render)');
++    });
+   }
+ 
+   setupDom() {
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..3be319a
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,102 @@
++{
++  "watches": [
++    {
++      "id": "root-entry-point",
++      "order": 1,
++      "spec": "features/root-index-html.feature",
++      "status": "done",
++      "note": "Root index.html exists with correct structure and script"
++    },
++    {
++      "id": "structure",
++      "order": 2,
++      "spec": "features/todo-visibility.feature",
++      "status": "done",
++      "note": "DOM rendering, section visibility"
++    },
++    {
++      "id": "new-todo",
++      "order": 3,
++      "spec": "features/new-todo.feature",
++      "status": "done",
++      "note": "Input, creation, trimming"
++    },
++    {
++      "id": "item-interactions",
++      "order": 4,
++      "spec": "features/todo-item.feature",
++      "status": "done",
++      "note": "Checkbox, double-click, hover"
++    },
++    {
++      "id": "toggle-all",
++      "order": 5,
++      "spec": "features/toggle-all.feature",
++      "status": "done",
++      "note": "Mark all complete"
++    },
++    {
++      "id": "counter",
++      "order": 6,
++      "spec": "features/counter.feature",
++      "status": "done",
++      "note": "Pluralized count"
++    },
++    {
++      "id": "clear-completed",
++      "order": 7,
++      "spec": "features/clear-completed.feature",
++      "status": "done",
++      "note": "Button visibility and removal"
++    },
++    {
++      "id": "editing",
++      "order": 8,
++      "spec": "features/editing.feature",
++      "status": "done",
++      "note": "Save, blur, destroy, cancel, trim"
++    },
++    {
++      "id": "persistence",
++      "order": 9,
++      "spec": "features/persistence.feature",
++      "status": "done",
++      "note": "localStorage survival across reloads"
++    },
++    {
++      "id": "routing",
++      "order": 10,
++      "spec": "features/routing.feature",
++      "status": "done",
++      "note": "Hash-based filters, selected class, persistence"
++    },
++    {
++      "id": "dom-stability",
++      "order": 11,
++      "spec": "features/dom-stability.feature",
++      "status": "failing",
++      "note": "DOM node identity preserved across state changes. Blocks: toggle, toggle-all, clear-completed in real browser."
++    },
++    {
++      "id": "editing-visibility",
++      "order": 12,
++      "spec": "features/editing.feature:47",
++      "status": "failing",
++      "note": "Toggle control must be hidden during editing. Blocks: editing test in real browser."
++    },
++    {
++      "id": "routing-filter-class",
++      "order": 13,
++      "spec": "features/routing.feature:31",
++      "status": "failing",
++      "note": "Completed filter link must get class 'selected', not 'completed'. Copy-paste defect on line 104 of app.js."
++    },
++    {
++      "id": "methodology",
++      "order": 14,
++      "spec": "features/methodology-conformance.feature",
++      "status": "done",
++      "note": "Watchbill shape, perturbation quiescence"
++    }
++  ]
++}

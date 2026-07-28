@@ -1,0 +1,52 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..f5a9eb9
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,17 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++## Browser-only defect: Edit handler double-fire
++
++The acceptance suite (Cypress, real browser) reports `NotFoundError: Failed to execute 'removeChild' on 'Node'` when editing a todo with empty text and pressing Enter.
++
++**Root cause:** Both the `keydown` handler (Enter) and the `blur` handler (capture phase) call `editTodo` and `render`. In a real browser, removing a focused `<li>` via `removeChild` fires `blur` synchronously. The blur handler re-processes the same edit, triggering a nested `render()` inside the outer `render()`'s removal loop, which fails because the node was already detached.
++
++**Why the harness passes:** happy-dom does not fire `blur` synchronously on `removeChild`. The in-harness suite never exercises the nested-render path.
++
++**Spec status:** The existing product spec `features/todos.feature:Editing with empty input removes the todo` is correct and unchanged. The defect is in the implementation, not the spec.
++
++**Conformance guard:** `features/edit-conformance.feature` adds a `@conformance` scenario that checks the source code for a guard in the blur handler. This scenario WILL fail on the current code because no guard exists. It is listed in `watchbill.json` as the sole watch target for the next QM dispatch.
++
++**Next steps:** QM implements the step definitions for the conformance scenario. Crew adds a guard (e.g., a flag or conditional) so the blur handler defers when Enter has already processed the edit. The existing product spec should then pass in a real browser.
+diff --git a/features/edit-conformance.feature b/features/edit-conformance.feature
+new file mode 100644
+index 0000000..be5329a
+--- /dev/null
++++ b/features/edit-conformance.feature
+@@ -0,0 +1,10 @@
++Feature: Edit handler conformance
++  As a developer
++  I want the edit event handlers to guard against duplicate processing
++  So that editing works correctly in real browsers where blur fires during DOM removal
++
++  @conformance
++  Scenario: Blur handler does not unconditionally re-process edits handled by Enter
++    Given the app source "js/app.js"
++    When the edit event handling code is inspected
++    Then the blur handler for edit inputs contains a guard that prevents calling editTodo when the keydown handler has already processed the same edit action
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..4bead22
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,7 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/edit-conformance.feature:Blur handler does not unconditionally re-process edits handled by Enter"
++    ]
++  }
++}

@@ -1,0 +1,50 @@
+diff --git a/features/entry-point.feature b/features/entry-point.feature
+new file mode 100644
+index 0000000..11315cb
+--- /dev/null
++++ b/features/entry-point.feature
+@@ -0,0 +1,25 @@
++Feature: Browser entry point
++  As a user
++  I want to open index.html in a browser
++  So that I can use the todo application
++
++  Rule: index.html must exist at the project root and load the app
++
++    Scenario: index.html exists at the project root
++      When I check for the file "index.html" at the project root
++      Then the file "index.html" should exist
++
++    Scenario: index.html loads js/app.js via a script tag
++      Given the file "index.html" exists at the project root
++      When I read the contents of "index.html"
++      Then the file contains a script element with src "js/app.js"
++
++    Scenario: index.html contains the todo app structural elements
++      Given the file "index.html" exists at the project root
++      When I read the contents of "index.html"
++      Then the file contains an element with class "todoapp"
++      And the file contains an input with class "new-todo"
++      And the file contains a section with class "main"
++      And the file contains an unordered list with class "todo-list"
++      And the file contains a footer with class "footer"
++      And the file contains a span with class "todo-count"
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+index 57a5098..bb74044 100644
+--- a/watchbill.json
++++ b/watchbill.json
+@@ -53,5 +53,12 @@
+       "features/todos.feature:Hide item when it no longer matches the active filter",
+       "features/todos.feature:Hide item when it no longer matches the completed filter"
+     ]
++  },
++  "watch7": {
++    "scenarios": [
++      "features/entry-point.feature:index.html exists at the project root",
++      "features/entry-point.feature:index.html loads js/app.js via a script tag",
++      "features/entry-point.feature:index.html contains the todo app structural elements"
++    ]
+   }
+ }
+\ No newline at end of file

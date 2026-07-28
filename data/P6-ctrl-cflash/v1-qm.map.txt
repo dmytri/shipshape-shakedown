@@ -1,0 +1,29 @@
+# banked: 2026-07-28T11:10:00Z
+# leg: {  "name": "v1-qm",  "model": "deepseek/deepseek-v4-flash",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/P6-ctrl-cflash/sim",  "timeout_s": 3600,  "skills": [    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills/shipshape",    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills/qm",    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills/crew",    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills/boatswain",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== v1-qm.session.jsonl ===
+  turns=19  wall=143.8s  in=122841  out=7761  cache_read=341632  cost=$0.0194
+  role reads: qm@t0 -> boatswain@t9
+  roles loaded: boatswain, qm
+  ~ repeated tool signature at turns [8] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0     258/108     2048 $0.0001  read
+    t1    3433/185     2304 $0.0004  bash
+    t2    1130/590     5632 $0.0003  bash, bash
+    t3    1007/304     6656 $0.0003  read, read, bash, bash
+    t4    2264/381     7424 $0.0004  read, read, read, read, read, read
+    t5   17320/539      640 $0.0017  bash, bash, bash
+    t6    9672/206     9472 $0.0011  bash
+    t7   17330/476     2048 $0.0018  bash
+    t8   17893/558     2048 $0.0018  bash, bash
+    t9    6648/511    18944 $0.0011  read
+    t10   4624/266    25344 $0.0010  bash
+    t11  11546/443    19456 $0.0015  bash
+    t12   6592/1313   29952 $0.0014  bash
+    t13  19526/599    18432 $0.0023  bash
+    t14   2217/102    36352 $0.0009  bash
+    t15    284/85     38400 $0.0008  bash
+    t16    206/255    38656 $0.0008  bash
+    t17    555/98     38656 $0.0008  bash
+    t18    336/742    39168 $0.0009  -

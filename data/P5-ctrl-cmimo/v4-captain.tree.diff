@@ -1,0 +1,120 @@
+diff --git a/index.html b/index.html
+index 6806954..a390928 100644
+--- a/index.html
++++ b/index.html
+@@ -4,6 +4,10 @@
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>TodoMVC</title>
++  <style>
++    li.editing .toggle { display: none; }
++    li.editing .destroy { display: none; }
++  </style>
+ </head>
+ <body>
+   <section class="todoapp">
+diff --git a/js/app.js b/js/app.js
+index 5d2ccbc..132bf11 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -38,7 +38,6 @@
+   function render() {
+     var todos = loadTodos();
+     var filter = getFilter();
+-    todoList.innerHTML = '';
+ 
+     var filtered = todos.filter(function (todo) {
+       if (filter === 'active') return !todo.completed;
+@@ -46,36 +45,54 @@
+       return true;
+     });
+ 
+-    filtered.forEach(function (todo) {
+-      var li = document.createElement('li');
+-      li.dataset.id = todo.id;
+-      if (todo.completed) li.classList.add('completed');
+-
+-      var div = document.createElement('div');
+-      div.className = 'view';
+-
+-      var checkbox = document.createElement('input');
+-      checkbox.className = 'toggle';
+-      checkbox.type = 'checkbox';
+-      checkbox.checked = todo.completed;
+-
+-      var label = document.createElement('label');
+-      label.textContent = todo.title;
+-
+-      var destroyBtn = document.createElement('button');
+-      destroyBtn.className = 'destroy';
++    var existingItems = Array.from(todoList.querySelectorAll('li'));
++    var existingById = {};
++    existingItems.forEach(function (li) { existingById[li.dataset.id] = li; });
+ 
+-      div.appendChild(checkbox);
+-      div.appendChild(label);
+-      div.appendChild(destroyBtn);
+-
+-      var editInput = document.createElement('input');
+-      editInput.className = 'edit';
+-      editInput.value = todo.title;
++    var usedIds = {};
++    filtered.forEach(function (todo) {
++      usedIds[todo.id] = true;
++      var li = existingById[todo.id];
++      if (li) {
++        if (todo.completed) li.classList.add('completed');
++        else li.classList.remove('completed');
++        var editInput = li.querySelector('.edit');
++        if (editInput) editInput.value = todo.title;
++      } else {
++        li = document.createElement('li');
++        li.dataset.id = todo.id;
++        if (todo.completed) li.classList.add('completed');
++
++        var div = document.createElement('div');
++        div.className = 'view';
++
++        var checkbox = document.createElement('input');
++        checkbox.className = 'toggle';
++        checkbox.type = 'checkbox';
++        checkbox.checked = todo.completed;
++
++        var label = document.createElement('label');
++        label.textContent = todo.title;
++
++        var destroyBtn = document.createElement('button');
++        destroyBtn.className = 'destroy';
++
++        div.appendChild(checkbox);
++        div.appendChild(label);
++        div.appendChild(destroyBtn);
++
++        var editInput = document.createElement('input');
++        editInput.className = 'edit';
++        editInput.value = todo.title;
++
++        li.appendChild(div);
++        li.appendChild(editInput);
++        todoList.appendChild(li);
++      }
++    });
+ 
+-      li.appendChild(div);
+-      li.appendChild(editInput);
+-      todoList.appendChild(li);
++    existingItems.forEach(function (li) {
++      if (!usedIds[li.dataset.id]) li.parentNode.removeChild(li);
+     });
+ 
+     var activeCount = todos.filter(function (t) { return !t.completed; }).length;
+@@ -101,8 +118,7 @@
+       var linkFilter = link.getAttribute('href');
+       if (linkFilter === '#/' && filter === 'all') link.classList.add('selected');
+       if (linkFilter === '#/active' && filter === 'active') link.classList.add('selected');
+-      if (linkFilter === '#/completed' && filter === 'completed') link.classList.add('completed');
+-      if (linkFilter === '#/active' && filter === 'active') link.classList.add('selected');
++      if (linkFilter === '#/completed' && filter === 'completed') link.classList.add('selected');
+     });
+ 
+     newTodoInput.focus();

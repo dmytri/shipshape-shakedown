@@ -1,0 +1,79 @@
+diff --git a/features/editing.feature b/features/editing.feature
+index 1d244be..a10e465 100644
+--- a/features/editing.feature
++++ b/features/editing.feature
+@@ -48,3 +48,8 @@ Feature: Editing todos
+     Given I have a todo "Buy milk"
+     When I double-click the label for todo "Buy milk"
+     Then the toggle input for todo "Buy milk" is not visible
++
++  Scenario: View label is hidden when editing
++    Given I have a todo "Buy milk"
++    When I double-click the label for todo "Buy milk"
++    Then the view label for todo "Buy milk" has display "none"
+diff --git a/features/support/steps.js b/features/support/steps.js
+index 8733de5..160883e 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -257,6 +257,11 @@ Then('the toggle-all checkbox is unchecked', function () {
+   assert.strictEqual(checkbox.checked, false, 'Toggle-all should be unchecked');
+ });
+ 
++Then('the toggle-all checkbox is checked', function () {
++  const checkbox = this.document.querySelector('.toggle-all');
++  assert.strictEqual(checkbox.checked, true, 'Toggle-all should be checked');
++});
++
+ Then('the {string} filter link has class {string}', function (filterName, className) {
+   const links = this.document.querySelectorAll('.filters a');
+   let found = null;
+@@ -288,6 +293,14 @@ Then('the toggle input for todo {string} is not visible', function (title) {
+   assert.strictEqual(style.display, 'none', 'Toggle input should be hidden (display: none) during editing');
+ });
+ 
++Then('the view label for todo {string} has display {string}', function (title, displayValue) {
++  const li = this.findTodoByTitle(title);
++  assert.ok(li, 'Todo "' + title + '" should exist');
++  const viewDiv = li.querySelector('.view');
++  assert.ok(viewDiv, '.view div should exist');
++  assert.strictEqual(viewDiv.style.display, displayValue, '.view div should have display: ' + displayValue + ' during editing');
++});
++
+ Then('the check passes', function () {
+   assert.strictEqual(this._checkResult, true, 'Check should pass');
+ });
+diff --git a/features/toggle-all.feature b/features/toggle-all.feature
+index 732c2c8..dfbf2da 100644
+--- a/features/toggle-all.feature
++++ b/features/toggle-all.feature
+@@ -13,3 +13,11 @@ Feature: Toggle all
+     When I check the toggle-all checkbox
+     And I click the clear completed button
+     Then the toggle-all checkbox is unchecked
++
++  Scenario: Complete all checkbox updates when items are completed and cleared
++    Given I have todos "Buy milk" and "Walk dog"
++    When I click the checkbox for todo "Buy milk"
++    And I click the checkbox for todo "Walk dog"
++    Then the toggle-all checkbox is checked
++    When I click the clear completed button
++    Then the toggle-all checkbox is unchecked
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..48442c5
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,13 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/editing.feature:View label is hidden when editing"
++    ]
++  },
++  "watch2": {
++    "scenarios": [
++      "features/toggle-all.feature:Complete all checkbox updates when items are completed and cleared",
++      "features/editing.feature:Empty edit destroys the todo"
++    ]
++  }
++}

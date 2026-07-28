@@ -1,0 +1,41 @@
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..90b6759
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,34 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/todos.feature:Hide main and footer when no todos exist"
++    ]
++  },
++  "watch2": {
++    "scenarios": [
++      "features/entry-point.feature:index.html links to the todomvc-common CSS",
++      "features/entry-point.feature:index.html links to the todomvc-app-css CSS"
++    ]
++  },
++  "watch3": {
++    "scenarios": [
++      "features/todos.feature:Destroy todo when edit text is empty",
++      "features/todos.feature:Destroy todo when edit text is only whitespace"
++    ]
++  },
++  "watch4": {
++    "scenarios": [
++      "features/todos.feature:Hide other controls when editing"
++    ]
++  },
++  "watch5": {
++    "scenarios": [
++      "features/todos.feature:Show all todos by default",
++      "features/todos.feature:Filter to active todos",
++      "features/todos.feature:Filter to completed todos",
++      "features/todos.feature:Hide item when it no longer matches the active filter",
++      "features/todos.feature:Hide item when it no longer matches the completed filter",
++      "features/todos.feature:Persist active filter across reloads"
++    ]
++  }
++}
+\ No newline at end of file

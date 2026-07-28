@@ -1,0 +1,164 @@
+diff --git a/features/display.feature b/features/display.feature
+index 998aa46..33adfce 100644
+--- a/features/display.feature
++++ b/features/display.feature
+@@ -1,14 +1,12 @@
+ Feature: Display and counters
+   DOM-level behaviour for the empty state, the active counter, and the
+-  clear-completed control. Non-binding harbour skeleton — awaiting Captain review.
++  clear-completed control.
+ 
+-  @captain
+   Scenario: No todos hides main and footer
+     Given the app loads with an empty todo list
+     Then the "#main" section is hidden
+     And the "#footer" section is hidden
+ 
+-  @captain
+   Scenario: Active counter pluralises zero, one, and many
+     Given the app loads with todos:
+       | title            | completed |
+@@ -20,7 +18,6 @@ Feature: Display and counters
+     When all todos are removed
+     Then the ".todo-count" shows "<strong>0</strong> items left"
+ 
+-  @captain
+   Scenario: Clear completed button removes completed todos and hides when none
+     Given the app loads with todos:
+       | title            | completed |
+diff --git a/features/methodology.feature b/features/methodology.feature
+index 7479b08..d7a58e4 100644
+--- a/features/methodology.feature
++++ b/features/methodology.feature
+@@ -1,16 +1,14 @@
+ Feature: Shipshape methodology conformance
+-  Baseline methodology checks that must hold on a green deck. Non-binding
+-  harbour skeletons — awaiting Captain review. QM makes the steps executable
+-  on promotion (removing the @captain tag); the derived checks run through the
+-  `conformance` command from RIGGING.md.
++  Baseline methodology checks that must hold on a green deck. The derived checks
++  run through the `conformance` command from RIGGING.md.
+ 
+-  @captain @conformance
++  @conformance
+   Scenario: Absent watchbill conforms as the deck at rest
+     Given the working tree has no watchbill file
+     When the watchbill-shape conformance check runs
+     Then it reports the deck at rest (conforms)
+ 
+-  @captain @conformance
++  @conformance
+   Scenario: Green tree carries no PERTURBATION token
+     When the perturbation-quiescence check scans the implementation directories
+     Then it finds no "PERTURBATION" token
+diff --git a/features/persistence-routing.feature b/features/persistence-routing.feature
+index b6f50b5..09de535 100644
+--- a/features/persistence-routing.feature
++++ b/features/persistence-routing.feature
+@@ -1,15 +1,12 @@
+ Feature: Persistence and routing
+   DOM-level behaviour for localStorage persistence and hash routing/filtering.
+-  Non-binding harbour skeleton — awaiting Captain review.
+ 
+-  @captain
+   Scenario: Todos persist to localStorage under todos-vanillajs
+     Given the app has loaded
+     When "Buy a unicorn" is typed into ".new-todo" and Enter is pressed
+     Then localStorage "todos-vanillajs" contains a todo with title "Buy a unicorn"
+     And that stored todo has keys "id", "title", "completed"
+ 
+-  @captain
+   Scenario: Editing state is not persisted
+     Given the app loads with todos:
+       | title            | completed |
+@@ -17,7 +14,6 @@ Feature: Persistence and routing
+     When the "Buy a unicorn" label is double-clicked
+     Then localStorage "todos-vanillajs" does not record the "editing" state
+ 
+-  @captain
+   Scenario: Routing filters the list and toggles the selected filter
+     Given the app loads with todos:
+       | title            | completed |
+@@ -32,7 +28,6 @@ Feature: Persistence and routing
+     When the route is "#/"
+     Then all todos are shown
+ 
+-  @captain
+   Scenario: Active filter persists across reload
+     Given the app loads with todos:
+       | title            | completed |
+diff --git a/features/todo-items.feature b/features/todo-items.feature
+index 7b65a8f..03dbb93 100644
+--- a/features/todo-items.feature
++++ b/features/todo-items.feature
+@@ -1,8 +1,6 @@
+ Feature: Todo items
+   DOM-level behaviour for creating, toggling, editing, and bulk-toggling todos.
+-  Non-binding harbour skeleton — awaiting Captain review.
+ 
+-  @captain
+   Scenario: New todo is created, trimmed, and ignores blanks
+     Given the app has loaded
+     When "  Buy a unicorn  " is typed into ".new-todo" and Enter is pressed
+@@ -11,12 +9,10 @@ Feature: Todo items
+     When "" is typed into ".new-todo" and Enter is pressed
+     Then the todo count is 1
+ 
+-  @captain
+   Scenario: New-todo input is focused on load
+     Given the app has loaded
+     Then ".new-todo" has focus
+ 
+-  @captain
+   Scenario: Toggling a single todo marks it complete
+     Given the app loads with todos:
+       | title            | completed |
+@@ -25,7 +21,6 @@ Feature: Todo items
+     Then the "Buy a unicorn" todo has class "completed"
+     And its model "completed" is true
+ 
+-  @captain
+   Scenario: Mark all as complete toggles every todo and reflects single toggles
+     Given the app loads with todos:
+       | title            | completed |
+@@ -38,7 +33,6 @@ Feature: Todo items
+     When the "Taste JavaScript" todo checkbox is clicked
+     Then "#toggle-all" is checked
+ 
+-  @captain
+   Scenario: Double-clicking a label enters edit mode
+     Given the app loads with todos:
+       | title            | completed |
+@@ -47,7 +41,6 @@ Feature: Todo items
+     Then the "Buy a unicorn" todo has class "editing"
+     And its ".edit" input is focused
+ 
+-  @captain
+   Scenario: Editing saves on enter, destroys on empty, and escapes discard
+     Given the app loads with todos:
+       | title            | completed |
+@@ -63,7 +56,6 @@ Feature: Todo items
+     And ".edit" is set to "Changed" and Escape is pressed
+     Then the "Survivor" todo is still named "Survivor"
+ 
+-  @captain
+   Scenario: Hovering a todo reveals the destroy button
+     Given the app loads with todos:
+       | title            | completed |
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..19a04e4
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,11 @@
++{
++  "watch1": {
++    "scenarios": ["@logic"]
++  },
++  "watch2": {
++    "scenarios": [
++      "features/methodology.feature:Absent watchbill conforms as the deck at rest",
++      "features/methodology.feature:Green tree carries no PERTURBATION token"
++    ]
++  }
++}

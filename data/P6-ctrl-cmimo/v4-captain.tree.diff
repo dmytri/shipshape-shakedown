@@ -1,0 +1,109 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 5a54bbb..dd478de 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -27,9 +27,9 @@ Eleven feature files under `features/`:
+ | `persistence.feature` | 5 |
+ | `routing.feature` | 6 |
+ | `dom-stability.feature` | 5 |
+-| `editing-controls.feature` | 6 |
++| `editing-controls.feature` | 7 |
+ 
+-**Total: 60 scenarios across 11 watches.**
++**Total: 61 scenarios across 11 watches.**
+ 
+ ## Watchbill
+ 
+@@ -41,6 +41,37 @@ Eleven feature files under `features/`:
+ - No step definitions exist — Crew must write `features/support/steps.js` (or equivalent) before verification can run.
+ - `RIGGING.md` not yet authored; fitting out may be needed if the build path requires tooling decisions.
+ 
++## Acceptance Suite Defect Analysis (2026-07-28)
++
++The external browser acceptance suite (Cypress) reports 5 failures. These are PRODUCT defects, not test issues.
++
++### Defect 1: DOM node replacement during state changes (4 failures)
++
++**Acceptance failures:**
++- "Mark all as completed" → should allow me to mark all items as completed
++- "Mark all as completed" → should allow me to clear the complete state of all items
++- "Item" → should allow me to mark items as complete
++- "Item" → should allow me to un-mark items as complete
++
++**Root cause:** The `render()` function in `app.js` calls `todoList.innerHTML = ''` which destroys ALL DOM nodes and recreates them from scratch. This causes Cypress to lose its element references.
++
++**Verification suite coverage:** `dom-stability.feature` (5 scenarios) already captures this defect and fails correctly.
++
++**Required fix:** Mutate existing DOM nodes in place (toggle class/checkbox) instead of rebuilding the list.
++
++### Defect 2: Toggle checkbox visible during editing (1 failure)
++
++**Acceptance failure:**
++- "Editing" → should hide other controls when editing
++
++**Root cause:** The CSS packages (`todomvc-app-css`, `todomvc-common`) are not installed, so the rule `li.editing .view { display: none }` is not applied.
++
++**Verification suite coverage:** `editing-controls.feature` now has 7 scenarios:
++- Behavioral check: "The toggle checkbox is not visible during editing" (newly added, fails)
++- Source checks: CSS packages declared, files exist, rule present (all fail)
++
++**Required fix:** Install CSS packages and ensure stylesheets are linked.
++
+ ## Next
+ 
+-Specs and watchbill complete. Deck clean. Next role: **Crew** to implement `index.html`, `js/app.js`, and step definitions, then QM to verify against the watchbill.
++Specs updated to capture all acceptance failures. Deck clean. Next role: **Crew** to fix `app.js` (DOM stability) and `package.json` (CSS dependencies), then QM to verify.
+diff --git a/features/editing-controls.feature b/features/editing-controls.feature
+index 631314d..44f3838 100644
+--- a/features/editing-controls.feature
++++ b/features/editing-controls.feature
+@@ -13,6 +13,11 @@ Feature: Editing controls visibility
+       When I double-click the label of the todo "Buy milk"
+       Then the todo "Buy milk" is in editing mode
+ 
++    Scenario: The toggle checkbox is not visible during editing
++      Given I have added a todo "Buy milk"
++      When I double-click the label of the todo "Buy milk"
++      Then the toggle checkbox of "Buy milk" is not visible
++
+   Rule: CSS dependencies must be installed for editing visibility
+ 
+     Scenario: The todomvc-app-css package is declared in package.json
+diff --git a/features/support/steps.js b/features/support/steps.js
+index b0a0c59..fb8ab2e 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -406,6 +406,21 @@ Then('the todo {string} is hidden', function (title) {
+   }
+ });
+ 
++Then('the toggle checkbox of {string} is not visible', function (title) {
++  const li = todoByTitle(this.document, title);
++  if (!li) throw new Error(`Todo "${title}" not found`);
++  const checkbox = el(li, '.toggle');
++  if (!checkbox) throw new Error(`Toggle checkbox not found in todo "${title}"`);
++  const style = this.window.getComputedStyle(checkbox);
++  if (style.display !== 'none' && style.visibility !== 'hidden') {
++    throw new Error(
++      `Toggle checkbox of "${title}" is visible (display=${style.display}, visibility=${style.visibility}) ` +
++      `but should be hidden during editing. The CSS rule "li.editing .view { display: none }" ` +
++      `must hide the view container which contains the toggle checkbox.`
++    );
++  }
++});
++
+ Then('localStorage contains a key {string}', function (key) {
+   if (this.localStorage.getItem(key) === null) {
+     throw new Error(`localStorage does not contain key "${key}"`);
+diff --git a/watchbill.json b/watchbill.json
+index 858eada..0475945 100644
+--- a/watchbill.json
++++ b/watchbill.json
+@@ -107,6 +107,7 @@
+       "name": "editing-controls",
+       "scenarios": [
+         "features/editing-controls.feature:Entering editing mode applies the editing class to the list item",
++        "features/editing-controls.feature:The toggle checkbox is not visible during editing",
+         "features/editing-controls.feature:The todomvc-app-css package is declared in package.json",
+         "features/editing-controls.feature:The todomvc-common package is declared in package.json",
+         "features/editing-controls.feature:The todomvc-app-css stylesheet exists",

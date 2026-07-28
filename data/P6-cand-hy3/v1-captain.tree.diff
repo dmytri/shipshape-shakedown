@@ -1,0 +1,251 @@
+diff --git a/features/todo-completion.feature b/features/todo-completion.feature
+new file mode 100644
+index 0000000..ea439e1
+--- /dev/null
++++ b/features/todo-completion.feature
+@@ -0,0 +1,61 @@
++Feature: Todo completion and item editing
++  As a todo-list user
++  I want to complete, toggle, and edit my todos
++  So that I can manage each item's state
++
++  Scenario: Completing a single todo toggles its completed state
++    Given the app loads with active todo "a"
++    When I complete the todo "a"
++    Then the todo "a" shows the completed state
++
++  Scenario: The toggle-all control completes every todo
++    Given the app loads with active todos "a" and "b"
++    When I click the toggle-all control
++    Then every todo item shows the completed state
++
++  Scenario: The toggle-all control clears every todo
++    Given the app loads with completed todos "a" and "b"
++    When I click the toggle-all control
++    Then every todo item shows the active state
++
++  Scenario: The toggle-all control reflects full completion
++    Given the app loads with active todos "a" and "b"
++    When I complete the todo "a"
++    And I complete the todo "b"
++    Then the toggle-all control is checked
++
++  Scenario: Each todo item exposes a destroy control
++    Given the app loads with todo "a"
++    Then the todo "a" has a destroy control
++
++  Scenario: Double-clicking a todo label enters edit mode
++    Given the app loads with todo "a"
++    When I double-click the label of the todo "a"
++    Then the todo "a" is in editing mode
++
++  Scenario: Editing saves on Enter and leaves edit mode
++    Given the app loads with todo "a"
++    When I double-click the label of the todo "a"
++    And I set the edit input to "Buy a unicorn" and press Enter
++    Then the todo "a" shows title "Buy a unicorn"
++    And the todo "a" is not in editing mode
++
++  Scenario: Editing saves on blur and leaves edit mode
++    Given the app loads with todo "a"
++    When I double-click the label of the todo "a"
++    And I set the edit input to "Buy a unicorn" and blur
++    Then the todo "a" shows title "Buy a unicorn"
++    And the todo "a" is not in editing mode
++
++  Scenario: Editing to empty destroys the todo
++    Given the app loads with todo "a"
++    When I double-click the label of the todo "a"
++    And I set the edit input to "   " and press Enter
++    Then the todo list shows no items
++
++  Scenario: Escape cancels the edit and discards changes
++    Given the app loads with todo "a"
++    When I double-click the label of the todo "a"
++    And I set the edit input to "changed" and press Escape
++    Then the todo "a" shows title "a"
++    And the todo "a" is not in editing mode
+diff --git a/features/todo-creation.feature b/features/todo-creation.feature
+new file mode 100644
+index 0000000..fb137e6
+--- /dev/null
++++ b/features/todo-creation.feature
+@@ -0,0 +1,36 @@
++Feature: Todo creation and display
++  As a todo-list user
++  I want to add todos and see my list and remaining count
++  So that I can track what needs doing
++
++  Scenario: An empty list hides the main section and footer
++    Given the app loads with no todos
++    Then the main section is hidden
++    And the footer is hidden
++
++  Scenario: The new-todo input is focused on load
++    Given the app loads with no todos
++    Then the new-todo input is focused
++
++  Scenario: Entering a title adds a todo and clears the input
++    Given the app loads with no todos
++    When I type "Buy milk" into the new-todo input and press Enter
++    Then the todo list shows one item with title "Buy milk"
++    And the new-todo input is empty
++
++  Scenario: Whitespace-only input creates no todo
++    Given the app loads with no todos
++    When I type "   " into the new-todo input and press Enter
++    Then the todo list shows no items
++
++  Scenario: The counter shows the active count with correct pluralization
++    Given the app loads with active todos "a" and "b" and completed todo "c"
++    Then the counter shows "2 items left"
++
++  Scenario: The counter singularizes one active item
++    Given the app loads with active todo "a" and completed todo "b"
++    Then the counter shows "1 item left"
++
++  Scenario: The counter shows zero items
++    Given the app loads with completed todo "a"
++    Then the counter shows "0 items left"
+diff --git a/features/todo-filtering.feature b/features/todo-filtering.feature
+new file mode 100644
+index 0000000..176cf3b
+--- /dev/null
++++ b/features/todo-filtering.feature
+@@ -0,0 +1,51 @@
++Feature: Todo filtering, routing, and clearing
++  As a todo-list user
++  I want to filter my list and clear finished work
++  So that I can focus on what remains
++
++  Scenario: The clear-completed button removes completed todos
++    Given the app loads with active todo "a" and completed todo "b"
++    When I click the clear-completed button
++    Then the todo list shows one item with title "a"
++
++  Scenario: The clear-completed button is hidden with no completed todos
++    Given the app loads with active todos "a" and "b"
++    Then the clear-completed button is hidden
++
++  Scenario: Clearing completed todos hides and unchecks the toggle-all control
++    Given the app loads with completed todos "a" and "b"
++    When I click the clear-completed button
++    Then the todo list shows no items
++    And the toggle-all control is unchecked
++    And the clear-completed button is hidden
++
++  Scenario: The All filter shows every todo
++    Given the app loads with active todo "a" and completed todo "b"
++    When I open the "All" filter
++    Then the todo list shows two items
++    And the "All" filter link is selected
++
++  Scenario: The Active filter hides completed todos
++    Given the app loads with active todo "a" and completed todo "b"
++    When I open the "Active" filter
++    Then the todo list shows one item with title "a"
++    And the "Active" filter link is selected
++
++  Scenario: The Completed filter hides active todos
++    Given the app loads with active todo "a" and completed todo "b"
++    When I open the "Completed" filter
++    Then the todo list shows one item with title "b"
++    And the "Completed" filter link is selected
++
++  Scenario: An item completed in a filtered view updates immediately
++    Given the app loads with active todo "a" and completed todo "b"
++    When I open the "Active" filter
++    And I complete the todo "a"
++    Then the todo list shows no items
++
++  Scenario: The active filter persists across a reload
++    Given the app loads with active todo "a" and completed todo "b"
++    When I open the "Completed" filter
++    And I reload the app
++    Then the "Completed" filter link is selected
++    And the todo list shows one item with title "b"
+diff --git a/features/todo-persistence.feature b/features/todo-persistence.feature
+new file mode 100644
+index 0000000..ab91d84
+--- /dev/null
++++ b/features/todo-persistence.feature
+@@ -0,0 +1,26 @@
++Feature: Todo persistence
++  As a todo-list user
++  I want my todos to survive a page reload
++  So that I do not lose my list
++
++  Rule: The app stores todos under the localStorage key "todos-vanillajs"
++
++  Scenario: Adding a todo persists it to localStorage
++    Given the app loads with no todos
++    When I type "Buy milk" into the new-todo input and press Enter
++    Then localStorage "todos-vanillajs" contains a todo with title "Buy milk"
++
++  Scenario: Completing a todo persists the completed state
++    Given the app loads with active todo "a"
++    When I complete the todo "a"
++    Then localStorage "todos-vanillajs" marks the todo "a" as completed
++
++  Scenario: Each stored todo carries the id, title, and completed fields
++    Given the app loads with no todos
++    When I type "Buy milk" into the new-todo input and press Enter
++    Then every stored todo under "todos-vanillajs" has the keys "id", "title", and "completed"
++
++  Scenario: Editing mode is not persisted
++    Given the app loads with todo "a"
++    When I double-click the label of the todo "a"
++    Then localStorage "todos-vanillajs" records no editing state for the todo "a"
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..b543eda
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,47 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/todo-creation.feature:An empty list hides the main section and footer",
++      "features/todo-creation.feature:The new-todo input is focused on load",
++      "features/todo-creation.feature:Entering a title adds a todo and clears the input",
++      "features/todo-creation.feature:Whitespace-only input creates no todo",
++      "features/todo-creation.feature:The counter shows the active count with correct pluralization",
++      "features/todo-creation.feature:The counter singularizes one active item",
++      "features/todo-creation.feature:The counter shows zero items"
++    ]
++  },
++  "watch2": {
++    "scenarios": [
++      "features/todo-completion.feature:Completing a single todo toggles its completed state",
++      "features/todo-completion.feature:The toggle-all control completes every todo",
++      "features/todo-completion.feature:The toggle-all control clears every todo",
++      "features/todo-completion.feature:The toggle-all control reflects full completion",
++      "features/todo-completion.feature:Each todo item exposes a destroy control",
++      "features/todo-completion.feature:Double-clicking a todo label enters edit mode",
++      "features/todo-completion.feature:Editing saves on Enter and leaves edit mode",
++      "features/todo-completion.feature:Editing saves on blur and leaves edit mode",
++      "features/todo-completion.feature:Editing to empty destroys the todo",
++      "features/todo-completion.feature:Escape cancels the edit and discards changes"
++    ]
++  },
++  "watch3": {
++    "scenarios": [
++      "features/todo-filtering.feature:The clear-completed button removes completed todos",
++      "features/todo-filtering.feature:The clear-completed button is hidden with no completed todos",
++      "features/todo-filtering.feature:Clearing completed todos hides and unchecks the toggle-all control",
++      "features/todo-filtering.feature:The All filter shows every todo",
++      "features/todo-filtering.feature:The Active filter hides completed todos",
++      "features/todo-filtering.feature:The Completed filter hides active todos",
++      "features/todo-filtering.feature:An item completed in a filtered view updates immediately",
++      "features/todo-filtering.feature:The active filter persists across a reload"
++    ]
++  },
++  "watch4": {
++    "scenarios": [
++      "features/todo-persistence.feature:Adding a todo persists it to localStorage",
++      "features/todo-persistence.feature:Completing a todo persists the completed state",
++      "features/todo-persistence.feature:Each stored todo carries the id, title, and completed fields",
++      "features/todo-persistence.feature:Editing mode is not persisted"
++    ]
++  }
++}

@@ -1,0 +1,129 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index c642dc7..f4ebc82 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -2,28 +2,35 @@
+ 
+ # Captain Notes
+ 
+-## Voyage 2 — Browser-identity defects
++## Voyage 3 — Browser-identity defects (remaining)
+ 
+ ### State at opening
+-- Voyage 1 complete: TodoMVC vanilla JS app implemented, all 31 scenarios pass via happy-dom
+-- Cypress acceptance suite (real browser) reports 5 failures due to DOM node detachment
+-- Root cause: `render()` in `js/app.js` uses `todoList.innerHTML = ...` which destroys and recreates all `<li>` elements on every state change
+-- Additional issue: `.toggle` checkbox not hidden during editing (no CSS rule, no `todomvc-app-css` loaded)
+-
+-### Acceptance failures (fixed spec, must not change test)
+-1. "Mark all as completed" — `cy.eq()` fails: toggle-all re-render destroys all `<li>` references
+-2. "Clear complete state of all items" — same: toggle-all re-render
+-3. "Mark items as complete" — `cy.find()` fails: single toggle triggers `render()` which rebuilds list
+-4. "Un-mark items as complete" — same: single toggle re-render
+-5. "Hide other controls when editing" — `.toggle` checkbox is visible during editing, should be hidden
++- Voyage 2 complete: DOM identity fixed (mutate in place, no innerHTML rebuild), toggle hidden during editing via injected CSS
++- 35 scenarios all pass via happy-dom (DOM identity + editing toggle scenarios added)
++- Cypress acceptance suite now reports 2 remaining failures (browser-specific)
++
++### Remaining acceptance failures (fixed spec, must not change test)
++1. "should hide other controls when editing" — `<label>` is visible during editing, should be hidden
++   - Root cause: CSS injection only hides `.toggle`, not the label
++   - New scenario: "Editing hides the label control" — FAILS on current code (pins the missing CSS rule)
++
++2. "should remove the item if an empty text string was entered" — `Failed to execute 'remove' on 'Element': The node to be removed is no longer a child of this node. Perhaps it was moved in a 'blur' event handler?`
++   - Root cause: `render()` → `todoList.innerHTML = ''` removes focused `editInput`, which fires a `blur` event in a real browser. The `blur` handler re-enters `updateTodo()` → `removeTodo()` → `render()`, and the second `render()` tries to `.remove()` an already-detached node.
++   - Not reproducible in happy-dom (blur events don't fire on DOM removal)
++   - PERTURBATION planted at the blur handler seam in `js/app.js:288`
++   - Existing scenarios "Empty edit destroys the todo", "Whitespace-only edit destroys the todo" pin the must-survive behaviour
++   - New scenario "Empty edit via blur destroys the todo" added for explicit blur-path coverage
+ 
+ ### Decisions
+-- **DOM identity**: The app must mutate existing `<li>` nodes in place (toggle class/checkbox) instead of rebuilding via `innerHTML`. This preserves browser-held references.
+-- **Editing controls**: `.toggle` checkbox must be hidden when the parent `<li>` has `.editing` class (CSS: `.todo-list li.editing .toggle { display: none; }`)
+-- 4 new scenarios added to `features/todos.feature` pinning this behaviour
+-- `watchbill.json` created with 2 watches: `watch-dom-identity` and `watch-editing-controls`
++- **Label visibility**: CSS rule must also hide the label during editing: `.todo-list li.editing .view label { display: none; }` (or `.todo-list li.editing .view { display: none; }`)
++- **Blur re-entrancy**: The blur handler must guard against re-entrant render calls. The Enter-key handler also calls `li.classList.remove('editing')` on a potentially detached `li` after `updateTodo` removes the item.
++
++### Durable artifacts authored
++- `features/todos.feature`: 2 new scenarios added (editing hides label, empty edit via blur)
++- `js/app.js`: PERTURBATION marker at blur handler (line 288)
++- `watchbill.json`: 2 watches — `watch-editing-controls` and `watch-empty-edit-blur`
+ 
+ ### Next role
+-QM → implement step definitions for the 4 new scenarios, then execute watchbill.
+-Crew → fix `render()` to mutate in-place; add CSS rule to hide toggle during editing.
++QM → implement step definitions for the new scenarios, execute watchbill, report green.
++Crew → add CSS rule to hide label during editing; fix blur handler re-entrancy.
+ Boatswain → custody after QM goes green.
+\ No newline at end of file
+diff --git a/features/todos.feature b/features/todos.feature
+index 4c2b73a..48a1258 100644
+--- a/features/todos.feature
++++ b/features/todos.feature
+@@ -116,6 +116,11 @@ Feature: TodoMVC
+     Given the todo list has item "Buy milk"
+     Then the item "Buy milk" has a ".destroy" button
+ 
++  Scenario: Editing hides the label control
++    Given the todo list has item "Buy milk"
++    When I double-click the label for "Buy milk"
++    Then ".todo-list li.editing label" is not visible
++
+   # ── Editing ───────────────────────────────────────────────────────
+ 
+   Rule: Editing a todo
+@@ -143,6 +148,13 @@ Feature: TodoMVC
+     And I press Enter in the edit field
+     Then the todo list is empty
+ 
++  Scenario: Empty edit via blur destroys the todo
++    Given the todo list has item "Buy milk"
++    When I double-click the label for "Buy milk"
++    And I change the edit field to ""
++    And the edit field loses focus
++    Then the todo list is empty
++
+   Scenario: Whitespace-only edit destroys the todo
+     Given the todo list has item "Buy milk"
+     When I double-click the label for "Buy milk"
+diff --git a/js/app.js b/js/app.js
+index 6d58048..2ebf6f8 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -285,6 +285,8 @@
+     }
+   });
+ 
++  // PERTURBATION: blur handler re-enters render() when DOM removal fires a blur event
++  // must survive: Empty edit destroys the todo, Empty edit via blur destroys the todo, Whitespace-only edit destroys the todo
+   todoList.addEventListener('blur', function (e) {
+     var editInput = e.target.closest('.edit');
+     if (!editInput) return;
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..0ca33a3
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,20 @@
++{
++  "watches": [
++    {
++      "name": "watch-editing-controls",
++      "scenarios": [
++        "features/todos.feature:Editing hides the label control",
++        "features/todos.feature:Editing hides the toggle control"
++      ]
++    },
++    {
++      "name": "watch-empty-edit-blur",
++      "scenarios": [
++        "features/todos.feature:Empty edit destroys the todo",
++        "features/todos.feature:Empty edit via blur destroys the todo",
++        "features/todos.feature:Whitespace-only edit destroys the todo"
++      ],
++      "perturbation": "js/app.js:288"
++    }
++  ]
++}
+\ No newline at end of file

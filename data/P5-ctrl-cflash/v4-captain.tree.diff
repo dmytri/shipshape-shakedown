@@ -1,0 +1,82 @@
+diff --git a/features/entry-point.feature b/features/entry-point.feature
+index 8ffec1c..06b5e03 100644
+--- a/features/entry-point.feature
++++ b/features/entry-point.feature
+@@ -23,3 +23,13 @@ Feature: Browser entry point
+       And the file contains an unordered list with class "todo-list"
+       And the file contains a footer with class "footer"
+       And the file contains a span with class "todo-count"
++
++    Scenario: index.html links to the todomvc-common CSS
++      Given the file "index.html" exists at the project root
++      When I read the contents of "index.html"
++      Then the file contains a stylesheet link with href "node_modules/todomvc-common/base.css"
++
++    Scenario: index.html links to the todomvc-app-css CSS
++      Given the file "index.html" exists at the project root
++      When I read the contents of "index.html"
++      Then the file contains a stylesheet link with href "node_modules/todomvc-app-css/index.css"
+diff --git a/features/todos.feature b/features/todos.feature
+index 2ec8833..63a7b84 100644
+--- a/features/todos.feature
++++ b/features/todos.feature
+@@ -89,6 +89,12 @@ Feature: TodoMVC todos
+       And the edit input contains the item title
+       And the edit input is focused
+ 
++    Scenario: Hide other controls when editing
++      Given the todo list contains 1 item
++      When I double-click the item label
++      Then the toggle control is not visible
++      And the destroy button is not visible
++
+     Scenario: Save edit on Enter
+       Given the item is in editing mode
+       When I type "Buy groceries" in the edit input
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..d2f479c
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,40 @@
++{
++  "watch1": {
++    "description": "Fix initial load visibility: hide main and footer when no todos exist",
++    "scenarios": [
++      "features/todos.feature:Hide main and footer when no todos exist",
++      "features/todos.feature:Show main and footer when todos exist"
++    ]
++  },
++  "watch2": {
++    "description": "Add todomvc CSS stylesheet links to index.html for styling and editing controls",
++    "scenarios": [
++      "features/entry-point.feature:index.html links to the todomvc-common CSS",
++      "features/entry-point.feature:index.html links to the todomvc-app-css CSS"
++    ]
++  },
++  "watch3": {
++    "description": "Fix blur event conflict when destroying an item via empty edit text",
++    "scenarios": [
++      "features/todos.feature:Destroy todo when edit text is empty",
++      "features/todos.feature:Destroy todo when edit text is only whitespace"
++    ]
++  },
++  "watch4": {
++    "description": "Hide toggle and destroy controls when editing an item",
++    "scenarios": [
++      "features/todos.feature:Hide other controls when editing"
++    ]
++  },
++  "watch5": {
++    "description": "Implement routing and filtering: hashchange listener, list filtering, and route-based visibility",
++    "scenarios": [
++      "features/todos.feature:Show all todos by default",
++      "features/todos.feature:Filter to active todos",
++      "features/todos.feature:Filter to completed todos",
++      "features/todos.feature:Hide item when it no longer matches the active filter",
++      "features/todos.feature:Hide item when it no longer matches the completed filter",
++      "features/todos.feature:Persist active filter across reloads"
++    ]
++  }
++}
+\ No newline at end of file

@@ -1,0 +1,140 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 5a54bbb..7009a1a 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -26,15 +26,25 @@ Eleven feature files under `features/`:
+ | `clear-completed.feature` | 3 |
+ | `persistence.feature` | 5 |
+ | `routing.feature` | 6 |
+-| `dom-stability.feature` | 5 |
++| `dom-stability.feature` | 8 |
+ | `editing-controls.feature` | 6 |
+ 
+-**Total: 60 scenarios across 11 watches.**
++**Total: 62 scenarios across 11 watches.**
+ 
+ ## Watchbill
+ 
+ `watchbill.json` written with 11 watches, one per feature file. Ready for QM dispatch when the next role takes the deck.
+ 
++## Acceptance suite defects (2025-07-28)
++
++External Cypress acceptance suite reports two product defects the happy-dom harness does not reproduce:
++
++1. **Toggle checkbox visible during editing.** The `li.editing .view` CSS rule must hide the view container (and its toggle checkbox) when a todo is in editing mode. Requires `todomvc-app-css` and `todomvc-common` as dependencies. Pinned by `dom-stability.feature:65` and `editing-controls.feature` scenarios.
++
++2. **removeChild error on empty-edit removal.** When the user saves an empty edit via Enter, `render()` removes the `<li>`. The blur event then fires on the detached edit input, calling `editTodo` again, and `render()` attempts `removeChild` on the already-detached node. The render function must guard `removeChild` with a `parentNode` check. Pinned by new `@conformance` scenario `dom-stability.feature:74`.
++
++Both scenarios fail on current code, confirming the specs pin the defects.
++
+ ## Open questions
+ 
+ - No `index.html` or `js/app.js` exist yet — Crew will author them.
+diff --git a/features/dom-stability.feature b/features/dom-stability.feature
+index bd7714c..5352190 100644
+--- a/features/dom-stability.feature
++++ b/features/dom-stability.feature
+@@ -67,3 +67,9 @@ Feature: DOM node stability
+       When I double-click the label of the todo "Buy milk"
+       Then the todo "Buy milk" is in editing mode
+       And the toggle checkbox of the todo "Buy milk" is not visible
++
++  Rule: Empty-edit removal must guard against detached DOM nodes
++
++    @conformance
++    Scenario: The render function checks parentNode before removeChild
++      Then the file "js/app.js" contains the rule ".parentNode"
+diff --git a/js/app.js b/js/app.js
+index 2d66168..a19a0e9 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -47,26 +47,59 @@
+     var todos = loadTodos();
+     var filtered = getFilteredTodos(todos);
+ 
+-    // Clear list
+-    todoList.innerHTML = '';
++    // Build map of existing DOM nodes by data-id
++    var existingNodes = {};
++    var existingLis = todoList.querySelectorAll('li');
++    for (var i = 0; i < existingLis.length; i++) {
++      var existingLi = existingLis[i];
++      existingNodes[existingLi.getAttribute('data-id')] = existingLi;
++    }
++
++    // Track which data-ids are needed
++    var neededIds = {};
+ 
+-    // Render each todo
++    // Render each todo, reusing existing DOM nodes
+     filtered.forEach(function (todo) {
+-      var li = document.createElement('li');
+-      li.setAttribute('data-id', todo.id);
+-      if (todo.completed) li.classList.add('completed');
+-
+-      li.innerHTML =
+-        '<div class="view">' +
+-          '<input class="toggle" type="checkbox"' + (todo.completed ? ' checked' : '') + '>' +
+-          '<label>' + escapeHtml(todo.title) + '</label>' +
+-          '<button class="destroy"></button>' +
+-        '</div>' +
+-        '<input class="edit" value="' + escapeHtml(todo.title) + '">';
+-
+-      todoList.appendChild(li);
++      var id = String(todo.id);
++      neededIds[id] = true;
++      var li = existingNodes[id];
++
++      if (li) {
++        // Update existing node in place
++        if (todo.completed) {
++          li.classList.add('completed');
++        } else {
++          li.classList.remove('completed');
++        }
++        var toggle = li.querySelector('.toggle');
++        if (toggle) toggle.checked = todo.completed;
++        var label = li.querySelector('.view label');
++        if (label) label.textContent = todo.title;
++        var editInput = li.querySelector('.edit');
++        if (editInput) editInput.value = todo.title;
++      } else {
++        // Create new node
++        li = document.createElement('li');
++        li.setAttribute('data-id', id);
++        if (todo.completed) li.classList.add('completed');
++        li.innerHTML =
++          '<div class="view">' +
++            '<input class="toggle" type="checkbox"' + (todo.completed ? ' checked' : '') + '>' +
++            '<label>' + escapeHtml(todo.title) + '</label>' +
++            '<button class="destroy"></button>' +
++          '</div>' +
++          '<input class="edit" value="' + escapeHtml(todo.title) + '">';
++        todoList.appendChild(li);
++      }
+     });
+ 
++    // Remove nodes for todos not in filtered list
++    for (var existingId in existingNodes) {
++      if (!neededIds[existingId]) {
++        todoList.removeChild(existingNodes[existingId]);
++      }
++    }
++
+     // Counter
+     var activeCount = todos.filter(function (t) { return !t.completed; }).length;
+     var pluralized = activeCount === 1 ? 'item' : 'items';
+diff --git a/watchbill.json b/watchbill.json
+index 23e8eaf..4d796fc 100644
+--- a/watchbill.json
++++ b/watchbill.json
+@@ -102,7 +102,8 @@
+         "features/dom-stability.feature:Uncompleting a todo preserves other DOM nodes",
+         "features/dom-stability.feature:Saving an edit preserves other DOM nodes",
+         "features/dom-stability.feature:Destroying a todo preserves other DOM nodes",
+-        "features/dom-stability.feature:The toggle checkbox is hidden when a todo is being edited"
++        "features/dom-stability.feature:The toggle checkbox is hidden when a todo is being edited",
++        "features/dom-stability.feature:The render function checks parentNode before removeChild"
+       ]
+     },
+     {

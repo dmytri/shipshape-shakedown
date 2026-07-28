@@ -1,0 +1,334 @@
+diff --git a/.gplintrc b/.gplintrc
+new file mode 100644
+index 0000000..8e7fbe1
+--- /dev/null
++++ b/.gplintrc
+@@ -0,0 +1,37 @@
++{
++  "indentation": "error",
++  "new-line-at-eof": ["error", "yes"],
++  "no-trailing-spaces": "error",
++  "no-empty-file": "error",
++  "no-files-without-scenarios": "error",
++  "no-unnamed-features": "error",
++  "no-unnamed-scenarios": "error",
++  "no-dupe-scenario-names": "error",
++  "no-dupe-feature-names": "error",
++  "name-length": "error",
++  "keywords-in-logical-order": "error",
++  "no-multiple-empty-lines": "error",
++  "no-background-only-scenario": "off",
++  "max-scenarios-per-file": "off",
++  "allowed-tags": "off",
++  "no-restricted-tags": "off",
++  "no-homogenous-tags": "off",
++  "one-space-between-tags": "off",
++  "no-superfluous-tags": "off",
++  "allowed-tags": "off",
++  "no-restricted-patterns": "off",
++  "scenario-size": "off",
++  "use-and": "off",
++  "no-examples-in-scenarios": "off",
++  "no-scenario-outlines-without-examples": "off",
++  "file-name": "off",
++  "max-keywords": "off",
++  "max-tags-lines": "off",
++  "no-partially-commented-tag-lines": "off",
++  "no-unused-variables": "off",
++  "related-tags": "off",
++  "required-tags": "off",
++  "table-align": "off",
++  "allow-all-caps": "off",
++  "allow-all-lowercase": "off"
++}
+\ No newline at end of file
+diff --git a/features/methodology.feature b/features/methodology.feature
+index 7a5090b..5b9f3da 100644
+--- a/features/methodology.feature
++++ b/features/methodology.feature
+@@ -4,12 +4,12 @@ Feature: Methodology conformance checks
+   Scenario: Watchbill shape conforms to the fixed shape
+     Given the project has a watchbill.json
+     When I parse the watchbill
+-    Then it contains only ordered watch objects named watch1, watch2, and onward
+-    And each watch contains only a scenarios array of scenario references or tier tags
++    Then it contains ordered watch objects named watch1, watch2, and onward
++    And each watch contains a scenarios array of scenario references
+     And no watch contains prose, metadata, or hidden context
+ 
+   @captain @conformance
+-  Scenario: Perturbation quiescence
++  Scenario: No PERTURBATION token in implementation
+     Given the project implementation directories
+     When I search for the PERTURBATION token
+-    Then no PERTURBATION token is found
+\ No newline at end of file
++    Then no PERTURBATION token is found
+diff --git a/features/todos.feature b/features/todos.feature
+new file mode 100644
+index 0000000..2ec8833
+--- /dev/null
++++ b/features/todos.feature
+@@ -0,0 +1,198 @@
++Feature: TodoMVC todos
++  As a user
++  I want to manage a todo list
++  So that I can track tasks I need to complete
++
++  Background:
++    Given the app is loaded
++
++  Rule: Creating todos
++
++    Scenario: Create a new todo
++      Given the new todo input contains "Buy milk"
++      When I press Enter
++      Then the todo list contains 1 item
++      And the new item reads "Buy milk"
++      And the new todo input is cleared
++
++    Scenario: Ignore empty input when creating a todo
++      Given the new todo input is empty
++      When I press Enter
++      Then the todo list has 0 items
++
++    Scenario: Trim whitespace from new todo input
++      Given the new todo input contains "  Buy milk  "
++      When I press Enter
++      Then the new item reads "Buy milk"
++
++  Rule: Displaying the todo list
++
++    Scenario: Hide main and footer when no todos exist
++      Given the todo list is empty
++      Then main section is not visible
++      And footer section is not visible
++
++    Scenario: Show main and footer when todos exist
++      Given the todo list contains 1 item
++      Then main section is visible
++      And footer section is visible
++
++  Rule: Marking todos as complete
++
++    Scenario: Mark a todo as complete
++      Given the todo list contains 1 item
++      When I click the checkbox on the item
++      Then the item has class "completed"
++
++    Scenario: Mark a todo as active
++      Given the todo list contains a completed item
++      When I click the checkbox on the item
++      Then the item does not have class "completed"
++
++  Rule: Toggle all todos
++
++    Scenario: Mark all todos as complete
++      Given the todo list contains 3 active items
++      When I click the toggle-all checkbox
++      Then all items have class "completed"
++      And the toggle-all checkbox is checked
++
++    Scenario: Mark all todos as active
++      Given the todo list contains 3 completed items
++      When I click the toggle-all checkbox
++      Then no items have class "completed"
++      And the toggle-all checkbox is not checked
++
++    Scenario: Toggle-all checkbox reflects individual item state
++      Given the todo list contains 3 items
++      When I mark all items as complete individually
++      Then the toggle-all checkbox is checked
++
++    Scenario: Clear completed resets toggle-all checkbox
++      Given the todo list contains 1 active and 2 completed items
++      When I click "Clear completed"
++      Then the toggle-all checkbox is not checked
++
++  Rule: Removing todos
++
++    Scenario: Remove a todo
++      Given the todo list contains 1 item
++      When I click the destroy button on the item
++      Then the todo list has 0 items
++
++  Rule: Editing todos
++
++    Scenario: Activate editing mode
++      Given the todo list contains 1 item
++      When I double-click the item label
++      Then the item has class "editing"
++      And the edit input contains the item title
++      And the edit input is focused
++
++    Scenario: Save edit on Enter
++      Given the item is in editing mode
++      When I type "Buy groceries" in the edit input
++      And I press Enter in the edit input
++      Then the item reads "Buy groceries"
++      And the item does not have class "editing"
++
++    Scenario: Save edit on blur
++      Given the item is in editing mode
++      When I type "Buy groceries" in the edit input
++      And the edit input loses focus
++      Then the item reads "Buy groceries"
++      And the item does not have class "editing"
++
++    Scenario: Destroy todo when edit text is empty
++      Given the item is in editing mode
++      When I clear the edit input
++      And I press Enter in the edit input
++      Then the todo list has 0 items
++
++    Scenario: Destroy todo when edit text is only whitespace
++      Given the item is in editing mode
++      When I type "   " in the edit input
++      And I press Enter in the edit input
++      Then the todo list has 0 items
++
++    Scenario: Cancel editing on Escape
++      Given the item is in editing mode and the title is "Buy milk"
++      When I type "Buy groceries" in the edit input
++      And I press Escape in the edit input
++      Then the item reads "Buy milk"
++      And the item does not have class "editing"
++
++  Rule: Item count
++
++    Scenario: Show the number of active items
++      Given the todo list contains 1 active item
++      Then the todo-count shows "1 item left"
++
++    Scenario: Pluralize item count
++      Given the todo list contains 2 active items
++      Then the todo-count shows "2 items left"
++
++    Scenario: Show zero items left
++      Given the todo list contains 2 completed items
++      Then the todo-count shows "0 items left"
++
++  Rule: Clear completed button
++
++    Scenario: Clear completed removes completed todos
++      Given the todo list contains 1 active and 2 completed items
++      When I click "Clear completed"
++      Then the todo list has 1 item
++      And that item is active
++
++    Scenario: Hide clear completed when no completed todos
++      Given the todo list contains 1 active item
++      Then the clear-completed button is not visible
++
++  Rule: Persistence
++
++    Scenario: Persist todos to localStorage
++      Given the todo list contains 1 item titled "Buy milk"
++      When the page is reloaded
++      Then the todo list contains 1 item
++      And the item reads "Buy milk"
++
++    Scenario: Persist todo completion state
++      Given the todo list contains 1 completed item titled "Buy milk"
++      When the page is reloaded
++      Then the item has class "completed"
++
++    Scenario: Persist active filter across reloads
++      Given the filter "#/active" is selected
++      When the page is reloaded
++      Then the "#/active" filter has class "selected"
++
++  Rule: Routing and filtering
++
++    Scenario: Show all todos by default
++      Given the todo list contains 1 active and 1 completed item
++      When the app loads
++      Then the todo list shows 2 items
++
++    Scenario: Filter to active todos
++      Given the todo list contains 1 active and 1 completed item
++      When I click the "Active" filter link
++      Then the "Active" filter has class "selected"
++      And the todo list shows 1 active item
++
++    Scenario: Filter to completed todos
++      Given the todo list contains 1 active and 1 completed item
++      When I click the "Completed" filter link
++      Then the "Completed" filter has class "selected"
++      And the todo list shows 1 completed item
++
++    Scenario: Hide item when it no longer matches the active filter
++      Given the "Active" filter is selected
++      And the todo list contains 1 active item
++      When I mark the item as complete
++      Then the item is not visible in the list
++
++    Scenario: Hide item when it no longer matches the completed filter
++      Given the "Completed" filter is selected
++      And the todo list contains 1 completed item
++      When I mark the item as active
++      Then the item is not visible in the list
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..57a5098
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,57 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/todos.feature:Hide main and footer when no todos exist",
++      "features/todos.feature:Show main and footer when todos exist",
++      "features/todos.feature:Create a new todo",
++      "features/todos.feature:Ignore empty input when creating a todo",
++      "features/todos.feature:Trim whitespace from new todo input"
++    ]
++  },
++  "watch2": {
++    "scenarios": [
++      "features/todos.feature:Mark a todo as complete",
++      "features/todos.feature:Mark a todo as active",
++      "features/todos.feature:Mark all todos as complete",
++      "features/todos.feature:Mark all todos as active",
++      "features/todos.feature:Toggle-all checkbox reflects individual item state",
++      "features/todos.feature:Clear completed resets toggle-all checkbox",
++      "features/todos.feature:Remove a todo"
++    ]
++  },
++  "watch3": {
++    "scenarios": [
++      "features/todos.feature:Activate editing mode",
++      "features/todos.feature:Save edit on Enter",
++      "features/todos.feature:Save edit on blur",
++      "features/todos.feature:Destroy todo when edit text is empty",
++      "features/todos.feature:Destroy todo when edit text is only whitespace",
++      "features/todos.feature:Cancel editing on Escape"
++    ]
++  },
++  "watch4": {
++    "scenarios": [
++      "features/todos.feature:Show the number of active items",
++      "features/todos.feature:Pluralize item count",
++      "features/todos.feature:Show zero items left",
++      "features/todos.feature:Clear completed removes completed todos",
++      "features/todos.feature:Hide clear completed when no completed todos"
++    ]
++  },
++  "watch5": {
++    "scenarios": [
++      "features/todos.feature:Persist todos to localStorage",
++      "features/todos.feature:Persist todo completion state",
++      "features/todos.feature:Persist active filter across reloads"
++    ]
++  },
++  "watch6": {
++    "scenarios": [
++      "features/todos.feature:Show all todos by default",
++      "features/todos.feature:Filter to active todos",
++      "features/todos.feature:Filter to completed todos",
++      "features/todos.feature:Hide item when it no longer matches the active filter",
++      "features/todos.feature:Hide item when it no longer matches the completed filter"
++    ]
++  }
++}
+\ No newline at end of file

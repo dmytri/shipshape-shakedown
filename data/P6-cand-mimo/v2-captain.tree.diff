@@ -1,0 +1,51 @@
+diff --git a/features/rendering.feature b/features/rendering.feature
+new file mode 100644
+index 0000000..a38e303
+--- /dev/null
++++ b/features/rendering.feature
+@@ -0,0 +1,16 @@
++Feature: DOM identity preservation
++  As a user interacting with the todo list
++  I want the app to update existing elements in place when toggling state
++  So that the list remains stable and does not flicker or lose focus
++
++  Background:
++    Given the app is loaded with no existing todos
++
++  Rule: Toggling a todo preserves its DOM node identity
++
++    Scenario: Toggling a todo updates the existing element in place
++      Given the user has added a todo "Buy milk"
++      And the user has added a todo "Walk dog"
++      And the second todo DOM node is captured
++      When the user toggles the first todo
++      Then the second todo DOM node is unchanged
+diff --git a/js/app.js b/js/app.js
+index fb5dc60..322b919 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -47,6 +47,7 @@
+ 		var activeCount = todos.filter(function (t) { return !t.completed; }).length;
+ 		var completedCount = todos.filter(function (t) { return t.completed; }).length;
+ 
++		// PERTURBATION
+ 		// Clear list
+ 		todoList.innerHTML = '';
+ 
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..e6c4980
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,11 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/rendering.feature:Toggling a todo updates the existing element in place",
++      "features/todos.feature:Mark all as complete toggles all todos",
++      "features/todos.feature:Mark all as complete unchecks when all are completed",
++      "features/todos.feature:Completing a todo",
++      "features/todos.feature:Uncompleting a todo"
++    ]
++  }
++}

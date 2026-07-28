@@ -1,0 +1,677 @@
+diff --git a/.gplintrc b/.gplintrc
+new file mode 100644
+index 0000000..db4008d
+--- /dev/null
++++ b/.gplintrc
+@@ -0,0 +1,13 @@
++{
++  "allowedTags": [
++    "@logic",
++    "@sandbox",
++    "@captain",
++    "@shipwright",
++    "@conformance",
++    "@contract"
++  ],
++  "tagPrefixRequired": false,
++  "maxStepsPerScenario": 15,
++  "scenarioTitleMaxLength": 80
++}
+diff --git a/.rgignore b/.rgignore
+new file mode 100644
+index 0000000..ba910ba
+--- /dev/null
++++ b/.rgignore
+@@ -0,0 +1 @@
++CAPTAIN.md
+diff --git a/.shipshape/plank-join.js b/.shipshape/plank-join.js
+new file mode 100644
+index 0000000..0fb9df7
+--- /dev/null
++++ b/.shipshape/plank-join.js
+@@ -0,0 +1,205 @@
++#!/usr/bin/env node
++/**
++ * plank-join.js — checks plank conformance.
++ *
++ * 1. Every @planks string is a current step-definition pattern.
++ * 2. Every @planks-provisional reference names a scenario that still carries @captain.
++ * 3. Every action step (When) whose pattern exercises production code has a matching
++ *    plank or provisional plank on some production seam.
++ *
++ * Given/Then steps and verification-only steps are excluded: Given sets up state,
++ * Then asserts, and neither typically planked seams. Verification-only steps read
++ * source files or scan directories without exercising app behaviour.
++ *
++ * Exit 0 on clean, exit 1 on violations.
++ */
++const fs = require('node:fs');
++const path = require('node:path');
++
++const ROOT = path.resolve(__dirname, '..');
++const IMPL_DIRS = ['js'];
++const SPECS_DIR = path.join(ROOT, 'features');
++const STEPS_DIR = path.join(SPECS_DIR, 'step_definitions');
++
++// Step definitions that do NOT planked seams:
++// - Verification-only (read source, scan directories, inspect files)
++// - Given-only steps (set up state, don't exercise production seams)
++// - Then-only steps (assert DOM state, don't exercise production seams)
++// These are excluded from the UNPLANKED_STEP check.
++const NON_SEAM_PATTERNS = new Set([
++  // Verification-only
++  'the app source {string}',
++  'the edit event handling code is inspected',
++  'the blur handler for edit inputs contains a guard that prevents calling editTodo when the keydown handler has already processed the same edit action',
++  'the file {string} is read',
++  'the implementation directories are scanned for {string}',
++  'every top-level key matches the pattern {string}',
++  'each watch contains a {string} array',
++  'each scenario reference matches the repo-root-relative {string} pattern',
++  'no standing {string} token exists in committed production code',
++  // Given-only (state setup)
++  'the app is loaded with no existing todos',
++  'the app is reloaded',
++  // Then-only (assertions)
++  'a todo {string} appears in the list',
++  'the new-todo input is empty',
++  'the todo count shows {string}',
++  'no todos exist',
++  'the todo list shows {int} todos',
++  'the first todo is marked completed',
++  'the first todo is not marked completed',
++  'the todo list shows {int} todo',
++  'the remaining todo is {string}',
++  'the {string} button is hidden',
++  'all todos are marked completed',
++  'no todos are marked completed',
++  'the toggle-all checkbox is not checked',
++  'the main section is hidden',
++  'the footer is hidden',
++  'the main section is visible',
++  'the footer is visible',
++  'the {string} filter is selected',
++  'the new-todo input is focused',
++  // Given setup steps
++  'the second todo DOM node is captured',
++  // Then assertion steps
++  'the second todo DOM node is unchanged',
++]);
++
++// Steps that ARE action steps (exercise production seams) and should planked.
++// This is the complement: When steps not in NON_SEAM_PATTERNS.
++// We classify by reading the step definitions and checking the keyword context.
++
++// --- Collect step-definition patterns with their keyword ---
++function collectStepDefinitions() {
++  const steps = []; // { pattern, keyword, file, line }
++  const files = fs.readdirSync(STEPS_DIR).filter(f => f.endsWith('.js'));
++  for (const file of files) {
++    const content = fs.readFileSync(path.join(STEPS_DIR, file), 'utf8');
++    const lines = content.split('\n');
++    for (let i = 0; i < lines.length; i++) {
++      const m = lines[i].match(/(Given|When|Then)\(\s*['"`]([^'"`]+)['"`]/);
++      if (m) {
++        steps.push({ keyword: m[1], pattern: m[2], file, line: i + 1 });
++      }
++    }
++  }
++  return steps;
++}
++
++// --- Collect @planks and @planks-provisional from implementation ---
++function collectPlanks() {
++  const planks = [];
++  const provisionals = [];
++  const files = [];
++  for (const dir of IMPL_DIRS) {
++    const dirPath = path.join(ROOT, dir);
++    if (!fs.existsSync(dirPath)) continue;
++    const entries = fs.readdirSync(dirPath, { recursive: true });
++    for (const entry of entries) {
++      const fp = path.join(dirPath, entry);
++      if (!fs.statSync(fp).isFile()) continue;
++      if (!fp.endsWith('.js') && !fp.endsWith('.ts')) continue;
++      files.push(fp);
++    }
++  }
++  for (const file of files) {
++    const lines = fs.readFileSync(file, 'utf8').split('\n');
++    for (let i = 0; i < lines.length; i++) {
++      const line = lines[i];
++      const plankMatch = line.match(/@planks\(\s*["']([^"']+)["']\s*\)/);
++      if (plankMatch) {
++        planks.push({ file: path.relative(ROOT, file), line: i + 1, pattern: plankMatch[1] });
++      }
++      const provMatch = line.match(/@planks-provisional\(\s*["']([^"']+)["']\s*\)/);
++      if (provMatch) {
++        provisionals.push({ file: path.relative(ROOT, file), line: i + 1, ref: provMatch[1] });
++      }
++    }
++  }
++  return { planks, provisionals };
++}
++
++// --- Collect @captain scenarios from specs ---
++function collectCaptainScenarios() {
++  const scenarios = [];
++  const files = fs.readdirSync(SPECS_DIR).filter(f => f.endsWith('.feature'));
++  for (const file of files) {
++    const content = fs.readFileSync(path.join(SPECS_DIR, file), 'utf8');
++    const featureName = file.replace('.feature', '');
++    const lines = content.split('\n');
++    let scenarioName = null;
++    let hasCaptain = false;
++    for (const line of lines) {
++      const scenarioMatch = line.match(/^\s*Scenario(?:\s+Outline)?:\s*(.+)/);
++      if (scenarioMatch) {
++        if (scenarioName && hasCaptain) {
++          scenarios.push({ feature: featureName, name: scenarioName });
++        }
++        scenarioName = scenarioMatch[1].trim();
++        hasCaptain = false;
++      }
++      if (line.includes('@captain')) {
++        hasCaptain = true;
++      }
++    }
++    if (scenarioName && hasCaptain) {
++      scenarios.push({ feature: featureName, name: scenarioName });
++    }
++  }
++  return scenarios;
++}
++
++// --- Main check ---
++const stepDefs = collectStepDefinitions();
++const { planks, provisionals } = collectPlanks();
++const captainScenarios = collectCaptainScenarios();
++const violations = [];
++
++// Check 1: Every @planks pattern matches a step-definition pattern
++const stepPatterns = stepDefs.map(s => s.pattern);
++for (const plank of planks) {
++  if (!stepPatterns.includes(plank.pattern)) {
++    violations.push(`STALE_PLANK: ${plank.file}:${plank.line} @planks("${plank.pattern}") matches no step-definition pattern`);
++  }
++}
++
++// Check 2: Every @planks-provisional ref names a @captain scenario
++for (const prov of provisionals) {
++  const colonIdx = prov.ref.indexOf(':');
++  if (colonIdx === -1) {
++    violations.push(`MALFORMED_PROVISIONAL: ${prov.file}:${prov.line} @planks-provisional("${prov.ref}") — expected "feature.feature:Scenario Name"`);
++    continue;
++  }
++  const featureFile = prov.ref.substring(0, colonIdx);
++  const scenarioName = prov.ref.substring(colonIdx + 1);
++  const featureStem = path.basename(featureFile, '.feature');
++  const found = captainScenarios.find(s => s.feature === featureStem && s.name === scenarioName);
++  if (!found) {
++    violations.push(`STALE_PROVISIONAL: ${prov.file}:${prov.line} @planks-provisional("${prov.ref}") — scenario not found or not @captain`);
++  }
++}
++
++// Check 3: Every When step (action) whose pattern exercises production code has a plank
++const allPlankPatterns = new Set(planks.map(p => p.pattern));
++const whenSteps = stepDefs.filter(s => s.keyword === 'When');
++const uncoveredWhenSteps = whenSteps.filter(s => {
++  if (allPlankPatterns.has(s.pattern)) return false;
++  if (NON_SEAM_PATTERNS.has(s.pattern)) return false;
++  return true;
++});
++for (const step of uncoveredWhenSteps) {
++  violations.push(`UNPLANKED_ACTION: ${step.file}:${step.line} When pattern "${step.pattern}" has no matching @planks or @planks-provisional`);
++}
++
++// --- Report ---
++if (violations.length === 0) {
++  console.log('plank-join: clean — ' + planks.length + ' planks, ' + provisionals.length + ' provisionals, ' + stepDefs.length + ' step defs, ' + captainScenarios.length + ' @captain scenarios');
++  process.exit(0);
++} else {
++  console.error('plank-join: ' + violations.length + ' violation(s):');
++  for (const v of violations) {
++    console.error('  ' + v);
++  }
++  process.exit(1);
++}
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..41ad3fe
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,33 @@
++# Agent Instructions
++
++This project uses Shipshape, a context-isolated spec-driven workflow for coding agents.
++
++Agent opening this project: ensure Shipshape is installed, then load the `shipshape` skill (`shipshape:shipshape` under the plugin channel) and follow its routing before other work. Decide how to involve the human per your configured preferences.
++
++Tooling values such as stack, directories, and commands live in `RIGGING.md`.
++
++## Project summary
++
++TodoMVC app: vanilla JS, no preprocessors. Tests run via Cucumber with happy-dom for browser simulation. The harness loads the real `index.html` and `js/app.js` into a happy-dom window before every scenario.
++
++## Verification support
++
++`features/support/world.js` sets up the happy-dom window, restores localStorage across scenarios, dispatches lifecycle events, and routes hash navigation. Every scenario exercises the real production code; no mocks or fakes.
++
++## Key files
++
++- `js/app.js` — application logic (render, CRUD, routing, persistence)
++- `css/app.css` — application styles
++- `index.html` — page markup
++- `features/todos.feature` — core TodoMVC behaviour specs
++- `features/rendering.feature` — DOM identity preservation spec
++- `features/edit-conformance.feature` — edit handler guard conformance
++- `features/filter-routing.feature` — hash-based filter routing (@captain)
++- `features/persistence.feature` — localStorage persistence (@captain)
++- `features/methodology-conformance.feature` — methodology checks (@conformance)
++- `assets/app-spec.md` — TodoMVC application specification
++- `.shipshape/plank-join.js` — plank conformance checker
++
++## Known issues
++
++The edit handler has a browser-only double-fire defect: both the Enter keydown handler and the blur handler (capture phase) call `editTodo` and `render`. In a real browser, removing a focused `<li>` via `removeChild` fires `blur` synchronously, causing nested renders. The happy-dom harness does not reproduce this. See `features/edit-conformance.feature` for the conformance guard.
+diff --git a/RIGGING.md b/RIGGING.md
+index 6c6493e..c857c75 100644
+--- a/RIGGING.md
++++ b/RIGGING.md
+@@ -1,43 +1,62 @@
+ # Rigging
+ 
++Project tooling values for Shipshape roles. Values only, not procedure.
++Procedure lives in the skills. Every role reads this on open.
++
+ ## Stack
+ 
+ - language: JavaScript
+-- runner: cucumber-js
+-- browser: happy-dom
++- runtime: Node.js
++- packageManager: npm
+ 
+ ## Directories
+ 
+-- specs: features
++- implementation: js
++- implementation: css
+ - implementation: .
++- specs: features
++- verification: features/step_definitions
+ - verification: features/support
++- assets: assets
+ 
+ ## Methods
+ 
+-- prove: `npx cucumber-js --tags "not @captain and not @shipwright" ${SS_SCENARIO}`
+-- verify: `npx cucumber-js --tags "not @captain and not @shipwright" ${SS_SCENARIO} --format summary`
+-- sweep: `npx cucumber-js --tags "${SS_TIER}" --format summary`
+-- plank-join: `npx cucumber-js --dry-run --tags "not @captain and not @shipwright" --format usage`
+-- discovery: `npx cucumber-js --dry-run --tags "not @captain and not @shipwright" --format snippets`
+-- hygiene: `echo "hygiene: no tooling configured"`
+-- static: `echo "static: no checks configured"`
+-- regression: `npx cucumber-js --tags "not @captain and not @shipwright" --format summary`
+-- condemnation: `echo "condemnation: none"`
+-- dead-code: `echo "dead-code: none"`
+-- spec-lint: `echo "spec-lint: none"`
+-- install: `npm install ${SS_DEPENDENCY}`
+-- ship: `echo "ship: none"`
+-- ship-verify: `echo "ship-verify: none"`
++- prove: `SS_SCENARIO="{scenario}" npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js "${SS_SCENARIO%%:*}" --name "^${SS_SCENARIO#*:}$" --tags "not @captain and not @shipwright"' --label prove --timeout 600`
++- verify: `SS_SCENARIO="{scenario}" npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js "${SS_SCENARIO%%:*}" --name "^${SS_SCENARIO#*:}$" --tags "not @captain and not @shipwright"' --label prove --timeout 600 --run 'node .shipshape/plank-join.js' --label plank-join --timeout 120`
++- sweep: `npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js --tags "not @captain and not @shipwright"' --label sweep --timeout 900`
++- plank-join: `npx @dk/yoink --max-bytes 200000 --run 'node .shipshape/plank-join.js' --label plank-join --timeout 120`
++- hygiene: `npx @dk/yoink --max-bytes 200000 --run 'node .shipshape/plank-join.js' --label plank-join --timeout 120 --run 'npx cucumber-js --tags "not @captain and not @shipwright"' --label sweep --timeout 900`
++- static: `npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js --dry-run --tags "not @captain and not @shipwright"' --label discovery --timeout 300 --run 'node .shipshape/plank-join.js' --label plank-join --timeout 120`
++- discovery: `npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js --dry-run --tags "not @captain and not @shipwright"' --label discovery --timeout 300`
++- regression: `npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js --tags "not @captain and not @shipwright" --format summary' --label regression --timeout 900`
++- condemnation: `SS_SCENARIO="{scenario}" npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js "${SS_SCENARIO%%:*}" --name "^${SS_SCENARIO#*:}$" --tags "not @captain and not @shipwright"' --label prove --timeout 600`
++- dead-code: none
++- spec-lint: `npx @dk/yoink --max-bytes 200000 --run 'npx gplint -c .gplintrc features/' --label gherkin-lint --timeout 300`
++- install: `SS_DEPENDENCY="{dependency}" npx @dk/yoink --max-bytes 200000 --run 'npm install --save-dev "$SS_DEPENDENCY"' --label install --timeout 600`
++- ship: none
++- ship-verify: none
+ 
+ ## Tiers
+ 
+ - tag: @logic
+-- sweep: `npx cucumber-js --tags "@logic and not @captain and not @shipwright" --format summary`
++- sweep: `npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js --tags "@logic and not @captain and not @shipwright" --format summary' --label sweep --timeout 900`
++- policy: default (no external credentials required)
++- weather: .shipshape/wake/weather.jsonl
++- runrecord: .shipshape/wake/runrecord.jsonl
+ 
+ ## Dependencies
+ 
+ - policy: locked
++- dependency: @cucumber/cucumber
++- dependency: happy-dom
+ 
+ ## Perturbation
+ 
+-- message: PERTURBATION
++- message: PERTURBATION: consider current durable context; remove when fixed
++- perturb: `throw new Error("PERTURBATION: consider current durable context; remove when fixed");`
++
++## Outbound
++
++- outbound: none
++- ship: none
++- ship-verify: none
+diff --git a/features/filter-routing.feature b/features/filter-routing.feature
+new file mode 100644
+index 0000000..c63160a
+--- /dev/null
++++ b/features/filter-routing.feature
+@@ -0,0 +1,33 @@
++Feature: Filter routing
++  As a user viewing a subset of todos
++  I want the URL hash to control which todos are visible
++  So that I can switch between All, Active, and Completed views
++
++  Background:
++    Given the app is loaded with no existing todos
++
++  @captain
++  Scenario: Hash change to active filter hides completed todos
++    Given the user has added a todo "Buy milk"
++    And the user has added a todo "Walk dog"
++    And the user toggles the first todo
++    When the user navigates to "#/active"
++    Then the todo list shows 1 todo
++    And the remaining todo is "Walk dog"
++
++  @captain
++  Scenario: Hash change to completed filter shows only completed todos
++    Given the user has added a todo "Buy milk"
++    And the user has added a todo "Walk dog"
++    And the user toggles the first todo
++    When the user navigates to "#/completed"
++    Then the todo list shows 1 todo
++    And the remaining todo is "Buy milk"
++
++  @captain
++  Scenario: Hash change to all filter shows all todos
++    Given the user has added a todo "Buy milk"
++    And the user has added a todo "Walk dog"
++    And the user toggles the first todo
++    When the user navigates to "#/"
++    Then the todo list shows 2 todos
+diff --git a/features/methodology-conformance.feature b/features/methodology-conformance.feature
+new file mode 100644
+index 0000000..cbbc53b
+--- /dev/null
++++ b/features/methodology-conformance.feature
+@@ -0,0 +1,19 @@
++Feature: Methodology conformance
++  As the Shipshape harness
++  I want executable checks that catch methodology violations
++  So that violations surface as failing targets rather than silent debt
++
++  Background:
++    Given the app is loaded with no existing todos
++
++  @conformance
++  Scenario: Watchbill shape conformance
++    Given the file "watchbill.json" is read
++    Then every top-level key matches the pattern "watch{int}"
++    And each watch contains a "scenarios" array
++    And each scenario reference matches the repo-root-relative "feature" pattern
++
++  @conformance
++  Scenario: Perturbation quiescence
++    Given the implementation directories are scanned for "PERTURBATION"
++    Then no standing "PERTURBATION" token exists in committed production code
+diff --git a/features/persistence.feature b/features/persistence.feature
+new file mode 100644
+index 0000000..a8af2af
+--- /dev/null
++++ b/features/persistence.feature
+@@ -0,0 +1,23 @@
++Feature: Todo persistence
++  As a user who adds todos
++  I want my todos to survive page reloads
++  So that I do not lose my work
++
++  Background:
++    Given the app is loaded with no existing todos
++
++  @captain
++  Scenario: Todos persist in localStorage across page reloads
++    Given the user has added a todo "Buy milk"
++    And the user has added a todo "Walk dog"
++    When the app is reloaded
++    Then the todo list shows 2 todos
++    And the remaining todo is "Buy milk"
++    And the remaining todo is "Walk dog"
++
++  @captain
++  Scenario: Completed state persists across page reloads
++    Given the user has added a todo "Buy milk"
++    And the user toggles the first todo
++    When the app is reloaded
++    Then the first todo is marked completed
+diff --git a/features/step_definitions/methodology.steps.js b/features/step_definitions/methodology.steps.js
+new file mode 100644
+index 0000000..cdadc41
+--- /dev/null
++++ b/features/step_definitions/methodology.steps.js
+@@ -0,0 +1,89 @@
++const fs = require('node:fs');
++const path = require('node:path');
++const { Given, When, Then } = require('@cucumber/cucumber');
++const { expect } = require('chai');
++
++const ROOT = path.resolve(__dirname, '..', '..');
++
++// --- Filter routing steps ---
++
++// Uses the existing step pattern from todos.steps.js:
++// When('the user navigates to {string}', ...)
++// The @captain scenarios in filter-routing.feature use this pattern.
++
++// --- Methodology conformance steps ---
++
++Given('the file {string} is read', function (filePath) {
++  const fullPath = path.resolve(ROOT, filePath);
++  try {
++    this.methodologyData = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
++    this.methodologyFileExists = true;
++  } catch (e) {
++    this.methodologyFileExists = false;
++    this.methodologyData = null;
++  }
++});
++
++Then('every top-level key matches the pattern {string}', function (pattern) {
++  if (!this.methodologyFileExists) {
++    // Absent watchbill conforms: absence is the deck at rest.
++    return;
++  }
++  const regex = new RegExp('^' + pattern.replace('{int}', '\\d+') + '$');
++  for (const key of Object.keys(this.methodologyData)) {
++    expect(key).to.match(regex);
++  }
++});
++
++Then('each watch contains a {string} array', function (key) {
++  if (!this.methodologyFileExists) return;
++  for (const [watchName, watch] of Object.entries(this.methodologyData)) {
++    expect(watch).to.have.property(key);
++    expect(watch[key]).to.be.an('array');
++  }
++});
++
++Then('each scenario reference matches the repo-root-relative {string} pattern', function (_pattern) {
++  if (!this.methodologyFileExists) return;
++  const refRegex = /^features\/.+\.feature:.+$/;
++  for (const [watchName, watch] of Object.entries(this.methodologyData)) {
++    for (const ref of watch.scenarios) {
++      // Tier tags are also valid (e.g., "@logic")
++      if (ref.startsWith('@')) continue;
++      expect(ref).to.match(refRegex);
++    }
++  }
++});
++
++// --- Perturbation quiescence steps ---
++
++Given('the implementation directories are scanned for {string}', function (token) {
++  this.perturbationToken = token;
++  this.perturbationHits = [];
++  const implDirs = ['js', 'css'];
++  for (const dir of implDirs) {
++    const dirPath = path.join(ROOT, dir);
++    if (!fs.existsSync(dirPath)) continue;
++    const files = fs.readdirSync(dirPath, { recursive: true });
++    for (const file of files) {
++      const filePath = path.join(dirPath, file);
++      if (!fs.statSync(filePath).isFile()) continue;
++      const content = fs.readFileSync(filePath, 'utf8');
++      if (content.includes(token)) {
++        this.perturbationHits.push(filePath);
++      }
++    }
++  }
++  // Also check index.html in root
++  const indexFile = path.join(ROOT, 'index.html');
++  if (fs.existsSync(indexFile)) {
++    const content = fs.readFileSync(indexFile, 'utf8');
++    if (content.includes(token)) {
++      this.perturbationHits.push(indexFile);
++    }
++  }
++});
++
++Then('no standing {string} token exists in committed production code', function (_token) {
++  expect(this.perturbationHits).to.deep.equal([]);
++});
+diff --git a/js/app.js b/js/app.js
+index 6ccb892..2455563 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -11,6 +11,9 @@
+ 	var clearCompletedBtn = document.querySelector('.clear-completed');
+ 	var filters = document.querySelectorAll('.filters li a');
+ 
++	/**
++	 * @planks-provisional("features/persistence.feature:Todos persist in localStorage across page reloads")
++	 */
+ 	function loadTodos() {
+ 		try {
+ 			return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+@@ -19,6 +22,9 @@
+ 		}
+ 	}
+ 
++	/**
++	 * @planks-provisional("features/persistence.feature:Todos persist in localStorage across page reloads")
++	 */
+ 	function saveTodos(todos) {
+ 		localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+ 	}
+@@ -150,6 +156,9 @@
+ 		});
+ 	}
+ 
++	/**
++	 * @planks("the user types {string} in the new-todo input and presses Enter")
++	 */
+ 	function addTodo(title) {
+ 		var trimmed = title.trim();
+ 		if (trimmed === '') return;
+@@ -159,6 +168,9 @@
+ 		render();
+ 	}
+ 
++	/**
++	 * @planks("the user toggles the first todo")
++	 */
+ 	function toggleTodo(id) {
+ 		var todos = loadTodos();
+ 		todos = todos.map(function (t) {
+@@ -171,6 +183,9 @@
+ 		render();
+ 	}
+ 
++	/**
++	 * @planks("the user deletes the first todo")
++	 */
+ 	function deleteTodo(id) {
+ 		var todos = loadTodos();
+ 		todos = todos.filter(function (t) { return t.id !== id; });
+@@ -178,6 +193,9 @@
+ 		render();
+ 	}
+ 
++	/**
++	 * @planks("the user changes the edit input to {string} and presses Enter")
++	 */
+ 	function editTodo(id, newTitle) {
+ 		var trimmed = newTitle.trim();
+ 		var todos = loadTodos();
+@@ -195,6 +213,9 @@
+ 		render();
+ 	}
+ 
++	/**
++	 * @planks("the user clicks the toggle-all checkbox")
++	 */
+ 	function toggleAll() {
+ 		var todos = loadTodos();
+ 		var allCompleted = todos.every(function (t) { return t.completed; });
+@@ -205,6 +226,9 @@
+ 		render();
+ 	}
+ 
++	/**
++	 * @planks("the user clicks \"Clear completed\"")
++	 */
+ 	function clearCompleted() {
+ 		var todos = loadTodos();
+ 		todos = todos.filter(function (t) { return !t.completed; });
+@@ -213,6 +237,10 @@
+ 	}
+ 
+ 	// Event: new todo input
++	/**
++	 * @planks("the user types {string} in the new-todo input and presses Enter")
++	 * @planks("the user presses Enter without typing")
++	 */
+ 	newTodoInput.addEventListener('keydown', function (e) {
+ 		if (e.key === 'Enter') {
+ 			addTodo(newTodoInput.value);
+@@ -257,6 +285,9 @@
+ 	});
+ 
+ 	// Double-click to edit
++	/**
++	 * @planks("the user double-clicks the first todo label")
++	 */
+ 	todoList.addEventListener('dblclick', function (e) {
+ 		if (e.target.tagName !== 'LABEL') return;
+ 		var li = e.target.closest('li');
+@@ -277,9 +308,11 @@
+ 			if (e.key === 'Enter') {
+ 				editHandledByKeydown = true;
+ 				li.classList.remove('editing');
++				/** @planks("the user changes the edit input to {string} and presses Enter") */
+ 				editTodo(id, e.target.value);
+ 			} else if (e.key === 'Escape') {
+ 				li.classList.remove('editing');
++				/** @planks("the user changes the edit input to {string} and presses Escape") */
+ 				render();
+ 			}
+ 		}
+@@ -321,6 +354,9 @@
+ 	});
+ 
+ 	// Hash change
++	/**
++	 * @planks("the user navigates to {string}")
++	 */
+ 	window.addEventListener('hashchange', function () {
+ 		render();
+ 	});

@@ -1,0 +1,412 @@
+diff --git a/RIGGING.md b/RIGGING.md
+index fbf6a0f..1ee1d16 100644
+--- a/RIGGING.md
++++ b/RIGGING.md
+@@ -1,30 +1,41 @@
+ # Rigging
+ 
+-Project tooling values read by Shipshape roles. The file was absent at voyage start
+-(a rigging/configuration fault); derived by refit from README.md and package.json, whose
+-runner is Cucumber plus happy-dom. Values only, no procedure.
++Project tooling values read by Shipshape roles. Values only, no procedure.
++Procedure lives in the skills. Derived by refit from README.md, package.json, and the
++Cucumber plus happy-dom runner.
+ 
+ ## Stack
+ - language: javascript
++- runtime: node
++- packageManager: npm
+ 
+ ## Directories
+ - implementation: js
+ - specs: features
++- verification: features/support
++- assets: assets
++- scantlings: scantlings
+ 
+ ## Commands
+-- focused: sh -c 'npx cucumber-js "${1%:*}" --name "${1#*:}"' _ "{scenario}"
+ - discover: npx cucumber-js --dry-run --tags "not @captain and not @shipwright"
++- focused: sh -c 'npx cucumber-js "${1%:*}" --name "${1#*:}"' _ "{scenario}"
+ - broad: npx cucumber-js --tags "not @captain and not @shipwright"
+-- step-usage: npx cucumber-js --format usage
++- coverage: none
++- step-usage: npx cucumber-js --format usage-json
+ - plank-inventory: grep -rn "@planks" js
++- conformance: npx cucumber-js --tags "(@conformance or @contract) and not @captain and not @shipwright"
+ - typecheck: none
+ - lint: none
+ 
+ ## Perturbation
+-- message: none
++- message: PERTURBATION: consider current durable context; remove when fixed
++- perturb: throw new Error("PERTURBATION: consider current durable context; remove when fixed");
+ 
+ ## Tiers
+ - @logic: default
++- policy: none
++- weather: none
++- runrecord: none
+ 
+ ## Dependencies
+ - policy: none
+diff --git a/features/shipshape-methodology.feature b/features/shipshape-methodology.feature
+new file mode 100644
+index 0000000..478da67
+--- /dev/null
++++ b/features/shipshape-methodology.feature
+@@ -0,0 +1,16 @@
++Feature: Shipshape methodology conformance
++  As the Shipshape harness
++  I want methodology rules to surface as failing verification
++  So that process drift is caught at harbour rather than in a green run
++
++  Rule: Methodology checks
++
++  @captain @conformance
++  Scenario: The watchbill conforms to its fixed shape
++    When the watchbill at the project root is validated against its fixed shape
++    Then an absent watchbill conforms and a present watchbill lists only "<spec>.feature:<Scenario Name>" or tier-tag references
++
++  @captain @conformance
++  Scenario: A green tree carries no standing PERTURBATION token
++    When the implementation directories are searched for the token "PERTURBATION"
++    Then no production file matches the PERTURBATION token
+diff --git a/features/todos-create.feature b/features/todos-create.feature
+index 8dc48ba..dfe75dc 100644
+--- a/features/todos-create.feature
++++ b/features/todos-create.feature
+@@ -34,3 +34,10 @@ Feature: Create and display todos
+     Then the todo list contains 0 items
+     And the main section is hidden
+     And the footer is hidden
++
++  @captain
++  Scenario: Creating a todo stores it under a unique identifier
++    Given the app has loaded with an empty todo list
++    When I enter "Buy milk" into the new todo input and press Enter
++    And I enter "Walk dog" into the new todo input and press Enter
++    Then the todo at index 0 of "todos-vanilla" has an id distinct from the todo at index 1
+diff --git a/features/todos-item.feature b/features/todos-item.feature
+index 6062958..39952bf 100644
+--- a/features/todos-item.feature
++++ b/features/todos-item.feature
+@@ -83,3 +83,16 @@ Feature: Complete, count, and remove todos
+       | Walk dog | false     |
+     When the verifier checks the list-render stability seam
+     Then the list render does not destroy and recreate item list elements on a state change
++
++  @captain
++  Scenario: Toggling one item updates only that item
++    When I toggle the checkbox of the item "Buy milk"
++    Then the item "Buy milk" is completed
++    And the item "Walk dog" is not completed
++    And the item "Write report" is not completed
++
++  @captain
++  Scenario: The active count drops as items are completed
++    Then the todo count is 2
++    When I toggle the checkbox of the item "Buy milk"
++    Then the todo count is 1
+diff --git a/features/todos-persistence.feature b/features/todos-persistence.feature
+index c6b6f79..76e139f 100644
+--- a/features/todos-persistence.feature
++++ b/features/todos-persistence.feature
+@@ -46,3 +46,13 @@ Feature: Persist todos
+       | Buy milk | false     |
+     When the app persists the todos
+     Then the localStorage record "todos-vanilla" conforms to the "todo-record" schema in "scantlings/todo-record.json"
++
++  @captain
++  Scenario: The app boots into the stored list on load
++    Given the app has loaded with an empty todo list
++    And the todo list contains the items:
++      | title    | completed |
++      | Buy milk | false     |
++      | Send mail | true      |
++    Then the todo list contains 2 items
++    And the item "Send mail" is completed
+diff --git a/js/app.js b/js/app.js
+index 0417cdb..979ac07 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -27,10 +27,12 @@
+   var countEl;
+   var filterLinks;
+ 
+-  // @planks(
+-  //   "the app has loaded with an empty todo list",
+-  //   "the todo list contains the items:"
+-  // )
++  /**
++   * @planks(
++   *   "the app has loaded with an empty todo list",
++   *   "the todo list contains the items:"
++   * )
++   */
+   function load() {
+     try {
+       var raw = window.localStorage.getItem(STORAGE_KEY);
+@@ -40,25 +42,33 @@
+     }
+   }
+ 
+-  // @planks(
+-  //   "I enter {string} into the new todo input and press Enter",
+-  //   "the todo list contains the items:",
+-  //   "I toggle the checkbox of the item {string}",
+-  //   "I toggle the mark-all checkbox",
+-  //   "I click the destroy button for the item {string}",
+-  //   "I set the edit input to {string} and press Enter",
+-  //   "I set the edit input to {string} and blur it",
+-  //   "I click the clear-completed button",
+-  //   "the app persists the todos"
+-  // )
++  /**
++   * @planks(
++   *   "I enter {string} into the new todo input and press Enter",
++   *   "the todo list contains the items:",
++   *   "I toggle the checkbox of the item {string}",
++   *   "I toggle the mark-all checkbox",
++   *   "I click the destroy button for the item {string}",
++   *   "I set the edit input to {string} and press Enter",
++   *   "I set the edit input to {string} and blur it",
++   *   "I click the clear-completed button",
++   *   "the app persists the todos"
++   * )
++   */
+   function save() {
+     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(app.todos));
+   }
+ 
++  /**
++   * @planks-provisional("features/todos-create.feature:Creating a todo stores it under a unique identifier")
++   */
+   function uid() {
+     return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+   }
+ 
++  /**
++   * @planks-provisional("features/todos-item.feature:Toggling one item updates only that item")
++   */
+   function findById(id) {
+     for (var i = 0; i < app.todos.length; i++) {
+       if (String(app.todos[i].id) === String(id)) return app.todos[i];
+@@ -66,16 +76,21 @@
+     return null;
+   }
+ 
++  /**
++   * @planks-provisional("features/todos-item.feature:The active count drops as items are completed")
++   */
+   function activeCount() {
+     return app.todos.filter(function (t) { return !t.completed; }).length;
+   }
+ 
+-  // @planks(
+-  //   "the visible todo list contains {int} items",
+-  //   "I navigate to {string}",
+-  //   "the item {string} is not visible",
+-  //   "the item {string} is visible"
+-  // )
++  /**
++   * @planks(
++   *   "^the visible todo list contains (\\d+) items?$",
++   *   "I navigate to {string}",
++   *   "the item {string} is not visible",
++   *   "the item {string} is visible"
++   * )
++   */
+   function currentFilter() {
+     var hash = window.location.hash;
+     if (hash === '#/active') return 'active';
+@@ -90,28 +105,30 @@
+     return 'all';
+   }
+ 
+-  // @planks(
+-  //   "the todo list contains {int} items",
+-  //   "the item at position {int} has the title {string}",
+-  //   "the item at position {int} is not completed",
+-  //   "the item {string} is completed",
+-  //   "the list item for {string} has the {string} class",
+-  //   "the list item for {string} does not have the {string} class",
+-  //   "every item is completed",
+-  //   "the mark-all checkbox is checked",
+-  //   "the mark-all checkbox is not checked",
+-  //   "the todo count is {int}",
+-  //   "the todo count reads {string}",
+-  //   "the clear-completed button is hidden",
+-  //   "the item {string} is present",
+-  //   "the item {string} is absent",
+-  //   "the main section is visible",
+-  //   "the main section is hidden",
+-  //   "the footer is visible",
+-  //   "the footer is hidden",
+-  //   "the filter link {string} has the {string} class",
+-  //   "the filter link {string} does not have the {string} class"
+-  // )
++  /**
++   * @planks(
++   *   "^the todo list contains (\\d+) items?$",
++   *   "the item at position {int} has the title {string}",
++   *   "the item at position {int} is not completed",
++   *   "the item {string} is completed",
++   *   "the list item for {string} has the {string} class",
++   *   "the list item for {string} does not have the {string} class",
++   *   "every item is completed",
++   *   "the mark-all checkbox is checked",
++   *   "the mark-all checkbox is not checked",
++   *   "the todo count is {int}",
++   *   "the todo count reads {string}",
++   *   "the clear-completed button is hidden",
++   *   "the item {string} is present",
++   *   "the item {string} is absent",
++   *   "the main section is visible",
++   *   "the main section is hidden",
++   *   "the footer is visible",
++   *   "the footer is hidden",
++   *   "the filter link {string} has the {string} class",
++   *   "the filter link {string} does not have the {string} class"
++   * )
++   */
+   function render() {
+     var seen = {};
+     app.todos.forEach(function (todo) {
+@@ -196,7 +213,9 @@
+     save();
+   }
+ 
+-  // @planks("I enter {string} into the new todo input and press Enter")
++  /**
++   * @planks("I enter {string} into the new todo input and press Enter")
++   */
+   function onNewTodoKey(e) {
+     if (e.key === 'Enter' || e.keyCode === ENTER_KEY) {
+       var title = newTodoInput.value.trim();
+@@ -209,7 +228,9 @@
+     }
+   }
+ 
+-  // @planks("I toggle the checkbox of the item {string}")
++  /**
++   * @planks("I toggle the checkbox of the item {string}")
++   */
+   function onListChange(e) {
+     if (!e.target.classList.contains('toggle')) return;
+     var li = e.target.closest('.todo');
+@@ -220,7 +241,9 @@
+     render();
+   }
+ 
+-  // @planks("I toggle the mark-all checkbox")
++  /**
++   * @planks("I toggle the mark-all checkbox")
++   */
+   function onToggleAll() {
+     var allCompleted = toggleAll.checked;
+     app.todos.forEach(function (t) { t.completed = allCompleted; });
+@@ -228,7 +251,9 @@
+     render();
+   }
+ 
+-  // @planks("I click the destroy button for the item {string}")
++  /**
++   * @planks("I click the destroy button for the item {string}")
++   */
+   function onListClick(e) {
+     var destroy = e.target.closest('.destroy');
+     if (!destroy) return;
+@@ -240,7 +265,9 @@
+     render();
+   }
+ 
+-  // @planks("I double-click the label of the item {string}")
++  /**
++   * @planks("I double-click the label of the item {string}")
++   */
+   function onListDblClick(e) {
+     var label = e.target.closest('label');
+     if (!label) return;
+@@ -257,6 +284,12 @@
+     edit.focus();
+   }
+ 
++  /**
++   * @planks(
++   *   "I set the edit input to {string} and press Enter",
++   *   "I set the edit input to {string} and blur it"
++   * )
++   */
+   function commitEdit(edit) {
+     var li = edit.closest('.todo');
+     var todo = findById(li.dataset.id);
+@@ -271,6 +304,9 @@
+     render();
+   }
+ 
++  /**
++   * @planks("I press Escape in the edit input")
++   */
+   function cancelEdit(edit) {
+     var li = edit.closest('.todo');
+     var todo = findById(li.dataset.id);
+@@ -281,25 +317,31 @@
+     edit.blur();
+   }
+ 
+-  // @planks(
+-  //   "I set the edit input to {string} and press Enter",
+-  //   "I set the edit input to {string} and blur it",
+-  //   "I press Escape in the edit input"
+-  // )
++  /**
++   * @planks(
++   *   "I set the edit input to {string} and press Enter",
++   *   "I set the edit input to {string} and blur it",
++   *   "I press Escape in the edit input"
++   * )
++   */
+   function onListKey(e) {
+     if (!e.target.classList.contains('edit')) return;
+     if (e.key === 'Enter' || e.keyCode === ENTER_KEY) commitEdit(e.target);
+     else if (e.key === 'Escape' || e.keyCode === ESCAPE_KEY) cancelEdit(e.target);
+   }
+ 
+-  // @planks("I set the edit input to {string} and blur it")
++  /**
++   * @planks("I set the edit input to {string} and blur it")
++   */
+   function onListBlur(e) {
+     if (!e.target.classList.contains('edit')) return;
+     var li = e.target.closest('.todo');
+     if (li && li.classList.contains('editing')) commitEdit(e.target);
+   }
+ 
+-  // @planks("I navigate to {string}")
++  /**
++   * @planks("I navigate to {string}")
++   */
+   function onRoute() {
+     app.filter = currentFilter();
+     if (window.location.hash === '#/active' || window.location.hash === '#/completed') {
+@@ -308,13 +350,18 @@
+     render();
+   }
+ 
+-  // @planks("I click the clear-completed button")
++  /**
++   * @planks("I click the clear-completed button")
++   */
+   function onClearCompleted() {
+     app.todos = app.todos.filter(function (t) { return !t.completed; });
+     save();
+     render();
+   }
+ 
++  /**
++   * @planks-provisional("features/todos-persistence.feature:The app boots into the stored list on load")
++   */
+   function init() {
+     newTodoInput = document.querySelector('.new-todo');
+     main = document.querySelector('.main');

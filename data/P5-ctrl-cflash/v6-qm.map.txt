@@ -1,0 +1,18 @@
+# banked: 2026-07-28T08:33:29Z
+# verdict: PENDING
+# leg: {  "name": "v6-qm",  "model": "deepseek/deepseek-v4-flash",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/P5-ctrl-cflash/sim",  "timeout_s": 3600,  "skills": [    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills/shipshape",    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills/qm",    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills/crew",    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills/boatswain",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== v6-qm.session.jsonl ===
+  turns=7  wall=37.6s  in=50557  out=1089  cache_read=77824  cost=$0.0064
+  role reads: qm@t0 -> shipshape@t1
+  roles loaded: qm, shipshape
+  ~ repeated tool signature at turns [1, 2] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    1629/106     1024 $0.0002  read
+    t1    3522/153     2560 $0.0004  read
+    t2   15860/138     1024 $0.0015  read
+    t3   19161/181     5888 $0.0019  bash
+    t4    9062/170    16640 $0.0012  bash
+    t5    1072/190    24832 $0.0006  bash
+    t6     251/151    25856 $0.0005  -

@@ -1,0 +1,127 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..79a384a
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,24 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
++
++## Browser-only defects pinned this leg (from the fixed external Cypress acceptance suite)
++
++Both defects are app-side. Captain MUST NOT edit `js/` or `index.html`; Crew fixes from the specs below and QM builds the checker.
++
++1. **List re-render replaces item nodes.** `render()` sets `todoList.innerHTML`, so every item's `<li>` is detached and re-created on any state change (item toggle, toggle-all, clear-completed). A real browser that holds a node reference across the click sees it detached (Cypress `cy.eq()` / `cy.find()` detached-from-DOM errors: "mark all as completed", "clear the complete state of all items", "mark items as complete", "un-mark items as complete").
++   - Pinned by source-level conformance, not a DOM-behaviour scenario: happy-dom re-queries by title and cannot reproduce the chain-break, so a behaviour scenario would pass green against the bug. `scantlings/todo-dom-identity.md` rules DI-1 / DI-2 name the checker contract; the checker parses `js/app.js` and flags any single-item or toggle-all/clear-completed path that reaches a `todoList.innerHTML` rebuild instead of in-place mutation.
++   - The fix preserves the existing node: toggle the `completed` class and the `.toggle` `checked` in place, do not rebuild the list.
++
++2. **Editing does not hide other controls.** No stylesheet rule hides `.view` while `.editing`, so the toggle stays visible during edit (Cypress `expected '<input.toggle>' not to be 'visible'`). happy-dom has no layout, so this is browser-only and guarded by the same source-level conformance check.
++   - Pinned by `scantlings/todo-dom-identity.md` rule EV-1: the checker inspects the stylesheet carried by `index.html` (inline `<style>` and any linked `css/app.css`) for a `.todo-list li.editing .view` hide rule. The fix ships that rule.
++
++## Watchbill
++
++`watchbill.json` `watch1` carries the single conformance scenario above. It reddens against the current code (rebuild + missing CSS rule) and goes green once Crew preserves node identity and ships the editing-hide rule, and QM's checker discharges the scantling.
++
++## Decision
++
++Authored specs + scantling + watchbill only. No production code, no edits under `js/` or `index.html`, no commit. Next leg: QM implements the source-level conformance checker in verification support; Crew fixes the render path and the editing stylesheet from the specs.
+diff --git a/features/todo-dom-identity.feature b/features/todo-dom-identity.feature
+new file mode 100644
+index 0000000..a59ac94
+--- /dev/null
++++ b/features/todo-dom-identity.feature
+@@ -0,0 +1,12 @@
++Feature: Todo list item DOM identity and editing visibility
++  As a todo-list user
++  I want each list item to keep a stable DOM node across state changes and to hide its other controls while editing
++  So that browser automation, assistive technology, and the editing UI keep a stable, correct DOM
++
++  Rule: An item-state change must mutate the existing list item node in place, and editing must hide the item's other controls
++
++  @conformance
++  Scenario: The list render preserves item node identity and ships the editing-hide rule
++    Given the todo app source at "js/app.js" and the page at "index.html"
++    When the conformance checker discharges "scantlings/todo-dom-identity.md"
++    Then the checker reports no violation of the dom-identity and editing-visibility rules
+diff --git a/scantlings/todo-dom-identity.md b/scantlings/todo-dom-identity.md
+new file mode 100644
+index 0000000..45d8c1d
+--- /dev/null
++++ b/scantlings/todo-dom-identity.md
+@@ -0,0 +1,60 @@
++# Todo list item DOM-identity and editing-visibility scantling
++
++This scantling fixes the mechanical shape of the TodoMVC list render and edit
++behaviour. A SOURCE-LEVEL conformance checker (QM-owned verification support)
++discharges it against `js/app.js` and the shipped stylesheet carried by
++`index.html` (its inline `<style>` and any linked stylesheet such as
++`css/app.css`). The current build violates every rule below; each rule names the
++observed acceptance-suite failure it closes.
++
++## DI-1: Item-state changes must mutate the existing node, not rebuild the list
++
++When a single todo's `completed` value changes (by its own checkbox toggle, or by
++toggle-all), the app MUST NOT detach and re-create that todo's `<li>` element. The
++same `HTMLLIElement` instance attached to `.todo-list` before the change MUST
++remain attached afterwards. Re-rendering the whole list by replacing
++`todoList.innerHTML` in response to an item-state change is forbidden.
++
++Conformance: a source-level checker parses `js/app.js` and asserts that every
++single-item state-change path reaches in-place mutation of the existing `<li>`
++rather than a full-list rebuild. The checked paths are the handler invoked when a
++`.toggle` checkbox changes and the toggle-all handler. A path violates DI-1 when
++it can reach an assignment to `todoList.innerHTML` (or any equivalent full-list
++teardown) for a single-item state change, instead of toggling the `<li>`'s
++`completed` class and the `.toggle` `checked` state on the live node. The current
++`render()` assigns `todoList.innerHTML` and each checked path calls it, so the
++build violates DI-1. Closes acceptance failures "should allow me to mark items as
++complete" and "should allow me to un-mark items as complete" (the `cy.find()`
++detached-from-DOM errors).
++
++## DI-2: Toggle-all and clear-completed must preserve surviving nodes
++
++After toggle-all (mark or clear) or clear-completed, every `<li>` that remains in
++the list MUST be the same node instance that was present before the action. A node
++is removed only when the todo itself is removed (destroy, or clear-completed that
++drops it). Rebuilding the list on these actions is forbidden for surviving nodes.
++
++Conformance: a source-level checker parses `js/app.js` and asserts that the
++toggle-all and clear-completed paths preserve every surviving `<li>` by mutating
++it in place, not by reassigning `todoList.innerHTML`. A path violates DI-2 when it
++rebuilds the list for nodes that survive the action. The current `render()`
++rebuilds the whole list, so these paths violate DI-2. Closes acceptance failures
++"should allow me to mark all items as completed" and "should allow me to clear the
++complete state of all items" (the `cy.eq()` detached-from-DOM errors).
++
++## EV-1: Editing must hide the item's other controls
++
++The shipped stylesheet MUST contain a rule that, while a `.todo-list li` carries the
++class `editing`, hides its `.view` block (and therefore its `.toggle` checkbox, its
++`label`, and its `.destroy` button) and shows its `.edit` input. A bare
++data-attribute toggle is not enough; the control must be visually hidden so a
++visibility probe reports it not visible.
++
++Conformance: a source-level checker inspects the shipped stylesheet carried by
++`index.html` (its inline `<style>` and any linked stylesheet such as
++`css/app.css`) and asserts a rule matching `.todo-list li.editing .view` (or an
++equivalent selector that removes `.view` from layout, for example `display:none`
++or `visibility:hidden`) exists, and that `.toggle` is not left visible while
++editing. The current build links no stylesheet and ships no such rule, so it
++violates EV-1. Closes acceptance failure "should hide other controls when
++editing" (the `expected '<input.toggle>' not to be 'visible'` assertion).
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..a29a7eb
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,7 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/todo-dom-identity.feature:The list render preserves item node identity and ships the editing-hide rule"
++    ]
++  }
++}

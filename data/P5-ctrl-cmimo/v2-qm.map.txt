@@ -1,0 +1,81 @@
+# banked: 2026-07-28T07:41:08Z
+# verdict: PENDING
+# leg: {  "name": "v2-qm",  "model": "xiaomi/mimo-v2.5",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/P5-ctrl-cmimo/sim",  "timeout_s": 3600,  "skills": [    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills/shipshape",    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills/qm",    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills/crew",    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills/boatswain",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== v2-qm.session.jsonl ===
+  turns=70  wall=688.8s  in=72983  out=21800  cache_read=3194176  cost=$0.0253
+  role reads: shipshape@t0 -> qm@t2 -> crew@t45 -> boatswain@t57
+  roles loaded: boatswain, crew, qm, shipshape
+  ~ repeated tool signature at turns [1, 2, 5, 6, 7, 10, 11, 12, 13, 14, 15, 16, 17, 19, 21, 29, 30, 32, 37, 39, 40, 41, 44, 53, 54, 55, 56] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    2122/107      512 $0.0003  read
+    t1   10715/90      2624 $0.0015  read
+    t2    8077/83     13312 $0.0012  read
+    t3    3389/136    21376 $0.0006  bash
+    t4    1383/567    24704 $0.0004  bash, bash, bash, bash
+    t5    4025/266    26048 $0.0007  bash, bash, bash
+    t6     639/158    30016 $0.0002  bash
+    t7     303/184    30592 $0.0002  bash
+    t8     451/110    30848 $0.0002  bash
+    t9     661/549    31296 $0.0003  bash, bash, bash, bash
+    t10    880/328    31936 $0.0003  bash, bash, bash, bash
+    t11    666/390    32768 $0.0003  bash, bash, bash, bash
+    t12    699/343    33408 $0.0003  bash, bash, bash, bash
+    t13   1195/332    34048 $0.0004  bash, bash, bash
+    t14    636/353    35200 $0.0003  bash, bash, bash, bash
+    t15    719/242    35776 $0.0003  bash, bash, bash
+    t16    488/296    36480 $0.0003  bash, bash, bash
+    t17    733/201    36928 $0.0003  bash, bash
+    t18    566/560    37632 $0.0003  bash, bash
+    t19   1058/78     38144 $0.0003  bash
+    t20    183/451    39168 $0.0003  bash
+    t21    528/423    39296 $0.0003  bash
+    t22    662/94     39808 $0.0002  bash
+    t23    195/97     40448 $0.0002  bash
+    t24    309/137    40448 $0.0002  bash
+    t25    208/105    40704 $0.0002  bash
+    t26    154/203    40896 $0.0002  bash
+    t27    438/285    40896 $0.0003  bash
+    t28    494/152    41280 $0.0002  bash
+    t29    262/251    41728 $0.0002  bash
+    t30    318/117    41984 $0.0002  bash
+    t31    246/529    42240 $0.0003  bash
+    t32    617/560    42432 $0.0004  bash
+    t33    621/527    43008 $0.0004  bash
+    t34    592/660    43584 $0.0004  bash
+    t35    702/569    44160 $0.0004  read
+    t36   1342/772    44800 $0.0005  edit
+    t37    880/946    46080 $0.0005  edit
+    t38   1042/641    46912 $0.0005  bash
+    t39    696/278    47936 $0.0003  bash
+    t40    351/269    48576 $0.0003  bash
+    t41    320/408    48896 $0.0003  bash
+    t42    703/464    49152 $0.0004  edit
+    t43    574/122    49792 $0.0003  bash
+    t44    398/143    50304 $0.0002  bash
+    t45    239/424    50688 $0.0003  read
+    t46   2100/374    50880 $0.0005  read, read
+    t47   2564/565    52928 $0.0007  bash
+    t48    583/338    55488 $0.0003  edit
+    t49    388/124    56064 $0.0002  edit
+    t50    175/65     56448 $0.0002  bash
+    t51    126/417    56576 $0.0003  edit
+    t52    525/175    56640 $0.0003  bash, bash
+    t53    353/302    57152 $0.0003  bash, bash, bash, bash
+    t54    626/128    57472 $0.0003  bash
+    t55    277/94     58048 $0.0002  bash
+    t56    328/686    58304 $0.0004  bash, bash
+    t57   1096/529    58624 $0.0005  read
+    t58   4386/288    59712 $0.0009  bash
+    t59   2485/558    64064 $0.0007  bash
+    t60    749/453    66496 $0.0004  bash
+    t61    597/296    67200 $0.0004  bash
+    t62    749/325    67776 $0.0004  bash
+    t63    384/170    68480 $0.0003  bash
+    t64    303/161    68800 $0.0003  bash
+    t65    463/80     69056 $0.0003  bash
+    t66    122/203    69504 $0.0003  bash
+    t67    378/143    69568 $0.0003  bash
+    t68    319/79     69888 $0.0003  bash
+    t69    428/247    70144 $0.0003  -

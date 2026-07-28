@@ -1,0 +1,140 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..2cfce73
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,32 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++Defect pinned this leg (external browser acceptance suite, fixed and correct):
++
++- Failures 1-4 (Mark all completed; Item mark/unmark): `render()` in `js/app.js`
++  does `list.innerHTML = ''` and rebuilds every `<li>`. A browser reference taken
++  before a click (toggle one, `#toggle-all` check/uncheck) is detached when the
++  list rebuilds, so a chain off that held element fails with "element has
++  detached from the DOM". Fix: mutate the existing nodes in place (toggle the
++  `completed` class / checkbox, update counts and the `#toggle-all` state) rather
++  than rebuilding the list. Node identity must survive toggles, mark-all, and
++  clear-completed (the surviving active nodes must stay attached; only genuinely
++  removed todos may detach).
++
++- Failure 5 (Editing hides other controls): the served page ships no stylesheet.
++  `index.html` links `css/app.css` and `node_modules/todomvc-app-css/index.css`,
++  but neither exists in the tree, so `.view` (toggle + label) is never hidden
++  while a todo is edited. Fix: ship `css/app.css` with the rule that hides the
++  todo view controls when a `li` carries the `editing` class. This is a
++  browser-only behaviour; the in-harness guard asserts the served page links and
++  ships that stylesheet.
++
++Pinned by: `features/dom-identity.feature` (failures 1-4) and
++`features/index-page.feature` (failure 5, served-page guard). Targeted by
++`watchbill.json` (watch1, watch2).
++
++Next leg: QM authors the missing step definitions (capture a DOM node; assert it
++is still attached; served-page stylesheet link/hide checks). Crew fixes the
++re-render and ships the stylesheet. The acceptance suite is fixed and correct;
++do not change it.
+diff --git a/features/dom-identity.feature b/features/dom-identity.feature
+new file mode 100644
+index 0000000..fd99ea3
+--- /dev/null
++++ b/features/dom-identity.feature
+@@ -0,0 +1,61 @@
++Feature: DOM node identity
++  When the app changes a todo's state it must mutate the existing DOM nodes in
++  place instead of rebuilding the whole list, so a node reference a browser
++  holds across the interaction stays attached to the document. The current
++  render rebuilds every <li> (list.innerHTML = ''), which detaches nodes a
++  browser captured before the click and breaks acceptance flows that chain off
++  a held element. These scenarios hold a direct node reference, perform the
++  state change, then assert the held node is still attached.
++
++  Rule: Toggling one todo preserves the other todo elements in the list
++
++  Scenario: Toggling one todo keeps the other todos' DOM nodes attached
++    Given the app loads with todos:
++      | title            | completed |
++      | Buy a unicorn    | false     |
++      | Taste JavaScript | false     |
++      | Rule the web     | false     |
++    And I capture the DOM node for the "Taste JavaScript" todo
++    When the "Buy a unicorn" todo checkbox is clicked
++    Then the captured todo node is still attached to the document
++
++  Scenario: Toggling one todo keeps that todo's own DOM node attached and marks it complete
++    Given the app loads with todos:
++      | title            | completed |
++      | Buy a unicorn    | false     |
++      | Taste JavaScript | false     |
++    And I capture the DOM node for the "Buy a unicorn" todo
++    When the "Buy a unicorn" todo checkbox is clicked
++    Then the captured todo node is still attached to the document
++    And the captured todo node has class "completed"
++
++  Rule: Marking all or clearing all preserves every todo element
++
++  Scenario: Marking all complete keeps every todo's DOM node attached
++    Given the app loads with todos:
++      | title            | completed |
++      | Buy a unicorn    | false     |
++      | Taste JavaScript | false     |
++    And I capture the DOM node for the "Taste JavaScript" todo
++    When "#toggle-all" is clicked
++    Then the captured todo node is still attached to the document
++
++  Scenario: Clearing the complete state of all items keeps every todo's DOM node attached
++    Given the app loads with todos:
++      | title            | completed |
++      | Buy a unicorn    | false     |
++      | Taste JavaScript | false     |
++    And I capture the DOM node for the "Taste JavaScript" todo
++    When "#toggle-all" is clicked
++    And "#toggle-all" is clicked
++    Then the captured todo node is still attached to the document
++
++  Scenario: Clearing completed keeps the surviving todos' DOM nodes attached
++    Given the app loads with todos:
++      | title            | completed |
++      | Buy a unicorn    | false     |
++      | Taste JavaScript | true      |
++    And I capture the DOM node for the "Buy a unicorn" todo
++    When the ".clear-completed" button is clicked
++    Then the captured todo node is still attached to the document
++    And only the "Buy a unicorn" todo remains
+diff --git a/features/index-page.feature b/features/index-page.feature
+index e7cd841..0347fe2 100644
+--- a/features/index-page.feature
++++ b/features/index-page.feature
+@@ -11,3 +11,8 @@ Feature: Root index page
+     And that page is built from the template "assets/app-template.index.html"
+     Then the page contains the todo input, the todo list section, and the footer
+     And the page loads the application script "js/app.js"
++
++  Scenario: The served todo app hides view controls while a todo is edited
++    Given the project root has a real "index.html" file
++    And the page links the stylesheet "css/app.css"
++    Then that stylesheet hides the todo view controls while a todo is being edited
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..88f98f9
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,16 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/dom-identity.feature:Toggling one todo keeps the other todos' DOM nodes attached",
++      "features/dom-identity.feature:Toggling one todo keeps that todo's own DOM node attached and marks it complete",
++      "features/dom-identity.feature:Marking all complete keeps every todo's DOM node attached",
++      "features/dom-identity.feature:Clearing the complete state of all items keeps every todo's DOM nodes attached",
++      "features/dom-identity.feature:Clearing completed keeps the surviving todos' DOM nodes attached"
++    ]
++  },
++  "watch2": {
++    "scenarios": [
++      "features/index-page.feature:The served todo app hides view controls while a todo is edited"
++    ]
++  }
++}

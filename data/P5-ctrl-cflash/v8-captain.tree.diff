@@ -1,0 +1,102 @@
+diff --git a/features/support/steps.js b/features/support/steps.js
+index 5ce5c52..d523d6a 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -648,6 +648,22 @@ Then('the file contains a stylesheet link with href {string}', function (href) {
+   expect(regex.test(html)).to.be.true;
+ });
+ 
++// =========================
++// When steps - URL navigation (for routing/back-button scenarios)
++// =========================
++
++When('the URL hash changes to {string}', function (hash) {
++  // Update the window location hash
++  this.window.location.hash = hash;
++  // Dispatch a hashchange event for the production listener
++  const event = new this.window.HashChangeEvent('hashchange', {
++    oldURL: this.window.location.href,
++    newURL: this.window.location.href,
++    bubbles: true
++  });
++  this.window.dispatchEvent(event);
++});
++
+ // =========================
+ // Given steps - singular forms
+ // =========================
+diff --git a/features/support/world.js b/features/support/world.js
+index f282174..784647c 100644
+--- a/features/support/world.js
++++ b/features/support/world.js
+@@ -16,19 +16,19 @@ const HTML_TEMPLATE = `<!doctype html>
+         <h1>todos</h1>
+         <input class="new-todo" placeholder="What needs to be done?" autofocus>
+       </header>
+-      <section class="main" style="display:none">
++      <section class="main">
+         <input id="toggle-all" class="toggle-all" type="checkbox">
+         <label for="toggle-all">Mark all as complete</label>
+         <ul class="todo-list"></ul>
+       </section>
+-      <footer class="footer" style="display:none">
++      <footer class="footer">
+         <span class="todo-count"><strong>0</strong> item left</span>
+         <ul class="filters">
+           <li><a class="selected" href="#/">All</a></li>
+           <li><a href="#/active">Active</a></li>
+           <li><a href="#/completed">Completed</a></li>
+         </ul>
+-        <button class="clear-completed" style="display:none">Clear completed</button>
++        <button class="clear-completed">Clear completed</button>
+       </footer>
+     </section>
+   </body>
+@@ -228,33 +228,20 @@ class TodoWorld {
+   }
+ 
+   /**
+-   * Get the currently visible (non-hidden) items, respecting filter.
++   * Get the visible items by checking the DOM for display:none.
++   * This delegates to the production code's filtering logic.
+    */
+   getVisibleItems() {
+     const items = this.document.querySelectorAll('.todo-list > li');
+-    const filter = this._getActiveFilter();
+     return Array.from(items).filter(li => {
+-      if (filter === 'all') return true;
+-      if (filter === 'active') return !li.classList.contains('completed');
+-      if (filter === 'completed') return li.classList.contains('completed');
+-      return true;
++      return li.style.display !== 'none';
+     });
+   }
+ 
+   /**
+-   * Get the active filter (all, active, completed).
+-   */
+-  _getActiveFilter() {
+-    const selected = this.document.querySelector('.filters a.selected');
+-    if (!selected) return 'all';
+-    const href = selected.getAttribute('href');
+-    if (href === '#/active') return 'active';
+-    if (href === '#/completed') return 'completed';
+-    return 'all';
+-  }
+-
+-  /**
+-   * Apply a filter (all, active, completed).
++   * Set the active filter by toggling the 'selected' class on filter links
++   * and persisting to localStorage. Does NOT do DOM filtering — production code
++   * must handle that on hashchange.
+    */
+   setFilter(filter) {
+     const links = this.document.querySelectorAll('.filters a');
+@@ -266,7 +253,6 @@ class TodoWorld {
+       else if (filter === 'completed' && href === '#/completed') match = true;
+       a.classList.toggle('selected', match);
+     });
+-    // Save filter to localStorage so it persists on reload
+     const selected = this.document.querySelector('.filters a.selected');
+     if (selected) {
+       this.window.localStorage.setItem('todos-todomvc-filter', selected.getAttribute('href'));

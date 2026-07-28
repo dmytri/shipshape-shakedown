@@ -1,0 +1,392 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..44d3b45
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,25 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++## Voyage 1 — TodoMVC vanilla JS
++
++### State at opening
++- Greenfield project with test infrastructure (cucumber + happy-dom + world.js) already fitted
++- No production code: `index.html`, `js/app.js`, `css/app.css` all absent
++- Dependencies `todomvc-common` and `todomvc-app-css` not installed
++- Working tree clean, `main` branch
++
++### Decisions
++- **Stack**: Vanilla JS (no preprocessors), happy-dom test tier (per existing world.js)
++- **localStorage key**: `todos-vanillajs` (per spec convention: `todos-[framework]`)
++- **Routing**: Native hashchange, no Director library (spec allows this; happy-dom world.js provides synthetic hashchange dispatch)
++- **Scenarios**: 31 scenarios across 6 watch groups covering all spec sections
++
++### Open questions
++- Does the user want the `todomvc-common` and `todomvc-app-css` packages installed before Shipwright work? The template index.html references them via node_modules paths.
++- The `js/app.js` file does not exist yet — Crew must implement all production code.
++- World.js enforces that `index.html` and `js/app.js` exist before any scenario runs; first Crew implementation will need to create both.
++
++### Next role
++Shipwright → Crew → QM (per watchbill). Boatswain for custody after QM goes green.
+\ No newline at end of file
+diff --git a/features/todos.feature b/features/todos.feature
+new file mode 100644
+index 0000000..b755233
+--- /dev/null
++++ b/features/todos.feature
+@@ -0,0 +1,272 @@
++Feature: TodoMVC
++  As a user
++  I want to manage a todo list
++  So that I can track tasks I need to complete
++
++  Background:
++    Given the app is loaded
++
++  # ── No todos ──────────────────────────────────────────────────────
++
++  Rule: Empty state
++
++  Scenario: Main and footer are hidden when there are no todos
++    Given there are no todos
++    Then "#main" is not visible
++    And "#footer" is not visible
++
++  # ── New todo ──────────────────────────────────────────────────────
++
++  Rule: Adding a new todo
++
++  Scenario: Enter a new todo
++    When I type "Buy milk" into ".new-todo"
++    And I press Enter
++    Then the todo list contains 1 item
++    And the new todo has title "Buy milk"
++    And the new todo is not completed
++    And ".new-todo" is cleared
++
++  Scenario: Trimming whitespace from input
++    When I type "   Walk the dog   " into ".new-todo"
++    And I press Enter
++    Then the todo list contains 1 item
++    And the new todo has title "Walk the dog"
++
++  Scenario: Empty input is ignored
++    When I type "   " into ".new-todo"
++    And I press Enter
++    Then the todo list is empty
++
++  # ── Mark all as complete ──────────────────────────────────────────
++
++  Rule: Toggle all todos
++
++  Scenario: Mark all as complete toggles every todo
++    Given the todo list has items:
++      | title       | completed |
++      | Task One    | false     |
++      | Task Two    | false     |
++      | Task Three  | false     |
++    When I click "#toggle-all"
++    Then all todos are completed
++    And "#toggle-all" is checked
++
++  Scenario: Mark all unchecks when one todo is unchecked
++    Given the todo list has items:
++      | title       | completed |
++      | Task One    | true      |
++      | Task Two    | true      |
++      | Task Three  | false     |
++    Then "#toggle-all" is not checked
++
++  Scenario: Mark all checks when all todos are completed
++    Given the todo list has items:
++      | title       | completed |
++      | Task One    | true      |
++      | Task Two    | true      |
++    Then "#toggle-all" is checked
++
++  # ── Item ──────────────────────────────────────────────────────────
++
++  Rule: Todo item interactions
++
++  Scenario: Checking a todo marks it completed
++    Given the todo list has item "Buy milk"
++    When I click the toggle for "Buy milk"
++    Then the item "Buy milk" has class "completed"
++
++  Scenario: Unchecking a todo removes completed state
++    Given the todo list has item "Buy milk" completed
++    When I click the toggle for "Buy milk"
++    Then the item "Buy milk" does not have class "completed"
++
++  Scenario: Double-clicking a todo label enters edit mode
++    Given the todo list has item "Buy milk"
++    When I double-click the label for "Buy milk"
++    Then the item "Buy milk" has class "editing"
++
++  Scenario: The destroy button is present on todo items
++    Given the todo list has item "Buy milk"
++    Then the item "Buy milk" has a ".destroy" button
++
++  # ── Editing ───────────────────────────────────────────────────────
++
++  Rule: Editing a todo
++
++  Scenario: Saving edit on Enter
++    Given the todo list has item "Buy milk"
++    When I double-click the label for "Buy milk"
++    And I change the edit field to "Buy almond milk"
++    And I press Enter in the edit field
++    Then the item "Buy milk" is renamed to "Buy almond milk"
++    And the item "Buy milk" does not have class "editing"
++
++  Scenario: Saving edit on blur
++    Given the todo list has item "Buy milk"
++    When I double-click the label for "Buy milk"
++    And I change the edit field to "Buy oat milk"
++    And the edit field loses focus
++    Then the item "Buy milk" is renamed to "Buy oat milk"
++    And the item "Buy milk" does not have class "editing"
++
++  Scenario: Empty edit destroys the todo
++    Given the todo list has item "Buy milk"
++    When I double-click the label for "Buy milk"
++    And I change the edit field to ""
++    And I press Enter in the edit field
++    Then the todo list is empty
++
++  Scenario: Whitespace-only edit destroys the todo
++    Given the todo list has item "Buy milk"
++    When I double-click the label for "Buy milk"
++    And I change the edit field to "   "
++    And I press Enter in the edit field
++    Then the todo list is empty
++
++  Scenario: Escape discards edits
++    Given the todo list has item "Buy milk"
++    When I double-click the label for "Buy milk"
++    And I change the edit field to "Buy oat milk"
++    And I press Escape in the edit field
++    Then the item "Buy milk" has title "Buy milk"
++    And the item "Buy milk" does not have class "editing"
++
++  # ── Counter ───────────────────────────────────────────────────────
++
++  Rule: Active todo counter
++
++  Scenario: Counter shows number of active todos
++    Given the todo list has items:
++      | title       | completed |
++      | Task One    | false     |
++      | Task Two    | true      |
++      | Task Three  | false     |
++    Then ".todo-count" shows "2 items left"
++
++  Scenario: Counter uses singular "item" for 1
++    Given the todo list has items:
++      | title       | completed |
++      | Task One    | false     |
++      | Task Two    | true      |
++    Then ".todo-count" shows "1 item left"
++
++  Scenario: Counter shows "0 items left" when all completed
++    Given the todo list has items:
++      | title       | completed |
++      | Task One    | true      |
++      | Task Two    | true      |
++    Then ".todo-count" shows "0 items left"
++
++  # ── Clear completed ───────────────────────────────────────────────
++
++  Rule: Clear completed button
++
++  Scenario: Clear completed removes completed todos
++    Given the todo list has items:
++      | title       | completed |
++      | Task One    | true      |
++      | Task Two    | false     |
++      | Task Three  | true      |
++    When I click ".clear-completed"
++    Then the todo list has 1 item
++    And the remaining todo has title "Task Two"
++
++  Scenario: Clear completed is hidden when no completed todos
++    Given the todo list has items:
++      | title       | completed |
++      | Task One    | false     |
++      | Task Two    | false     |
++    Then ".clear-completed" is not visible
++
++  Scenario: Clear completed is visible when there are completed todos
++    Given the todo list has items:
++      | title       | completed |
++      | Task One    | true      |
++      | Task Two    | false     |
++    Then ".clear-completed" is visible
++
++  # ── Persistence ───────────────────────────────────────────────────
++
++  Rule: localStorage persistence
++
++  Scenario: Todos survive page reload
++    Given the todo list has items:
++      | title       | completed |
++      | Task One    | false     |
++      | Task Two    | true      |
++    When the app is reloaded
++    Then the todo list has 2 items
++    And the item "Task One" is not completed
++    And the item "Task Two" is completed
++
++  Scenario: localStorage key is "todos-vanillajs"
++    Given the todo list has item "Test"
++    Then localStorage has a key "todos-vanillajs"
++
++  Scenario: Editing state is not persisted
++    Given the todo list has item "Buy milk"
++    When I double-click the label for "Buy milk"
++    And I change the edit field to "not saved"
++    When the app is reloaded
++    Then the item "Buy milk" has title "Buy milk"
++    And the item "Buy milk" does not have class "editing"
++
++  # ── Routing ───────────────────────────────────────────────────────
++
++  Rule: Routing and filtering
++
++  Scenario: Default route shows all todos
++    Given the todo list has items:
++      | title       | completed |
++      | Task One    | false     |
++      | Task Two    | true      |
++    When the route is "#/"
++    Then the todo list shows 2 items
++    And the "All" filter link has class "selected"
++
++  Scenario: Active route shows only active todos
++    Given the todo list has items:
++      | title       | completed |
++      | Task One    | false     |
++      | Task Two    | true      |
++      | Task Three  | false     |
++    When the route is "#/active"
++    Then the todo list shows 2 items
++    And the list includes "Task One"
++    And the list includes "Task Three"
++    And the list does not include "Task Two"
++    And the "Active" filter link has class "selected"
++
++  Scenario: Completed route shows only completed todos
++    Given the todo list has items:
++      | title       | completed |
++      | Task One    | false     |
++      | Task Two    | true      |
++      | Task Three  | false     |
++    When the route is "#/completed"
++    Then the todo list shows 1 item
++    And the list includes "Task Two"
++    And the list does not include "Task One"
++    And the "Completed" filter link has class "selected"
++
++  Scenario: Completing a todo hides it in active filter
++    Given the todo list has items:
++      | title       | completed |
++      | Task One    | false     |
++      | Task Two    | false     |
++    When the route is "#/active"
++    And I click the toggle for "Task One"
++    Then the todo list shows 1 item
++    And the list includes "Task Two"
++
++  Scenario: Active filter is persisted on reload
++    Given the todo list has item "Test"
++    When the route is "#/active"
++    And the app is reloaded
++    Then the "Active" filter link has class "selected"
++
++  Scenario: Clicking a filter link changes the route
++    Given the todo list has item "Test"
++    When I click the "Completed" filter link
++    Then the route is "#/completed"
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..e551198
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,74 @@
++{
++  "title": "TodoMVC vanilla JS — voyage 1",
++  "description": "First voyage: implement all TodoMVC behaviour per assets/app-spec.md",
++  "watches": [
++    {
++      "id": "empty-and-add",
++      "label": "Empty state and adding todos",
++      "scenarios": [
++        "features/todos.feature: Empty state",
++        "features/todos.feature: Main and footer are hidden when there are no todos",
++        "features/todos.feature: Enter a new todo",
++        "features/todos.feature: Trimming whitespace from input",
++        "features/todos.feature: Empty input is ignored"
++      ]
++    },
++    {
++      "id": "toggle-all",
++      "label": "Mark all as complete",
++      "scenarios": [
++        "features/todos.feature: Mark all as complete toggles every todo",
++        "features/todos.feature: Mark all unchecks when one todo is unchecked",
++        "features/todos.feature: Mark all checks when all todos are completed"
++      ]
++    },
++    {
++      "id": "item-interactions",
++      "label": "Todo item interactions (check, edit, destroy)",
++      "scenarios": [
++        "features/todos.feature: Checking a todo marks it completed",
++        "features/todos.feature: Unchecking a todo removes completed state",
++        "features/todos.feature: Double-clicking a todo label enters edit mode",
++        "features/todos.feature: The destroy button is present on todo items",
++        "features/todos.feature: Saving edit on Enter",
++        "features/todos.feature: Saving edit on blur",
++        "features/todos.feature: Empty edit destroys the todo",
++        "features/todos.feature: Whitespace-only edit destroys the todo",
++        "features/todos.feature: Escape discards edits"
++      ]
++    },
++    {
++      "id": "counter-and-clear",
++      "label": "Counter and Clear completed",
++      "scenarios": [
++        "features/todos.feature: Counter shows number of active todos",
++        "features/todos.feature: Counter uses singular \"item\" for 1",
++        "features/todos.feature: Counter shows \"0 items left\" when all completed",
++        "features/todos.feature: Clear completed removes completed todos",
++        "features/todos.feature: Clear completed is hidden when no completed todos",
++        "features/todos.feature: Clear completed is visible when there are completed todos"
++      ]
++    },
++    {
++      "id": "persistence",
++      "label": "localStorage persistence",
++      "scenarios": [
++        "features/todos.feature: Todos survive page reload",
++        "features/todos.feature: localStorage key is \"todos-vanillajs\"",
++        "features/todos.feature: Editing state is not persisted"
++      ]
++    },
++    {
++      "id": "routing",
++      "label": "Routing and filtering",
++      "scenarios": [
++        "features/todos.feature: Default route shows all todos",
++        "features/todos.feature: Active route shows only active todos",
++        "features/todos.feature: Completed route shows only completed todos",
++        "features/todos.feature: Completing a todo hides it in active filter",
++        "features/todos.feature: Active filter is persisted on reload",
++        "features/todos.feature: Clicking a filter link changes the route"
++      ]
++    }
++  ]
++}
+\ No newline at end of file

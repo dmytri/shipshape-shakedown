@@ -1,0 +1,82 @@
+diff --git a/features/dom-stability.feature b/features/dom-stability.feature
+index b8ac6c5..bd7714c 100644
+--- a/features/dom-stability.feature
++++ b/features/dom-stability.feature
+@@ -7,7 +7,14 @@ Feature: DOM node stability
+   Background:
+     Given the app is loaded
+ 
+-  Rule: Toggling a todo must not replace sibling todo elements
++  Rule: Toggling a todo must not replace the clicked element or siblings
++
++    Scenario: Clicking a checkbox preserves the clicked todo's DOM node
++      Given I have added a todo "Buy milk"
++      When I remember the DOM node of the todo "Buy milk"
++      And I click the checkbox of the todo "Buy milk"
++      Then the remembered DOM node is still in the document
++      And the remembered DOM node has the "completed" class
+ 
+     Scenario: Clicking a checkbox preserves the other todo's DOM node
+       Given I have added todos "Buy milk" and "Walk the dog"
+@@ -52,3 +59,11 @@ Feature: DOM node stability
+       When I remember the DOM node of the todo "Walk the dog"
+       And I destroy the todo "Buy milk"
+       Then the remembered DOM node is still in the document
++
++  Rule: Editing mode must hide the toggle checkbox
++
++    Scenario: The toggle checkbox is hidden when a todo is being edited
++      Given I have added a todo "Buy milk"
++      When I double-click the label of the todo "Buy milk"
++      Then the todo "Buy milk" is in editing mode
++      And the toggle checkbox of the todo "Buy milk" is not visible
+diff --git a/features/support/steps.js b/features/support/steps.js
+index b0a0c59..8b37bcb 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -473,6 +473,26 @@ Then('the remembered DOM node does not have the {string} class', function (class
+   }
+ });
+ 
++Then('the toggle checkbox of the todo {string} is not visible', function (title) {
++  const li = todoByTitle(this.document, title);
++  if (!li) throw new Error(`Todo "${title}" not found`);
++  const checkbox = el(li, '.toggle');
++  if (!checkbox) throw new Error(`Todo "${title}" has no toggle checkbox`);
++  // Check visibility via computed style: the CSS rule li.editing .view should
++  // hide the view container, making the checkbox invisible.
++  const win = this.document.defaultView || this.window;
++  const viewDiv = el(li, '.view');
++  if (viewDiv) {
++    const style = win.getComputedStyle(viewDiv);
++    if (style.display !== 'none' && style.visibility !== 'hidden') {
++      throw new Error(
++        `Toggle checkbox of "${title}" is still visible. ` +
++        `The li.editing .view CSS rule must hide the view container during editing.`
++      );
++    }
++  }
++});
++
+ // ---------------------------------------------------------------------------
+ // Source-level conformance steps (for editing-controls.feature)
+ // ---------------------------------------------------------------------------
+diff --git a/watchbill.json b/watchbill.json
+index 858eada..23e8eaf 100644
+--- a/watchbill.json
++++ b/watchbill.json
+@@ -96,11 +96,13 @@
+     {
+       "name": "dom-stability",
+       "scenarios": [
++        "features/dom-stability.feature:Clicking a checkbox preserves the clicked todo's DOM node",
+         "features/dom-stability.feature:Clicking a checkbox preserves the other todo's DOM node",
+         "features/dom-stability.feature:Clicking toggle-all preserves todo DOM nodes",
+         "features/dom-stability.feature:Uncompleting a todo preserves other DOM nodes",
+         "features/dom-stability.feature:Saving an edit preserves other DOM nodes",
+-        "features/dom-stability.feature:Destroying a todo preserves other DOM nodes"
++        "features/dom-stability.feature:Destroying a todo preserves other DOM nodes",
++        "features/dom-stability.feature:The toggle checkbox is hidden when a todo is being edited"
+       ]
+     },
+     {

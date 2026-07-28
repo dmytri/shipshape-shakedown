@@ -1,0 +1,46 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 286cc4a..0f1ca17 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -29,7 +29,7 @@ SOURCE level instead of forcing an impossible failing in-harness scenario.
+     `toggleAllTodos` seams and fails if either rebuilds via `todoList.innerHTML` /
+     unconditional `renderList()` or does not mutate the toggled `<li>`'s `completed` class and
+     toggle `.checked` in place. Acting on `js/app.js` directly is out of Captain scope.
+-- `watchbill.json` is RE-ESTABLISHED this leg (it had been struck as spent). `watch1` carries the
++- `watchbill.json` is RE-ESTABLISHED this leg (it had been struck as spent; written now at repo root). `watch1` carries the
+   two behavioural scenarios; `watch2` carries the `@conformance` guard. This is the only channel
+   that creates QM targets for the two acceptance failures. The `Editing a todo hides its label`
+   scenario is intentionally OFF this leg's watchbill — it is not in the acceptance output.
+@@ -39,7 +39,12 @@ SOURCE level instead of forcing an impossible failing in-harness scenario.
+ A build that rebuilds the list on a same-visibility completion toggle makes `watch1` (held
+ reference detached) and `watch2` (structural check catches `todoList.innerHTML` / unconditional
+ `renderList()` and the missing in-place mutation) go RED. An in-place build makes them GREEN.
+-Calibration was established in prior leg `d4270cf` (planted violation went RED, then reverted).
++Calibration was re-confirmed this leg by direct source inspection: the fixed `js/app.js` greens the
++`@conformance` guard (no problems), and a simulated list-rebuilding `completeTodo`/`toggleAllTodos`
++reddens it with four problems (no in-place `completed`-class or `.checked` mutation in either seam).
++The behavioural scenarios also re-detect the detach in happy-dom, because `todoList.innerHTML =`
++detaches the held `<li>`; happy-dom was measured to return `false` on a same-node identity check
++after a rebuild.
+ 
+ The committed `js/app.js` in this repo already carries the in-place mutation from a prior leg, so
+ the in-harness suite is currently GREEN against it. The acceptance suite runs against the stale,
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..febec97
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,13 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/todo-dom-stability.feature:Completing a todo keeps the same element in the DOM",
++      "features/todo-dom-stability.feature:Uncompleting a todo keeps the same element in the DOM"
++    ]
++  },
++  "watch2": {
++    "scenarios": [
++      "features/todo-dom-stability.feature:The completion-toggle seams do not rebuild the list on a same-visibility toggle"
++    ]
++  }
++}

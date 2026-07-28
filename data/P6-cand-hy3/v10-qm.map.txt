@@ -1,0 +1,36 @@
+# banked: 2026-07-28T12:19:27Z
+# verdict: PENDING
+# leg: {  "name": "v10-qm",  "model": "tencent/hy3",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/P6-cand-hy3/sim",  "timeout_s": 3600,  "skills": [    "/home/exedev/shipshape-shakedown/experiments/methods-candidate/skills/shipshape",    "/home/exedev/shipshape-shakedown/experiments/methods-candidate/skills/qm",    "/home/exedev/shipshape-shakedown/experiments/methods-candidate/skills/crew",    "/home/exedev/shipshape-shakedown/experiments/methods-candidate/skills/boatswain",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== v10-qm.session.jsonl ===
+  turns=25  wall=817.5s  in=132619  out=54359  cache_read=1161488  cost=$0.0907
+  role reads: qm@t0 -> shipshape@t1 -> crew@t14 -> boatswain@t15
+  roles loaded: boatswain, crew, qm, shipshape
+  ~ repeated tool signature at turns [1, 2, 15, 16, 21] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    2259/103        0 $0.0004  read
+    t1    3462/89      2048 $0.0006  read
+    t2   16241/110        0 $0.0023  read
+    t3    8881/347    16128 $0.0020  bash
+    t4     422/110    24960 $0.0010  bash
+    t5     696/960    25344 $0.0015  bash
+    t6    1133/1283   25984 $0.0018  bash
+    t7    1702/236    27008 $0.0013  read
+    t8     662/283    28672 $0.0013  read
+    t9   34114/1387       0 $0.0056  bash
+    t10   2922/119    34144 $0.0017  read
+    t11   2439/5130   37088 $0.0046  bash
+    t12   5199/2669   39536 $0.0037  bash
+    t13   2717/7809   44832 $0.0065  bash
+    t14   7875/6415   47584 $0.0065  read
+    t15   7953/153    55488 $0.0031  read
+    t16   3129/3575   63472 $0.0047  read
+    t17   5871/16181  66592 $0.0125  write
+    t18  15823/648    72704 $0.0051  write
+    t19    577/152    88640 $0.0033  write
+    t20    148/566    89264 $0.0035  bash
+    t21   1924/1966   89488 $0.0045  bash
+    t22   2840/2076   91392 $0.0048  bash
+    t23   2542/987    94256 $0.0042  bash
+    t24   1088/1005   96864 $0.0041  -

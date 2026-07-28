@@ -1,0 +1,52 @@
+diff --git a/css/app.css b/css/app.css
+new file mode 100644
+index 0000000..0c3887f
+--- /dev/null
++++ b/css/app.css
+@@ -0,0 +1,3 @@
++li.editing .view {
++  display: none;
++}
+\ No newline at end of file
+diff --git a/index.html b/index.html
+index 6ed420a..0e8efa7 100644
+--- a/index.html
++++ b/index.html
+@@ -7,6 +7,11 @@
+   <link rel="stylesheet" href="node_modules/todomvc-common/base.css">
+   <link rel="stylesheet" href="node_modules/todomvc-app-css/index.css">
+   <link rel="stylesheet" href="css/app.css">
++  <style>
++    li.editing .view {
++      display: none;
++    }
++  </style>
+ </head>
+ <body>
+   <section class="todoapp">
+diff --git a/js/app.js b/js/app.js
+index d75d1b6..a5d95bb 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -102,7 +102,9 @@
+     // Remove nodes for todos not in filtered list
+     for (var existingId in existingNodes) {
+       if (!neededIds[existingId]) {
+-        todoList.removeChild(existingNodes[existingId]);
++        if (existingNodes[existingId].parentNode) {
++          todoList.removeChild(existingNodes[existingId]);
++        }
+       }
+     }
+ 
+diff --git a/wake/runrecord.json b/wake/runrecord.json
+index 2f7fbfe..e7ad456 100644
+--- a/wake/runrecord.json
++++ b/wake/runrecord.json
+@@ -9,3 +9,6 @@
+ {"targets":["features/routing.feature:All todos are visible on the default route","features/routing.feature:Completed todos are hidden on the active filter","features/routing.feature:Active todos are hidden on the completed filter","features/routing.feature:The selected class is applied to the active filter link","features/routing.feature:Completing an item on the active filter hides it","features/routing.feature:The active filter is maintained after page reload"],"command":"npx cucumber-js --tags \"not @captain and not @shipwright\" --name \"All todos are visible on the default route|Completed todos are hidden on the active filter|Active todos are hidden on the completed filter|The selected class is applied to the active filter link|Completing an item on the active filter hides it|The active filter is maintained after page reload\"","result":"pass","hash":"bd8a024e0de7717ab447eabdf937dad401ee5f8d"}
+ {"targets":["features/dom-stability.feature:Clicking a checkbox preserves the clicked todo's DOM node","features/dom-stability.feature:Clicking a checkbox preserves the other todo's DOM node","features/dom-stability.feature:Clicking toggle-all preserves todo DOM nodes","features/dom-stability.feature:Saving an edit preserves other DOM nodes","features/dom-stability.feature:Destroying a todo preserves other DOM nodes"],"command":"npx cucumber-js --tags \"not @captain and not @shipwright\" --name \"Clicking a checkbox preserves the clicked todo's DOM node|Clicking a checkbox preserves the other todo's DOM node|Clicking toggle-all preserves todo DOM nodes|Saving an edit preserves other DOM nodes|Destroying a todo preserves other DOM nodes\"","result":"pass","hash":"bd8a024e0de7717ab447eabdf937dad401ee5f8d"}
+ {"targets":["features/editing-controls.feature:Entering editing mode applies the editing class to the list item"],"command":"npx cucumber-js --tags \"not @captain and not @shipwright\" --name \"Entering editing mode applies the editing class to the list item\"","result":"pass","hash":"bd8a024e0de7717ab447eabdf937dad401ee5f8d"}
++{"targets":["features/new-todo.feature:Pressing Enter with an empty input creates no todo","features/new-todo.feature:Whitespace-only input is trimmed and rejected","features/new-todo.feature:Pressing Enter creates a todo from the input value","features/new-todo.feature:Input is trimmed before creating a todo","features/new-todo.feature:A newly created todo is not completed","features/new-todo.feature:The input has focus when the page loads"],"command":"npx cucumber-js --tags \"not @captain and not @shipwright\" --name \"Pressing Enter with an empty input creates no todo|Whitespace-only input is trimmed and rejected|Pressing Enter creates a todo from the input value|Input is trimmed before creating a todo|A newly created todo is not completed|The input has focus when the page loads\"","result":"pass","hash":"e077d28c1ccfec4217836caa5069955b5c6a711e"}
++{"targets":["features/toggle-all.feature:Clicking toggle-all when all items are active marks all completed","features/toggle-all.feature:Clicking toggle-all when all items are completed marks all active","features/toggle-all.feature:Toggle-all becomes checked when all items are individually completed","features/toggle-all.feature:Toggle-all becomes unchecked when any item is individually unchecked","features/toggle-all.feature:Toggle-all is unchecked after clearing completed items"],"command":"npx cucumber-js --tags \"not @captain and not @shipwright\" --name \"Clicking toggle-all when all items are active marks all completed|Clicking toggle-all when all items are completed marks all active|Toggle-all becomes checked when all items are individually completed|Toggle-all becomes unchecked when any item is individually unchecked|Toggle-all is unchecked after clearing completed items\"","result":"pass","hash":"e077d28c1ccfec4217836caa5069955b5c6a711e"}
++{"targets":["features/item-interactions.feature:Clicking the toggle checkbox marks the todo as completed","features/item-interactions.feature:Clicking the toggle checkbox again unmarks the todo","features/item-interactions.feature:Double-clicking a todo label enters editing mode","features/item-interactions.feature:The destroy button is present on each todo"],"command":"npx cucumber-js --tags \"not @captain and not @shipwright\" --name \"Clicking the toggle checkbox marks the todo as completed|Clicking the toggle checkbox again unmarks the todo|Double-clicking a todo label enters editing mode|The destroy button is present on each todo\"","result":"pass","hash":"e077d28c1ccfec4217836caa5069955b5c6a711e"}

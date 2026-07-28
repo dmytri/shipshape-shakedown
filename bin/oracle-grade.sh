@@ -52,6 +52,15 @@ grep -q "invoke('resetHistory')" "$CLONE/cypress/e2e/spec.cy.js" || {
 git -C "$CLONE" diff --name-only --diff-filter=D -- examples | head -1 | grep -q . && {
   echo "oracle-grade.sh: the clone has DELETED vendored files under examples/ — run 'git checkout -- examples/' in the clone; refusing to grade, exit 6" >&2; exit 6; }
 
+# ONE FIXTURE (dk, 2026-07-28). Per-arm oracle clones existed only so parallel waves could not
+# collide in examples/<framework>/ — six copies cost 1.1G and were a standing disk hazard that
+# twice took this box to 99% and voided a cell mid-run. One clone plus a lock is the same
+# guarantee for a sixth of the disk: a grade holds the clone for the ~35s it runs, and a
+# concurrent wave waits rather than overwriting the build under it.
+# The lock is keyed on the clone, so a run that still passes its own --clone is unaffected.
+exec 9>"$CLONE/.grade.lock"
+flock 9 || { echo "oracle-grade.sh: could not lock $CLONE — refusing to grade, exit 6" >&2; exit 6; }
+
 # Drop the build at examples/<framework>/ (served at :PORT/examples/<framework>/index.html).
 # Copy the runnable app only — never features/steps/assets/node_modules/.git.
 DEST="$CLONE/examples/$FRAMEWORK"

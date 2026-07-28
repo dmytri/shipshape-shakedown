@@ -1,0 +1,273 @@
+diff --git a/features/support/conformance-steps.js b/features/support/conformance-steps.js
+new file mode 100644
+index 0000000..b43c41b
+--- /dev/null
++++ b/features/support/conformance-steps.js
+@@ -0,0 +1,182 @@
++const fs = require('node:fs');
++const path = require('node:path');
++const { Given, When, Then } = require('@cucumber/cucumber');
++
++// QM-owned verification support: a SOURCE-LEVEL conformance checker that discharges
++// scantlings/todo-dom-identity.md against the production artifact (js/app.js) and the
++// shipped stylesheet carried by index.html. happy-dom cannot reproduce the detached-node
++// chain-break or the layout/visibility state, so the rule is pinned here at the source
++// layer, exactly as the scantling and CAPTAIN.md direct.
++
++const ROOT = path.resolve(__dirname, '..', '..');
++
++function readText(relPath) {
++  const p = path.resolve(ROOT, relPath);
++  if (!fs.existsSync(p)) throw new Error(`conformance checker: ${relPath} not found at ${p}`);
++  return fs.readFileSync(p, 'utf8');
++}
++
++// Pull each top-level `function name(...) { ... }` body out, balanced on braces.
++// app.js keeps no braces inside string or regex literals, so balanced matching is safe.
++function extractFunctionBodies(source) {
++  const bodies = {};
++  const decl = /function\s+([A-Za-z_$][\w$]*)\s*\(/g;
++  let m;
++  while ((m = decl.exec(source)) !== null) {
++    let i = m.index + m[0].length;
++    while (i < source.length && source[i] !== '{') i++;
++    if (i >= source.length) break;
++    const open = i;
++    let depth = 0;
++    for (; i < source.length; i++) {
++      const c = source[i];
++      if (c === '{') depth++;
++      else if (c === '}') {
++        depth--;
++        if (depth === 0) {
++          bodies[m[1]] = source.slice(open, i + 1);
++          break;
++        }
++      }
++    }
++  }
++  return bodies;
++}
++
++function calledNames(body) {
++  const names = new Set();
++  const call = /([A-Za-z_$][\w$]*)\s*\(/g;
++  let m;
++  while ((m = call.exec(body)) !== null) names.add(m[1]);
++  return names;
++}
++
++// Transitive closure of named-function calls reachable from `entry`.
++function reachableSource(bodies, entry) {
++  const seen = new Set();
++  const stack = [entry];
++  while (stack.length) {
++    const name = stack.pop();
++    if (seen.has(name)) continue;
++    seen.add(name);
++    const body = bodies[name];
++    if (!body) continue;
++    for (const callee of calledNames(body)) {
++      if (bodies[callee] && !seen.has(callee)) stack.push(callee);
++    }
++  }
++  return [...seen].map((n) => bodies[n] || '').join('\n');
++}
++
++// The list container is the variable bound to querySelector('.todo-list').
++function findListVar(source) {
++  const m = source.match(/(\w+)\s*=\s*(?:document\.)?querySelector\(\s*['"]\.todo-list['"]\s*\)/);
++  return m ? m[1] : 'todoList';
++}
++
++// Collect CSS text from inline <style> blocks and any linked local stylesheets.
++function extractStylesheet(relHtmlPath) {
++  const html = readText(relHtmlPath);
++  let css = '';
++  const styleRe = /<style[^>]*>([\s\S]*?)<\/style>/gi;
++  let m;
++  while ((m = styleRe.exec(html)) !== null) css += '\n' + m[1];
++  const linkRe = /<link\b[^>]*>/gi;
++  while ((m = linkRe.exec(html)) !== null) {
++    const tag = m[0];
++    if (!/rel\s*=\s*["']?stylesheet["']?/i.test(tag)) continue;
++    const hrefM = tag.match(/href\s*=\s*["']([^"']+)["']/i);
++    if (!hrefM) continue;
++    const href = hrefM[1];
++    if (/^[a-z]+:\/\//i.test(href) || href.startsWith('#')) continue;
++    const p = path.resolve(ROOT, path.dirname(relHtmlPath), href);
++    if (fs.existsSync(p)) css += '\n' + fs.readFileSync(p, 'utf8');
++  }
++  return css;
++}
++
++function parseRules(css) {
++  css = css.replace(/\/\*[\s\S]*?\*\//g, '');
++  const rules = [];
++  const re = /([^{}]+)\{([^{}]*)\}/g;
++  let m;
++  while ((m = re.exec(css)) !== null) rules.push({ selector: m[1].trim(), decl: m[2] });
++  return rules;
++}
++
++// EV-1: a rule that removes .view from layout while a .todo-list li carries .editing.
++// Hiding .view also removes .toggle (it is a child of .view), so the toggle is not left visible.
++function hasEditingHideViewRule(rules) {
++  return rules.some((r) => {
++    const s = r.selector.replace(/\s+/g, '');
++    const i = s.indexOf('.editing');
++    const j = s.indexOf('.view');
++    if (i === -1 || j === -1 || j < i) return false;
++    return /display\s*:\s*none|visibility\s*:\s*hidden/i.test(r.decl);
++  });
++}
++
++// Discharge the scantling: returns a list of violation strings (empty means clean).
++function dischargeDomIdentity(appSrcRel, pageRel, scantlingRel) {
++  const violations = [];
++  const source = readText(appSrcRel);
++
++  // The scantling itself must exist and name the rules it fixes.
++  const scantling = readText(scantlingRel);
++  if (!/(DI-1|DI-2|EV-1)/i.test(scantling)) {
++    violations.push('SCANTLING: scantlings/todo-dom-identity.md does not name the DI-1/DI-2/EV-1 rules');
++  }
++
++  const bodies = extractFunctionBodies(source);
++  const listVar = findListVar(source);
++  const rebuildRe = new RegExp(listVar + '\\.innerHTML\\s*=');
++
++  // DI-1: the .toggle handler and the toggle-all handler must mutate the existing
++  // node in place, never reach a full-list rebuild (todoList.innerHTML).
++  // DI-2: toggle-all and clear-completed must preserve surviving nodes (no rebuild).
++  const checked = {
++    completeTodo: ['DI-1'],
++    toggleAllTodos: ['DI-1', 'DI-2'],
++    clearCompletedTodos: ['DI-2'],
++  };
++  for (const [fn, rules] of Object.entries(checked)) {
++    if (!bodies[fn]) {
++      violations.push(`${rules.join('/')}: handler ${fn}() not found in ${appSrcRel}`);
++      continue;
++    }
++    const reach = reachableSource(bodies, fn);
++    if (rebuildRe.test(reach)) {
++      for (const rule of rules) {
++        violations.push(
++          `${rule}: ${fn}() reaches a full-list rebuild (${listVar}.innerHTML) for an item-state change`
++        );
++      }
++    }
++  }
++
++  // EV-1: the shipped stylesheet must hide .view while .editing.
++  const rules = parseRules(extractStylesheet(pageRel));
++  if (!hasEditingHideViewRule(rules)) {
++    violations.push('EV-1: no stylesheet rule hides .view while a .todo-list li carries .editing');
++  }
++
++  return violations;
++}
++
++// ----- step definitions -----
++
++Given('the todo app source at {string} and the page at {string}', function (appSrc, page) {
++  this._appSrc = appSrc;
++  this._page = page;
++});
++
++When('the conformance checker discharges {string}', function (scantling) {
++  this._violations = dischargeDomIdentity(this._appSrc, this._page, scantling);
++});
++
++Then('the checker reports no violation of the dom-identity and editing-visibility rules', function () {
++  const v = this._violations || [];
++  if (v.length) {
++    throw new Error('conformance checker found violations:\n  - ' + v.join('\n  - '));
++  }
++});
+diff --git a/js/app.js b/js/app.js
+index b9724a3..8a2a8da 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -98,6 +98,29 @@
+     }
+   }
+ 
++  // Update the surrounding UI (count, footer, toggle-all, filters, section visibility)
++  // without rebuilding the list, so item-state handlers keep every surviving <li> node
++  // attached to .todo-list (DI-1 / DI-2).
++  function syncMeta() {
++    var hasTodos = todos.length > 0;
++    main.hidden = !hasTodos;
++    footer.hidden = !hasTodos;
++
++    var activeCount = todos.filter(function (t) { return !t.completed; }).length;
++    countEl.innerHTML = '<strong>' + activeCount + '</strong> ' + (activeCount === 1 ? 'item' : 'items') + ' left';
++
++    toggleAll.checked = hasTodos && todos.every(function (t) { return t.completed; });
++    clearCompleted.hidden = !todos.some(function (t) { return t.completed; });
++
++    var links = footer.querySelectorAll('.filters a');
++    for (var i = 0; i < links.length; i++) {
++      var href = links[i].getAttribute('href');
++      var r = href === '#/active' ? 'active' : href === '#/completed' ? 'completed' : 'all';
++      if (r === route) links[i].classList.add('selected');
++      else links[i].classList.remove('selected');
++    }
++  }
++
+   /** @planks("I type {string} into the new-todo input and press Enter") */
+   /** @planks("the app loads with active todo {string}") */
+   function addTodo(title) {
+@@ -108,19 +131,33 @@
+ 
+   /** @planks("I complete the todo {string}") */
+   function completeTodo(id) {
++    var li = todoList.querySelector('li[data-id="' + id + '"]');
++    if (!li) return;
+     var todo = todos.find(function (t) { return t.id === id; });
+     if (!todo) return;
+     todo.completed = !todo.completed;
++    li.classList.toggle('completed', todo.completed);
++    var toggle = li.querySelector('.toggle');
++    if (toggle) toggle.checked = todo.completed;
+     save();
+-    render();
++    syncMeta();
+   }
+ 
+   /** @planks("I click the toggle-all control") */
+   function toggleAllTodos() {
+     var next = toggleAll.checked;
+     todos.forEach(function (t) { t.completed = next; });
++    var lis = todoList.querySelectorAll('li');
++    for (var i = 0; i < lis.length; i++) {
++      var li = lis[i];
++      var todo = todos.find(function (t) { return t.id === Number(li.dataset.id); });
++      var done = todo ? todo.completed : next;
++      li.classList.toggle('completed', done);
++      var toggle = li.querySelector('.toggle');
++      if (toggle) toggle.checked = done;
++    }
+     save();
+-    render();
++    syncMeta();
+   }
+ 
+   /** @planks("I set the edit input to {string} and press Enter") */
+@@ -166,9 +203,13 @@
+ 
+   /** @planks("I click the clear-completed button") */
+   function clearCompletedTodos() {
++    todos.filter(function (t) { return t.completed; }).forEach(function (t) {
++      var li = todoList.querySelector('li[data-id="' + t.id + '"]');
++      if (li) li.remove();
++    });
+     todos = todos.filter(function (t) { return !t.completed; });
+     save();
+-    render();
++    syncMeta();
+   }
+ 
+   function init() {

@@ -1,0 +1,255 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 48fc875..5a54bbb 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -13,7 +13,7 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ 
+ ## Specs authored
+ 
+-Nine feature files under `features/`:
++Eleven feature files under `features/`:
+ 
+ | Feature file | Scenarios |
+ |---|---|
+@@ -26,12 +26,14 @@ Nine feature files under `features/`:
+ | `clear-completed.feature` | 3 |
+ | `persistence.feature` | 5 |
+ | `routing.feature` | 6 |
++| `dom-stability.feature` | 5 |
++| `editing-controls.feature` | 6 |
+ 
+-**Total: 48 scenarios across 9 watches.**
++**Total: 60 scenarios across 11 watches.**
+ 
+ ## Watchbill
+ 
+-`watchbill.json` written with 9 watches, one per feature file. Ready for QM dispatch when the next role takes the deck.
++`watchbill.json` written with 11 watches, one per feature file. Ready for QM dispatch when the next role takes the deck.
+ 
+ ## Open questions
+ 
+diff --git a/features/dom-stability.feature b/features/dom-stability.feature
+new file mode 100644
+index 0000000..b8ac6c5
+--- /dev/null
++++ b/features/dom-stability.feature
+@@ -0,0 +1,54 @@
++Feature: DOM node stability
++  As a user
++  I want the app to preserve DOM elements when their state changes
++  So that browser automation tools and assistive technologies can reliably
++    interact with elements without losing references
++
++  Background:
++    Given the app is loaded
++
++  Rule: Toggling a todo must not replace sibling todo elements
++
++    Scenario: Clicking a checkbox preserves the other todo's DOM node
++      Given I have added todos "Buy milk" and "Walk the dog"
++      When I remember the DOM node of the todo "Walk the dog"
++      And I click the checkbox of the todo "Buy milk"
++      Then the remembered DOM node is still in the document
++
++  Rule: Completing all todos via toggle-all must not replace elements
++
++    Scenario: Clicking toggle-all preserves todo DOM nodes
++      Given I have added todos "Buy milk" and "Walk the dog"
++      When I remember the DOM node of the todo "Buy milk"
++      And I click the toggle-all checkbox
++      Then the remembered DOM node is still in the document
++      And the remembered DOM node has the "completed" class
++
++  Rule: Uncompleting a todo must not replace sibling elements
++
++    Scenario: Uncompleting a todo preserves other DOM nodes
++      Given I have added todos "Buy milk" and "Walk the dog"
++      And all todos are completed
++      When I remember the DOM node of the todo "Walk the dog"
++      And I uncomplete the todo "Buy milk"
++      Then the remembered DOM node is still in the document
++      And the remembered DOM node does not have the "completed" class
++
++  Rule: Editing a todo must not replace other todo elements
++
++    Scenario: Saving an edit preserves other DOM nodes
++      Given I have added todos "Buy milk" and "Walk the dog"
++      And the todo "Buy milk" is in editing mode
++      When I remember the DOM node of the todo "Walk the dog"
++      And I clear the edit input of "Buy milk"
++      And I type "Buy eggs" in the edit input of "Buy milk"
++      And I press Enter in the edit input of "Buy milk"
++      Then the remembered DOM node is still in the document
++
++  Rule: Destroying a todo must not replace other todo elements
++
++    Scenario: Destroying a todo preserves other DOM nodes
++      Given I have added todos "Buy milk" and "Walk the dog"
++      When I remember the DOM node of the todo "Walk the dog"
++      And I destroy the todo "Buy milk"
++      Then the remembered DOM node is still in the document
+diff --git a/features/editing-controls.feature b/features/editing-controls.feature
+new file mode 100644
+index 0000000..631314d
+--- /dev/null
++++ b/features/editing-controls.feature
+@@ -0,0 +1,31 @@
++Feature: Editing controls visibility
++  As a user
++  I want view controls hidden while editing a todo
++  So that I can focus on editing without visual distraction
++
++  Background:
++    Given the app is loaded
++
++  Rule: The toggle checkbox must be hidden during editing
++
++    Scenario: Entering editing mode applies the editing class to the list item
++      Given I have added a todo "Buy milk"
++      When I double-click the label of the todo "Buy milk"
++      Then the todo "Buy milk" is in editing mode
++
++  Rule: CSS dependencies must be installed for editing visibility
++
++    Scenario: The todomvc-app-css package is declared in package.json
++      Then the project depends on "todomvc-app-css"
++
++    Scenario: The todomvc-common package is declared in package.json
++      Then the project depends on "todomvc-common"
++
++    Scenario: The todomvc-app-css stylesheet exists
++      Then the file "node_modules/todomvc-app-css/index.css" exists
++
++    Scenario: The todomvc-common base stylesheet exists
++      Then the file "node_modules/todomvc-common/base.css" exists
++
++    Scenario: The todomvc-app-css stylesheet hides the view container during editing
++      Then the file "node_modules/todomvc-app-css/index.css" contains the rule "li.editing .view"
+diff --git a/features/support/steps.js b/features/support/steps.js
+index 189e949..b0a0c59 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -1,4 +1,7 @@
+ const { Given, When, Then } = require('@cucumber/cucumber');
++const fs = require('node:fs');
++const path = require('node:path');
++const ROOT = path.resolve(__dirname, '..', '..');
+ 
+ // ---------------------------------------------------------------------------
+ // Helpers
+@@ -426,3 +429,83 @@ Then('the {string} filter link is not selected', function (linkText) {
+     throw new Error(`Filter link "${linkText}" is selected but should not be`);
+   }
+ });
++
++// ---------------------------------------------------------------------------
++// DOM stability steps (for dom-stability.feature)
++// ---------------------------------------------------------------------------
++
++When('I remember the DOM node of the todo {string}', function (title) {
++  const li = todoByTitle(this.document, title);
++  if (!li) throw new Error(`Todo "${title}" not found`);
++  this._rememberedNode = li;
++  this._rememberedNodeId = li.getAttribute('data-id');
++});
++
++Then('the remembered DOM node is still in the document', function () {
++  if (!this._rememberedNode) throw new Error('No DOM node was remembered');
++  const node = this._rememberedNode;
++  // Check that the same object is still a child of the document
++  if (!this.document.contains(node)) {
++    throw new Error(
++      'The remembered DOM node (data-id=' + this._rememberedNodeId + ') is no longer in the document. '
++      + 'The app replaced DOM nodes instead of mutating them in place.'
++    );
++  }
++});
++
++Then('the remembered DOM node has the {string} class', function (className) {
++  if (!this._rememberedNode) throw new Error('No DOM node was remembered');
++  if (!this._rememberedNode.classList.contains(className)) {
++    throw new Error(
++      'The remembered DOM node (data-id=' + this._rememberedNodeId + ') does not have the "' + className + '" class. '
++      + 'It has: ' + Array.from(this._rememberedNode.classList).join(', ')
++    );
++  }
++});
++
++Then('the remembered DOM node does not have the {string} class', function (className) {
++  if (!this._rememberedNode) throw new Error('No DOM node was remembered');
++  if (this._rememberedNode.classList.contains(className)) {
++    throw new Error(
++      'The remembered DOM node (data-id=' + this._rememberedNodeId + ') still has the "' + className + '" class '
++      + 'but it should not'
++    );
++  }
++});
++
++// ---------------------------------------------------------------------------
++// Source-level conformance steps (for editing-controls.feature)
++// ---------------------------------------------------------------------------
++
++Then('the project depends on {string}', function (pkgName) {
++  const pkgPath = path.join(ROOT, 'package.json');
++  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
++  const allDeps = { ...pkg.dependencies, ...pkg.devDependencies };
++  if (!(pkgName in allDeps)) {
++    throw new Error(
++      `package.json does not declare "${pkgName}" as a dependency. ` +
++      `Required for CSS rules that hide view controls during editing.`
++    );
++  }
++});
++
++Then('the file {string} exists', function (relPath) {
++  const fullPath = path.join(ROOT, relPath);
++  if (!fs.existsSync(fullPath)) {
++    throw new Error(`File "${relPath}" does not exist at ${fullPath}`);
++  }
++});
++
++Then('the file {string} contains the rule {string}', function (relPath, rule) {
++  const fullPath = path.join(ROOT, relPath);
++  if (!fs.existsSync(fullPath)) {
++    throw new Error(`File "${relPath}" does not exist — cannot check for rule`);
++  }
++  const content = fs.readFileSync(fullPath, 'utf8');
++  if (!content.includes(rule)) {
++    throw new Error(
++      `File "${relPath}" does not contain the CSS rule "${rule}". ` +
++      `This rule is required to hide view controls during editing.`
++    );
++  }
++});
+diff --git a/watchbill.json b/watchbill.json
+index 49d8850..858eada 100644
+--- a/watchbill.json
++++ b/watchbill.json
+@@ -92,6 +92,27 @@
+         "features/routing.feature:Completing an item on the active filter hides it",
+         "features/routing.feature:The active filter is maintained after page reload"
+       ]
++    },
++    {
++      "name": "dom-stability",
++      "scenarios": [
++        "features/dom-stability.feature:Clicking a checkbox preserves the other todo's DOM node",
++        "features/dom-stability.feature:Clicking toggle-all preserves todo DOM nodes",
++        "features/dom-stability.feature:Uncompleting a todo preserves other DOM nodes",
++        "features/dom-stability.feature:Saving an edit preserves other DOM nodes",
++        "features/dom-stability.feature:Destroying a todo preserves other DOM nodes"
++      ]
++    },
++    {
++      "name": "editing-controls",
++      "scenarios": [
++        "features/editing-controls.feature:Entering editing mode applies the editing class to the list item",
++        "features/editing-controls.feature:The todomvc-app-css package is declared in package.json",
++        "features/editing-controls.feature:The todomvc-common package is declared in package.json",
++        "features/editing-controls.feature:The todomvc-app-css stylesheet exists",
++        "features/editing-controls.feature:The todomvc-common base stylesheet exists",
++        "features/editing-controls.feature:The todomvc-app-css stylesheet hides the view container during editing"
++      ]
+     }
+   ]
+ }

@@ -1,0 +1,129 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 44d3b45..c642dc7 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -2,24 +2,28 @@
+ 
+ # Captain Notes
+ 
+-## Voyage 1 — TodoMVC vanilla JS
++## Voyage 2 — Browser-identity defects
+ 
+ ### State at opening
+-- Greenfield project with test infrastructure (cucumber + happy-dom + world.js) already fitted
+-- No production code: `index.html`, `js/app.js`, `css/app.css` all absent
+-- Dependencies `todomvc-common` and `todomvc-app-css` not installed
+-- Working tree clean, `main` branch
++- Voyage 1 complete: TodoMVC vanilla JS app implemented, all 31 scenarios pass via happy-dom
++- Cypress acceptance suite (real browser) reports 5 failures due to DOM node detachment
++- Root cause: `render()` in `js/app.js` uses `todoList.innerHTML = ...` which destroys and recreates all `<li>` elements on every state change
++- Additional issue: `.toggle` checkbox not hidden during editing (no CSS rule, no `todomvc-app-css` loaded)
+ 
+-### Decisions
+-- **Stack**: Vanilla JS (no preprocessors), happy-dom test tier (per existing world.js)
+-- **localStorage key**: `todos-vanillajs` (per spec convention: `todos-[framework]`)
+-- **Routing**: Native hashchange, no Director library (spec allows this; happy-dom world.js provides synthetic hashchange dispatch)
+-- **Scenarios**: 31 scenarios across 6 watch groups covering all spec sections
++### Acceptance failures (fixed spec, must not change test)
++1. "Mark all as completed" — `cy.eq()` fails: toggle-all re-render destroys all `<li>` references
++2. "Clear complete state of all items" — same: toggle-all re-render
++3. "Mark items as complete" — `cy.find()` fails: single toggle triggers `render()` which rebuilds list
++4. "Un-mark items as complete" — same: single toggle re-render
++5. "Hide other controls when editing" — `.toggle` checkbox is visible during editing, should be hidden
+ 
+-### Open questions
+-- Does the user want the `todomvc-common` and `todomvc-app-css` packages installed before Shipwright work? The template index.html references them via node_modules paths.
+-- The `js/app.js` file does not exist yet — Crew must implement all production code.
+-- World.js enforces that `index.html` and `js/app.js` exist before any scenario runs; first Crew implementation will need to create both.
++### Decisions
++- **DOM identity**: The app must mutate existing `<li>` nodes in place (toggle class/checkbox) instead of rebuilding via `innerHTML`. This preserves browser-held references.
++- **Editing controls**: `.toggle` checkbox must be hidden when the parent `<li>` has `.editing` class (CSS: `.todo-list li.editing .toggle { display: none; }`)
++- 4 new scenarios added to `features/todos.feature` pinning this behaviour
++- `watchbill.json` created with 2 watches: `watch-dom-identity` and `watch-editing-controls`
+ 
+ ### Next role
+-Shipwright → Crew → QM (per watchbill). Boatswain for custody after QM goes green.
+\ No newline at end of file
++QM → implement step definitions for the 4 new scenarios, then execute watchbill.
++Crew → fix `render()` to mutate in-place; add CSS rule to hide toggle during editing.
++Boatswain → custody after QM goes green.
+\ No newline at end of file
+diff --git a/features/todos.feature b/features/todos.feature
+index b755233..4c2b73a 100644
+--- a/features/todos.feature
++++ b/features/todos.feature
+@@ -52,6 +52,15 @@ Feature: TodoMVC
+     Then all todos are completed
+     And "#toggle-all" is checked
+ 
++  Scenario: Toggling all preserves element identity
++    Given the todo list has items:
++      | title       | completed |
++      | Task One    | false     |
++      | Task Two    | false     |
++    When I capture the reference to the item "Task One"
++    And I click "#toggle-all"
++    Then the captured reference is still attached
++
+   Scenario: Mark all unchecks when one todo is unchecked
+     Given the todo list has items:
+       | title       | completed |
+@@ -76,16 +85,33 @@ Feature: TodoMVC
+     When I click the toggle for "Buy milk"
+     Then the item "Buy milk" has class "completed"
+ 
++  Scenario: Checking a todo preserves element identity
++    Given the todo list has item "Buy milk"
++    When I capture the reference to the item "Buy milk"
++    And I click the toggle for "Buy milk"
++    Then the captured reference is still attached
++
+   Scenario: Unchecking a todo removes completed state
+     Given the todo list has item "Buy milk" completed
+     When I click the toggle for "Buy milk"
+     Then the item "Buy milk" does not have class "completed"
+ 
++  Scenario: Unchecking a todo preserves element identity
++    Given the todo list has item "Buy milk" completed
++    When I capture the reference to the item "Buy milk"
++    And I click the toggle for "Buy milk"
++    Then the captured reference is still attached
++
+   Scenario: Double-clicking a todo label enters edit mode
+     Given the todo list has item "Buy milk"
+     When I double-click the label for "Buy milk"
+     Then the item "Buy milk" has class "editing"
+ 
++  Scenario: Editing hides the toggle control
++    Given the todo list has item "Buy milk"
++    When I double-click the label for "Buy milk"
++    Then the item "Buy milk" has hidden toggle
++
+   Scenario: The destroy button is present on todo items
+     Given the todo list has item "Buy milk"
+     Then the item "Buy milk" has a ".destroy" button
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..a100d25
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,18 @@
++{
++  "watches": [
++    {
++      "id": "watch-dom-identity",
++      "scenarios": [
++        "Checking a todo preserves element identity",
++        "Unchecking a todo preserves element identity",
++        "Toggling all preserves element identity"
++      ]
++    },
++    {
++      "id": "watch-editing-controls",
++      "scenarios": [
++        "Editing hides the toggle control"
++      ]
++    }
++  ]
++}
+\ No newline at end of file

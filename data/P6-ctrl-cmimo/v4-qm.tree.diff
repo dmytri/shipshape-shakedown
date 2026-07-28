@@ -1,0 +1,98 @@
+diff --git a/js/app.js b/js/app.js
+index 2d66168..77e2d97 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -47,26 +47,60 @@
+     var todos = loadTodos();
+     var filtered = getFilteredTodos(todos);
+ 
+-    // Clear list
+-    todoList.innerHTML = '';
++    // Build a map of existing li elements by data-id
++    var existingLis = {};
++    var existingNodes = todoList.querySelectorAll('li[data-id]');
++    for (var i = 0; i < existingNodes.length; i++) {
++      var el = existingNodes[i];
++      existingLis[el.getAttribute('data-id')] = el;
++    }
+ 
+-    // Render each todo
++    // Update or create each todo's li in place
++    var usedIds = {};
+     filtered.forEach(function (todo) {
+-      var li = document.createElement('li');
+-      li.setAttribute('data-id', todo.id);
+-      if (todo.completed) li.classList.add('completed');
+-
+-      li.innerHTML =
+-        '<div class="view">' +
+-          '<input class="toggle" type="checkbox"' + (todo.completed ? ' checked' : '') + '>' +
+-          '<label>' + escapeHtml(todo.title) + '</label>' +
+-          '<button class="destroy"></button>' +
+-        '</div>' +
+-        '<input class="edit" value="' + escapeHtml(todo.title) + '">';
+-
+-      todoList.appendChild(li);
++      var id = String(todo.id);
++      usedIds[id] = true;
++      var li = existingLis[id];
++      if (li) {
++        // Update in place
++        if (todo.completed) {
++          li.classList.add('completed');
++        } else {
++          li.classList.remove('completed');
++        }
++        var toggle = li.querySelector('.toggle');
++        toggle.checked = todo.completed;
++        var label = li.querySelector('label');
++        label.textContent = todo.title;
++        var edit = li.querySelector('.edit');
++        edit.value = todo.title;
++      } else {
++        // Create new
++        li = document.createElement('li');
++        li.setAttribute('data-id', id);
++        if (todo.completed) li.classList.add('completed');
++
++        li.innerHTML =
++          '<div class="view">' +
++            '<input class="toggle" type="checkbox"' + (todo.completed ? ' checked' : '') + '>' +
++            '<label>' + escapeHtml(todo.title) + '</label>' +
++            '<button class="destroy"></button>' +
++          '</div>' +
++          '<input class="edit" value="' + escapeHtml(todo.title) + '">';
++
++        todoList.appendChild(li);
++      }
+     });
+ 
++    // Remove li elements that are no longer in the filtered list
++    var children = todoList.querySelectorAll('li[data-id]');
++    for (var j = 0; j < children.length; j++) {
++      var child = children[j];
++      if (!usedIds[child.getAttribute('data-id')]) {
++        todoList.removeChild(child);
++      }
++    }
++
+     // Counter
+     var activeCount = todos.filter(function (t) { return !t.completed; }).length;
+     var pluralized = activeCount === 1 ? 'item' : 'items';
+diff --git a/wake/runrecord.json b/wake/runrecord.json
+index e15de9a..b48ff2c 100644
+--- a/wake/runrecord.json
++++ b/wake/runrecord.json
+@@ -1 +1,12 @@
+ {"targets":["features/new-todo.feature:Pressing Enter with an empty input creates no todo","features/new-todo.feature:Whitespace-only input is trimmed and rejected","features/new-todo.feature:Pressing Enter creates a todo from the input value","features/new-todo.feature:Input is trimmed before creating a todo","features/new-todo.feature:A newly created todo is not completed","features/new-todo.feature:The input has focus when the page loads","features/toggle-all.feature:Clicking toggle-all when all items are active marks all completed","features/toggle-all.feature:Clicking toggle-all when all items are completed marks all active","features/toggle-all.feature:Toggle-all becomes checked when all items are individually completed","features/toggle-all.feature:Toggle-all becomes unchecked when any item is individually unchecked","features/toggle-all.feature:Toggle-all is unchecked after clearing completed items","features/item-interactions.feature:Clicking the toggle checkbox marks the todo as completed","features/item-interactions.feature:Clicking the toggle checkbox again unmarks the todo","features/item-interactions.feature:Double-clicking a todo label enters editing mode","features/item-interactions.feature:The destroy button is present on each todo","features/editing.feature:Pressing Enter saves the edited title","features/editing.feature:Blurring the edit input saves the edited title","features/editing.feature:Saving an empty edit removes the todo","features/editing.feature:Saving a whitespace-only edit removes the todo","features/editing.feature:Pressing Escape reverts to the original title","features/editing.feature:Trailing and leading whitespace is removed from edits","features/counter.feature:Counter shows zero items left when no todos exist","features/counter.feature:Counter shows one item left","features/counter.feature:Counter shows two items left","features/counter.feature:Counter decrements when a todo is completed","features/counter.feature:Counter increments when a todo is uncompleted","features/counter.feature:The count number is bold","features/visibility.feature:The main section is hidden when the todo list is empty","features/visibility.feature:The footer is hidden when the todo list is empty","features/visibility.feature:The main section is visible when a todo is added","features/visibility.feature:The footer is visible when a todo is added","features/visibility.feature:Clear completed button is hidden when no completed todos","features/visibility.feature:Clear completed button is visible when completed todos exist","features/visibility.feature:Clear completed button hides after all completed are cleared","features/clear-completed.feature:Clicking clear-completed removes all completed todos","features/clear-completed.feature:Active todos remain after clearing","features/clear-completed.feature:Only completed items are removed","features/persistence.feature:Added todos persist after page reload","features/persistence.feature:Completed state persists after page reload","features/persistence.feature:Destroyed todos do not reappear after reload","features/persistence.feature:Todos are stored under the correct key","features/persistence.feature:A todo in editing mode is saved without editing class on reload","features/routing.feature:All todos are visible on the default route","features/routing.feature:Completed todos are hidden on the active filter","features/routing.feature:Active todos are hidden on the completed filter","features/routing.feature:The selected class is applied to the active filter link","features/routing.feature:Completing an item on the active filter hides it","features/routing.feature:The active filter is maintained after page reload"],"command":"npx cucumber-js --tags \"not @captain and not @shipwright\"","result":"pass","hash":"f1cd0c649823272ea1cac5b1c2023269c270845f"}
++{"targets":["features/new-todo.feature:Pressing Enter with an empty input creates no todo","features/new-todo.feature:Whitespace-only input is trimmed and rejected","features/new-todo.feature:Pressing Enter creates a todo from the input value","features/new-todo.feature:Input is trimmed before creating a todo","features/new-todo.feature:A newly created todo is not completed","features/new-todo.feature:The input has focus when the page loads"],"command":"npx cucumber-js --tags \"not @captain and not @shipwright\" --name \"Pressing Enter with an empty input creates no todo\" --name \"Whitespace-only input is trimmed and rejected\" --name \"Pressing Enter creates a todo from the input value\" --name \"Input is trimmed before creating a todo\" --name \"A newly created todo is not completed\" --name \"The input has focus when the page loads\"","result":"pass","hash":"25fff24c081634ab6c5b33fa5c878ee999559a69"}
++{"targets":["features/toggle-all.feature:Clicking toggle-all when all items are active marks all completed","features/toggle-all.feature:Clicking toggle-all when all items are completed marks all active","features/toggle-all.feature:Toggle-all becomes checked when all items are individually completed","features/toggle-all.feature:Toggle-all becomes unchecked when any item is individually unchecked","features/toggle-all.feature:Toggle-all is unchecked after clearing completed items"],"command":"npx cucumber-js --tags \"not @captain and not @shipwright\" --name \"Clicking toggle-all when all items are active marks all completed\" --name \"Clicking toggle-all when all items are completed marks all active\" --name \"Toggle-all becomes checked when all items are individually completed\" --name \"Toggle-all becomes unchecked when any item is individually unchecked\" --name \"Toggle-all is unchecked after clearing completed items\"","result":"pass","hash":"21d51203580f0dd5811dc5c1772fcd8e097f8549"}
++{"targets":["features/item-interactions.feature:Clicking the toggle checkbox marks the todo as completed","features/item-interactions.feature:Clicking the toggle checkbox again unmarks the todo","features/item-interactions.feature:Double-clicking a todo label enters editing mode","features/item-interactions.feature:The destroy button is present on each todo"],"command":"npx cucumber-js --tags \"not @captain and not @shipwright\" --name \"Clicking the toggle checkbox marks the todo as completed\" --name \"Clicking the toggle checkbox again unmarks the todo\" --name \"Double-clicking a todo label enters editing mode\" --name \"The destroy button is present on each todo\"","result":"pass","hash":"36f408274393596c3e61cd86dc58246755e38ad6"}
++{"targets":["features/editing.feature:Pressing Enter saves the edited title","features/editing.feature:Blurring the edit input saves the edited title","features/editing.feature:Saving an empty edit removes the todo","features/editing.feature:Saving a whitespace-only edit removes the todo","features/editing.feature:Pressing Escape reverts to the original title","features/editing.feature:Trailing and leading whitespace is removed from edits"],"command":"npx cucumber-js --tags \"not @captain and not @shipwright\" --name \"Pressing Enter saves the edited title\" --name \"Blurring the edit input saves the edited title\" --name \"Saving an empty edit removes the todo\" --name \"Saving a whitespace-only edit removes the todo\" --name \"Pressing Escape reverts to the original title\" --name \"Trailing and leading whitespace is removed from edits\"","result":"pass","hash":"1960ba2c696931975cb9b5069427a4026f7b9754"}
++{"targets":["features/counter.feature:Counter shows zero items left when no todos exist","features/counter.feature:Counter shows one item left","features/counter.feature:Counter shows two items left","features/counter.feature:Counter decrements when a todo is completed","features/counter.feature:Counter increments when a todo is uncompleted","features/counter.feature:The count number is bold"],"command":"npx cucumber-js --tags \"not @captain and not @shipwright\" --name \"Counter shows zero items left when no todos exist\" --name \"Counter shows one item left\" --name \"Counter shows two items left\" --name \"Counter decrements when a todo is completed\" --name \"Counter increments when a todo is uncompleted\" --name \"The count number is bold\"","result":"pass","hash":"77ce4cac7b13b8cca3cb0d944fd0bdca7be5e8b3"}
++{"targets":["features/visibility.feature:The main section is hidden when the todo list is empty","features/visibility.feature:The footer is hidden when the todo list is empty","features/visibility.feature:The main section is visible when a todo is added","features/visibility.feature:The footer is visible when a todo is added","features/visibility.feature:Clear completed button is hidden when no completed todos","features/visibility.feature:Clear completed button is visible when completed todos exist","features/visibility.feature:Clear completed button hides after all completed are cleared"],"command":"npx cucumber-js --tags \"not @captain and not @shipwright\" --name \"The main section is hidden when the todo list is empty\" --name \"The footer is hidden when the todo list is empty\" --name \"The main section is visible when a todo is added\" --name \"The footer is visible when a todo is added\" --name \"Clear completed button is hidden when no completed todos\" --name \"Clear completed button is visible when completed todos exist\" --name \"Clear completed button hides after all completed are cleared\"","result":"pass","hash":"81e6de9c6f3bd635c2e398c4eef27aeeae65cfc0"}
++{"targets":["features/clear-completed.feature:Clicking clear-completed removes all completed todos","features/clear-completed.feature:Active todos remain after clearing","features/clear-completed.feature:Only completed items are removed"],"command":"npx cucumber-js --tags \"not @captain and not @shipwright\" --name \"Clicking clear-completed removes all completed todos\" --name \"Active todos remain after clearing\" --name \"Only completed items are removed\"","result":"pass","hash":"8c39cca42249491c605b836bef3bb168bfc3a5a5"}
++{"targets":["features/persistence.feature:Added todos persist after page reload","features/persistence.feature:Completed state persists after page reload","features/persistence.feature:Destroyed todos do not reappear after reload","features/persistence.feature:Todos are stored under the correct key","features/persistence.feature:A todo in editing mode is saved without editing class on reload"],"command":"npx cucumber-js --tags \"not @captain and not @shipwright\" --name \"Added todos persist after page reload\" --name \"Completed state persists after page reload\" --name \"Destroyed todos do not reappear after reload\" --name \"Todos are stored under the correct key\" --name \"A todo in editing mode is saved without editing class on reload\"","result":"pass","hash":"99a87031bedf00e1eec29b4558914f8d2d3c7f86"}
++{"targets":["features/routing.feature:All todos are visible on the default route","features/routing.feature:Completed todos are hidden on the active filter","features/routing.feature:Active todos are hidden on the completed filter","features/routing.feature:The selected class is applied to the active filter link","features/routing.feature:Completing an item on the active filter hides it","features/routing.feature:The active filter is maintained after page reload"],"command":"npx cucumber-js --tags \"not @captain and not @shipwright\" --name \"All todos are visible on the default route\" --name \"Completed todos are hidden on the active filter\" --name \"Active todos are hidden on the completed filter\" --name \"The selected class is applied to the active filter link\" --name \"Completing an item on the active filter hides it\" --name \"The active filter is maintained after page reload\"","result":"pass","hash":"7aa6e000ece2f960cbf31be02f28229ec6677f67"}
++{"targets":["features/dom-stability.feature:Clicking a checkbox preserves the other todo's DOM node","features/dom-stability.feature:Clicking toggle-all preserves todo DOM nodes","features/dom-stability.feature:Saving an edit preserves other DOM nodes","features/dom-stability.feature:Destroying a todo preserves other DOM nodes"],"command":"npx cucumber-js --tags \"not @captain and not @shipwright\" --name \"Clicking a checkbox preserves the other todo's DOM node\" --name \"Clicking toggle-all preserves todo DOM nodes\" --name \"Saving an edit preserves other DOM nodes\" --name \"Destroying a todo preserves other DOM nodes\"","result":"pass","hash":"3366aa16fe027849382be44e46037d5f24f5d51b"}
++{"targets":["features/editing-controls.feature:Entering editing mode applies the editing class to the list item"],"command":"npx cucumber-js --tags \"not @captain and not @shipwright\" --name \"Entering editing mode applies the editing class to the list item\"","result":"pass","hash":"f6472c948ebb5434478065819d7bb0fd1c7e671a"}

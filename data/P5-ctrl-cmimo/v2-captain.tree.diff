@@ -1,0 +1,126 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index bd5a679..60370c0 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -12,6 +12,7 @@ Deck is clean. No production code exists in `js/` yet.
+ 
+ | Feature file | Scenarios | Lane |
+ |---|---|---|
++| root-index-html.feature | 1 | product |
+ | todo-visibility.feature | 2 | product |
+ | new-todo.feature | 4 | product |
+ | editing.feature | 5 | product |
+@@ -22,17 +23,28 @@ Deck is clean. No production code exists in `js/` yet.
+ | persistence.feature | 2 | product |
+ | routing.feature | 5 | product |
+ | methodology-conformance.feature | 2 | conformance |
+-| **Total** | **30** | **28 product, 2 conformance** |
++| **Total** | **31** | **29 product, 2 conformance** |
+ 
+ ### Watchbill order
+ 
+-1. structure — DOM rendering, section visibility
+-2. new-todo — input, creation, trimming
+-3. item-interactions — checkbox, double-click, hover
+-4. toggle-all — mark-all-complete
+-5. counter — pluralized count
+-6. clear-completed — button visibility and removal
+-7. editing — save, blur, destroy, cancel, trim
+-8. persistence — localStorage survival across reloads
+-9. routing — hash-based filters, selected class, persistence
+-10. methodology — watchbill shape, perturbation quiescence
++1. root-entry-point — root index.html existence, structure, script tag
++2. structure — DOM rendering, section visibility
++3. new-todo — input, creation, trimming
++4. item-interactions — checkbox, double-click, hover
++5. toggle-all — mark-all-complete
++6. counter — pluralized count
++7. clear-completed — button visibility and removal
++8. editing — save, blur, destroy, cancel, trim
++9. persistence — localStorage survival across reloads
++10. routing — hash-based filters, selected class, persistence
++11. methodology — watchbill shape, perturbation quiescence
++
++### Voyage: Root index.html spec
++
++**Problem:** Opening the app in a real web browser shows a blank page. No `index.html` exists at the project root. The test harness reads `js/index.html` directly, so all 30 existing DOM scenarios pass, but the product has no browser entry point.
++
++**Action:** Authored `features/root-index-html.feature` with one scenario that asserts the root `index.html` exists, contains a script tag loading `js/app.js`, and carries the core TodoMVC sections (`.todoapp`, `.new-todo`, `.todo-list`). Added filesystem-based step definitions to `features/support/steps.js`. Updated `watchbill.json` with a new `root-entry-point` watch at position 1.
++
++**Verification:** Scenario fails red as expected -- `Given the root index.html exists at the project root` asserts file existence and the file is absent. Dry-run: 31 scenarios, 125 steps, all parsable.
++
++**Handoff to QM:** Red target is `features/root-index-html.feature:Root index.html exists with correct structure and script`. Crew must create a root `index.html` built from `assets/app-template.index.html` that loads `js/app.js` via a script tag. The scenario will go green when the file exists with the correct structure.
+diff --git a/features/root-index-html.feature b/features/root-index-html.feature
+new file mode 100644
+index 0000000..588dd9a
+--- /dev/null
++++ b/features/root-index-html.feature
+@@ -0,0 +1,11 @@
++Feature: Root index.html
++  As a user opening the TodoMVC app in a browser
++  I want an index.html at the project root that loads the app
++  So that the todo app renders and runs when I open the page
++
++  Scenario: Root index.html exists with correct structure and script
++    Given the root index.html exists at the project root
++    Then the root index.html contains a script tag loading "js/app.js"
++    And the root index.html contains the section with class "todoapp"
++    And the root index.html contains an input with class "new-todo"
++    And the root index.html contains a ul with class "todo-list"
+diff --git a/features/support/steps.js b/features/support/steps.js
+index 1328b68..7b70f04 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -267,3 +267,35 @@ Then('the destroy button for todo {string} is visible', function (title) {
+ Then('the check passes', function () {
+   assert.strictEqual(this._checkResult, true, 'Check should pass');
+ });
++
++// --- Root index.html steps ---
++
++Given('the root index.html exists at the project root', function () {
++  const rootPath = path.resolve(__dirname, '../../index.html');
++  assert.ok(fs.existsSync(rootPath), 'index.html must exist at the project root');
++  this._rootHtml = fs.readFileSync(rootPath, 'utf8');
++});
++
++Then('the root index.html contains a script tag loading {string}', function (src) {
++  assert.ok(this._rootHtml, 'Root index.html must be loaded');
++  const pattern = new RegExp('<script[^>]+src=["\']' + src.replace('/', '\/') + '["\']');
++  assert.ok(pattern.test(this._rootHtml), 'Root index.html must contain a script tag loading ' + src);
++});
++
++Then('the root index.html contains the section with class {string}', function (className) {
++  assert.ok(this._rootHtml, 'Root index.html must be loaded');
++  const pattern = new RegExp('<section[^>]+class=["\'][^"]*' + className + '[^"]*["\']');
++  assert.ok(pattern.test(this._rootHtml), 'Root index.html must contain a section with class ' + className);
++});
++
++Then('the root index.html contains an input with class {string}', function (className) {
++  assert.ok(this._rootHtml, 'Root index.html must be loaded');
++  const pattern = new RegExp('<input[^>]+class=["\'][^"]*' + className + '[^"]*["\']');
++  assert.ok(pattern.test(this._rootHtml), 'Root index.html must contain an input with class ' + className);
++});
++
++Then('the root index.html contains a ul with class {string}', function (className) {
++  assert.ok(this._rootHtml, 'Root index.html must be loaded');
++  const pattern = new RegExp('<ul[^>]+class=["\'][^"]*' + className + '[^"]*["\']');
++  assert.ok(pattern.test(this._rootHtml), 'Root index.html must contain a ul with class ' + className);
++});
+diff --git a/watchbill.json b/watchbill.json
+index 99e694a..6b50bef 100644
+--- a/watchbill.json
++++ b/watchbill.json
+@@ -1,5 +1,12 @@
+ {
+   "watches": [
++    {
++      "name": "root-entry-point",
++      "description": "Root index.html exists with correct structure and loads the app",
++      "scenarios": [
++        "features/root-index-html.feature:Root index.html exists with correct structure and script"
++      ]
++    },
+     {
+       "name": "structure",
+       "description": "App skeleton, DOM rendering, and section visibility",

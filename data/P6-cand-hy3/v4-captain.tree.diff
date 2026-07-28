@@ -1,0 +1,134 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 90e48eb..2bf13d7 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -6,34 +6,43 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ 
+ ## Defect diagnosis (from the fixed, correct Cypress acceptance suite)
+ 
+-The real-browser acceptance suite reports five failures that the in-harness Cucumber/happy-dom
+-suite does not reproduce:
++The real-browser acceptance suite reports three failures that the in-harness Cucumber/happy-dom
++suite did not previously pin:
+ 
+-1-2. "Mark all as completed" — toggle-all complete and toggle-all clear.
+-3-4. "Item" — mark and un-mark a single item complete.
+-5. "Editing" — the toggle must be hidden while a todo is being edited.
++1. "Item - should allow me to mark items as complete" - `cy.find()` on a detached node.
++2. "Item - should allow me to un-mark items as complete" - same detach.
++3. "Editing - should hide other controls when editing" - `expected '<label>' not to be 'visible'`.
+ 
+-Root cause for 1-4 is a DOM-identity defect: `render()` in `js/app.js` rebuilds the list with
+-`todoList.innerHTML = ...` on every state change, so every interaction detaches and recreates the
+-`<li>` nodes. A browser (Cypress) that holds a reference before the click sees the old node detach,
+-so `cy.eq()` / `cy.find()` fail. happy-dom preserves node identity, so a step that captures a
+-reference and compares it after the interaction DOES reproduce this in-harness; the new scenarios
+-in `features/todo-dom-stability.feature` pin that.
++Root cause for 1 and 2 is a DOM-identity defect: a state change re-renders the list with
++`todoList.innerHTML = ...`, detaching and recreating the `<li>` nodes. A browser (Cypress) that
++holds a reference before the click sees the old node detach, so chained `cy.find()` fails. The fix is
++to mutate the existing node in place (toggle its `completed` class and checkbox) instead of rebuilding.
+ 
+-Failure 5 is visibility-only: there is no rule hiding the toggle (or the rest of the controls) while
+-`.editing` is set, so the toggle stays visible. The new scenario pins "toggle not visible during
+-editing" via `checkVisibility()`, which happy-dom honours for `display:none`.
++Failure 3 is the same editing interaction: once a todo enters edit mode, its `label` (and the rest
++of the view controls) must not be visible. The current code only hides the `toggle`, so the label
++stays visible and the assertion times out.
++
++## Reproducibility
++
++happy-dom DOES replace child nodes on `innerHTML` reassignment, and `getComputedStyle` reflects an
++inline `display:none`. So an in-harness scenario that captures a reference before the change and
++compares it after reproduces failures 1 and 2; a visibility scenario reproduces failure 3. A
++behavioural scenario is the right tool; no source-level conformance check is required.
+ 
+ ## Decision
+ 
+-Pin all five as product-behaviour scenarios in `features/todo-dom-stability.feature` and list them in
+-`watchbill.json` (watch1: identity for 1-4; watch2: editing visibility for 5). The Quartermaster
+-authors the three new step definitions; the Crew fixes `js/app.js` to mutate list elements in place
+-and to hide the toggle during edit. No production code written here.
++Pin all three as product-behaviour scenarios in `features/todo-dom-stability.feature`:
++- watch1: element identity for mark and un-mark complete (failures 1 and 2).
++- watch2: label hidden while editing (failure 3).
++
++The Quartermaster authors the one missing step definition ("the label of the todo {string} is not
++visible", mirroring the existing toggle-visibility step) and the Crew fixes `js/app.js` to mutate
++list elements in place on completion changes and to hide the label (and the rest of the view) while
++editing. No production code written here.
+ 
+ ## Open question
+ 
+-Failure 5's scenario fails on current code in-harness (toggle is visible). Whether it also turns
+-green after a CSS-class fix depends on whether the harness applies the stylesheet for `checkVisibility`;
+-the real-browser acceptance suite is the authority for that behaviour. If the in-harness cannot see a
+-CSS-based fix, that is the expected browser-only limitation; do not force it.
++Whether failure 3's in-harness scenario goes green after the fix depends on the Crew hiding the label
++through a channel happy-dom's `getComputedStyle` honours (inline `display:none`), which also satisfies
++the real browser. If a fix leans only on an external stylesheet the in-harness tier cannot load, that
++is the expected browser-only limitation; the real-browser acceptance suite remains the authority.
+diff --git a/features/todo-dom-stability.feature b/features/todo-dom-stability.feature
+index 0de8405..53814de 100644
+--- a/features/todo-dom-stability.feature
++++ b/features/todo-dom-stability.feature
+@@ -1,9 +1,9 @@
+ Feature: Todo list element stability
+   As a todo-list user
+   I want the app to update an item without replacing its list element
+-  So that a browser that already holds that element keeps working after I change its state
++  So that a browser that already holds a reference to that element keeps working after I change its state
+ 
+-  Rule: The app mutates an existing list element in place when an item's state changes, instead of rebuilding the list
++  Rule: The app mutates an existing list element in place when an item's completion changes, instead of rebuilding the list
+ 
+   Scenario: Completing a todo keeps the same element in the DOM
+     Given the app loads with active todo "a"
+@@ -17,25 +17,9 @@ Feature: Todo list element stability
+     When I complete the todo "a"
+     Then the todo "a" element is the same element as the held reference
+ 
+-  Scenario: Toggling all to complete keeps every element in the DOM
+-    Given the app loads with active todos "a" and "b"
+-    And I hold a reference to the todo "a" element
+-    And I hold a reference to the todo "b" element
+-    When I click the toggle-all control
+-    Then the todo "a" element is the same element as the held reference
+-    And the todo "b" element is the same element as the held reference
+-
+-  Scenario: Toggling all to clear keeps every element in the DOM
+-    Given the app loads with completed todos "a" and "b"
+-    And I hold a reference to the todo "a" element
+-    And I hold a reference to the todo "b" element
+-    When I click the toggle-all control
+-    Then the todo "a" element is the same element as the held reference
+-    And the todo "b" element is the same element as the held reference
+-
+-  Rule: While a todo is being edited, its toggle control is hidden
++  Rule: While a todo is being edited, its label control is hidden
+ 
+-  Scenario: Editing a todo hides its toggle control
++  Scenario: Editing a todo hides its label
+     Given the app loads with todo "a"
+     When I double-click the label of the todo "a"
+-    Then the toggle control of the todo "a" is not visible
++    Then the label of the todo "a" is not visible
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..bcbed0d
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,13 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/todo-dom-stability.feature:Completing a todo keeps the same element in the DOM",
++      "features/todo-dom-stability.feature:Uncompleting a todo keeps the same element in the DOM"
++    ]
++  },
++  "watch2": {
++    "scenarios": [
++      "features/todo-dom-stability.feature:Editing a todo hides its label"
++    ]
++  }
++}

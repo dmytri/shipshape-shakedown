@@ -1,0 +1,20 @@
+[2026-07-28T09:07:25Z] PILOT START wave=P6-cand-mimo model=xiaomi/mimo-v2.5 clone=/home/exedev/shipshape-shakedown/.eval-scratch/oracle-clone-mimo port=8874 max=12 resume=0
+[2026-07-28T09:07:26Z] VOYAGE 0 (fit out: Shipwright harbour pass BEFORE the build)
+[2026-07-28T09:11:37Z] SHIPWRIGHT[fitout] 250s | committed=reverted(self-suite red) | self-suite:3 scenarios (3 failed) | planks=NO-APP.JS
+[2026-07-28T09:11:37Z] VOYAGE 1 (build)
+[2026-07-28T09:19:23Z] V1 build 466s | self-suite: 25 scenarios (25 passed)
+[2026-07-28T09:20:16Z] V1 (post-shipwright) | oracle 24/29 | failing:
+    TodoMVC - shakedown -- Mark all as completed -- should allow me to mark all items as completed
+    TodoMVC - shakedown -- Mark all as completed -- should allow me to clear the complete state of all items
+    TodoMVC - shakedown -- Item -- should allow me to mark items as complete
+    TodoMVC - shakedown -- Item -- should allow me to un-mark items as complete
+[2026-07-28T09:20:16Z] VOYAGE 2 (oracle-correction — exact failure pasted verbatim)
+[2026-07-28T09:27:56Z] V2 oracle-correction 425s | VOYAGE-COMPLETE | self-suite: 26 scenarios (26 passed) | oracle 27/29 | failing:
+    TodoMVC - shakedown -- Editing -- should remove the item if an empty text string was entered
+[2026-07-28T09:27:56Z] VOYAGE 3 (oracle-correction — exact failure pasted verbatim)
+[2026-07-28T09:41:07Z] V3 oracle-correction 756s | VOYAGE-COMPLETE | self-suite: 27 scenarios (27 passed) | oracle 28/29 | failing:
+    
+[2026-07-28T09:41:07Z] REACHED 28/29 — Shipwright harbour pass #2 (after 28/29)
+[2026-07-28T09:47:21Z] SHIPWRIGHT[final] 373s | committed=yes | self-suite:34 scenarios (34 passed) | planks=24 on-seam=16 hoisted=8 | @captain=5 @conformance=3
+[2026-07-28T09:47:56Z] POST-SHIPWRIGHT oracle 28/29 — STILL 28/29 (shipwright did not regress) — DONE
+[2026-07-28T09:47:56Z] PILOT END wave=P6-cand-mimo final=28/29

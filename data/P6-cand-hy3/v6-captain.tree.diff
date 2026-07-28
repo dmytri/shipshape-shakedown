@@ -1,0 +1,111 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 79a39cf..cd3f8a9 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -4,47 +4,54 @@
+ 
+ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
+ 
+-## Defect diagnosis (from the fixed, correct Cypress acceptance suite)
++## Defect scope for this leg (from the fixed, correct Cypress acceptance suite)
+ 
+-The real-browser acceptance suite reports two DOM-identity failures that the in-harness
++The real-browser acceptance suite reports exactly two DOM-identity failures that the in-harness
+ Cucumber/happy-dom suite did not previously pin:
+ 
+-1. "Item - should allow me to mark items as complete" - `cy.find()` on a detached node.
+-2. "Item - should allow me to un-mark items as complete" - same detach.
+-
+-The supplied verbatim acceptance output names ONLY these two failures. The prior three-defect
+-plan (which also listed an editing-label-visibility failure) over-reached past the evidence:
+-that third item is not present in the output below, so it is out of scope for this voyage and
+-is deferred to a harbour full regression. Treat the two failures above as the only product
+-defects this leg must close.
+-
+-Root cause is a DOM-identity defect: a completion-toggle state change re-renders the list with
+-`todoList.innerHTML = ...`, detaching and recreating the `<li>` nodes. A browser (Cypress) that
+-holds a reference before the click sees the old node detach, so chained `cy.find()` fails. The fix
+-is to mutate the existing node in place (toggle its `completed` class and checkbox) instead of
+-rebuilding the list when the item stays visible under the current filter.
+-
+-## Reproducibility
+-
+-happy-dom DOES replace child nodes on `innerHTML` reassignment, and `getComputedStyle` reflects an
+-inline `display:none`. So an in-harness scenario that captures a reference before the change and
+-compares it after reproduces failures 1 and 2; a visibility scenario reproduces failure 3. A
+-behavioural scenario is the right tool; no source-level conformance check is required.
++1. `Item - should allow me to mark items as complete` — `cy.find()` on a detached node.
++2. `Item - should allow me to un-mark items as complete` — same detach.
++
++The supplied verbatim output names ONLY these two. A third item that earlier planning called out
++(editing-label visibility) is NOT present in this output, so it is out of scope for this leg and
++waits for the next harbour full regression. Treat failures 1 and 2 as the only product defects
++this leg must close.
++
++## Root cause
++
++A completion-toggle state change re-rendered the list with `todoList.innerHTML = ...`, detaching
++and recreating the `<li>` nodes. A browser (Cypress) that holds a reference before the click sees
++the old node detach, so a chained `cy.find()` fails. Fix: mutate the existing node in place (toggle
++its `completed` class and checkbox) when the item stays visible under the current filter
++(`completeTodo` / `toggleAllTodos` under the "all" route).
++
++## Durable artifacts this leg
++
++- `features/todo-dom-stability.feature` already pins the behaviour (Rule: "The app mutates an
++  existing list element in place when an item's completion changes, instead of rebuilding the
++  list"). The first two scenarios map 1:1 to the two acceptance failures:
++  - `Completing a todo keeps the same element in the DOM`  -> failure 1
++  - `Uncompleting a todo keeps the same element in the DOM` -> failure 2
++  The third scenario, `Editing a todo hides its label`, is intentionally LEFT OFF this leg's
++  watchbill (not in the acceptance output).
++- `watchbill.json` is re-established with `watch1` referencing exactly those two scenarios. (It was
++  struck as spent after the prior leg implemented the in-place fix; this leg re-pins the behaviour
++  as QM's regression target.)
++
++## Falsifiability (verified, not assumed)
++
++Captain verified with a happy-dom micro-test that node identity is NOT preserved across an
++`innerHTML` rebuild (`held !== re-queried` after rebuild) but IS preserved by in-place mutation
++(`held === re-queried`). Therefore the in-harness scenario is genuinely falsifiable against a
++defective `innerHTML`-rebuild baseline and needs NO source-level conformance check. The step
++definitions `I hold a reference to the todo {string} element`,
++`the todo {string} element is the same element as the held reference`, and `I complete the todo
++{string}` already exist in `features/support/steps.js`, and `findTodoLiByIdentity` re-queries the
++DOM so a rebuilt list yields a different node than the held reference.
+ 
+ ## Decision
+ 
+-Pin the two DOM-identity failures as product-behaviour scenarios in
+-`features/todo-dom-stability.feature`:
+-- watch1: element identity for mark and un-mark complete (failures 1 and 2).
+-
+-The Quartermaster authors no new step definitions for these: `I hold a reference to the todo
+-{string} element`, `the todo {string} element is the same element as the held reference`, and
+-`I complete the todo {string}` already exist in `features/support/steps.js`, and
+-`findTodoLiByIdentity` re-queries the DOM so the re-queried node differs from the held reference
+-when the list is rebuilt. The Crew fixes `js/app.js` to mutate the list element in place on
+-a completion toggle that leaves the item visible under the current filter. No production code
+-written here.
+-
+-The editing-label-visibility scenario already in `features/todo-dom-stability.feature` is NOT in
+-the supplied acceptance output, so it is excluded from this voyage's `watchbill.json` and waits
+-for the next harbour full regression.
++QM re-verifies `watch1`. QM/Crew confirm `js/app.js` mutates the list element in place on a
++completion toggle that leaves the item visible under the current filter (the "all" route). No
++production code is written here; Captain's scope is the durable specs, `watchbill.json`, and these
++notes. No `RIGGING.md` edit is warranted — this is a behaviour fix, not tooling.
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..4134087
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,8 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/todo-dom-stability.feature:Completing a todo keeps the same element in the DOM",
++      "features/todo-dom-stability.feature:Uncompleting a todo keeps the same element in the DOM"
++    ]
++  }
++}

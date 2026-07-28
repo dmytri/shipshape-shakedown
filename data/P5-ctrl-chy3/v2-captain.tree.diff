@@ -1,0 +1,32 @@
+diff --git a/features/index-page.feature b/features/index-page.feature
+new file mode 100644
+index 0000000..e7cd841
+--- /dev/null
++++ b/features/index-page.feature
+@@ -0,0 +1,13 @@
++Feature: Root index page
++  The working todo app must render and run in a real browser. The app is
++  served from a real index.html at the project root, built from the
++  human-owned template assets/app-template.index.html, and wired to the
++  production script js/app.js. The existing behaviour suite drives the
++  template plus js/app.js inside a DOM realm; this scenario pins the
++  served page a browser actually opens.
++
++  Scenario: Root index.html serves the todo app and loads js/app.js
++    Given the project root has a real "index.html" file
++    And that page is built from the template "assets/app-template.index.html"
++    Then the page contains the todo input, the todo list section, and the footer
++    And the page loads the application script "js/app.js"
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..293b319
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,7 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/index-page.feature:Root index.html serves the todo app and loads js/app.js"
++    ]
++  }
++}

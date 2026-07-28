@@ -1,0 +1,127 @@
+diff --git a/features/support/steps.js b/features/support/steps.js
+index 8f53737..5291827 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -187,6 +187,33 @@ Then('{string} is checked', function (sel) {
+   assert.strictEqual(this.q(sel).checked, true);
+ });
+ 
++// ---------------------------------------------------------------------------
++// DOM node identity (features/dom-identity.feature)
++//
++// These steps hold a direct node reference across a state change and assert it
++// stays attached. They observe DOM state only, so they carry no @planks
++// (verification support).
++// ---------------------------------------------------------------------------
++Given('I capture the DOM node for the {string} todo', function (title) {
++  this.captureTodoNode(title);
++});
++
++Then('the captured todo node is still attached to the document', function () {
++  assert.ok(this.capturedNode, 'No captured node; preceding capture step failed');
++  assert.ok(
++    this.capturedNodeAttached(),
++    'Captured todo node is detached from the document after the state change'
++  );
++});
++
++Then('the captured todo node has class {string}', function (cls) {
++  assert.ok(this.capturedNode, 'No captured node; preceding capture step failed');
++  assert.ok(
++    this.capturedNode.classList.contains(cls),
++    'Captured todo node missing class "' + cls + '"'
++  );
++});
++
+ Then('its {string} input is focused', function (sel) {
+   const li = this.q('.todo-list li.editing') || this.findTodoLi(this.currentTodoTitle);
+   assert.ok(li, 'editing li not found');
+@@ -391,6 +418,65 @@ Then('the page loads the application script {string}', function (scriptPath) {
+   assert.ok(found, 'Page does not load the application script "' + scriptPath + '"');
+ });
+ 
++// A served page may also link a project stylesheet, which must really exist on
++// disk (not a dangling link) and must hide the todo view controls while a todo
++// is being edited. Both steps assert observable facts about the static served
++// assets, so they carry no @planks (verification support only).
++function parseCssRules(css) {
++  const rules = [];
++  const stripped = css.replace(/\/\*[\s\S]*?\*\//g, '');
++  const ruleRe = /([^{}]+)\{([^{}]*)\}/g;
++  let m;
++  while ((m = ruleRe.exec(stripped))) {
++    const selector = m[1].trim();
++    const decls = {};
++    m[2].split(';').forEach((part) => {
++      const idx = part.indexOf(':');
++      if (idx === -1) return;
++      const prop = part.slice(0, idx).trim().toLowerCase();
++      const val = part.slice(idx + 1).trim().toLowerCase();
++      if (prop) decls[prop] = val;
++    });
++    rules.push({ selector, decls });
++  }
++  return rules;
++}
++
++Given('the page links the stylesheet {string}', function (href) {
++  if (!this.servedDoc) {
++    assert.ok(this.servedFileName, 'Served page not loaded; preceding step failed');
++    this.servedDoc = loadServedDoc(this.servedFileName);
++  }
++  const doc = this.servedDoc;
++  assert.ok(doc, 'Served page not loaded; preceding step failed');
++  const links = Array.from(doc.querySelectorAll('link[rel="stylesheet"]'));
++  const found = links.some((l) => l.getAttribute('href') === href);
++  assert.ok(found, 'Served page does not link the stylesheet "' + href + '"');
++  const full = path.join(__dirname, '..', '..', href);
++  assert.ok(fs.existsSync(full), 'Stylesheet file not found at project root: ' + href);
++  this.servedStylesheetHref = href;
++});
++
++Then('that stylesheet hides the todo view controls while a todo is being edited', function () {
++  assert.ok(this.servedStylesheetHref, 'Stylesheet link step failed; href not captured');
++  const full = path.join(__dirname, '..', '..', this.servedStylesheetHref);
++  const css = fs.readFileSync(full, 'utf8');
++  const rules = parseCssRules(css);
++  const hidesViewWhileEditing = rules.some((r) => {
++    const selectors = r.selector.split(',').map((s) => s.trim());
++    return selectors.some((sel) => {
++      const hasEditing = sel.includes('.editing');
++      const hasView = sel.includes('.view');
++      const hides = r.decls['display'] === 'none' || r.decls['visibility'] === 'hidden';
++      return hasEditing && hasView && hides;
++    });
++  });
++  assert.ok(
++    hidesViewWhileEditing,
++    'Stylesheet does not hide the todo view controls (.view) while a todo is being edited (.editing)'
++  );
++});
++
+ // ---------------------------------------------------------------------------
+ // Hooks
+ // ---------------------------------------------------------------------------
+diff --git a/features/support/world.js b/features/support/world.js
+index dc640c2..b7f3a06 100644
+--- a/features/support/world.js
++++ b/features/support/world.js
+@@ -75,6 +75,18 @@ class AppWorld {
+     }) || null;
+   }
+ 
++  // Hold a direct reference to a todo's <li> node so a later state change can
++  // be asserted not to have detached it from the document.
++  captureTodoNode(title) {
++    const li = this.findTodoLi(title);
++    if (!li) throw new Error('Todo li not found for capture: ' + title);
++    this.capturedNode = li;
++  }
++
++  capturedNodeAttached() {
++    return !!(this.capturedNode && this.document.contains(this.capturedNode));
++  }
++
+   // --- interaction helpers ----------------------------------------------
+   clickSelector(sel) {
+     const el = this.q(sel);

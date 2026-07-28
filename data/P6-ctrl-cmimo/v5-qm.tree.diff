@@ -1,0 +1,80 @@
+diff --git a/js/app.js b/js/app.js
+index 2d66168..a19a0e9 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -47,26 +47,59 @@
+     var todos = loadTodos();
+     var filtered = getFilteredTodos(todos);
+ 
+-    // Clear list
+-    todoList.innerHTML = '';
++    // Build map of existing DOM nodes by data-id
++    var existingNodes = {};
++    var existingLis = todoList.querySelectorAll('li');
++    for (var i = 0; i < existingLis.length; i++) {
++      var existingLi = existingLis[i];
++      existingNodes[existingLi.getAttribute('data-id')] = existingLi;
++    }
++
++    // Track which data-ids are needed
++    var neededIds = {};
+ 
+-    // Render each todo
++    // Render each todo, reusing existing DOM nodes
+     filtered.forEach(function (todo) {
+-      var li = document.createElement('li');
+-      li.setAttribute('data-id', todo.id);
+-      if (todo.completed) li.classList.add('completed');
+-
+-      li.innerHTML =
+-        '<div class="view">' +
+-          '<input class="toggle" type="checkbox"' + (todo.completed ? ' checked' : '') + '>' +
+-          '<label>' + escapeHtml(todo.title) + '</label>' +
+-          '<button class="destroy"></button>' +
+-        '</div>' +
+-        '<input class="edit" value="' + escapeHtml(todo.title) + '">';
+-
+-      todoList.appendChild(li);
++      var id = String(todo.id);
++      neededIds[id] = true;
++      var li = existingNodes[id];
++
++      if (li) {
++        // Update existing node in place
++        if (todo.completed) {
++          li.classList.add('completed');
++        } else {
++          li.classList.remove('completed');
++        }
++        var toggle = li.querySelector('.toggle');
++        if (toggle) toggle.checked = todo.completed;
++        var label = li.querySelector('.view label');
++        if (label) label.textContent = todo.title;
++        var editInput = li.querySelector('.edit');
++        if (editInput) editInput.value = todo.title;
++      } else {
++        // Create new node
++        li = document.createElement('li');
++        li.setAttribute('data-id', id);
++        if (todo.completed) li.classList.add('completed');
++        li.innerHTML =
++          '<div class="view">' +
++            '<input class="toggle" type="checkbox"' + (todo.completed ? ' checked' : '') + '>' +
++            '<label>' + escapeHtml(todo.title) + '</label>' +
++            '<button class="destroy"></button>' +
++          '</div>' +
++          '<input class="edit" value="' + escapeHtml(todo.title) + '">';
++        todoList.appendChild(li);
++      }
+     });
+ 
++    // Remove nodes for todos not in filtered list
++    for (var existingId in existingNodes) {
++      if (!neededIds[existingId]) {
++        todoList.removeChild(existingNodes[existingId]);
++      }
++    }
++
+     // Counter
+     var activeCount = todos.filter(function (t) { return !t.completed; }).length;
+     var pluralized = activeCount === 1 ? 'item' : 'items';

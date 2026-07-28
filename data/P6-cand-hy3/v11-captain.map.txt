@@ -1,0 +1,20 @@
+# banked: 2026-07-28T12:22:58Z
+# verdict: PENDING
+# leg: {  "name": "v11-captain",  "model": "tencent/hy3",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/P6-cand-hy3/sim",  "timeout_s": 3600,  "skills": [    "/home/exedev/shipshape-shakedown/experiments/methods-candidate/skills/shipshape",    "/home/exedev/shipshape-shakedown/experiments/methods-candidate/skills/captain",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== v11-captain.session.jsonl ===
+  turns=10  wall=149.4s  in=79782  out=19217  cache_read=274752  cost=$0.0319
+  role reads: shipshape@t0 -> captain@t0
+  roles loaded: captain, shipshape
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    4121/499        0 $0.0009  read, read, bash
+    t1   20524/351        0 $0.0031  read, read, read, bash
+    t2    4312/1751   20480 $0.0023  read, read
+    t3   32226/4077       0 $0.0069  bash
+    t4    4697/3839   32128 $0.0040  bash, bash
+    t5    4956/3095   36736 $0.0038  read, bash
+    t6    3704/3913   41600 $0.0042  write
+    t7    4033/265    45184 $0.0023  bash
+    t8     404/684    49152 $0.0022  bash
+    t9     805/743    49472 $0.0023  -
