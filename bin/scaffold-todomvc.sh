@@ -61,7 +61,7 @@ mkdir -p features/support
 cat > features/support/world.js <<'JS'
 const fs = require('node:fs');
 const path = require('node:path');
-const { setWorldConstructor, Before } = require('@cucumber/cucumber');
+const { setWorldConstructor, Before, After } = require('@cucumber/cucumber');
 const { Window } = require('happy-dom');
 
 const ROOT = path.resolve(__dirname, '..', '..');
@@ -87,22 +87,51 @@ class AppWorld {
       settings: { disableJavaScriptFileLoading: true },
     });
     this.document = this.window.document;
+
+    // The app must EXECUTE, not merely be present. Two things were measured 2026-07-28 and both
+    // bit an earlier version of this harness:
+    //   1. happy-dom does NOT run scripts the parser sees — neither an appended <script> with
+    //      textContent nor one inlined into document.write(). window.eval() DOES run them. An
+    //      earlier harness looked green while app.js never ran, because its only assertion
+    //      checked that the PAGE had loaded. A weak test hid a broken loader.
+    //   2. DOMContentLoaded never fires from write()/close(), so an app that defers its init to
+    //      DOMContentLoaded or window.load — the common TodoMVC shape — would never initialise
+    //      and the harness would fail CORRECT code. The lifecycle events are dispatched here.
+    // disableJavaScriptFileLoading stops the page's own src tag attempting a network fetch
+    // (ECONNREFUSED under happy-dom, pilot 0.13.64).
     this.document.write(fs.readFileSync(indexPath, 'utf8'));
     this.document.close();
-
-    const el = this.document.createElement('script');
-    el.textContent = appSource;
-    this.document.body.appendChild(el);
+    this.window.eval(appSource);
+    this.document.dispatchEvent(new this.window.Event('DOMContentLoaded', { bubbles: true }));
+    this.window.dispatchEvent(new this.window.Event('load'));
     return this.document;
   }
 
   get localStorage() { return this.window.localStorage; }
+
+  // A happy-dom Window holds timers, observers and native buffers; an undisposed one per
+  // scenario grows without bound. Measured 2026-07-28: a wave whose own world.js never
+  // disposed reached 13.6G RSS across ~45 scenarios and was OOM-killed by the kernel, which
+  // ended the suite with a bare "Killed" and no summary line. NODE_OPTIONS
+  // --max-old-space-size does NOT prevent this: the growth is outside V8's old space, so the
+  // cap bounds the JS heap while the process still takes the box down. Disposal is the fix.
+  async disposeApp() {
+    const w = this.window;
+    if (!w) return;
+    this.window = undefined;
+    this.document = undefined;
+    if (w.happyDOM && typeof w.happyDOM.close === 'function') { await w.happyDOM.close(); return; }
+    if (w.happyDOM && typeof w.happyDOM.abort === 'function') { await w.happyDOM.abort(); return; }
+    if (typeof w.close === 'function') w.close();
+  }
 }
 
 setWorldConstructor(AppWorld);
 
 // Every scenario gets the real app. No scenario can pass without one.
 Before(function () { this.loadApp(); });
+// ...and every scenario gives it back.
+After(async function () { await this.disposeApp(); });
 JS
 
 # OPTIONAL vendored rigging (methods-candidate A/B, 2026-07-26). Normally the roles derive
