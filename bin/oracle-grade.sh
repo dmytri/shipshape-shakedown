@@ -62,11 +62,40 @@ exec 9>"$CLONE/.grade.lock"
 flock 9 || { echo "oracle-grade.sh: could not lock $CLONE — refusing to grade, exit 6" >&2; exit 6; }
 
 # Drop the build at examples/<framework>/ (served at :PORT/examples/<framework>/index.html).
-# Copy the runnable app only — never features/steps/assets/node_modules/.git.
+# Copy the runnable app only — never features/steps/assets/.git.
 DEST="$CLONE/examples/$FRAMEWORK"
 rm -rf "$DEST"; mkdir -p "$DEST"
 ( cd "$BUILD" && tar --exclude=node_modules --exclude=.git --exclude=features \
     --exclude=assets --exclude='*.feature' -cf - . ) | ( cd "$DEST" && tar -xf - )
+
+# SERVE WHAT THE PAGE LINKS (2026-07-28). Excluding node_modules wholesale stripped the very
+# stylesheets index.html references: the standard TodoMVC template links
+# node_modules/todomvc-app-css/index.css, which carries `li.editing .view { display: none }` —
+# the rule the oracle's "should hide other controls when editing" test checks. The served page
+# therefore had NO css at all, so that test could never pass however correct the app was, and
+# the roles could not see why: happy-dom does not compute stylesheet visibility, so their tier
+# reads green while a real browser fails. P6-ctrl-cmimo sat at 27/29 on exactly this, on
+# doctrine byte-identical to a run that had passed the day before — the difference was ours.
+# Copy ONLY the packages the built page actually links, never the whole tree.
+for pkg in $(grep -ohE 'node_modules/[A-Za-z0-9._@/-]+' "$BUILD/index.html" 2>/dev/null \
+             | sed -E 's#(node_modules/(@[^/]+/)?[^/]+)/.*#\1#' | sort -u); do
+  # The sim's own node_modules is an EMPTY mountpoint outside bwrap — the packages live in the
+  # shared toolkit, which is the overlay's lower dir. So resolve from the build first, then the
+  # toolkit. Without the fallback the copy silently finds nothing and the page is still styleless.
+  src=""
+  [ -d "$BUILD/$pkg" ] && src="$BUILD/$pkg"
+  for cand in "${EVAL_SHARED_NM:-}" /home/exedev/shipshape-shakedown/.eval-scratch/.shared-nm/node_modules; do
+    [ -n "$src" ] && break
+    [ -n "$cand" ] && [ -d "$cand/${pkg#node_modules/}" ] && src="$cand/${pkg#node_modules/}"
+  done
+  if [ -n "$src" ]; then
+    mkdir -p "$DEST/$(dirname "$pkg")"
+    cp -a "$src" "$DEST/$(dirname "$pkg")/" 2>/dev/null \
+      && echo "oracle-grade: served linked dependency $pkg (from $(dirname "$src"))" >&2
+  else
+    echo "oracle-grade: WARNING index.html links $pkg but neither the build nor the toolkit has it" >&2
+  fi
+done
 echo "oracle-grade: build -> $DEST ($(find "$DEST" -type f | wc -l) files)" >&2
 
 # Serve + run. Override baseUrl/port off 8000 to dodge orphaned sibling servers (a
