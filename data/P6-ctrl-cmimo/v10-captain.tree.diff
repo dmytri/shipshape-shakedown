@@ -1,0 +1,40 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 7009a1a..8470435 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -35,15 +35,30 @@ Eleven feature files under `features/`:
+ 
+ `watchbill.json` written with 11 watches, one per feature file. Ready for QM dispatch when the next role takes the deck.
+ 
+-## Acceptance suite defects (2025-07-28)
++## Acceptance suite defects (verified 2025-07-28)
+ 
+-External Cypress acceptance suite reports two product defects the happy-dom harness does not reproduce:
++External Cypress acceptance suite reports one product defect; the harness confirms it with 8 pre-existing failures.
+ 
+-1. **Toggle checkbox visible during editing.** The `li.editing .view` CSS rule must hide the view container (and its toggle checkbox) when a todo is in editing mode. Requires `todomvc-app-css` and `todomvc-common` as dependencies. Pinned by `dom-stability.feature:65` and `editing-controls.feature` scenarios.
++### Defect: Toggle checkbox visible during editing
+ 
+-2. **removeChild error on empty-edit removal.** When the user saves an empty edit via Enter, `render()` removes the `<li>`. The blur event then fires on the detached edit input, calling `editTodo` again, and `render()` attempts `removeChild` on the already-detached node. The render function must guard `removeChild` with a `parentNode` check. Pinned by new `@conformance` scenario `dom-stability.feature:74`.
++**Acceptance error:** `expected '<input.toggle>' not to be 'visible'` during editing mode.
+ 
+-Both scenarios fail on current code, confirming the specs pin the defects.
++**Root cause:** `todomvc-app-css` and `todomvc-common` are referenced in `index.html` but not declared in `package.json` and not installed. Without `todomvc-app-css`, the `li.editing .view { display: none; }` CSS rule does not exist, so the view container (and its toggle checkbox) stays visible when a todo is in editing mode.
++
++**Harness failures pinning this (8 total):**
++- `dom-stability.feature:65` — toggle checkbox not visible during editing (computed style check)
++- `dom-stability.feature:74` — render function must guard `removeChild` with `parentNode` check
++- `dom-stability.feature:36` — uncompleting a todo preserves other DOM nodes
++- `editing-controls.feature:18` — todomvc-app-css declared in package.json
++- `editing-controls.feature:21` — todomvc-common declared in package.json
++- `editing-controls.feature:24` — todomvc-app-css stylesheet file exists
++- `editing-controls.feature:27` — todomvc-common base stylesheet file exists
++- `editing-controls.feature:30` — todomvc-app-css contains `li.editing .view` rule
++
++**Crew targets:**
++1. Add `todomvc-app-css` and `todomvc-common` as dependencies in `package.json` and install them
++2. Guard `todoList.removeChild()` in `js/app.js` with a `parentNode` check to prevent errors when blur fires on a detached edit input after empty-edit removal
++3. Investigate DOM node stability issue where uncompleting a todo affects sibling nodes' `completed` class
+ 
+ ## Open questions
+ 

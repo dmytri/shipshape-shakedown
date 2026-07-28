@@ -249,7 +249,7 @@ run_shipwright(){ # $1=label
   # keep the sim GREEN — a harbour pass that breaks the self-suite is reverted (measured, not merged)
   rm -rf "$SIM/node_modules"; ln -s "$EVAL_SHARED_NM" "$SIM/node_modules"
   local ssraw; ssraw=$( cd "$SIM" && NODE_OPTIONS="--max-old-space-size=2048" npx cucumber-js 2>&1 )
-  local ss; ss=$( echo "$ssraw" | grep -oE '[0-9]+ scenarios \([^)]*\)' | head -1 )
+  local ss; ss=$( echo "$ssraw" | grep -oE '[0-9]+ scenarios( \([^)]*\))?' | head -1 )
   rm -f "$SIM/node_modules"; mkdir -p "$SIM/node_modules"
   # A suite that cannot RUN is red (2026-07-27): only "failed" was checked, so a harbour pass
   # leaving an unrunnable suite (missing test dep) was kept and reported "self-suite:?".
@@ -275,7 +275,7 @@ if [ "$RESUME_FROM" -eq 0 ]; then
   say "VOYAGE 1 (build)"
   w=$(run_voyage 1 "$HERE/tasks/pilot/captain-todomvc.task.md" "--no-revert")
   if grep -q 'PROVIDER ERROR' "$BASE/v1.log" 2>/dev/null; then say "PROVIDER ERROR on build — STOP"; echo PILOT-DONE; exit 5; fi
-  ss=$(grep -oE '[0-9]+ scenarios \([^)]*\)' "$BASE/v1-selfsuite.txt" 2>/dev/null | head -1)
+  ss=$(grep -oE '[0-9]+ scenarios( \([^)]*\))?' "$BASE/v1-selfsuite.txt" 2>/dev/null | head -1)
   say "V1 build ${w}s | self-suite: ${ss:-?}"
   read -r p t <<<"$(grade v1)"
   say "V1 (post-shipwright) | oracle ${p}/${t} | failing:"; titles v1 | sed 's/^/    /' | tee -a "$LOG" >/dev/null
@@ -335,7 +335,7 @@ for v in $(seq "$START" "$MAXV"); do
   done
   if grep -q 'PROVIDER ERROR' "$BASE/v$v.log" 2>/dev/null; then say "PROVIDER ERROR — STOP"; break; fi
   outcome=$(grep -oE 'VOYAGE-(COMPLETE|REGRESSED)' "$BASE/v$v.log" | tail -1)
-  ss=$(grep -oE '[0-9]+ scenarios \([^)]*\)' "$BASE/v$v-selfsuite.txt" 2>/dev/null | head -1)
+  ss=$(grep -oE '[0-9]+ scenarios( \([^)]*\))?' "$BASE/v$v-selfsuite.txt" 2>/dev/null | head -1)
   read -r p t <<<"$(grade v$v)"
   cur_titles=$(titles v$v)
   say "V$v $intent ${w}s | $outcome | self-suite: ${ss:-?} | oracle ${p}/${t} | failing:"; echo "$cur_titles" | sed 's/^/    /' | tee -a "$LOG" >/dev/null

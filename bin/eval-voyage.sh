@@ -151,7 +151,16 @@ rm -rf "$SIM/node_modules"; ln -s "$EVAL_SHARED_NM" "$SIM/node_modules"
 # A non-zero suite is DATA here, not a script failure: capture it and judge it below.
 # Keep the WHOLE output (2026-07-27): `tail -6` on a MODULE_NOT_FOUND kept only the requireStack
 # array, so the readout parsed to "?" and the real cause (a missing test dep) was invisible.
-( cd "$SIM" && NODE_OPTIONS="--max-old-space-size=2048" npx cucumber-js 2>&1 ) > "$BASE/$V-selfsuite.txt" 2>&1 || true
+# Run the suite the way THIS project is laid out. Bare `npx cucumber-js` uses cucumber's default
+# glob (features/), so a project whose specs live in specs/ — the candidate's convention, and it
+# ships no cucumber.js — reported "0 scenarios" and the REVERT GUARD WENT BLIND: a voyage could
+# break everything and nothing would fire (found 2026-07-28, R2-cand-mimo). Name both roots when
+# the project has no config of its own.
+SUITE_PATHS=""
+if [ ! -f "$SIM/cucumber.js" ] && [ ! -f "$SIM/cucumber.cjs" ]; then
+  for r in features specs; do [ -d "$SIM/$r" ] && SUITE_PATHS="$SUITE_PATHS $r"; done
+fi
+( cd "$SIM" && NODE_OPTIONS="--max-old-space-size=2048" npx cucumber-js $SUITE_PATHS 2>&1 ) > "$BASE/$V-selfsuite.txt" 2>&1 || true
 tail -20 "$BASE/$V-selfsuite.txt"
 restore_nm
 
