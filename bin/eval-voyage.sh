@@ -56,6 +56,20 @@ run_leg() {
   "$HERE/bin/eval-leg.sh" --model "$MODEL" --workspace "$SIM" --out "$out" \
        "${skill_args[@]}" --task-file "$task" --name "$name" --timeout-s "$TIMEOUT_S" \
        >"$BASE/$name.leg.log" 2>&1 || legrc=$?
+  # CUSTODY FIRST (2026-07-28). A leg's work must become a commit before anything that can kill
+  # this script runs. It used to be committed at the end of the voyage, AFTER the provider-error
+  # guard — and that guard was OOM-killing the script, so P6-ctrl-cmimo's V2 work was never
+  # committed. The oracle then graded the WORKING TREE (the grader copies $BUILD as-is) at
+  # 26/29 — a real improvement — and the next voyage's revert guard, which resets to the last
+  # COMMIT, deleted it: 26 -> 23, twice, logged as a model regression. It was ours.
+  # Grade-on-dirty-tree and revert-to-commit must not disagree; committing here makes them agree
+  # and makes a killed script cost time rather than work.
+  if [ -n "$(git -C "$SIM" status --porcelain 2>/dev/null)" ]; then
+    git -C "$SIM" add -A >/dev/null 2>&1 || true
+    git -C "$SIM" -c user.name="Sim Operator" -c user.email="sim@example.test" \
+      commit -qm "$V $name (operator custody, post-leg)" >/dev/null 2>&1 \
+      && echo "eval-voyage[$WAVE/$V]: leg $name work committed (custody-first)"
+  fi
   if [ "$legrc" = 0 ]; then
     "$HERE/bin/eval-bank.sh" --wave "$WAVE" --name "$name" --out "$out" --workspace "$SIM" --verdict PENDING >/dev/null 2>&1 || true
     echo "eval-voyage[$WAVE/$V]: leg $name banked (exit $(cat "$out/exit" 2>/dev/null))"
