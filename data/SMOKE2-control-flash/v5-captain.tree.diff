@@ -1,0 +1,38 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 662db23..c591341 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -4,11 +4,11 @@
+ 
+ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
+ 
+-## Voyage 2 — Fix Cypress DOM-detachment failures
+-
+-- Acceptance suite reported 2 failures on toggle (mark/unmark as complete).
+-  Root cause: toggle click handler called `render()` which replaced `todoList.innerHTML` wholesale, destroying all `<li>` elements and detaching Cypress DOM references.
+-  Fix: surgical DOM updates in toggle, focusout, finishEdit, and cancelEdit — update only the affected `<li>` nodes directly instead of calling full `render()`.
+-- Verification suite: 35/37 pass (2 pre-existing routing-filter failures).
+-- No plant-perturbation added: all interaction handlers now use surgical DOM updates.
+-- Outbound not yet relevant. After Boatswain custody commit, offer user a summary and outbound options.
+\ No newline at end of file
++## Voyage 3 — Fix Cypress DOM-detachment on toggle (browser default action)
++
++- Acceptance suite reported 2 toggle failures after Voyage 2's surgical DOM updates.
++  Root cause: in a real browser, clicking a checkbox triggers the browser's default action (toggling `checked`) AFTER click handlers finish, because no `e.preventDefault()` was called. The handler explicitly sets `target.checked = todo.completed`, but the browser then toggles it back, creating a state race that Cypress detects as a page update with detached elements. happy-dom's `click()` does not exercise this default action, so the verification suite never saw the issue.
++  Fix: added `e.preventDefault()` in the toggle branch so the browser's checkbox default action is suppressed; the app alone controls the checkbox state via the explicit `target.checked = todo.completed` assignment.
++- Verification suite: 37/37 pass.
++- No plant-perturbation added.
++- Outbound not yet relevant.
+\ No newline at end of file
+diff --git a/js/app.js b/js/app.js
+index 6e558fd..0918fa1 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -140,6 +140,7 @@
+     var id = parseInt(li.getAttribute('data-id'), 10);
+ 
+     if (target.classList.contains('toggle')) {
++      e.preventDefault();
+       var todos = loadTodos();
+       var todo = todos.find(function (t) { return t.id === id; });
+       if (todo) {

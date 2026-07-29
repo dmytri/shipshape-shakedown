@@ -1,5 +1,39 @@
 # Metrics: how to read a shakedown
 
+## 2026-07-29 (later) — the 3x3 is still unspent. Defects 14 and 15.
+
+**No matrix, no doctrine, no new baseline.** Two smokes, one aborted by defect 14 and one run
+to the cap on a playbook defect 15 makes unsound. Nothing here is a control-flash score.
+
+| wave | arm/model | voyages | trajectory | final |
+|---|---|---|---|---|
+| SMOKE-control-flash | control 0.13.65 / flash | 1, then ABORTED | 24 | **not a result** (defect 14) |
+| SMOKE2-control-flash | control 0.13.65 / flash | 12 (cap), 95 min | 24 26 26 26 25 25 25 26 26 26 25 25 | **25/29**, unsound (defect 15) |
+
+**Defect 14 (FIXED):** `local vg="$1" cyp="...$vg..."` — `local` expands all assignment words
+before assigning any, so `$vg` was unset under `set -u`. Killed the correction subshell, emptied
+`$task`, and produced a session-less v2 leg on EVERY voyage 2. The reason `pilot-run.sh` had
+never completed a wave. selftest now scans the whole class across `bin/*.sh` (25 -> 29 checks)
+and caught two further instances on its first run.
+
+**Defect 15 (OPEN, dk's call):** the correction prompt forbids Captain to commit, then
+`BASE_COMMIT` is read after the Captain leg, so QM is handed a dirty tree its own dispatch
+excludes. Stash operations in 6 of 7 QM legs, dirty/foul reasoning in 7 of 7, and one real
+repair destroyed at v3 (`Dropped refs/stash@{0}`).
+
+**How to read the SMOKE2 numbers: as instrument evidence, not model evidence.**
+The self-suite was 37/37 GREEN on all twelve voyages while the oracle sat at 25-26 — coverage
+and correctness fully decoupled, the roles blind to their own gap. Compare defect 6 (a wave
+19/21 GREEN over an empty `js/`): same shape, different cause.
+
+**R6 is NOT a baseline for anything run after `a8c4118`.** R6 carried a voyage-0 Shipwright
+fit-out and a post-ceiling harbour pass; both were deleted. Its 28/29 is a different experiment.
+
+**New per-voyage measurement: FIT-OUT.** `.gplintrc` present | rigging lint value | gplint run.
+Vocabulary-neutral on purpose — keying it on `## Methods` (via `rigging-conform.py`) would score
+every control cell "no Methods section" and fabricate an arm difference out of naming, which is
+defect 13's shape. Measured, never seeded. Both smokes: `no | none | no-config`, all voyages.
+
 ## 2026-07-29 — THE HARNESS WAS THE STORY: thirteen instrument defects, and what survives them
 
 **No doctrine shipped. The session's product is an instrument that can be trusted, plus one

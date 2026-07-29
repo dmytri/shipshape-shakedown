@@ -1,0 +1,112 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 691990d..bfd77b1 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -4,23 +4,22 @@
+ 
+ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
+ 
+-## Voyage 4 — Adopt checkbox `change` event for real-browser compatibility
++## Voyage 5 — Unify individual toggle to single `click` handler
+ 
+-- Three acceptance-suite failures persisted after Voyage 3's `e.preventDefault()` fix.
+-  Root cause: In a real browser, clicking a checkbox fires the `change` event AFTER the
+-  native toggle, and the native toggle races our explicit `target.checked` assignment.
+-  The Cypress test chain `.find('.toggle').click()` then finds the element detached
+-  because the DOM mutated.
++- Voyage 4's dual-listener approach (`change` for real browser, `click` for
++  happy-dom) had the `change` handler UNTESTED by the verification suite, because
++  happy-dom never fires `change` after `click()`.  Three acceptance-suite failures
++  persisted: toggle-all not checked after individual completions, and DOM
++  detachment on mark/unmark.
+ 
+-  Fix: Replace the individual-toggle `click`+`preventDefault` approach with dual
+-  listeners:
+-  - `change` listener (real browser): the browser toggles the checkbox natively, then
+-    fires `change`; we read `target.checked` and sync the model. No DOM detachment.
+-  - `click` listener fallback (happy-dom): when `e.isTrusted` is false (programmatic
+-    dispatch), we call `preventDefault()` and handle the toggle ourselves, because
+-    happy-dom never fires `change` after `click()`.
++  Fix: Remove the split.  Single `click` handler with `e.preventDefault()`
++  handles every toggle.  Both environments take the identical code path.  The
++  browser's native toggle is prevented, so no race condition exists between
++  native toggle and our explicit `target.checked` assignment.
+ 
+ - Verification suite: 37/37 pass.
+-- Toggle-all `change` handler unchanged (already uses `change`).
++- Toggle-all `change` handler unchanged.
+ - No plant-perturbation added.
+-- Outbound not yet relevant.
+\ No newline at end of file
++- Three acceptance-suite failures are expected to resolve: all toggle state
++  management now runs synchronously in one event handler, same path in every
++  browser.
+\ No newline at end of file
+diff --git a/js/app.js b/js/app.js
+index 5971f8d..5a74f88 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -133,39 +133,12 @@
+   });
+ 
+   // ── Individual checkbox toggle ──
+-  // In a REAL browser clicking a checkbox fires 'change' AFTER the native toggle.
+-  // Handle it here: read target.checked (already set by the browser) and sync the
+-  // model.  No preventDefault() needed — we let the browser own the checkbox state.
+-  todoList.addEventListener('change', function (e) {
+-    var target = e.target;
+-    if (!target.classList.contains('toggle')) return;
+-    var li = target.closest('li');
+-    if (!li) return;
+-    var id = parseInt(li.getAttribute('data-id'), 10);
+-    var todos = loadTodos();
+-    var todo = todos.find(function (t) { return t.id === id; });
+-    if (todo) {
+-      todo.completed = target.checked;
+-      saveTodos(todos);
+-      li.classList.toggle('completed', todo.completed);
+-      updateTodoCount(todos);
+-      updateClearCompleted(todos);
+-      updateToggleAll(todos);
+-      // Remove li from DOM when it no longer matches the active filter
+-      var currentFilter = getCurrentFilter();
+-      if (currentFilter === '#/active' && todo.completed) {
+-        li.remove();
+-      } else if (currentFilter === '#/completed' && !todo.completed) {
+-        li.remove();
+-      }
+-    }
+-  });
+-
+-  // happy-dom's click() dispatches 'click' but never fires 'change' and never
+-  // toggles the checkbox natively.  Handle that here so the verification suite
+-  // still works.  Use isTrusted to distinguish: real user clicks (isTrusted=true)
+-  // are handled by the change listener above; programmatic clicks from the test
+-  // harness (isTrusted=false) are handled here.
++  // Handle all toggle clicks in one place.  e.preventDefault() prevents the
++  // browser's native toggle so we own the checked state entirely, eliminating
++  // the race between native toggle and our explicit assignment.  This single
++  // path works in both a real browser (where click fires, we preventDefault,
++  // and the browser never toggles natively) and happy-dom (where click fires
++  // and no change event follows).
+   todoList.addEventListener('click', function (e) {
+     var target = e.target;
+     var li = target.closest('li');
+@@ -173,9 +146,6 @@
+     var id = parseInt(li.getAttribute('data-id'), 10);
+ 
+     if (target.classList.contains('toggle')) {
+-      // Real browser: change will fire after native toggle — skip click handling.
+-      if (e.isTrusted) return;
+-      // Test harness (happy-dom): no change follows, handle here.
+       e.preventDefault();
+       var todos = loadTodos();
+       var todo = todos.find(function (t) { return t.id === id; });
+@@ -187,6 +157,7 @@
+         updateTodoCount(todos);
+         updateClearCompleted(todos);
+         updateToggleAll(todos);
++        // Remove li from DOM when it no longer matches the active filter
+         var currentFilter = getCurrentFilter();
+         if (currentFilter === '#/active' && todo.completed) {
+           li.remove();

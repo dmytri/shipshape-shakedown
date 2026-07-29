@@ -1,6 +1,59 @@
 # Captain notes - shipshape-shakedown workstream
 
 <!-- ============================================================================= -->
+## >>> 2026-07-29 (later): the 3x3 did NOT run. Two more instrument defects first. <<<
+
+**R9 was not spent, deliberately.** The smoke found defect 14 and the smoke's own results
+found defect 15. Nine waves on this playbook would have produced nine broken cells.
+
+**Defect 14 — FIXED, proven dead.** `bin/pilot-run.sh` `correction()` read `$vg` inside the
+same `local` that assigned it. `local` expands every assignment word before assigning any, so
+under `set -u` the command substitution aborted, `$task` came back empty, `cp ''` failed, and
+the v2 leg produced no session. **Every voyage 2, always.** That is why pilot-run.sh had never
+completed a full wave. Reproduced standalone (exit 127). Split the declaration; SMOKE2 then ran
+12 voyages. `bin/selftest.sh` now scans every `bin/*.sh` for the CLASS — it immediately caught
+two more, one in the new `fitout()` and one live in `fit-matrix.sh:30`. 25 -> 29 checks.
+
+**Defect 15 — FOUND, NOT FIXED, dk's call owed.** The playbook hands QM a custody foul every
+voyage by construction:
+1. the correction prompt ends "Do not commit, push, or dispatch", so Captain leaves work dirty;
+2. `BASE_COMMIT` is read AFTER the Captain leg, so it does NOT contain that work;
+3. QM is dispatched with that base, meets a dirty tree its dispatch says cannot exist.
+
+Evidenced in ALL SEVEN QM legs mined (stash ops in 6 of 7; dirty/foul reasoning in 7 of 7). It
+destroyed a real repair at v3: `Dropped refs/stash@{0}` — "Regression-bearing working tree change
+(removed render() from toggle handler) dropped". `a8c4118` removed the operator custody commits
+that used to mask this and put nothing in their place. **The two candidate fixes measure
+different things — Captain commits its own work at voyage end (a real Shipshape handoff), or
+`BASE_COMMIT` is captured BEFORE the Captain leg (harness stays passive, QM decides). Not
+choosing unilaterally.**
+
+**R6 IS NOT A VALID BASELINE FOR R9.** R6 ran a voyage-0 Shipwright fit-out and a post-ceiling
+Shipwright harbour pass; `a8c4118` deleted both. Its 28/29 and today's numbers are different
+experiments. Do not compare them; the operator did, briefly, and was wrong to.
+
+**SMOKE2 (control, flash, 12 voyages, 95 min, banked `data/SMOKE2-control-flash/`):**
+24, 26, 26, 26, 25, 25, 25, 26, 26, 26, 25, **25/29 final** — never reached the ceiling.
+Self-suite 37/37 GREEN on all twelve while the oracle sat at 25-26: the roles had no internal
+signal anything was wrong. Residual is the `Item -- mark/un-mark items as complete` pair, plus
+a `Mark all` regression at the end. v5 shipped `e.preventDefault()` on a checkbox click handler
+and cost a point. This is a run on a KNOWN-BROKEN playbook — it is not a control-flash score.
+
+**Fit-out linter grading is now recorded per voyage (dk asked).** Three vocabulary-neutral facts:
+`.gplintrc` present, the rigging's lint value, whether gplint runs. Deliberately NOT keyed on
+`## Methods` — that is the candidate's word, and `rigging-conform.py` would score every control
+cell "no Methods section" and manufacture an arm difference out of naming. The harness MEASURES
+and never seeds: `.gplintrc` is role-authored fit-out output, and roles do write it (four
+creations across the R* legs). Both smokes read `.gplintrc: no | rigging lint: none |
+gplint: no-config` on every voyage — control declining a linter doctrine mandates, twice.
+gplint refuses to START without a config, which is recorded as `no-config`, never as a clean
+spec surface.
+
+**Accepted, not a defect (dk): the shared `node_modules` is cross-wave and stays that way** —
+"we are not testing npm", and pre-installed tools cut latency. gplint 2.5.2 and @dk/yoink 0.2.0
+both resolve from it.
+
+<!-- ============================================================================= -->
 ## >>> NEXT SESSION - PRIME (2026-07-29): the harness was the story. Run the CLEAN 3x3. <<<
 
 **Do this, in this order. It is three commands.**

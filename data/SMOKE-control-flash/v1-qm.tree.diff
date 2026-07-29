@@ -1,0 +1,54 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..697500c
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,47 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
++
++## State at voyage start
++
++- Greenfield project. One initial commit (`38fe83d`) with: `assets/app-spec.md`, `assets/app-template.index.html`, `features/support/world.js`, `package.json`, `.gitignore`, `README.md`.
++- `@cucumber/cucumber` and `happy-dom` installed. World.js loads the real `index.html` and `js/app.js` into happy-dom, dispatches lifecycle events, and provides a routing helper (`navigate(hash)`) that works around happy-dom's missing hashchange.
++- No production code exists yet. No `js/app.js`, no `css/app.css`, no `index.html` at root.
++
++## Durable artifacts authored this voyage
++
++### RIGGING.md
++Greenfield bootstrap. Stack: JavaScript, Node, npm. Implementation dir: `js/`. Specs dir: `features/`. Tier: happy-dom (cheapest DOM tier sufficient for TodoMVC). Focused/broad commands use cucumber-js with `@captain`/`@shipwright` exclusions.
++
++### Feature files (5 files, 31 scenarios total)
++
++| File | Scenarios | Domain |
++|------|-----------|--------|
++| `features/todo-creation.feature` | 5 | Adding todos, trimming, empty rejection, main/footer visibility |
++| `features/todo-toggle.feature` | 7 | Single toggle, mark-all, clear completed |
++| `features/todo-editing.feature` | 6 | Double-click edit, blur/Enter save, Escape cancel, empty-destroy, destroy button |
++| `features/todo-routing.feature` | 7 | Active count, pluralization, hash routing, filter link selection, re-filter on update |
++| `features/todo-persistence.feature` | 6 | localStorage save/load, completed persistence, editing NOT persisted, reload survival, filter persistence, item shape (`id`/`title`/`completed`) |
++
++### watchbill.json
++5 watches, one per domain area, ordered by implementation dependency (creation first, persistence last).
++
++## Decisions captured
++
++- **Tier**: happy-dom (cheapest DOM tier). Spec requires DOM manipulation and hash routing; the world.js routing helper makes hashchange reachable in happy-dom. Upgrade to jsdom or Playwright only if a scenario cannot pass in happy-dom.
++- **No routing library**: vanilla `hashchange` event + location.hash. World.js already provides a routing helper. The spec allows this as a framework's built-in capability.
++- **localStorage key**: `todos-vanillajs` per spec convention (`todos-[framework]`).
++- **Item shape**: `{ id, title, completed }` per spec.
++
++## Blockers / Open questions
++
++- `js/app.js`, `css/app.css`, `index.html` must exist for QM to verify. Crew must implement from the template at `assets/app-template.index.html`.
++- World.js checks that `index.html` and `js/app.js` exist and are non-empty before each scenario. A missing file is a hard failure (error thrown), not a silent skip.
++
++## Next role
++
++Dispatch **QM** to verify the watchbill against the implementation. The QM subagent reads durable artifacts only. The working tree must be clean or Boatswain must pre-clean before QM dispatch.
++
++**Context should clear before QM**. The watchbill at its home is the channel; durable artifacts are the hand-off.
+\ No newline at end of file

@@ -1,0 +1,61 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index ebcad5f..e73c999 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -24,4 +24,22 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ 
+ - Verification suite: 37/37 pass.
+ - Toggle-all `change` handler unchanged.
+-- No plant-perturbation added.
+\ No newline at end of file
++- No plant-perturbation added.
++
++## Voyage 7 — Guard redundant `target.checked` assignment in toggle handler
++
++- Voyage 6 removed `preventDefault()` and added environment detection but
++  still set `target.checked = todo.completed` unconditionally after model
++  update.  In a real browser the native toggle already set `checked` to the
++  correct value.  Re-assigning it (even to the same value) caused the browser
++  to re-render the DOM node, detaching the element Cypress held.
++
++  Fix: Guard the assignment with `if (target.checked !== todo.completed)`.
++  This skips the re-assignment in real browsers (where the native toggle
++  matched the model) and runs it only in happy-dom (where the native toggle
++  never fires).
++
++- Verification suite: 37/37 pass.
++- Toggle-all `change` handler unchanged.
++- No plant-perturbation added.
++- Acceptance-suite DOM detachment on mark/unmark should now be resolved.
+\ No newline at end of file
+diff --git a/js/app.js b/js/app.js
+index da541ae..f0c77db 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -139,6 +139,12 @@
+   // state: if the browser already toggled it we read the native result,
+   // otherwise we toggle the model manually.  No preventDefault() is needed
+   // because we never fight the browser's own toggle.
++  //
++  // CRITICAL: after updating the model, we only set target.checked when the
++  // DOM checkbox does not already match the model.  In a real browser the
++  // native toggle already set it; redundantly re-assigning it (even to the
++  // same value) can cause the browser to re-render the DOM node, detaching
++  // the element a framework or test harness holds a reference to.
+   todoList.addEventListener('click', function (e) {
+     var target = e.target;
+     var li = target.closest('li');
+@@ -155,7 +161,12 @@
+         var newCompleted = target.checked !== todo.completed ? target.checked : !todo.completed;
+         todo.completed = newCompleted;
+         saveTodos(todos);
+-        target.checked = todo.completed;
++        // Only sync DOM checkbox when it differs from the model.  A real
++        // browser already toggled it natively; re-assigning the same value
++        // can detach the DOM node.
++        if (target.checked !== todo.completed) {
++          target.checked = todo.completed;
++        }
+         li.classList.toggle('completed', todo.completed);
+         updateTodoCount(todos);
+         updateClearCompleted(todos);

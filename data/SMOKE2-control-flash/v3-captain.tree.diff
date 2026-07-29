@@ -1,0 +1,39 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index a58cbf9..9bbd6c2 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -7,10 +7,10 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ ## Voyage 1 — TodoMVC greenfield build
+ 
+ - Bootstrap complete: `RIGGING.md`, 4 feature files, watchbill authored.
+-- Fix applied to `js/app.js`: Cypress acceptance suite reported 4 DOM-detachment failures when toggling/clearing/completing todos.
++- Fix applied to `js/app.js`: Cypress acceptance suite reported DOM-detachment failures when marking/unmarking items complete.
+   Root cause: `render()` replaced `todoList.innerHTML` wholesale, destroying all `<li>` elements and detaching Cypress DOM references.
+-  Fix: surgical DOM updates in the toggle, toggle-all, destroy, and clear-completed event handlers — update only the affected `<li>` nodes directly instead of calling full `render()`.
+-- Verification suite: 35/37 pass (2 pre-existing routing-filter failures unrelated to this fix).
+-- Pre-existing failures went from 5 to 2 (3 fixed incidentally by surgical DOM updates).
+-- No plant-perturbation added: the fix is complete; no residual code path needs future attention.
++  Fix: toggle-all, destroy, and clear-completed event handlers previously used surgical DOM updates but single-item toggle handler still called full `render()`. Replaced the `render()` call in the toggle handler with surgical class-toggle and checkbox-toggle on the affected `<li>` node, plus derived UI updates. All four handlers now avoid full re-render.
++- Verification suite: 35/37 pass (same 2 pre-existing routing-filter failures from routing.feature:26 and routing.feature:40).
++- The single-toggle fix resolves the remaining Cypress acceptance failures for marking and unmarking items as complete.
++- The fix is complete; no residual code path needs future attention. No perturbation required.
+ - Outbound not yet relevant. After Boatswain custody commit, offer user a summary and outbound options.
+\ No newline at end of file
+diff --git a/js/app.js b/js/app.js
+index c241515..26350f7 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -145,7 +145,12 @@
+       if (todo) {
+         todo.completed = !todo.completed;
+         saveTodos(todos);
+-        render();
++        // Surgical DOM update: update only the affected <li> instead of full re-render
++        li.classList.toggle('completed', todo.completed);
++        target.checked = todo.completed;
++        updateTodoCount(todos);
++        updateClearCompleted(todos);
++        updateToggleAll(todos);
+       }
+       return;
+     }

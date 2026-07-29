@@ -1,0 +1,125 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index c591341..691990d 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -4,11 +4,23 @@
+ 
+ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
+ 
+-## Voyage 3 — Fix Cypress DOM-detachment on toggle (browser default action)
++## Voyage 4 — Adopt checkbox `change` event for real-browser compatibility
++
++- Three acceptance-suite failures persisted after Voyage 3's `e.preventDefault()` fix.
++  Root cause: In a real browser, clicking a checkbox fires the `change` event AFTER the
++  native toggle, and the native toggle races our explicit `target.checked` assignment.
++  The Cypress test chain `.find('.toggle').click()` then finds the element detached
++  because the DOM mutated.
++
++  Fix: Replace the individual-toggle `click`+`preventDefault` approach with dual
++  listeners:
++  - `change` listener (real browser): the browser toggles the checkbox natively, then
++    fires `change`; we read `target.checked` and sync the model. No DOM detachment.
++  - `click` listener fallback (happy-dom): when `e.isTrusted` is false (programmatic
++    dispatch), we call `preventDefault()` and handle the toggle ourselves, because
++    happy-dom never fires `change` after `click()`.
+ 
+-- Acceptance suite reported 2 toggle failures after Voyage 2's surgical DOM updates.
+-  Root cause: in a real browser, clicking a checkbox triggers the browser's default action (toggling `checked`) AFTER click handlers finish, because no `e.preventDefault()` was called. The handler explicitly sets `target.checked = todo.completed`, but the browser then toggles it back, creating a state race that Cypress detects as a page update with detached elements. happy-dom's `click()` does not exercise this default action, so the verification suite never saw the issue.
+-  Fix: added `e.preventDefault()` in the toggle branch so the browser's checkbox default action is suppressed; the app alone controls the checkbox state via the explicit `target.checked = todo.completed` assignment.
+ - Verification suite: 37/37 pass.
++- Toggle-all `change` handler unchanged (already uses `change`).
+ - No plant-perturbation added.
+ - Outbound not yet relevant.
+\ No newline at end of file
+diff --git a/js/app.js b/js/app.js
+index 0918fa1..5971f8d 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -132,27 +132,61 @@
+     }
+   });
+ 
++  // ── Individual checkbox toggle ──
++  // In a REAL browser clicking a checkbox fires 'change' AFTER the native toggle.
++  // Handle it here: read target.checked (already set by the browser) and sync the
++  // model.  No preventDefault() needed — we let the browser own the checkbox state.
++  todoList.addEventListener('change', function (e) {
++    var target = e.target;
++    if (!target.classList.contains('toggle')) return;
++    var li = target.closest('li');
++    if (!li) return;
++    var id = parseInt(li.getAttribute('data-id'), 10);
++    var todos = loadTodos();
++    var todo = todos.find(function (t) { return t.id === id; });
++    if (todo) {
++      todo.completed = target.checked;
++      saveTodos(todos);
++      li.classList.toggle('completed', todo.completed);
++      updateTodoCount(todos);
++      updateClearCompleted(todos);
++      updateToggleAll(todos);
++      // Remove li from DOM when it no longer matches the active filter
++      var currentFilter = getCurrentFilter();
++      if (currentFilter === '#/active' && todo.completed) {
++        li.remove();
++      } else if (currentFilter === '#/completed' && !todo.completed) {
++        li.remove();
++      }
++    }
++  });
++
++  // happy-dom's click() dispatches 'click' but never fires 'change' and never
++  // toggles the checkbox natively.  Handle that here so the verification suite
++  // still works.  Use isTrusted to distinguish: real user clicks (isTrusted=true)
++  // are handled by the change listener above; programmatic clicks from the test
++  // harness (isTrusted=false) are handled here.
+   todoList.addEventListener('click', function (e) {
+-    // @planks("I click the toggle checkbox on {string}", "I mark {string} as completed", "I mark {string} as active")
+     var target = e.target;
+     var li = target.closest('li');
+     if (!li) return;
+     var id = parseInt(li.getAttribute('data-id'), 10);
+ 
+     if (target.classList.contains('toggle')) {
++      // Real browser: change will fire after native toggle — skip click handling.
++      if (e.isTrusted) return;
++      // Test harness (happy-dom): no change follows, handle here.
+       e.preventDefault();
+       var todos = loadTodos();
+       var todo = todos.find(function (t) { return t.id === id; });
+       if (todo) {
+         todo.completed = !todo.completed;
+         saveTodos(todos);
+-        // Surgical DOM update: avoid full render() which detaches all <li> elements
+-        li.classList.toggle('completed', todo.completed);
+         target.checked = todo.completed;
++        li.classList.toggle('completed', todo.completed);
+         updateTodoCount(todos);
+         updateClearCompleted(todos);
+         updateToggleAll(todos);
+-        // Remove li from DOM when it no longer matches the active filter
+         var currentFilter = getCurrentFilter();
+         if (currentFilter === '#/active' && todo.completed) {
+           li.remove();
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..9b61253
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,15 @@
++{
++  "watches": [
++    {
++      "name": "individual-toggle",
++      "scenarios": [
++        "managing-todos.feature:Toggling a single todo as completed",
++        "managing-todos.feature:Unchecking a completed todo",
++        "managing-todos.feature:Toggle-all checkbox state reflects individual completions",
++        "managing-todos.feature:Toggle-all clears when not all todos are completed",
++        "managing-todos.feature:Toggling all todos as completed",
++        "managing-todos.feature:Clearing the \"Mark all as complete\" state via \"Clear completed\""
++      ]
++    }
++  ]
++}
+\ No newline at end of file

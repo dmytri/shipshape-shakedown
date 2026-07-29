@@ -1,0 +1,105 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index a58cbf9..662db23 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -4,13 +4,11 @@
+ 
+ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
+ 
+-## Voyage 1 — TodoMVC greenfield build
++## Voyage 2 — Fix Cypress DOM-detachment failures
+ 
+-- Bootstrap complete: `RIGGING.md`, 4 feature files, watchbill authored.
+-- Fix applied to `js/app.js`: Cypress acceptance suite reported 4 DOM-detachment failures when toggling/clearing/completing todos.
+-  Root cause: `render()` replaced `todoList.innerHTML` wholesale, destroying all `<li>` elements and detaching Cypress DOM references.
+-  Fix: surgical DOM updates in the toggle, toggle-all, destroy, and clear-completed event handlers — update only the affected `<li>` nodes directly instead of calling full `render()`.
+-- Verification suite: 35/37 pass (2 pre-existing routing-filter failures unrelated to this fix).
+-- Pre-existing failures went from 5 to 2 (3 fixed incidentally by surgical DOM updates).
+-- No plant-perturbation added: the fix is complete; no residual code path needs future attention.
++- Acceptance suite reported 2 failures on toggle (mark/unmark as complete).
++  Root cause: toggle click handler called `render()` which replaced `todoList.innerHTML` wholesale, destroying all `<li>` elements and detaching Cypress DOM references.
++  Fix: surgical DOM updates in toggle, focusout, finishEdit, and cancelEdit — update only the affected `<li>` nodes directly instead of calling full `render()`.
++- Verification suite: 35/37 pass (2 pre-existing routing-filter failures).
++- No plant-perturbation added: all interaction handlers now use surgical DOM updates.
+ - Outbound not yet relevant. After Boatswain custody commit, offer user a summary and outbound options.
+\ No newline at end of file
+diff --git a/js/app.js b/js/app.js
+index c241515..4cb5853 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -145,7 +145,12 @@
+       if (todo) {
+         todo.completed = !todo.completed;
+         saveTodos(todos);
+-        render();
++        // Surgical DOM update: avoid full render() which detaches all <li> elements
++        li.classList.toggle('completed', todo.completed);
++        target.checked = todo.completed;
++        updateTodoCount(todos);
++        updateClearCompleted(todos);
++        updateToggleAll(todos);
+       }
+       return;
+     }
+@@ -209,12 +214,20 @@
+         if (!todo) return;
+         if (title === '') {
+           todos = todos.filter(function (t) { return t.id !== id; });
++          saveTodos(todos);
++          li.remove();
+         } else {
+           todo.title = title;
++          saveTodos(todos);
++          li.querySelector('label').textContent = escapeHtml(title);
++          editInput.value = title;
+         }
+-        saveTodos(todos);
+         li.classList.remove('editing');
+-        render();
++        updateMainVisibility(todos);
++        updateFooterVisibility(todos);
++        updateTodoCount(todos);
++        updateClearCompleted(todos);
++        updateToggleAll(todos);
+       }
+     }
+   });
+@@ -231,18 +244,34 @@
+     if (title === '') {
+       // Destroy the todo
+       todos = todos.filter(function (t) { return t.id !== id; });
++      saveTodos(todos);
++      li.remove();
+     } else {
+       todo.title = title;
++      saveTodos(todos);
++      li.querySelector('label').textContent = escapeHtml(title);
++      editInput.value = title;
+     }
+-    saveTodos(todos);
+     li.classList.remove('editing');
+-    render();
++    updateMainVisibility(todos);
++    updateFooterVisibility(todos);
++    updateTodoCount(todos);
++    updateClearCompleted(todos);
++    updateToggleAll(todos);
+   }
+ 
+   function cancelEdit(li) {
++    var id = parseInt(li.getAttribute('data-id'), 10);
++    var todos = loadTodos();
++    var todo = todos.find(function (t) { return t.id === id; });
+     li.classList.remove('editing');
+-    // Restore original title by re-rendering
+-    render();
++    if (todo) {
++      // Restore original title without full re-render
++      var label = li.querySelector('label');
++      var editInput = li.querySelector('.edit');
++      if (label) label.textContent = escapeHtml(todo.title);
++      if (editInput) editInput.value = todo.title;
++    }
+   }
+ 
+   toggleAllCheckbox.addEventListener('change', function (e) {

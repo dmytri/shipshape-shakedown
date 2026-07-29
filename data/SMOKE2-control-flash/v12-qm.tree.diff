@@ -1,0 +1,105 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 72c2d73..09ecb31 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -35,4 +35,32 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ 
+ - Verification suite: 37/37 pass.
+ - Toggle-all `change` handler unchanged.
+-- No plant-perturbation added.
+\ No newline at end of file
++
++## Voyage 10 — Surgical DOM on all filters; never call `render()` from toggle handlers
++
++The Voyage 9 fix correctly split `change`/`click` listeners but still called
++`render()` on filtered views (Active/Completed) inside both the `change` and
++`click` (happy-dom fallback) handlers.  `render()` replaces `todoList.innerHTML`,
++which detaches every `<li>` from the DOM.  The Cypress acceptance test holds a
++reference to a `<li>` (via `.first()`) and after `.click()` tries `cy.find()` on
++it —  if the `<li>` was replaced by `render()`, the reference is stale and
++Cypress raises the DOM-detachment error.
++
++Real-browser failures (3 acceptance tests failing):
++1. "complete all checkbox should update state when items are completed / cleared"
++   — toggle-all not checked because items could not be completed without detach.
++2. "should allow me to mark items as complete" — DOM detachment after click.
++3. "should allow me to un-mark items as complete" — DOM detachment after click.
++
++Fix: Replace `render()` calls in both the `change` handler and the `click`
++fallback handler with surgical DOM updates:
++- On `#/` (All): toggle the `completed` class in place (unchanged).
++- On `#/active` when completing: remove the `<li>` (it no longer matches).
++- On `#/completed` when un-completing: remove the `<li>` (no longer matches).
++- On `#/active` when un-completing or `#/completed` when completing: keep the
++  `<li>` and toggle the class (it still matches the filter).
++
++Always update derived UI (counts, clear-completed, toggle-all) after every
++change — this fixes the toggle-all state update on all filters.
++
++No plant-perturbation added.
+\ No newline at end of file
+diff --git a/js/app.js b/js/app.js
+index 739bbd6..8539175 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -136,8 +136,10 @@
+   // REAL BROWSER path: clicking a checkbox fires 'change' AFTER the native
+   // toggle.  We read target.checked (already settled) and sync the model.
+   // No target.checked assignment needed — the browser already handled it.
+-  // Filter consistency is maintained by calling render(), which replaces
+-  // only <li> elements that need to appear/disappear from the filtered view.
++  // On all filters, we use surgical DOM updates instead of render() to
++  // avoid detaching DOM elements that Cypress may still reference.
++  // On 'All' filter: toggle the 'completed' class in place.
++  // On filtered views: remove the <li> if it no longer matches the filter.
+   todoList.addEventListener('change', function (e) {
+     var target = e.target;
+     if (!target.classList.contains('toggle')) return;
+@@ -149,16 +151,17 @@
+     if (todo) {
+       todo.completed = target.checked;
+       saveTodos(todos);
+-      // On 'All' filter: surgical DOM updates are safe (no li removal).
+-      // On filtered views: re-render to keep the list in sync.
+-      if (getCurrentFilter() === '#/') {
++      var filter = getCurrentFilter();
++      if (filter === '#/' ||
++          (filter === '#/active' && !todo.completed) ||
++          (filter === '#/completed' && todo.completed)) {
+         li.classList.toggle('completed', todo.completed);
+-        updateTodoCount(todos);
+-        updateClearCompleted(todos);
+-        updateToggleAll(todos);
+       } else {
+-        render();
++        li.remove();
+       }
++      updateTodoCount(todos);
++      updateClearCompleted(todos);
++      updateToggleAll(todos);
+     }
+   });
+ 
+@@ -185,14 +188,17 @@
+         todo.completed = !todo.completed;
+         saveTodos(todos);
+         target.checked = todo.completed;
+-        if (getCurrentFilter() === '#/') {
++        var filter = getCurrentFilter();
++        if (filter === '#/' ||
++            (filter === '#/active' && !todo.completed) ||
++            (filter === '#/completed' && todo.completed)) {
+           li.classList.toggle('completed', todo.completed);
+-          updateTodoCount(todos);
+-          updateClearCompleted(todos);
+-          updateToggleAll(todos);
+         } else {
+-          render();
++          li.remove();
+         }
++        updateTodoCount(todos);
++        updateClearCompleted(todos);
++        updateToggleAll(todos);
+       }
+       return;
+     }

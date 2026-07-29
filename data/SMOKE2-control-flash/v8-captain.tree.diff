@@ -1,0 +1,85 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index bfd77b1..ebcad5f 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -4,22 +4,24 @@
+ 
+ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
+ 
+-## Voyage 5 — Unify individual toggle to single `click` handler
++## Voyage 6 — Remove `preventDefault` from individual toggle click handler
+ 
+-- Voyage 4's dual-listener approach (`change` for real browser, `click` for
+-  happy-dom) had the `change` handler UNTESTED by the verification suite, because
+-  happy-dom never fires `change` after `click()`.  Three acceptance-suite failures
+-  persisted: toggle-all not checked after individual completions, and DOM
+-  detachment on mark/unmark.
++- Voyage 5 used `e.preventDefault()` in the click handler to prevent the
++  browser's native toggle, then toggled the model and set `target.checked`
++  explicitly.  This passed the happy-dom verification suite (37/37) but failed
++  the acceptance-suite in a real browser with:
++  1. Toggle-all not checked after individual completions
++  2. DOM detachment on mark/unmark (`cy.find()` detached subject)
+ 
+-  Fix: Remove the split.  Single `click` handler with `e.preventDefault()`
+-  handles every toggle.  Both environments take the identical code path.  The
+-  browser's native toggle is prevented, so no race condition exists between
+-  native toggle and our explicit `target.checked` assignment.
++  Root cause: In a real browser the native toggle fires BEFORE the click
++  handler, and `preventDefault()` is unreliable at undoing it.  The subsequent
++  DOM state changes can detach elements mid-Cypress-chain.
++
++  Fix: Remove `e.preventDefault()`.  Let the browser toggle `target.checked`
++  natively.  Detect the environment by comparing `target.checked` against the
++  model: if the browser already toggled it (real browser), read the result;
++  if not (happy-dom), toggle the model manually.
+ 
+ - Verification suite: 37/37 pass.
+ - Toggle-all `change` handler unchanged.
+-- No plant-perturbation added.
+-- Three acceptance-suite failures are expected to resolve: all toggle state
+-  management now runs synchronously in one event handler, same path in every
+-  browser.
+\ No newline at end of file
++- No plant-perturbation added.
+\ No newline at end of file
+diff --git a/js/app.js b/js/app.js
+index 5a74f88..da541ae 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -133,12 +133,12 @@
+   });
+ 
+   // ── Individual checkbox toggle ──
+-  // Handle all toggle clicks in one place.  e.preventDefault() prevents the
+-  // browser's native toggle so we own the checked state entirely, eliminating
+-  // the race between native toggle and our explicit assignment.  This single
+-  // path works in both a real browser (where click fires, we preventDefault,
+-  // and the browser never toggles natively) and happy-dom (where click fires
+-  // and no change event follows).
++  // Handle all toggle clicks in one place.  A real browser toggles the
++  // checkbox natively on click; happy-dom does not.  We detect which
++  // environment we are in by comparing target.checked against the model
++  // state: if the browser already toggled it we read the native result,
++  // otherwise we toggle the model manually.  No preventDefault() is needed
++  // because we never fight the browser's own toggle.
+   todoList.addEventListener('click', function (e) {
+     var target = e.target;
+     var li = target.closest('li');
+@@ -146,11 +146,14 @@
+     var id = parseInt(li.getAttribute('data-id'), 10);
+ 
+     if (target.classList.contains('toggle')) {
+-      e.preventDefault();
+       var todos = loadTodos();
+       var todo = todos.find(function (t) { return t.id === id; });
+       if (todo) {
+-        todo.completed = !todo.completed;
++        // Real browsers toggle target.checked on click natively; happy-dom
++        // does not.  If the DOM already reflects the toggled state, use it;
++        // otherwise toggle the model.
++        var newCompleted = target.checked !== todo.completed ? target.checked : !todo.completed;
++        todo.completed = newCompleted;
+         saveTodos(todos);
+         target.checked = todo.completed;
+         li.classList.toggle('completed', todo.completed);
