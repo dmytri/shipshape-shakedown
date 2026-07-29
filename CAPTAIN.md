@@ -1,6 +1,100 @@
 # Captain notes - shipshape-shakedown workstream
 
 <!-- ============================================================================= -->
+## >>> NEXT SESSION - PRIME (2026-07-29): the harness was the story. Run the CLEAN 3x3. <<<
+
+**Do this, in this order. It is three commands.**
+
+```
+bin/selftest.sh                      # 23 checks, no model calls. Must print SAFE TO LAUNCH.
+bin/pilot.sh control flash SMOKE      # ONE smoke wave. Must reach 28/29. ~$0.5, ~40min.
+bin/run-matrix.sh R9                  # the 3x3: one model per batch, three arms together.
+```
+
+`bin/pilot-run.sh` has never executed a full wave. Smoke it before spending nine.
+
+**THE RUN SHAPE, and nothing else (dk):** clean fixture -> sandbox -> initial prompt ->
+oracle-response prompts -> grading. `bin/pilot.sh <arm> <model> [tag]` takes two arguments and
+has no options: fixture, budget, cap and leg timeout live in the script so two runs cannot
+silently differ. The old driver's ten flags are gone.
+
+**THE HARNESS MAKES ZERO GIT WRITES.** It reads the sim and never edits it. No reverts, no
+operator custody commits, no discarding dirty trees, no operator-dispatched Shipwright passes,
+no intent library, no resume path. Whether roles commit, derive a rigging, or leave work
+uncommitted is a RESULT to be recorded, never something the harness arranges.
+
+## What is actually known
+
+**Valid (R6, sound fixture, one draw per cell):**
+
+| arm | flash | mimo | hy3 |
+|---|---|---|---|
+| control | 28/29 (4 voyages) | 28/29 (7) | 28/29 (6) |
+| candidate | 28/29 (3) | 28/29 (8) | 27/29 (12, capped) |
+| midway | VOID | VOID | VOID |
+
+Every midway cell is void: that arm was a hybrid (it carried `## Commands` AND `## Methods`,
+plus `plank-inventory`/`step-usage` beside `plank-join`). Rebuilt since by `bin/build-midway.py`,
+which is idempotent and self-checking — `--check` must pass before midway runs.
+
+**Both probes stand.** The candidate's "output bloat" does NOT survive controlled comparison:
+610 vs 625 out/turn on a matched ambiguous Captain task, and the candidate was the LIGHTER arm
+on a well-specified QM task. The pilot-level gap was unmatched aggregates, not doctrine.
+
+## Thirteen instrument defects were found and fixed this session. All ours.
+
+The fit-out revert destroyed `RIGGING.md` in every wave (a QM died on `cat: RIGGING.md: No such
+file` and scored 0/29); an unmeasured grade was recorded as a real 0/29; pi capped flash at 4096
+while its peers had 131072; the grader stripped the CSS the page links; `--tmp-overlay` discarded
+role installs (chai, then ajv — one cell lost 12 voyages); no app harness let a suite run 19/21
+GREEN over an empty `js/`; happy-dom never fires hashchange; the provider guard parsed the raw
+render and OOM-killed voyages at 13G; custody committed after that guard, deleting a measured
+26/29; the self-suite was blind to `specs/`; nine concurrent suites OOM'd the box and `setsid`
+then defeated the batching meant to fix it; `data/` reached 19G and took the disk to 99% twice.
+
+**Every one distorted a result we then argued about.** Hypotheses I built on that noise and had
+to withdraw: "methods suppress the plank route", "clause 4 forecloses the structural channel",
+"midway proves methods carry the regression". Assume the instrument first.
+
+## Standing rules earned this session
+
+- **Never edit the harness while a run is live.** Freeze, run, investigate after.
+- **Smoke one wave before a matrix.** Nine waves on an unproven instrument is nine wasted waves.
+- **A failed measurement is not a zero.** Unmeasured stops the run; it never enters a trajectory.
+- **One draw is not a result.** Control's flash cell scored 24, 24 and 0 across three matrices.
+- **Investigate every stall and regression immediately** — do not wait to be asked (dk).
+- **Never blame the model** (dk): every model here can finish the pilot unless doctrine,
+  playbook, fixture or harness sabotages it. The one exception on record is gpt-oss (no tools).
+- **Kill monitors properly.** TaskStop ends the wrapper, not the process; five orphaned watchers
+  were still running a day later, firing about deleted waves.
+
+## Known limits, carried, not fixed
+
+- **The output budget is per-MODEL.** pi ignores the seeded model store; `models.json`
+  `modelOverrides` is the only mechanism it honours (proven 4096 -> 30284). Budgets are equal
+  ACROSS ARMS within a model, so arm-vs-arm is valid and cross-model voyage counts are not.
+  See `data/BUDGET-NOTE.md`.
+- **The edit-commit reentrancy is tier-invisible.** happy-dom does not fire blur on node removal.
+  Control cleared it by writing an implementation-level scenario the Scenario-writing agreement
+  technically forbids; the candidate obeyed the text and stalled.
+
+## Routed to dk, unshipped, nothing goes to ~/shipshape without their word
+
+- **B1** the candidate's greenfield contradiction: `captain:54`/`:60` require Shipwright's return,
+  `captain:36` forbids dispatching Shipwright at greenfield, and `0.13.65 captain:59` (Captain may
+  write a minimal `RIGGING.md`) was deleted with nothing in its place. `qm:78` then makes blocking
+  mandatory. The pilot has only ever completed via a write-scope violation.
+- **B2** the watchbill's fixed shape is stated in `shipshape` and `qm` (the readers) and NOWHERE in
+  `captain` (the writer) — `grep watch1` returns zero hits in captain in BOTH arms. Plus: no
+  default specs directory when `RIGGING.md` is absent.
+- **B3/B4** the tier-invisible pincer: scenarios must "describe behaviour, not implementation";
+  structural facts belong in a scantling; a bespoke checker is "verification support under QM, not
+  a Captain-owned scantling file". A defect the executing tier cannot observe therefore has no
+  legal home. A proposed rewrite was probed and the first draw ran AGAINST it — the arm WITH the
+  clause authored the structural requirement and both edited arms authored nothing. Dropped
+  pending evidence; do not ship the wording.
+
+<!-- ============================================================================= -->
 ## >>> NEXT SESSION - PRIME (2026-07-27, later): 5/5 stacks clean on flash. Next is mimo + hy3, then the pilot <<<
 
 **State. THE BAR IS MET: 15/15, three models x five stacks, 100%.** r22 (flash) + r23 (mimo, hy3),

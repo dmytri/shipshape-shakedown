@@ -1,5 +1,86 @@
 # Metrics: how to read a shakedown
 
+## 2026-07-29 — THE HARNESS WAS THE STORY: thirteen instrument defects, and what survives them
+
+**No doctrine shipped. The session's product is an instrument that can be trusted, plus one
+valid matrix and two probes.**
+
+### What is measured and defensible (R6, sound fixture, ONE draw per cell)
+
+| arm | flash | mimo | hy3 |
+|---|---|---|---|
+| control 0.13.65 | 28/29 (4 voyages) | 28/29 (7) | 28/29 (6) |
+| methods candidate | 28/29 (3) | 28/29 (8) | 27/29 (12, cap) |
+| midway (control+methods) | VOID | VOID | VOID |
+
+Control reached the ceiling on all three models. The candidate reached it on two and stalled one
+short on hy3 after eleven no-move voyages. Every midway cell is void — that arm was built as a
+hybrid carrying BOTH vocabularies (`## Commands` beside `## Methods`, `plank-inventory` and
+`step-usage` beside `plank-join`), which is the likeliest cause of its 18/29 on flash, below both
+arms it brackets. `bin/build-midway.py` now builds and verifies it; the bisect has never actually
+been run.
+
+### The candidate's "output bloat" does not exist under controlled comparison
+
+Two probes, matched task, same model, same fixture:
+- ambiguous Captain task (the real stuck sim, the real correction prompt): control 610 out/turn,
+  candidate 625. Indistinguishable. Both authored in 3 of 4 draws.
+- well-specified QM task: candidate 278 out/turn, control 378 — the candidate was LIGHTER.
+The pilot-level 541-vs-428 gap that motivated the hypothesis was an aggregate over unmatched work.
+**Within-arm variance dwarfs the arm difference**: control ranged 292-856 out/turn across four
+draws of one identical task, and each arm produced one 6-turn, zero-write leg in four.
+
+### Thirteen instrument defects, each of which distorted a result
+
+1. **The voyage-0 fit-out revert destroyed `RIGGING.md`** — in EVERY wave of R6/R7/R8. A greenfield
+   fit-out necessarily leaves red or undefined scenarios, so the guard reverted it and took the
+   rigging with it. R8-ctrl-flash's QM then died on `cat: RIGGING.md: No such file or directory`
+   (11 turns, zero writes) and scored 0/29. Survival was a coin flip on whether skeletons reported
+   `failed` or `undefined`.
+2. **An unmeasured grade was recorded as 0/29.** `${p:-0} ${t:-29}` turned any grader crash,
+   refusal or missing file into a real-looking zero that the driver then "corrected" for voyages.
+3. **pi capped deepseek-v4-flash at 4096 output tokens** while mimo and hy3 got 131072 — a 32x
+   per-model handicap. Seeding the model store does nothing; `models.json` `modelOverrides` is the
+   only mechanism pi honours (proven: 4096 -> 30284 on an identical task).
+4. **The grader stripped the CSS the page links.** `node_modules/todomvc-app-css` carries
+   `li.editing .view { display: none }`, the rule the oracle's edit-visibility test checks. A cell
+   sat four voyages at 27/29 on an unwinnable test; the same build regraded 28/29 once served.
+5. **`--tmp-overlay` discarded role installs.** chai, then ajv: a role DECLARED `"ajv": "^8.20.0"`
+   and its suite failed `Cannot find module ajv` for twelve consecutive voyages. Now a persistent
+   per-wave upper — proven across leg boundaries.
+6. **No app harness** let a wave run 19/21 GREEN over an EMPTY `js/`, its final "app" two lines
+   and correctly planked. Conformance and correctness fully decoupled; the oracle was the only
+   witness.
+7. **happy-dom never fires `hashchange`** — the whole routing family was unreachable; one cell
+   spent seven voyages implementing filter links nothing could drive.
+8. **The provider guard parsed the raw render** and reached 13G, OOM-killing voyage scripts
+   mid-run (three exact correlations to "self-suite: ?" lines 43s later).
+9. **Custody committed AFTER that guard**, so a measured 26/29 improvement was deleted by the next
+   voyage's revert and logged as a model regression.
+10. **The self-suite was blind to `specs/`** — bare `npx cucumber-js` found 0 scenarios, so the
+    revert guard was inert for candidate cells.
+11. **Nine concurrent suites OOM-killed the box**; then `setsid` defeated the `wait` that was
+    supposed to batch them, so "batched" runs still launched all nine.
+12. **`data/` reached 19G** because banking copied the raw render by default (single files at 40G
+    apparent, against a 500K session.jsonl). Disk hit 99% twice and voided a live cell.
+13. **The midway arm was a hybrid** — see above.
+
+### The instrument now
+
+A run is exactly: clean fixture -> sandbox -> initial prompt -> oracle-response prompts ->
+grading. `bin/pilot.sh <arm> <model>` has two arguments and no options. **The harness makes zero
+git writes** — it reads the sim and never edits it, so custody, rigging and specs are the roles'
+business and whether they happen is a result. `bin/selftest.sh` proves 23 properties with no model
+calls before a pilot spends anything.
+
+### Method debt this session paid
+
+Three hypotheses were built on instrument noise and withdrawn: "methods suppress the plank route",
+"clause 4 forecloses the structural channel" (midway does not contain clause 4), and "midway proves
+methods carry the regression" (that midway was a hybrid). The rule earned: **assume the instrument
+first, and check the artifact rather than the code** — every defect above was visible in a file
+within seconds once someone looked.
+
 ## r23 + r22, 2026-07-27 — **15/15 PASS. dk's bar is MET: three models, five stacks, 100%.**
 
 One doctrine text, one spec (`fixtures/tidewatch-spec`, `bb277b23`, byte-identical in every sim),
