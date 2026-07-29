@@ -1,0 +1,111 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 1f53282..12da68c 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -24,3 +24,18 @@ perturbation token is owed from Shipshape fitting out before QM can run.
+   (from `assets/app-template.index.html`, comments stripped) and `js/app.js` (vanilla, no preprocessors).
+ - Step-def authors: the `the app is reloaded` step must preserve the current `location.hash` across
+   the happy-dom window rebuild, or the routing-persistence scenario cannot hold its state.
++
++## Voyage: DOM identity on state change (browser-only defect)
++
++- Acceptance (Cypress, real browser) fails because `render()` rebuilds `.todo-list` via
++  `innerHTML = ''`, detaching the list-item nodes a client holds before a click. happy-dom also
++  detaches on `innerHTML = ''`, so the in-suite cucumber tier CAN reproduce it.
++- `features/complete.feature` and `features/edit.feature` now pin element-identity preservation:
++  five scenarios capture a list-item node, perform the state change, and assert the same node is
++  still attached. They redden on the current `render()`-rebuild code and green only when the app
++  mutates the existing node in place (toggle class/checkbox, update mark-all, cancel edit in place).
++- `watchbill.json` `watch1` lists the five scenarios as the QM target set. QM must add the two new
++  step patterns (`the list item for {string} is captured`, `the list item for {string} is the
++  captured node`); until then they are undefined and the scenarios fail as intended.
++- Crew fix lives in `js/app.js` seams (`toggle`, `toggleAll`, the Escape branch in `init`): mutate
++  the live node instead of calling `render()` for these interactions. No production code written here.
+diff --git a/features/complete.feature b/features/complete.feature
+index bb5e963..195059a 100644
+--- a/features/complete.feature
++++ b/features/complete.feature
+@@ -44,3 +44,44 @@ Feature: Completing and toggling todos
+     When the user checks the mark all as complete checkbox
+     And the user clicks clear completed
+     Then the mark all as complete checkbox is unchecked
++
++  Rule: State changes preserve list item element identity
++    The app MUST mutate each existing list item node in place (toggle its
++    completed class and checkbox, or update the mark-all checkbox) instead of
++    rebuilding the list. An element a client holds before the change stays
++    attached to the DOM across the interaction, so references taken before the
++    click remain valid afterwards.
++
++  Scenario: Completing a todo keeps its list item element attached
++    Given the app has the active todo "feed the cat"
++    And the list item for "feed the cat" is captured
++    When the user checks the todo "feed the cat"
++    Then the todo "feed the cat" is marked completed
++    And the list item for "feed the cat" is the captured node
++
++  Scenario: Un-completing a todo keeps its list item element attached
++    Given the app has the completed todo "feed the cat"
++    And the list item for "feed the cat" is captured
++    When the user unchecks the todo "feed the cat"
++    Then the todo "feed the cat" is not marked completed
++    And the list item for "feed the cat" is the captured node
++
++  Scenario: Marking all complete keeps every list item element attached
++    Given the app has the active todo "feed the cat"
++    And the app has the active todo "walk the dog"
++    And the list item for "feed the cat" is captured
++    And the list item for "walk the dog" is captured
++    When the user checks the mark all as complete checkbox
++    Then every todo is marked completed
++    And the list item for "feed the cat" is the captured node
++    And the list item for "walk the dog" is the captured node
++
++  Scenario: Clearing all complete keeps every list item element attached
++    Given the app has the completed todo "feed the cat"
++    And the app has the completed todo "walk the dog"
++    And the list item for "feed the cat" is captured
++    And the list item for "walk the dog" is captured
++    When the user unchecks the mark all as complete checkbox
++    Then every todo is not marked completed
++    And the list item for "feed the cat" is the captured node
++    And the list item for "walk the dog" is the captured node
+diff --git a/features/edit.feature b/features/edit.feature
+index 619fe0d..51bec56 100644
+--- a/features/edit.feature
++++ b/features/edit.feature
+@@ -38,3 +38,17 @@ Feature: Editing todos
+     When the user changes the edit input to "Buy oat milk" and presses Escape
+     Then the todo list shows the todo "Buy milk"
+     And the todo "Buy milk" is not in editing mode
++
++  Rule: Editing interactions preserve list item element identity
++    Cancelling an edit MUST restore the item in place (reset the edit value and
++    drop the editing class) instead of rebuilding the list, so the item element a
++    client holds before the cancel stays attached to the DOM afterwards.
++
++  Scenario: Cancelling an edit on Escape keeps the list item element attached
++    Given the app has the todo "feed the cat"
++    And the todo "feed the cat" is in editing mode
++    And the list item for "feed the cat" is captured
++    When the user changes the edit input to "feed the dog" and presses Escape
++    Then the todo list shows the todo "feed the cat"
++    And the todo "feed the cat" is not in editing mode
++    And the list item for "feed the cat" is the captured node
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..52ca53c
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,11 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/complete.feature:Completing a todo keeps its list item element attached",
++      "features/complete.feature:Un-completing a todo keeps its list item element attached",
++      "features/complete.feature:Marking all complete keeps every list item element attached",
++      "features/complete.feature:Clearing all complete keeps every list item element attached",
++      "features/edit.feature:Cancelling an edit on Escape keeps the list item element attached"
++    ]
++  }
++}

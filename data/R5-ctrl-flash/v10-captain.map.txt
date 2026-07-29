@@ -1,0 +1,38 @@
+# banked: 2026-07-28T18:34:22Z
+# verdict: PENDING
+# leg: {  "name": "v10-captain",  "model": "deepseek/deepseek-v4-flash",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/R5-ctrl-flash/sim",  "timeout_s": 3600,  "max_tokens": 32768,  "skills": [    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills/shipshape",    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills/captain",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== v10-captain.session.jsonl ===
+  turns=27  wall=245.5s  in=161920  out=23801  cache_read=615168  cost=$0.0312
+  role reads: (no role SKILL.md read)
+  roles loaded: NONE
+  ~ repeated tool signature at turns [18] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    2971/316        0 $0.0003  read
+    t1    3309/142        0 $0.0003  bash, bash
+    t2    4349/270        0 $0.0005  read, read, read, read
+    t3    8657/234        0 $0.0009  bash
+    t4    9532/283        0 $0.0009  read, read, read, read
+    t5   14956/3487       0 $0.0021  read, read
+    t6   11040/448     8192 $0.0013  bash
+    t7    7468/4092   12288 $0.0017  bash, bash
+    t8    8751/166    16384 $0.0012  bash, bash
+    t9    1197/2114   24576 $0.0010  read, bash
+    t10   3595/1861   24576 $0.0011  read, bash
+    t11   6173/330    24576 $0.0011  bash, bash
+    t12   2484/192    28672 $0.0008  bash, bash
+    t13   3926/1974   28672 $0.0013  read, read
+    t14   6442/292    28672 $0.0012  bash
+    t15  19094/700    16384 $0.0022  read
+    t16   3878/939    32512 $0.0011  edit
+    t17   4615/114    32768 $0.0011  read
+    t18   4832/124    32768 $0.0011  read
+    t19   1238/1938   37376 $0.0012  edit
+    t20   3741/267    36864 $0.0011  edit
+    t21   8151/123    32768 $0.0014  bash
+    t22   4630/365    36864 $0.0012  write
+    t23   1200/1728   40704 $0.0012  edit
+    t24   1952/204    41728 $0.0010  bash, bash
+    t25   3821/298    40960 $0.0012  read, read, read
+    t26   9918/800    36864 $0.0018  -

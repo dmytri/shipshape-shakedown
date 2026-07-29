@@ -1,0 +1,122 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index fe38096..5be607c 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -17,6 +17,43 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ - Tier: happy-dom (default). The spec requires DOM rendering; happy-dom is the cheapest tier that observes it.
+ - Scantling for localStorage shape at `scantlings/todo-storage.json`.
+ 
++## Acceptance-suite failures (10, browser-only)
++
++An external Cypress suite against the real DOM reports 10 failures. Root cause: `render()`
++in `js/app.js` calls `todoList.innerHTML = ''` then rebuilds every `<li>` from scratch on every
++state change, destroying all DOM node references. The happy-dom harness re-queries after each
++step and masks the defect; a real browser holds pre-action references and sees them detached.
++
++### Failure groups
++
++**1-2 (Toggle all):** `toggleAllTodos()` → state change → `render()` → list rebuilt. Cypress
++`cy.eq()` references the detached element.
++
++**3-4 (Toggle individual):** Same pattern: toggle click handler calls `render()`, list rebuilt.
++
++**5-10 (Editing):** `dblclick` handler sets `todo.editing = true`, calls `render()`. But
++`render()` re-reads from localStorage via `getTodos()`, and `setTodos()` strips the `editing`
++property before persisting. So `todo.editing` is lost, the `editing` class is never added to the
++new `<li>`, and the `.edit` input stays `display: none` per TodoMVC CSS. Additionally, the old
++`li` reference is used after `render()`, operating on a detached node.
++
++### Fix direction
++
++Preserve element identity: mutate the existing `<li>` in place (toggle `.completed` class,
++show/hide `.edit` input) instead of calling `render()` to rebuild the list. The `render()`
++function already re-reads from localStorage — eliminate that re-read and use the in-memory
++`todos` array for rendering, or skip re-rendering entirely for single-item mutations.
++
++### Scenarios added
++
++- `todo-management.feature` Rule: DOM identity preservation (2 scenarios)
++- `todo-management.feature` Rule: Editing visibility (2 scenarios)
++
++These 4 scenarios are in `watchbill.json`.
++
+ ## Next
+ 
+-Dispatch QM with `watchbill.json` targets when production code exists.
+\ No newline at end of file
++Dispatch QM with `watchbill.json` targets. The step definitions for the new scenarios need
++implementation: `I store the todo element reference`, `the stored element is still attached to
++the document`, `I store the todo element references`, `all stored elements are still attached to
++the document`, `the edit input is visible`, `the label is not visible`.
+\ No newline at end of file
+diff --git a/features/todo-management.feature b/features/todo-management.feature
+index 6b8c127..9042a7c 100644
+--- a/features/todo-management.feature
++++ b/features/todo-management.feature
+@@ -74,6 +74,22 @@ Feature: Todo management
+     When I complete the first 2 todos
+     Then the "toggle-all" checkbox is checked
+ 
++  Rule: DOM identity preservation
++
++  Scenario: Toggle checkbox preserves the todo element
++    Given the todo list has 1 item with title "Buy milk"
++    When I store the todo element reference
++    And I click the toggle checkbox on the todo
++    Then the stored element is still attached to the document
++    And the todo has class "completed"
++
++  Scenario: Toggle-all preserves the todo elements
++    Given the todo list has items "Buy milk", "Buy eggs", "Buy bread"
++    When I store the todo element references
++    And I click the "toggle-all" checkbox
++    Then all stored elements are still attached to the document
++    And all todos have class "completed"
++
+   Rule: Editing todos
+ 
+   Scenario: Double-click a todo label to enter edit mode
+@@ -121,6 +137,18 @@ Feature: Todo management
+     Then the todo does not have class "editing"
+     And the todo list shows 1 item with title "Buy milk"
+ 
++  Rule: Editing visibility
++
++  Scenario: Edit input is visible on double-click
++    Given the todo list has 1 item with title "Buy milk"
++    When I double-click the todo label
++    Then the edit input is visible
++
++  Scenario: Label is hidden when editing
++    Given the todo list has 1 item with title "Buy milk"
++    When I double-click the todo label
++    Then the label is not visible
++
+   Rule: Destroying todos
+ 
+   Scenario: Delete a todo by clicking the destroy button
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..dcaee48
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,18 @@
++[
++  {
++    "target": "todo-management.feature:Toggle checkbox preserves the todo element",
++    "reason": "DOM-identity: toggle click calls render() which rebuilds the list, detaching the element"
++  },
++  {
++    "target": "todo-management.feature:Toggle-all preserves the todo elements",
++    "reason": "DOM-identity: toggle-all calls render() which rebuilds the list, detaching all elements"
++  },
++  {
++    "target": "todo-management.feature:Edit input is visible on double-click",
++    "reason": "Editing visibility: dblclick handler calls render() which re-reads localStorage losing editing state, edit input stays display:none"
++  },
++  {
++    "target": "todo-management.feature:Label is hidden when editing",
++    "reason": "Editing visibility: dblclick handler calls render() which re-reads localStorage losing editing state, label stays visible"
++  }
++]
+\ No newline at end of file

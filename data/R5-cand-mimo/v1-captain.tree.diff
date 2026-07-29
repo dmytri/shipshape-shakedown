@@ -1,0 +1,565 @@
+diff --git a/css/app.css b/css/app.css
+new file mode 100644
+index 0000000..31de8a5
+--- /dev/null
++++ b/css/app.css
+@@ -0,0 +1,3 @@
++/* app.css - Custom styles for TodoMVC app */
++
++/* Custom styles can be added here */
+\ No newline at end of file
+diff --git a/index.html b/index.html
+new file mode 100644
+index 0000000..e673d75
+--- /dev/null
++++ b/index.html
+@@ -0,0 +1,47 @@
++<!doctype html>
++<html lang="en">
++	<head>
++		<meta charset="utf-8">
++		<meta name="viewport" content="width=device-width, initial-scale=1">
++		<title>Template • TodoMVC</title>
++		<link rel="stylesheet" href="node_modules/todomvc-common/base.css">
++		<link rel="stylesheet" href="node_modules/todomvc-app-css/index.css">
++		<link rel="stylesheet" href="css/app.css">
++	</head>
++	<body>
++		<section class="todoapp">
++			<header class="header">
++				<h1>todos</h1>
++				<input class="new-todo" placeholder="What needs to be done?" autofocus>
++			</header>
++			<section class="main">
++				<input id="toggle-all" class="toggle-all" type="checkbox">
++				<label for="toggle-all">Mark all as complete</label>
++				<ul class="todo-list"></ul>
++			</section>
++			<footer class="footer">
++				<span class="todo-count"><strong>0</strong> items left</span>
++				<ul class="filters">
++					<li>
++						<a class="selected" href="#/">All</a>
++					</li>
++					<li>
++						<a href="#/active">Active</a>
++					</li>
++					<li>
++						<a href="#/completed">Completed</a>
++					</li>
++				</ul>
++				<button class="clear-completed">Clear completed</button>
++			</footer>
++		</section>
++		<footer class="info">
++			<p>Double-click to edit a todo</p>
++			<p>Template by <a href="http://sindresorhus.com">Sindre Sorhus</a></p>
++			<p>Created by <a href="http://todomvc.com">you</a></p>
++			<p>Part of <a href="http://todomvc.com">TodoMVC</a></p>
++		</footer>
++		<script src="node_modules/todomvc-common/base.js"></script>
++		<script src="js/app.js"></script>
++	</body>
++</html>
+\ No newline at end of file
+diff --git a/js/app.js b/js/app.js
+new file mode 100644
+index 0000000..16ec55d
+--- /dev/null
++++ b/js/app.js
+@@ -0,0 +1,406 @@
++(function () {
++	'use strict';
++
++	var STORAGE_KEY = 'todos-vanillajs';
++
++	// Model
++	var todos = [];
++	var currentFilter = 'all';
++
++	// DOM elements
++	var newTodoInput = document.querySelector('.new-todo');
++	var todoList = document.querySelector('.todo-list');
++	var mainSection = document.querySelector('.main');
++	var footer = document.querySelector('.footer');
++	var toggleAllCheckbox = document.getElementById('toggle-all');
++	var clearCompletedButton = document.querySelector('.clear-completed');
++	var filterLinks = document.querySelectorAll('.filters a');
++
++	// Load todos from localStorage
++	function loadTodos() {
++		var stored = localStorage.getItem(STORAGE_KEY);
++		if (stored) {
++			try {
++				todos = JSON.parse(stored);
++			} catch (e) {
++				todos = [];
++			}
++		}
++	}
++
++	// Save todos to localStorage
++	function saveTodos() {
++		localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
++	}
++
++	// Generate unique ID
++	function generateId() {
++		return Date.now().toString(36) + Math.random().toString(36).substr(2);
++	}
++
++	// Create a new todo
++	function addTodo(title) {
++		title = title.trim();
++		if (title === '') {
++			return;
++		}
++		var todo = {
++			id: generateId(),
++			title: title,
++			completed: false
++		};
++		todos.push(todo);
++		saveTodos();
++		render();
++	}
++
++	// Toggle todo completion
++	function toggleTodo(id) {
++		for (var i = 0; i < todos.length; i++) {
++			if (todos[i].id === id) {
++				todos[i].completed = !todos[i].completed;
++				break;
++			}
++		}
++		saveTodos();
++		render();
++	}
++
++	// Delete a todo
++	function deleteTodo(id) {
++		todos = todos.filter(function (todo) {
++			return todo.id !== id;
++		});
++		saveTodos();
++		render();
++	}
++
++	// Edit a todo
++	function editTodo(id, newTitle) {
++		newTitle = newTitle.trim();
++		if (newTitle === '') {
++			deleteTodo(id);
++			return;
++		}
++		for (var i = 0; i < todos.length; i++) {
++			if (todos[i].id === id) {
++				todos[i].title = newTitle;
++				break;
++			}
++		}
++		saveTodos();
++		render();
++	}
++
++	// Clear completed todos
++	function clearCompleted() {
++		todos = todos.filter(function (todo) {
++			return !todo.completed;
++		});
++		saveTodos();
++		render();
++	}
++
++	// Toggle all todos
++	function toggleAll() {
++		var allCompleted = todos.every(function (todo) {
++			return todo.completed;
++		});
++		var newState = !allCompleted;
++		todos.forEach(function (todo) {
++			todo.completed = newState;
++		});
++		saveTodos();
++		render();
++	}
++
++	// Filter todos based on current filter
++	function getFilteredTodos() {
++		switch (currentFilter) {
++			case 'active':
++				return todos.filter(function (todo) {
++					return !todo.completed;
++				});
++			case 'completed':
++				return todos.filter(function (todo) {
++					return todo.completed;
++				});
++			default:
++				return todos;
++		}
++	}
++
++	// Create a new <li> element for a todo
++	function createTodoElement(todo) {
++		var li = document.createElement('li');
++		li.dataset.id = todo.id;
++		if (todo.completed) {
++			li.classList.add('completed');
++		}
++
++		var viewDiv = document.createElement('div');
++		viewDiv.className = 'view';
++
++		var toggleInput = document.createElement('input');
++		toggleInput.className = 'toggle';
++		toggleInput.type = 'checkbox';
++		if (todo.completed) {
++			toggleInput.checked = true;
++		}
++
++		var label = document.createElement('label');
++		label.textContent = todo.title;
++
++		var destroyButton = document.createElement('button');
++		destroyButton.className = 'destroy';
++
++		viewDiv.appendChild(toggleInput);
++		viewDiv.appendChild(label);
++		viewDiv.appendChild(destroyButton);
++
++		var editInput = document.createElement('input');
++		editInput.className = 'edit';
++		editInput.value = todo.title;
++
++		li.appendChild(viewDiv);
++		li.appendChild(editInput);
++
++		return li;
++	}
++
++	// Update an existing <li> element in place
++	function updateTodoElement(li, todo) {
++		// Update completed state
++		if (todo.completed) {
++			li.classList.add('completed');
++		} else {
++			li.classList.remove('completed');
++		}
++
++		// Update toggle checkbox
++		var toggleInput = li.querySelector('.toggle');
++		toggleInput.checked = todo.completed;
++
++		// Update label text
++		var label = li.querySelector('label');
++		label.textContent = todo.title;
++
++		// Update edit input value
++		var editInput = li.querySelector('.edit');
++		editInput.value = todo.title;
++	}
++
++	// Render the app
++	function render() {
++		var filteredTodos = getFilteredTodos();
++		var activeTodos = todos.filter(function (todo) {
++			return !todo.completed;
++		});
++		var completedTodos = todos.filter(function (todo) {
++			return todo.completed;
++		});
++
++		// Build a map of existing <li> elements by data-id
++		var existingLis = todoList.querySelectorAll('li');
++		var existingMap = {};
++		for (var i = 0; i < existingLis.length; i++) {
++			existingMap[existingLis[i].dataset.id] = existingLis[i];
++		}
++
++		// Build a set of filtered todo IDs
++		var filteredIds = {};
++		filteredTodos.forEach(function (todo) {
++			filteredIds[todo.id] = true;
++		});
++
++		// Remove <li> elements for todos not in the filtered set
++		var currentLis = todoList.querySelectorAll('li');
++		for (var j = currentLis.length - 1; j >= 0; j--) {
++			var existingLi = currentLis[j];
++			if (!filteredIds[existingLi.dataset.id]) {
++				todoList.removeChild(existingLi);
++			}
++		}
++
++		// Add or update <li> elements in order
++		filteredTodos.forEach(function (todo) {
++			var li = existingMap[todo.id];
++			if (li) {
++				// Update existing element in place
++				updateTodoElement(li, todo);
++			} else {
++				// Create new element and append
++				li = createTodoElement(todo);
++				todoList.appendChild(li);
++			}
++		});
++
++		// Update main section visibility
++		if (todos.length > 0) {
++			mainSection.style.display = 'block';
++			footer.style.display = 'block';
++		} else {
++			mainSection.style.display = 'none';
++			footer.style.display = 'none';
++		}
++
++		// Update toggle all checkbox
++		toggleAllCheckbox.checked = todos.length > 0 && activeTodos.length === 0;
++
++		// Update count
++		var count = activeTodos.length;
++		var countText = count === 1 ? ' item left' : ' items left';
++		var todoCountSpan = document.querySelector('.todo-count');
++		todoCountSpan.innerHTML = '';
++		var strong = document.createElement('strong');
++		strong.textContent = String(count);
++		todoCountSpan.appendChild(strong);
++		todoCountSpan.appendChild(document.createTextNode(countText));
++
++		// Update clear completed button
++		if (completedTodos.length > 0) {
++			clearCompletedButton.style.display = 'block';
++		} else {
++			clearCompletedButton.style.display = 'none';
++		}
++
++		// Update filter links
++		filterLinks.forEach(function (link) {
++			if (link.getAttribute('href') === '#/' + currentFilter ||
++				(currentFilter === 'all' && link.getAttribute('href') === '#/')) {
++				link.classList.add('selected');
++			} else {
++				link.classList.remove('selected');
++			}
++		});
++	}
++
++	// Escape HTML to prevent XSS
++	function escapeHtml(text) {
++		var div = document.createElement('div');
++		div.appendChild(document.createTextNode(text));
++		return div.innerHTML;
++	}
++
++	// Event delegation for todo list
++	function handleTodoListClick(e) {
++		var target = e.target;
++		var li = target.closest('li');
++		if (!li) return;
++		var id = li.dataset.id;
++
++		if (target.classList.contains('toggle')) {
++			toggleTodo(id);
++		} else if (target.classList.contains('destroy')) {
++			deleteTodo(id);
++		}
++	}
++
++	function handleTodoListDblClick(e) {
++		var target = e.target;
++		if (target.tagName.toLowerCase() !== 'label') return;
++		var li = target.closest('li');
++		if (!li) return;
++		li.classList.add('editing');
++		var editInput = li.querySelector('.edit');
++		editInput.focus();
++	}
++
++	function handleTodoListKeyDown(e) {
++		if (e.key === 'Enter') {
++			var target = e.target;
++			if (target.classList.contains('edit')) {
++				var li = target.closest('li');
++				var id = li.dataset.id;
++				editTodo(id, target.value);
++				li.classList.remove('editing');
++			}
++		} else if (e.key === 'Escape') {
++			var target = e.target;
++			if (target.classList.contains('edit')) {
++				var li = target.closest('li');
++				li.classList.remove('editing');
++				target.value = li.querySelector('label').textContent;
++			}
++		}
++	}
++
++	function handleTodoListBlur(e) {
++		var target = e.target;
++		if (target.classList.contains('edit')) {
++			var li = target.closest('li');
++			var id = li.dataset.id;
++			editTodo(id, target.value);
++			li.classList.remove('editing');
++		}
++	}
++
++	// New todo input
++	function handleNewTodoKeyDown(e) {
++		if (e.key === 'Enter') {
++			addTodo(newTodoInput.value);
++			newTodoInput.value = '';
++		}
++	}
++
++	// Toggle all
++	function handleToggleAllChange() {
++		toggleAll();
++	}
++
++	// Clear completed
++	function handleClearCompletedClick() {
++		clearCompleted();
++	}
++
++	// Filter links
++	function handleFilterClick(e) {
++		e.preventDefault();
++		var href = e.target.getAttribute('href');
++		if (href === '#/') {
++			currentFilter = 'all';
++		} else if (href === '#/active') {
++			currentFilter = 'active';
++		} else if (href === '#/completed') {
++			currentFilter = 'completed';
++		}
++		render();
++	}
++
++	// Handle routing
++	function handleHashChange() {
++		var hash = window.location.hash;
++		if (hash === '#/active') {
++			currentFilter = 'active';
++		} else if (hash === '#/completed') {
++			currentFilter = 'completed';
++		} else {
++			currentFilter = 'all';
++		}
++		render();
++	}
++
++	// Initialize
++	function init() {
++		loadTodos();
++		render();
++
++		// Event listeners
++		newTodoInput.addEventListener('keydown', handleNewTodoKeyDown);
++		todoList.addEventListener('click', handleTodoListClick);
++		todoList.addEventListener('dblclick', handleTodoListDblClick);
++		todoList.addEventListener('keydown', handleTodoListKeyDown);
++		todoList.addEventListener('blur', handleTodoListBlur, true);
++		toggleAllCheckbox.addEventListener('change', handleToggleAllChange);
++		clearCompletedButton.addEventListener('click', handleClearCompletedClick);
++		filterLinks.forEach(function (link) {
++			link.addEventListener('click', handleFilterClick);
++		});
++		window.addEventListener('hashchange', handleHashChange);
++
++		// Handle initial hash
++		handleHashChange();
++	}
++
++	init();
++})();
+diff --git a/package.json b/package.json
+index 25b5f68..fcdaaaf 100644
+--- a/package.json
++++ b/package.json
+@@ -3,5 +3,9 @@
+   "version": "0.1.0",
+   "private": true,
+   "scripts": { "test": "cucumber-js" },
+-  "devDependencies": { "@cucumber/cucumber": "*", "happy-dom": "*" }
++  "devDependencies": { "@cucumber/cucumber": "*", "happy-dom": "*" },
++  "dependencies": {
++    "todomvc-common": "^1.0.1",
++    "todomvc-app-css": "^1.0.0"
++  }
+ }
+diff --git a/readme.md b/readme.md
+new file mode 100644
+index 0000000..ce41d92
+--- /dev/null
++++ b/readme.md
+@@ -0,0 +1,67 @@
++# TodoMVC - Vanilla JavaScript
++
++A TodoMVC implementation using vanilla JavaScript with no preprocessors.
++
++## Features
++
++- Add, edit, and delete todos
++- Mark todos as complete
++- Filter todos by All, Active, and Completed
++- Clear completed todos
++- Persistent storage using localStorage
++- Responsive design
++
++## Implementation
++
++This app is built with pure HTML, CSS, and JavaScript. It uses:
++
++- **HTML5** for structure
++- **CSS3** for styling (using TodoMVC CSS libraries)
++- **Vanilla JavaScript** for functionality
++- **localStorage** for data persistence
++
++## File Structure
++
++```
++index.html          - Main HTML file
++css/
++  app.css           - Custom styles
++js/
++  app.js            - Main application logic
++node_modules/
++  todomvc-common/   - Common TodoMVC utilities
++  todomvc-app-css/  - TodoMVC CSS styles
++```
++
++## How to Run
++
++1. Open `index.html` in a web browser
++2. No build process required - it's ready to run
++
++## Browser Support
++
++- Chrome (latest)
++- Firefox (latest)
++- Safari (latest)
++- Edge (latest)
++
++## Data Persistence
++
++Todos are stored in `localStorage` with the key `todos-vanillajs`. Each todo has:
++- `id`: Unique identifier
++- `title`: Todo text
++- `completed`: Boolean status
++
++## Features Implemented
++
++- [x] Add new todos
++- [x] Edit todos (double-click)
++- [x] Delete todos
++- [x] Mark as complete
++- [x] Mark all as complete
++- [x] Filter by All/Active/Completed
++- [x] Clear completed
++- [x] Counter of items left
++- [x] Responsive design
++- [x] Data persistence
++- [x] Keyboard navigation
+\ No newline at end of file

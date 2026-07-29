@@ -1,0 +1,45 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index abf81eb..0e58980 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -25,3 +25,15 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ **Watchbill:** `watchbill.json` with two watches targeting the new scenarios.
+ 
+ **Next:** QM dispatch to implement the undefined steps and verify the scenarios go red on current code, then Crew to fix `saveEdit`.
++
++## Voyage 3 — Re-entrant render guard
++
++**Defect:** External browser acceptance suite reports `NotFoundError: Failed to execute 'removeChild' on 'Node'` when deleting a todo via empty edit. The `focusout` handler calls `saveEdit(li)` after the `keydown` handler has already removed the `<li>` from the DOM via `removeTodo` → `render()`. The `saveEdit` detached-node guard (`document.body.contains(li)`) is insufficient: in a real browser the `focusout` fires synchronously during the first `render()`'s stale-removal `removeChild`, when the `<li>` still appears attached. The second `render()` call (from `saveEdit` → `removeTodo` → `render`) removes the `<li>` first, and the first `render()`'s stale-removal snapshot then tries `removeChild` on an already-removed node.
++
++**Root cause:** `render()` in `js/app.js` has no `todoList.contains(node)` guard before `removeChild` in its stale-removal loop (line ~114). The `querySelectorAll` snapshot is stale by the time the loop reaches the node, because a re-entrant `render()` call already removed it.
++
++**Specs written:** `features/editing-conformance.feature` — new `@conformance` scenario `render checks containment before removing a stale list item`.
++
++**Watchbill:** `watchbill.json` targeting the new conformance scenario.
++
++**Next:** QM dispatch to implement the undefined step definition for the new conformance check and verify it goes red on current code, then Crew to add the `contains` guard in `render()`.
+diff --git a/features/editing-conformance.feature b/features/editing-conformance.feature
+index b2a634c..94c2692 100644
+--- a/features/editing-conformance.feature
++++ b/features/editing-conformance.feature
+@@ -9,3 +9,7 @@ Feature: Editing implementation conformance
+   @conformance
+   Scenario: saveEdit does not call removeTodo or render when the todo list item is detached
+     Then the js/app.js saveEdit function contains a detached-node guard
++
++  @conformance
++  Scenario: render checks containment before removing a stale list item
++    Then the js/app.js render function contains a contains-guard before removeChild
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..a141c8d
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,7 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/editing-conformance.feature:render checks containment before removing a stale list item"
++    ]
++  }
++}

@@ -1,0 +1,37 @@
+# banked: 2026-07-28T15:52:23Z
+# verdict: PENDING
+# leg: {  "name": "v1-qm",  "model": "xiaomi/mimo-v2.5",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/R3-cand-mimo/sim",  "timeout_s": 3600,  "max_tokens": 32768,  "skills": [    "/home/exedev/shipshape-shakedown/experiments/methods-candidate/skills/shipshape",    "/home/exedev/shipshape-shakedown/experiments/methods-candidate/skills/qm",    "/home/exedev/shipshape-shakedown/experiments/methods-candidate/skills/crew",    "/home/exedev/shipshape-shakedown/experiments/methods-candidate/skills/boatswain",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== v1-qm.session.jsonl ===
+  turns=26  wall=70.8s  in=53080  out=4821  cache_read=746624  cost=$0.0109
+  role reads: qm@t0 -> shipshape@t1
+  roles loaded: qm, shipshape
+  ~ repeated tool signature at turns [1, 2] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    1862/75       512 $0.0003  read
+    t1    3240/69      2368 $0.0005  read
+    t2   10761/89      5568 $0.0015  read
+    t3    8761/136    16320 $0.0013  bash
+    t4     264/74     25024 $0.0001  bash
+    t5     507/139    25280 $0.0002  bash
+    t6     822/133    25728 $0.0002  bash
+    t7     294/139    26496 $0.0002  bash
+    t8     453/76     26752 $0.0002  read
+    t9    2108/64     27200 $0.0004  bash
+    t10    232/75     29248 $0.0001  read
+    t11   1342/113    29440 $0.0003  bash
+    t12    831/59     30720 $0.0002  read
+    t13   1598/120    31488 $0.0003  bash
+    t14    305/73     33024 $0.0002  bash
+    t15    170/41     33280 $0.0001  bash
+    t16    225/47     33280 $0.0001  bash
+    t17    234/311    33472 $0.0002  bash
+    t18    367/389    33664 $0.0003  bash
+    t19    473/146    33984 $0.0002  bash
+    t20    189/68     34432 $0.0001  read
+    t21    909/502    34560 $0.0004  bash
+    t22    528/382    35456 $0.0003  bash
+    t23  15481/507    35968 $0.0024  bash
+    t24    639/66     51392 $0.0003  read
+    t25    485/928    51968 $0.0005  -

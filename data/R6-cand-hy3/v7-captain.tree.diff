@@ -1,0 +1,41 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 91be32f..1a81925 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -41,10 +41,15 @@ removal-safety pin.
+   pin is what makes that defect visible to QM. The behavioural pin
+   `edit.feature:An empty edit destroys the todo` still passes in happy-dom and is listed alongside
+   as a regression guard.
+-- `watchbill.json` `watch1` lists both scenarios as the QM target set for Crew's fix in `js/app.js`
+-  (`commitEdit` / `removeTodo` / `render`): replace the `parentNode` truthiness test with a real
+-  connectivity guard so `removeChild` can never throw on an already-detached node. This leg
+-  re-establishes `watchbill.json` `watch1`; the `c92479c` hardening commit had dropped the file,
+-  which left the pin without a QM target. With the file restored the conformance scenario and the
+-  behavioural regression guard are both live targets.
+-- Crew fix lives in `js/app.js`; no production code written here.
++- `watchbill.json` `watch1` (re-established this leg; Boatswain struck it at `bef763c`) lists both
++  scenarios as the QM target set. The conformance scenario is the binding pin: it REDDENS against the
++  broken served build and GREENS once the guard lands. The behavioural scenario
++  `edit.feature:An empty edit destroys the todo` is the regression guard alongside it.
++- Where the fix lands: the in-repo `js/app.js` ALREADY carries the `c92479c` hardening
++  (`if (stale.parentNode && stale.parentNode.contains(stale)) stale.parentNode.removeChild(stale)`),
++  so the in-suite conformance scenario is GREEN here. The live defect acceptance exercises is the
++  BROKEN SERVED BUILD that still carries the unsafe `if (stale.parentNode) stale.parentNode.removeChild(stale)`
++  form. Crew's fix on the next leg MUST apply the same connectivity guard to that served build (the
++  product the Cypress acceptance suite drives) so `removeChild` can never throw on an already-detached
++  node. Do not touch the in-repo `js/app.js`: it is correct and must stay green.
++- This leg author only: no production code written here, no implementation directories edited.
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..4f3df21
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,8 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/edit-removal-safety.feature:The empty-edit removal must not issue an unguarded removeChild",
++      "features/edit.feature:An empty edit destroys the todo"
++    ]
++  }
++}

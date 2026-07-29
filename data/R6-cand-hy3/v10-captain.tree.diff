@@ -1,0 +1,104 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 6b7728d..432c2fc 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -6,50 +6,43 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ 
+ ## Build: TodoMVC (vanilla JS)
+ 
+-Greenfield build, now fitted out. The executable tier loads the real `index.html` and `js/app.js`
+-into happy-dom; `RIGGING.md` defines `prove`, `verify`, `sweep`, and `plank-join`. Eight feature
+-files cover behaviour. `features/edit-removal-safety.feature` carries the new browser-only
+-removal-safety pin.
+-
+-## Decisions captured
+-
+-- Persistence key: `todos-vanilla` (spec format `todos-[framework]`; the framework token is `vanilla`).
+-- The ordered scope is in `watchbill.json`.
++Fitted-out verification loads the real `index.html` and `js/app.js` into happy-dom. `RIGGING.md`
++defines `prove`, `verify`, `sweep`, and `plank-join`. Eight feature files cover behaviour. The
++empty-edit removal-safety pin lives in `features/edit-removal-safety.feature`.
+ 
+ ## Voyage: empty-edit removal crashes a real browser (browser-only defect)
+ 
+ - Acceptance (Cypress, real browser) fails: "should remove the item if an empty text string was
+   entered" throws `NotFoundError: removeChild ... node no longer a child` from `render`'s
+-  stale-list-item removal (`js/app.js:175`), reached through `removeTodo` -> `commitEdit` on the
+-  edit keydown. The Cypress advice names a `blur` event handler as the mover.
+-- happy-dom cannot reproduce it: a single keydown path removes an attached node cleanly, and
+-  happy-dom's own `removeChild` on a detached node throws the same way a real browser does, so no
+-  behavioural in-suite scenario reddens. Forcing an in-harness failure would be an impossible
+-  scenario, so the behaviour is pinned by a source-level `@conformance` check instead.
+-- Root cause: `render` removes stale list items with `if (stale.parentNode) stale.parentNode.removeChild(stale)`.
+-  A `parentNode` truthiness test is NOT a connectivity test; in a real browser the edit `blur`
+-  handler re-enters `commitEdit`/`render`, so a stale node whose `parentNode` is still truthy but
+-  which is no longer that parent's child reaches a throwing `removeChild`.
+-- Pin: `features/edit-removal-safety.feature` carries a `@conformance` scenario plus a matching
+-  source-level conformance check in `features/support/steps.js`. The earlier pin was a FALSE GREEN:
+-  it treated the `if (stale.parentNode)` truthiness test as a guard. The shipped check requires a
+-  REAL connectivity guard (`node.isConnected`, `parent.contains(node)`, or `node.remove()`). The
+-  check is proven: it REDDENS on the broken `if (stale.parentNode) parent.removeChild(stale)` form
+-  and GREENS on the hardened `if (stale.parentNode && stale.parentNode.contains(stale))` form.
+-  The in-repo `js/app.js` already carries the `c92479c` hardening, so the in-suite scenario is
+-  GREEN here; the acceptance (Cypress, real browser) runs against the broken served build, so the
+-  pin is what makes that defect visible to QM. The behavioural pin
+-  `edit.feature:An empty edit destroys the todo` still passes in happy-dom and is listed alongside
+-  as a regression guard.
+-- `watchbill.json` `watch1` is RE-CREATED on deck this Captain leg (Boatswain had struck it at `834bfda` and again at `7986178`, leaving the file absent) and lists both
+-  scenarios as the QM target set — the sole channel that makes the conformance scenario a binding QM target. The conformance scenario is the binding pin: a throwaway check proved it REDDENS on the
+-  broken `if (stale.parentNode) stale.parentNode.removeChild(stale)` form (1 unguarded removal) and GREENS on the hardened `if (stale.parentNode && stale.parentNode.contains(stale))` form (0). The behavioural scenario
+-  `edit.feature:An empty edit destroys the todo` is the regression guard alongside it.
+-- Where the fix lands: the in-repo `js/app.js` ALREADY carries the `c92479c` hardening
+-  (`if (stale.parentNode && stale.parentNode.contains(stale)) stale.parentNode.removeChild(stale)`),
+-  so the in-suite conformance scenario is GREEN here. The live defect acceptance exercises is the
+-  BROKEN SERVED BUILD that still carries the unsafe `if (stale.parentNode) stale.parentNode.removeChild(stale)`
+-  form. Crew's fix on the next leg MUST apply the same connectivity guard to that served build (the
+-  product the Cypress acceptance suite drives) so `removeChild` can never throw on an already-detached
+-  node. Do not touch the in-repo `js/app.js`: it is correct and must stay green.
+-- This leg authored only durable artifacts: the spec `features/edit-removal-safety.feature` (plus its `@conformance` source-level check in `features/support/steps.js`) already carried the pin, and `watchbill.json` `watch1` was re-created to bind it as a QM target. No production code written, no implementation directories edited. The fix to the broken served build (`examples/shakedown/js/app.js`, still carrying the unguarded `if (stale.parentNode)` form) is QM/Crew's next-leg work and MUST apply the same `parentNode.contains(stale)` connectivity guard.
++  stale-list-item removal, reached through `removeTodo` -> `commitEdit` on the edit keydown. Cypress
++  names a `blur` event handler as the mover.
++- happy-dom cannot reproduce it: a single keydown path removes an attached node cleanly, and the
++  harness cannot model the real-browser re-entrant render that the `blur` handler triggers. Forcing
++  an in-harness failing scenario would be an impossible scenario, so the behaviour is pinned by a
++  source-level `@conformance` check in `features/edit-removal-safety.feature` instead, per the
++  browser-only carve-out. The behavioural `edit.feature:An empty edit destroys the todo` is the
++  regression guard alongside it; it passes in happy-dom and stays green.
++- Root cause: `render` removes stale list items with a guard. A bare `parentNode` truthiness read is
++  NOT a connectivity test; in a real re-entrant render the stale node's `parentNode` can stay truthy
++  while the node is no longer that parent's child, so `if (node.parentNode) parent.removeChild(node)`
++  still throws. The pin requires a REAL connectivity guard (`node.isConnected`, `parent.contains(node)`,
++  or `node.remove()`), never a `parentNode` truthiness check alone.
++- The in-repo `js/app.js` ALREADY carries the `c92479c` hardening
++  (`if (stale.parentNode && stale.parentNode.contains(stale))`), so the in-suite conformance scenario
++  is GREEN here. The acceptance exercises a served build that still carries the unguarded
++  `if (stale.parentNode) stale.parentNode.removeChild(stale)` form, so the defect remains visible to
++  the acceptance suite and to QM through this pin. The conformance check is proven: it REDDENS on the
++  broken unguarded form and GREENS on the hardened `parentNode.contains(stale)` form.
++- `watchbill.json` `watch1` is created this leg and lists both the conformance pin
++  (`features/edit-removal-safety.feature:The empty-edit removal must not issue an unguarded
++  removeChild`) and the behavioural regression guard (`features/edit.feature:An empty edit destroys the
++  todo`) as the QM target set. The watchbill is the sole channel that makes the conformance scenario a
++  binding QM target; it was absent after Boatswain struck earlier spent watches.
++- Fix target (QM/Crew, next leg): apply the same `parentNode.contains(stale)` connectivity guard to
++  the served build the acceptance suite drives, so `removeChild` can never throw on an already-detached
++  node. Captain writes no production code and edits no implementation directory.
++
++## Decisions captured
++
++- Persistence key: `todos-vanilla`.
++- The ordered scope is in `watchbill.json`.
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..4f3df21
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,8 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/edit-removal-safety.feature:The empty-edit removal must not issue an unguarded removeChild",
++      "features/edit.feature:An empty edit destroys the todo"
++    ]
++  }
++}

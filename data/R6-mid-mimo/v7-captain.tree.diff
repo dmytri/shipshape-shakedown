@@ -1,0 +1,145 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..cdec2f8
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,25 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
++
++## DOM-identity constraint
++
++The external browser acceptance suite (Cypress) fails on every toggle interaction because the `render()` function in `js/app.js` destroys and recreates all `<li>` elements on every state change (`todoList.innerHTML = ''` followed by element-by-element reconstruction). This detaches any DOM reference the browser holds.
++
++The in-harness suite (happy-dom + Cucumber) does not catch this because its step definitions re-query the DOM fresh after each action, never holding a reference across a state change.
++
++**The fix:** The `render()` function MUST preserve existing DOM nodes when their data has not changed. When toggling a single todo's `completed` state, mutate the existing `<li>` element's class list in place rather than destroying and recreating it. When toggling all, mutate each `<li>` in place. The `innerHTML = ''` pattern is the defect; it must be replaced with in-place DOM mutation for unchanged nodes.
++
++**Routing defect (test 5):** After navigating between filter views and using browser back, the todo list shows empty. The hashchange handler may not be firing correctly in a real browser, or the filter state is not being restored on navigation.
++
++## Acceptance test failure evidence
++
++The external suite runs Cypress against the build. Five failures, all DOM-identity or routing:
++
++1. `Mark all as completed > should allow me to mark all items as completed` — `cy.eq()` fails because element detached after toggle-all click
++2. `Mark all as completed > should allow me to clear the complete state of all items` — same detachment pattern
++3. `Item > should allow me to mark items as complete` — `cy.find()` fails because element detached after checkbox click
++4. `Item > should allow me to un-mark items as complete` — same detachment pattern
++5. `Routing > should respect the back button` — expected `.todo-list li:visible` not found after back navigation
+diff --git a/features/dom-identity.feature b/features/dom-identity.feature
+new file mode 100644
+index 0000000..9817d39
+--- /dev/null
++++ b/features/dom-identity.feature
+@@ -0,0 +1,85 @@
++Feature: DOM node identity
++  As a user interacting with the todo list
++  I want DOM nodes to be preserved across state changes
++  So that the interface remains stable during rapid interactions
++
++  Background:
++    Given the app is loaded
++
++  Rule: Toggling a todo preserves sibling DOM nodes
++
++    Scenario: Checking a todo leaves other todos intact
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | false     |
++        | Walk the dog | false     |
++      When the user toggles the checkbox for todo "Buy milk"
++      Then both todos are visible
++      And the todo "Buy milk" has the completed class
++      And the todo "Walk the dog" does not have the completed class
++
++    Scenario: Unchecking a todo leaves other todos intact
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | true      |
++        | Walk the dog | true      |
++      When the user toggles the checkbox for todo "Buy milk"
++      Then both todos are visible
++      And the todo "Buy milk" does not have the completed class
++      And the todo "Walk the dog" has the completed class
++
++    Scenario: Toggling preserves all three todos in the list
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | false     |
++        | Walk the dog | false     |
++        | Clean house  | false     |
++      When the user toggles the checkbox for todo "Walk the dog"
++      Then the todo "Buy milk" does not have the completed class
++      And the todo "Walk the dog" has the completed class
++      And the todo "Clean house" does not have the completed class
++
++  Rule: Toggle-all preserves DOM node identity
++
++    Scenario: Marking all complete preserves the list
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | false     |
++        | Walk the dog | false     |
++      When the user clicks the toggle-all checkbox
++      Then both todos are visible
++      And all todos are completed
++
++    Scenario: Unmarking all preserves the list
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | true      |
++        | Walk the dog | true      |
++      When the user clicks the toggle-all checkbox
++      Then both todos are visible
++      And all todos are active
++
++    Scenario: Multiple rapid toggles do not corrupt the list
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | false     |
++        | Walk the dog | false     |
++      When the user clicks the toggle-all checkbox
++      Then both todos are visible
++      When the user clicks the toggle-all checkbox
++      Then both todos are visible
++      And all todos are active
++
++  Rule: Routing preserves visible todos
++
++    Scenario: Back button after filtering shows the correct todos
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | false     |
++        | Walk the dog | true      |
++      When the user navigates to "#/active"
++      Then only the todo "Buy milk" is visible
++      When the user navigates to "#/completed"
++      Then only the todo "Walk the dog" is visible
++      When the user navigates to "#/"
++      Then both todos are visible
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..53c0694
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,17 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/dom-identity.feature:Checking a todo leaves other todos intact",
++      "features/dom-identity.feature:Unchecking a todo leaves other todos intact",
++      "features/dom-identity.feature:Toggling preserves all three todos in the list",
++      "features/dom-identity.feature:Marking all complete preserves the list",
++      "features/dom-identity.feature:Unmarking all preserves the list",
++      "features/dom-identity.feature:Multiple rapid toggles do not corrupt the list"
++    ]
++  },
++  "watch2": {
++    "scenarios": [
++      "features/dom-identity.feature:Back button after filtering shows the correct todos"
++    ]
++  }
++}

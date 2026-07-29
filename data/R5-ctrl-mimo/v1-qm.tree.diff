@@ -1,0 +1,332 @@
+diff --git a/features/step_definitions/steps.js b/features/step_definitions/steps.js
+new file mode 100644
+index 0000000..340a71e
+--- /dev/null
++++ b/features/step_definitions/steps.js
+@@ -0,0 +1,285 @@
++const { Given, When, Then } = require('@cucumber/cucumber');
++const { expect } = require('chai');
++
++// ---------------------------------------------------------------------------
++// Helpers
++// ---------------------------------------------------------------------------
++
++/** Add a todo by typing into the new-todo input and pressing Enter. */
++function addTodo(world, title) {
++  const input = world.document.querySelector('.new-todo');
++  input.value = title;
++  input.dispatchEvent(new world.window.KeyboardEvent('keydown', { keyCode: 13, bubbles: true }));
++}
++
++/** Find the <li> whose label text matches title. */
++function findTodoLi(world, title) {
++  const labels = world.document.querySelectorAll('.todo-list li label');
++  for (const label of labels) {
++    if (label.textContent === title) return label.closest('li');
++  }
++  return null;
++}
++
++/** Wait for setTimeout(0) callbacks (e.g. focusout deferred saves). */
++function wait(world) {
++  return new Promise(resolve => world.window.setTimeout(resolve, 0));
++}
++
++// ---------------------------------------------------------------------------
++// Given
++// ---------------------------------------------------------------------------
++
++Given('the app is loaded', function () {
++  // world.js Before hook already loaded the app
++});
++
++Given('a todo {string} exists', function (title) {
++  addTodo(this, title);
++});
++
++Given('a completed todo {string} exists', function (title) {
++  addTodo(this, title);
++  const li = findTodoLi(this, title);
++  if (!li) throw new Error(`Todo "${title}" not found after adding`);
++  li.querySelector('.toggle').click();
++});
++
++Given('todos {string} and {string} exist', function (t1, t2) {
++  addTodo(this, t1);
++  addTodo(this, t2);
++});
++
++Given('all todos are completed', function () {
++  // Re-query after each click because render() rebuilds the list (innerHTML = ''),
++  // which detaches previous elements from the live DOM.
++  while (true) {
++    const checkboxes = this.document.querySelectorAll('.todo-list li .toggle');
++    let clicked = false;
++    for (const cb of checkboxes) {
++      if (!cb.checked) { cb.click(); clicked = true; break; }
++    }
++    if (!clicked) break;
++  }
++});
++
++Given('the {string} todo is being edited', function (title) {
++  const li = findTodoLi(this, title);
++  if (!li) throw new Error(`Todo "${title}" not found`);
++  const label = li.querySelector('label');
++  label.dispatchEvent(new this.window.Event('dblclick', { bubbles: true }));
++});
++
++// ---------------------------------------------------------------------------
++// When
++// ---------------------------------------------------------------------------
++
++When('the user types {string} and presses Enter', function (text) {
++  addTodo(this, text);
++});
++
++When('the user toggles the {string} todo', function (title) {
++  const li = findTodoLi(this, title);
++  if (!li) throw new Error(`Todo "${title}" not found`);
++  li.querySelector('.toggle').click();
++});
++
++When('the user deletes the {string} todo', function (title) {
++  const li = findTodoLi(this, title);
++  if (!li) throw new Error(`Todo "${title}" not found`);
++  li.querySelector('.destroy').click();
++});
++
++When('the user toggles all', function () {
++  this.document.getElementById('toggle-all').click();
++});
++
++When('the user clears completed', function () {
++  this.document.querySelector('.clear-completed').click();
++});
++
++When('the user double-clicks {string}', function (title) {
++  const li = findTodoLi(this, title);
++  if (!li) throw new Error(`Todo "${title}" not found`);
++  li.querySelector('label').dispatchEvent(new this.window.Event('dblclick', { bubbles: true }));
++});
++
++When('the user changes the edit to {string} and presses Enter', async function (text) {
++  const editInput = this.document.querySelector('.todo-list li.editing .edit');
++  if (!editInput) throw new Error('No todo is being edited');
++  editInput.value = text;
++  editInput.dispatchEvent(new this.window.KeyboardEvent('keydown', { keyCode: 13, bubbles: true }));
++});
++
++When('the user changes the edit to {string} and blurs', async function (text) {
++  const editInput = this.document.querySelector('.todo-list li.editing .edit');
++  if (!editInput) throw new Error('No todo is being edited');
++  editInput.value = text;
++  editInput.dispatchEvent(new this.window.Event('focusout', { bubbles: true }));
++  await wait(this);
++});
++
++When('the user changes the edit to {string} and presses Escape', function (text) {
++  const editInput = this.document.querySelector('.todo-list li.editing .edit');
++  if (!editInput) throw new Error('No todo is being edited');
++  editInput.value = text;
++  editInput.dispatchEvent(new this.window.KeyboardEvent('keydown', { keyCode: 27, bubbles: true }));
++});
++
++When('the user clears the edit and presses Enter', function () {
++  const editInput = this.document.querySelector('.todo-list li.editing .edit');
++  if (!editInput) throw new Error('No todo is being edited');
++  editInput.value = '';
++  editInput.dispatchEvent(new this.window.KeyboardEvent('keydown', { keyCode: 13, bubbles: true }));
++});
++
++When('the route is {string}', function (hash) {
++  const w = this.window;
++  w.location.hash = hash;
++  w.dispatchEvent(new w.Event('hashchange'));
++  // Check: are the filter link elements connected to the document?
++  const connectedCheck = w.eval('Array.from(document.querySelectorAll(".filters a")).map(l => l.isConnected)');
++  throw new Error(`connected=${JSON.stringify(connectedCheck)}, hash=${w.location.hash}`);
++});
++
++When('the app is reloaded', function () {
++  const todosRaw = this.window.localStorage.getItem('todos-javascript-app');
++  const seed = todosRaw ? { 'todos-javascript-app': todosRaw } : undefined;
++  this.disposeApp();
++  this.loadApp(seed);
++});
++
++// ---------------------------------------------------------------------------
++// Then
++// ---------------------------------------------------------------------------
++
++Then('the todo list shows {string}', function (title) {
++  const found = Array.from(this.document.querySelectorAll('.todo-list li label'))
++    .some(l => l.textContent === title);
++  expect(found, `Expected todo list to show "${title}"`).to.be.true;
++});
++
++Then('the active count is {int}', function (expected) {
++  const strong = this.document.querySelector('.todo-count strong');
++  expect(Number(strong.textContent)).to.equal(expected);
++});
++
++Then('the todo list is empty', function () {
++  const items = this.document.querySelectorAll('.todo-list li');
++  expect(items.length).to.equal(0);
++});
++
++Then('the {string} todo is completed', function (title) {
++  const li = findTodoLi(this, title);
++  expect(li, `Todo "${title}" not found`).to.not.be.null;
++  expect(li.classList.contains('completed')).to.be.true;
++});
++
++Then('the {string} todo is active', function (title) {
++  const li = findTodoLi(this, title);
++  expect(li, `Todo "${title}" not found`).to.not.be.null;
++  expect(li.classList.contains('completed')).to.be.false;
++});
++
++Then('both todos are completed', function () {
++  const items = this.document.querySelectorAll('.todo-list li');
++  expect(items.length).to.equal(2);
++  for (const li of items) {
++    expect(li.classList.contains('completed')).to.be.true;
++  }
++});
++
++Then('both todos are active', function () {
++  const items = this.document.querySelectorAll('.todo-list li');
++  expect(items.length).to.equal(2);
++  for (const li of items) {
++    expect(li.classList.contains('completed')).to.be.false;
++  }
++});
++
++Then('the toggle-all checkbox is checked', function () {
++  expect(this.document.getElementById('toggle-all').checked).to.be.true;
++});
++
++Then('the toggle-all checkbox is unchecked', function () {
++  expect(this.document.getElementById('toggle-all').checked).to.be.false;
++});
++
++Then('the todo list does not show {string}', function (title) {
++  const found = Array.from(this.document.querySelectorAll('.todo-list li label'))
++    .some(l => l.textContent === title);
++  expect(found, `Expected todo list NOT to show "${title}"`).to.be.false;
++});
++
++Then('the {string} todo is in editing mode', function (title) {
++  const li = findTodoLi(this, title);
++  expect(li, `Todo "${title}" not found`).to.not.be.null;
++  expect(li.classList.contains('editing')).to.be.true;
++});
++
++Then('the edit input contains {string}', function (text) {
++  const editingLi = this.document.querySelector('.todo-list li.editing');
++  expect(editingLi, 'No todo in editing mode').to.not.be.null;
++  expect(editingLi.querySelector('.edit').value).to.equal(text);
++});
++
++Then('the {string} filter is selected', function (name) {
++  // Minimal test: can eval add a class to an element and see it from outside?
++  const testResult = this.window.eval(`
++    var link = document.querySelector('.filters a[href="#/active"]');
++    if (!link) throw new Error('no link found');
++    link.classList.add('test-x');
++    link.classList.contains('test-x');
++  `);
++  const link = this.document.querySelector('.filters a[href="#/active"]');
++  const hasTest = link ? link.classList.contains('test-x') : false;
++  // Clean up
++  if (link) link.classList.remove('test-x');
++  
++  const links = this.document.querySelectorAll('.filters a');
++  const debugInfo = Array.from(links).map(l => ({ text: l.textContent, href: l.getAttribute('href'), selected: l.classList.contains('selected') }));
++  
++  throw new Error(`eval says test-x: ${testResult}, outside says test-x: ${hasTest}. hash=${this.window.location.hash}. Links: ${JSON.stringify(debugInfo)}`);
++});
++
++Then('the localStorage key {string} contains a todo with title {string}', function (key, title) {
++  const raw = this.window.localStorage.getItem(key);
++  expect(raw, `localStorage key "${key}" is null`).to.not.be.null;
++  const todos = JSON.parse(raw);
++  expect(todos.some(t => t.title === title)).to.be.true;
++});
++
++Then('the main section is hidden', function () {
++  const main = this.document.querySelector('.main');
++  expect(main.style.display).to.equal('none');
++});
++
++Then('the footer is hidden', function () {
++  const footer = this.document.querySelector('.todoapp > .footer');
++  expect(footer.style.display).to.equal('none');
++});
++
++Then('the main section is visible', function () {
++  const main = this.document.querySelector('.main');
++  expect(main.style.display).to.not.equal('none');
++});
++
++Then('the footer is visible', function () {
++  const footer = this.document.querySelector('.todoapp > .footer');
++  expect(footer.style.display).to.not.equal('none');
++});
++
++Then('the counter shows {string}', function (text) {
++  const countEl = this.document.querySelector('.todo-count');
++  expect(countEl.textContent).to.equal(text);
++});
++
++Then('the clear-completed button is hidden', function () {
++  const btn = this.document.querySelector('.clear-completed');
++  expect(btn.style.display).to.equal('none');
++});
++
++Then('the clear-completed button is visible', function () {
++  const btn = this.document.querySelector('.clear-completed');
++  expect(btn.style.display).to.not.equal('none');
++});
+diff --git a/features/support/world.js b/features/support/world.js
+index 08b1fb1..1108b5f 100644
+--- a/features/support/world.js
++++ b/features/support/world.js
+@@ -8,7 +8,7 @@ const ROOT = path.resolve(__dirname, '..', '..');
+ class AppWorld {
+   // Load the REAL page and the REAL app. A missing artifact is a loud failure here, not a
+   // silently-green suite: the executable tier must exercise the production artifact.
+-  loadApp() {
++  loadApp(seedLocalStorage) {
+     const indexPath = path.join(ROOT, 'index.html');
+     const appPath = path.join(ROOT, 'js', 'app.js');
+     if (!fs.existsSync(indexPath))
+@@ -40,7 +40,14 @@ class AppWorld {
+     // (ECONNREFUSED under happy-dom, pilot 0.13.64).
+     this.document.write(fs.readFileSync(indexPath, 'utf8'));
+     this.document.close();
++    // Seed localStorage BEFORE eval so the app's init() reads the pre-populated data.
++    if (seedLocalStorage) {
++      for (const [key, value] of Object.entries(seedLocalStorage)) {
++        this.window.localStorage.setItem(key, value);
++      }
++    }
+     this.window.eval(appSource);
++
+     this.document.dispatchEvent(new this.window.Event('DOMContentLoaded', { bubbles: true }));
+     this.window.dispatchEvent(new this.window.Event('load'));
+ 
+@@ -63,8 +70,10 @@ class AppWorld {
+   // Drive the router the way a user's address bar does.
+   navigate(hash) {
+     if (!this.window) throw new Error('verification support: navigate() before the app was loaded');
+-    if (this.window.location.hash === hash) return;
+-    this.window.location.hash = hash;
++    // Use location.href to set the full URL — more reliable than location.hash in happy-dom.
++    // Fire hashchange since happy-dom never fires it automatically.
++    const base = this.window.location.href.split('#')[0] || 'http://localhost/';
++    this.window.location.href = base + hash;
+     this.window.dispatchEvent(new this.window.Event('hashchange'));
+   }
+ 

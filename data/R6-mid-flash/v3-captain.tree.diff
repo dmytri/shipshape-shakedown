@@ -1,0 +1,72 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index fe38096..674d31c 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -10,13 +10,18 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ - Harness bootstrapped: `package.json` with `@cucumber/cucumber` + `happy-dom`, `features/support/world.js` loads real `index.html` + `js/app.js` into happy-dom per-scenario, disposes after. Routing patched to fire `hashchange` on click.
+ - Assets landed: `assets/app-spec.md` (product spec), `assets/app-template.index.html` (base markup).
+ - Durable work this cycle: spec feature files under `features/`, `watchbill.json`.
++- Production code present: `js/app.js` and `index.html` implement the full TodoMVC spec.
++- External acceptance suite (Cypress) reports 10 failures — all originate from two product defects in `js/app.js`:
++  1. `render()` replaces all DOM nodes via `todoList.innerHTML = ''` on every state change, causing detached-node errors in a real browser.
++  2. The `dblclick` label handler sets `todo.editing = true` on the in-memory object but never calls `setTodos(todos)` before `render()`, so the editing state is lost when `render()` re-reads from localStorage. The `<li>` never gets `.editing` class, leaving the `.edit` input hidden (`display: none`).
+ 
+ ## Decisions
+ 
+ - Storage key: `todos-vanillajs` per spec convention (`todos-[framework]`).
+ - Tier: happy-dom (default). The spec requires DOM rendering; happy-dom is the cheapest tier that observes it.
+ - Scantling for localStorage shape at `scantlings/todo-storage.json`.
++- Conformance checks added under `features/dom-integrity.feature` to guard the anti-patterns happy-dom cannot detect.
+ 
+ ## Next
+ 
+-Dispatch QM with `watchbill.json` targets when production code exists.
+\ No newline at end of file
++Dispatch QM to write step definitions for the conformance scenarios, confirm they redden on the current code, then dispatch Crew to fix the two product defects.
+\ No newline at end of file
+diff --git a/features/dom-integrity.feature b/features/dom-integrity.feature
+new file mode 100644
+index 0000000..c226dfc
+--- /dev/null
++++ b/features/dom-integrity.feature
+@@ -0,0 +1,16 @@
++Feature: DOM integrity
++  As a user
++  I want the app to preserve DOM node identity across state changes
++  So that a real browser can hold references through interactions
++
++  @conformance
++  Scenario: The render function does not replace todo-list child elements
++    Given the source file "js/app.js"
++    When the render function is inspected for DOM replacement
++    Then the render function does not assign to innerHTML of the todo-list element
++
++  @conformance
++  Scenario: The dblclick handler persists editing state before re-render
++    Given the source file "js/app.js"
++    When the dblclick event handler on the label is inspected
++    Then the dblclick handler calls setTodos before render
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..a322030
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,16 @@
++{
++  "watches": [
++    {
++      "name": "DOM integrity - render replaces nodes",
++      "targets": [
++        "features/dom-integrity.feature:The render function does not replace todo-list child elements"
++      ]
++    },
++    {
++      "name": "DOM integrity - dblclick persists editing state",
++      "targets": [
++        "features/dom-integrity.feature:The dblclick handler persists editing state before re-render"
++      ]
++    }
++  ]
++}
+\ No newline at end of file

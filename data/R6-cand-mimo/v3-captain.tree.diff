@@ -1,0 +1,86 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 9de8922..be7bf4d 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -8,7 +8,7 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ 
+ **Base commit:** HEAD (initial state, no prior commits with role-advanced work).
+ 
+-**Specs authored:** 9 feature files, 35 scenarios covering the TodoMVC spec at `assets/app-spec.md`.
++**Specs authored:** 9 feature files, 36 scenarios covering the TodoMVC spec at `assets/app-spec.md`.
+ 
+ **Production deliverables needed:**
+ - `index.html` at project root (adapted from `assets/app-template.index.html`)
+@@ -20,3 +20,36 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ - Routing via `hashchange` event on `window`, filtering at model level
+ - No external dependencies beyond todomvc-common and todomvc-app-css (devDependencies already installed: @cucumber/cucumber, happy-dom)
+ - The test harness (`features/support/world.js`) loads `index.html` and `js/app.js`, executes via happy-dom `window.eval`, and fires DOMContentLoaded/load events
++
++## Acceptance-suite defects (Voyage 1)
++
++External browser acceptance suite (Cypress) reports 5 failures. Root cause: two product defects.
++
++### Defect A — DOM identity lost on state change (4 failures)
++
++**Affected scenarios:** Marking all todos as complete, Unmarking all todos, Marking a todo as complete, Unmarking a completed todo.
++
++**Root cause:** `render()` in `js/app.js` does `dom.todoList.innerHTML = ''` then recreates every `<li>` from scratch on every state change. A real browser's Cypress holds a reference to the original `<li>` node before clicking the toggle; the node is destroyed and replaced by `render()`; the chained `.find()` / `.eq()` operates on a detached node → Cypress error.
++
++**Fix direction:** `render()` must preserve existing `<li>` nodes when their data hasn't changed. Update the existing node's classes, checkbox state, and editing state in place. Only add/remove nodes when the list composition changes. This keeps DOM identity stable across toggle interactions.
++
++**Spec added:** `specs/toggle-todo.feature:Toggling a todo preserves DOM node identity` — pins that toggling one todo must not destroy or replace sibling `<li>` nodes.
++
++### Defect B — Escape key does not discard edit (1 failure)
++
++**Affected scenario:** Discarding an edit on Escape.
++
++**Root cause:** The `blur` event listener on `.edit` input fires (capture phase) before the `keydown` Escape handler completes. Blur calls `editTodo(id, e.target.value)`, saving the current typed text to the model. Then Escape sets `editingId = null` and calls `render()`, but the model already has the new text. Result: pressing Escape saves the edit instead of discarding it.
++
++**Fix direction:** Set a flag (e.g. `escapePressed = true`) in the Escape keydown handler before the blur handler runs. In the blur handler, skip the `editTodo` call when the flag is set. Clear the flag after use.
++
++**Spec status:** `specs/edit-todo.feature:Discarding an edit on Escape` already pins correct behaviour. It will fail against the current buggy implementation. No spec change needed.
++
++## Watchbill status
++
++- **watch1:** All 35 original scenarios. Pending QM.
++- **watch2:** Acceptance-failures watch — 6 scenarios covering both defects. Pending QM.
++
++## Deck status
++
++Working tree dirty (specs and watchbill edited). Awaiting Boatswain pre-clean before QM dispatch.
+diff --git a/specs/toggle-todo.feature b/specs/toggle-todo.feature
+index f9fea3f..d161b3d 100644
+--- a/specs/toggle-todo.feature
++++ b/specs/toggle-todo.feature
+@@ -14,3 +14,11 @@ Feature: Toggle todo completion
+     When the user toggles the "Buy groceries" todo checkbox
+     Then the "Buy groceries" todo does not have class "completed"
+     And the todo count shows "1 item left"
++
++  Scenario: Toggling a todo preserves DOM node identity
++    Given the app has todos "Buy groceries" and "Clean house"
++    Then the todo list contains 2 items
++    When the user toggles the "Buy groceries" todo checkbox
++    Then the todo list contains 2 items
++    And the "Buy groceries" todo has class "completed"
++    And the "Clean house" todo does not have class "completed"
+diff --git a/watchbill.json b/watchbill.json
+index 42389ad..339e185 100644
+--- a/watchbill.json
++++ b/watchbill.json
+@@ -37,5 +37,15 @@
+       "specs/visibility.feature:Main and footer shown when todos exist",
+       "specs/visibility.feature:Removing the last todo hides sections"
+     ]
++  },
++  "watch2": {
++    "scenarios": [
++      "specs/toggle-todo.feature:Toggling a todo preserves DOM node identity",
++      "specs/toggle-todo.feature:Marking a todo as complete",
++      "specs/toggle-todo.feature:Unmarking a completed todo",
++      "specs/toggle-all.feature:Marking all todos as complete",
++      "specs/toggle-all.feature:Unmarking all todos",
++      "specs/edit-todo.feature:Discarding an edit on Escape"
++    ]
+   }
+ }

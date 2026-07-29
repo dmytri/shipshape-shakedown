@@ -1,0 +1,42 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 353b39e..91be32f 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -32,11 +32,15 @@ removal-safety pin.
+   which is no longer that parent's child reaches a throwing `removeChild`.
+ - Pin: `features/edit-removal-safety.feature` carries a `@conformance` scenario plus a matching
+   source-level conformance check in `features/support/steps.js`. The earlier pin was a FALSE GREEN:
+-  it treated the `if (stale.parentNode)` truthiness test as a guard. The check now requires a REAL
+-  connectivity guard (`node.isConnected`, `parent.contains(node)`, or `node.remove()`). With that
+-  correction the scenario REDDENS on the current (broken) code and will green once the removal is
+-  guarded. The behavioural pin `edit.feature:An empty edit destroys the todo` still passes in
+-  happy-dom and is listed alongside as a regression guard.
++  it treated the `if (stale.parentNode)` truthiness test as a guard. The shipped check requires a
++  REAL connectivity guard (`node.isConnected`, `parent.contains(node)`, or `node.remove()`). The
++  check is proven: it REDDENS on the broken `if (stale.parentNode) parent.removeChild(stale)` form
++  and GREENS on the hardened `if (stale.parentNode && stale.parentNode.contains(stale))` form.
++  The in-repo `js/app.js` already carries the `c92479c` hardening, so the in-suite scenario is
++  GREEN here; the acceptance (Cypress, real browser) runs against the broken served build, so the
++  pin is what makes that defect visible to QM. The behavioural pin
++  `edit.feature:An empty edit destroys the todo` still passes in happy-dom and is listed alongside
++  as a regression guard.
+ - `watchbill.json` `watch1` lists both scenarios as the QM target set for Crew's fix in `js/app.js`
+   (`commitEdit` / `removeTodo` / `render`): replace the `parentNode` truthiness test with a real
+   connectivity guard so `removeChild` can never throw on an already-detached node. This leg
+diff --git a/features/edit-removal-safety.feature b/features/edit-removal-safety.feature
+index 5e04b4b..2d75861 100644
+--- a/features/edit-removal-safety.feature
++++ b/features/edit-removal-safety.feature
+@@ -10,9 +10,10 @@ Feature: Editing removal safety
+     NotFoundError. A bare `parentNode` truthiness test is NOT a connectivity test: in the
+     re-entrant render the stale node's `parentNode` can still be truthy while the node is no
+     longer that parent's child, so `if (node.parentNode) parent.removeChild(node)` still throws.
+-    render may therefore remove a stale item only behind a real connectivity guard —
++    render MUST therefore remove a stale item only behind a real connectivity guard —
+     `node.isConnected`, `parent.contains(node)`, or the node's own `node.remove()` — never behind
+-    a `parentNode` truthiness check alone.
++    a `parentNode` truthiness check alone. A bare `parentNode` truthiness read is forbidden as a
++    guard because it is not a connectivity test and still reaches a throwing removeChild.
+ 
+   @conformance
+   Scenario: The empty-edit removal must not issue an unguarded removeChild

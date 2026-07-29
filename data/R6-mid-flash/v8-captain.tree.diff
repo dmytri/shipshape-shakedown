@@ -1,0 +1,236 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index fe38096..539e4f6 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -17,6 +17,31 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ - Tier: happy-dom (default). The spec requires DOM rendering; happy-dom is the cheapest tier that observes it.
+ - Scantling for localStorage shape at `scantlings/todo-storage.json`.
+ 
++## Current voyage
++
++Acceptance suite (Cypress, real browser) reports 10 failures on the current code.
++All stem from two defects in `js/app.js` that the happy-dom harness cannot detect:
++
++**Defect 1 — DOM detachment (failures 1-4).**
++`render()` at line 72 does `todoList.innerHTML = ''` then rebuilds every `<li>` from
++scratch, destroying element identity. A real browser holding a reference sees the
++element detached. Fix: mutate existing `<li>` nodes in place (toggle class, update
++checkbox) instead of rebuilding.
++
++**Defect 2 — Edit input hidden (failures 5-10).**
++The dblclick handler (line 109) captures `li` in its closure. After `render()`
++rebuilds the list, `li.querySelector('.edit')` searches the OLD detached `<li>`,
++which lacks the `editing` class, so its `.edit` input has `display: none`. Fix:
++re-query the DOM for the new `.edit` input after `render()`.
++
++**Durable specs added:**
++- `features/todo-dom-fidelity.feature` — 2 `@conformance` scenarios that fail on
++  current code via source-level analysis
++- `features/support/conformance.js` — step definitions for source inspection
++- `watchbill.json` — ordered work for QM
++
++All 40 existing scenarios still pass. 2 `@conformance` scenarios fail red.
++
+ ## Next
+ 
+-Dispatch QM with `watchbill.json` targets when production code exists.
+\ No newline at end of file
++Dispatch QM with `watchbill.json` targets.
+\ No newline at end of file
+diff --git a/features/support/conformance.js b/features/support/conformance.js
+new file mode 100644
+index 0000000..a656992
+--- /dev/null
++++ b/features/support/conformance.js
+@@ -0,0 +1,145 @@
++const { Given, Then } = require('@cucumber/cucumber');
++const assert = require('node:assert');
++const fs = require('node:fs');
++const path = require('node:path');
++
++const ROOT = path.resolve(__dirname, '..', '..');
++
++// ── Source-level conformance ────────────────────────────────────────────────
++
++Given('I inspect the app source', function () {
++  const appPath = path.join(ROOT, 'js', 'app.js');
++  this.appSource = fs.readFileSync(appPath, 'utf8');
++});
++
++Then('the {string} function does not clear the todo list with innerHTML', function (fnName) {
++  // The render function must NOT use `innerHTML = ''` or `innerHTML = ""` to clear the list.
++  // Instead, it should mutate existing nodes in place.
++  // We detect this by checking that the function body does not contain the pattern
++  // `innerHTML\s*=\s*['"]\s*['"]` (assignment to empty string) anywhere that would
++  // clear the todo-list container.
++  const lines = this.appSource.split('\n');
++  let inFunction = false;
++  let braceDepth = 0;
++  for (const line of lines) {
++    if (line.includes('function ' + fnName + '(')) {
++      inFunction = true;
++      braceDepth = 0;
++    }
++    if (!inFunction) continue;
++
++    // Count braces to track function boundaries
++    for (const ch of line) {
++      if (ch === '{') braceDepth++;
++      if (ch === '}') braceDepth--;
++    }
++
++    // Check for innerHTML = '' pattern
++    if (/innerHTML\s*=\s*['"]\s*['"]/.test(line) || /innerHTML\s*=\s*""/.test(line)) {
++      assert.fail(`render function uses innerHTML = '' to clear the list (line: ${line.trim()}) — must use in-place DOM mutation instead`);
++    }
++
++    if (braceDepth <= 0 && inFunction) {
++      // End of function, move on
++      inFunction = false;
++    }
++  }
++});
++
++Then('the toggle handler toggles the {string} class on the existing <li>', function (className) {
++  // The toggle click handler should NOT call render() after changing the state.
++  // Instead, it should toggle the class on the existing <li> and update the checkbox.
++  // We check that the handler does NOT call render() directly.
++  // It may call setTodos() to persist, but should not rebuild the DOM.
++  const source = this.appSource;
++  // Find the toggle click handler: it's inside the forEach loop in render()
++  // Look for the pattern where .toggle click handler does NOT call render()
++  // The bad pattern: todo.completed = ...; setTodos(); render();
++  // The good pattern: toggle class on the parent li, update checkbox, then setTodos()
++
++  // The handler should reference the parent li element and toggle the class directly
++  // Check that the source contains a pattern showing li.classList.toggle or similar
++  const hasClassToggle = /\.classList\.(add|remove|toggle)\s*\(/.test(source);
++  const hasClassListAdd = /\.classList\.add\s*\(/.test(source);
++  const hasClassListRemove = /\.classList\.remove\s*\(/.test(source);
++
++  // The current bad code does: todo.completed = this.checked; setTodos(todos); render();
++  // The good code should NOT call render() in the toggle handler
++  // Instead it should toggle the class on the LI and update the checkbox
++
++  // Check for the bad pattern: The toggle handler calls render() directly
++  // Find the toggle event listener
++  const toggleHandlerMatch = source.match(/\.toggle['"]?\)\.addEventListener\(['"]click['"][^)]*\)\s*\{[^}]*render\s*\(\)[^}]*\}/);
++  if (toggleHandlerMatch) {
++    assert.fail('Toggle click handler calls render() — it should mutate the existing <li> in place instead of rebuilding the list');
++  }
++
++  // Check for the good pattern: the toggle handler does DOM mutation
++  // Look for li.classList or parentElement.classList in the handler
++  const hasDomMutation = /classList\.(add|remove|toggle|contains)/.test(source);
++  if (!hasDomMutation) {
++    // This is a soft check — the source might use a different approach
++    // For now, we just check that the render function doesn't do innerHTML = ''
++    // which is already checked above
++  }
++});
++
++Then('the toggle-all handler toggles the {string} class on each existing <li>', function (className) {
++  // The toggle-all handler should also mutate in place, not call render()
++  const source = this.appSource;
++  // Find the toggleAllTodos function or the toggle-all click handler
++  // Check that it doesn't call render() (the bad pattern)
++  // The toggleAllTodos function at line ~132 does: todos.forEach(...); setTodos(); render();
++  // The fix should do: forEach existing li, toggle class, update checkbox
++
++  // Check if the toggleAll function calls render()
++  // Find the function definition
++  const funcMatch = source.match(/function\s+toggleAllTodos\s*\([^)]*\)\s*\{[^}]*render\s*\(\)[^}]*\}/);
++  if (funcMatch) {
++    assert.fail('toggleAllTodos function calls render() — it should mutate existing <li> elements in place');
++  }
++});
++
++Then('the dblclick handler does not use the captured {string} variable after calling {string}', function (varName, fnName) {
++  // The dblclick handler should not reference the captured `li` variable after calling render()
++  // We check that between render() and the end of the handler, there's no reference to `li.`
++  const source = this.appSource;
++
++  // Find the dblclick handler body
++  // Look for: addEventListener('dblclick', function () { ... })
++  // Specifically, the pattern: todo.editing = true; render(); var editInput = li.querySelector('.edit');
++  const dblclickMatch = source.match(/addEventListener\(['"]dblclick['"][^)]*\)\s*\{([^}]*)\}/);
++  if (dblclickMatch) {
++    const handlerBody = dblclickMatch[1];
++    // Check if render() is called and then li. is used
++    if (handlerBody.includes('render()') && (handlerBody.includes('li.') || handlerBody.includes('li['))) {
++      assert.fail(`dblclick handler references captured "${varName}" variable after calling render() — must re-query the DOM instead`);
++    }
++  }
++});
++
++Then('the dblclick handler queries the document for the new {string} input after render', function (selector) {
++  // The dblclick handler should re-query the DOM for the edit input after render
++  // It should use document.querySelector or todoList.querySelector instead of li.querySelector
++  const source = this.appSource;
++
++  // Find the dblclick handler
++  const dblclickMatch = source.match(/addEventListener\(['"]dblclick['"][^)]*\)\s*\{([^}]*)\}/);
++  if (dblclickMatch) {
++    const handlerBody = dblclickMatch[1];
++    // Check that after render(), the handler uses document.querySelector or similar
++    // to find the edit input, not li.querySelector
++    if (handlerBody.includes('render()')) {
++      const afterRender = handlerBody.split('render()')[1] || '';
++      if (afterRender.includes('li.querySelector') || afterRender.includes('li[')) {
++        assert.fail('dblclick handler uses li.querySelector after render() — must re-query the document');
++      }
++      // Check that it does query the document
++      const hasQuery = /querySelector/.test(afterRender) || /querySelectorAll/.test(afterRender);
++      if (!hasQuery) {
++        assert.fail('dblclick handler does not query the DOM for the edit input after render()');
++      }
++    }
++  }
++});
++
+diff --git a/features/todo-dom-fidelity.feature b/features/todo-dom-fidelity.feature
+new file mode 100644
+index 0000000..e4068f0
+--- /dev/null
++++ b/features/todo-dom-fidelity.feature
+@@ -0,0 +1,24 @@
++Feature: DOM fidelity in a real browser
++  As a user
++  I want the app to preserve DOM element identity across state changes
++  So that browser-based interactions (click, focus, visibility) work reliably
++
++  Background:
++    Given the app is loaded
++
++  Rule: In-place DOM mutation for toggle
++
++  @conformance
++  Scenario: The render function mutates existing nodes instead of rebuilding the list
++    Given I inspect the app source
++    Then the "render" function does not clear the todo list with innerHTML
++    And the toggle handler toggles the "completed" class on the existing <li>
++    And the toggle-all handler toggles the "completed" class on each existing <li>
++
++  Rule: Edit input re-query after render
++
++  @conformance
++  Scenario: The dblclick handler re-queries the DOM for the edit input after render
++    Given I inspect the app source
++    Then the dblclick handler does not use the captured "li" variable after calling "render()"
++    And the dblclick handler queries the document for the new ".edit" input after render
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..997c458
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,8 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/todo-dom-fidelity.feature:The render function mutates existing nodes instead of rebuilding the list",
++      "features/todo-dom-fidelity.feature:The dblclick handler re-queries the DOM for the edit input after render"
++    ]
++  }
++}
+\ No newline at end of file

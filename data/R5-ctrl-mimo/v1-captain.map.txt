@@ -1,0 +1,44 @@
+# banked: 2026-07-28T18:53:02Z
+# verdict: PENDING
+# leg: {  "name": "v1-captain",  "model": "xiaomi/mimo-v2.5",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/R5-ctrl-mimo/sim",  "timeout_s": 3600,  "max_tokens": 32768,  "skills": [    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills/shipshape",    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills/captain",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== v1-captain.session.jsonl ===
+  turns=33  wall=224.5s  in=53799  out=20234  cache_read=1260288  cost=$0.0167
+  role reads: shipshape@t0 -> captain@t0
+  roles loaded: captain, shipshape
+  ~ repeated tool signature at turns [3, 9, 12, 13, 16, 18, 19, 20, 21, 22] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    1591/289      512 $0.0003  read, read, read, read
+    t1   18484/432     2048 $0.0027  bash, bash, bash, bash, bash, bash
+    t2     981/362    20480 $0.0003  bash, bash, bash, bash, bash, bash
+    t3     779/157    21440 $0.0002  bash, bash, bash
+    t4    8317/1496   22208 $0.0016  write
+    t5    1601/85     30464 $0.0003  bash
+    t6     164/79     32000 $0.0001  write
+    t7     159/1924   32128 $0.0007  write
+    t8    2001/292    32256 $0.0005  bash
+    t9     356/492    34240 $0.0003  bash
+    t10    625/777    34560 $0.0004  edit
+    t11    879/636    35136 $0.0004  bash
+    t12    807/661    35968 $0.0004  bash
+    t13    896/605    36736 $0.0004  bash
+    t14    724/1054   37568 $0.0005  read
+    t15   2861/488    38272 $0.0006  edit
+    t16    578/2111   41088 $0.0008  edit
+    t17   2221/594    41600 $0.0006  bash
+    t18    690/692    43776 $0.0004  bash
+    t19    769/770    44416 $0.0004  bash
+    t20    890/983    45120 $0.0005  bash
+    t21   1084/1175   45952 $0.0006  bash
+    t22   1366/481    46976 $0.0005  bash
+    t23    597/645    48320 $0.0004  write
+    t24    714/462    48896 $0.0004  write
+    t25    521/452    49600 $0.0003  write
+    t26    509/230    50112 $0.0003  write
+    t27    339/423    50560 $0.0003  write
+    t28    491/167    50880 $0.0003  bash
+    t29    285/183    51328 $0.0002  write
+    t30    257/442    51584 $0.0003  write
+    t31    554/184    51776 $0.0003  bash, bash
+    t32    709/411    52288 $0.0004  -

@@ -1,0 +1,251 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index fe38096..6fa4ef4 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -17,6 +17,13 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ - Tier: happy-dom (default). The spec requires DOM rendering; happy-dom is the cheapest tier that observes it.
+ - Scantling for localStorage shape at `scantlings/todo-storage.json`.
+ 
++## Current leg (R6-mid-flash, leg 2)
++
++- **Defect:** 10 Cypress acceptance-suite failures — all DOM-identity defects caused by `render()` destroying and recreating `<li>` elements on every state change.
++- **Specs updated:** `features/dom-identity.feature` (new, 9 @contract scenarios), `features/support/steps.js` (DOM identity + source-level conformance steps).
++- **Watchbill:** `watchbill.json` — dispatch QM then Crew to refactor `render()` for in-place mutation.
++- **Source-level conformance:** The first `@contract` scenario in `dom-identity.feature` checks that `js/app.js` does not assign `todoList.innerHTML` (static analysis). It MUST fail on the current code and pass after the fix.
++
+ ## Next
+ 
+-Dispatch QM with `watchbill.json` targets when production code exists.
+\ No newline at end of file
++Dispatch QM with `watchbill.json` targets.
+\ No newline at end of file
+diff --git a/features/dom-identity.feature b/features/dom-identity.feature
+new file mode 100644
+index 0000000..a3b8833
+--- /dev/null
++++ b/features/dom-identity.feature
+@@ -0,0 +1,85 @@
++Feature: DOM identity
++  As a browser user
++  I want DOM elements to stay attached across interactions
++  So that assistive technology, focus, and event chains in real browsers never break
++
++  Rule: The app MUST NOT replace DOM nodes when mutating todo state.
++        Instead, it MUST mutate the existing node in place — toggle class names,
++        checked properties, and text content — so the browser element reference
++        remains valid across the interaction.
++
++  Background:
++    Given the app is loaded
++
++  @contract
++  Scenario: The source code does not use full-list innerHTML replacement
++    When I inspect the source of "js/app.js"
++    Then the source MUST NOT contain a full-list re-render pattern that destroys all child elements
++
++  @contract
++  Scenario: Single-todo completed toggle preserves the <li> element identity
++    Given the todo list has 1 item with title "Buy milk"
++    When I capture the reference of the first todo element
++    And I click the toggle checkbox on the todo
++    Then the first todo element is still the same DOM node
++    And the todo has class "completed"
++
++  @contract
++  Scenario: Single-todo uncompleted toggle preserves the <li> element identity
++    Given the todo list has 1 completed item with title "Buy milk"
++    When I capture the reference of the first todo element
++    And I click the toggle checkbox on the todo
++    Then the first todo element is still the same DOM node
++    And the todo does not have class "completed"
++
++  @contract
++  Scenario: Toggle-all completed preserves <li> element identities
++    Given the todo list has items "Buy milk", "Buy eggs", "Buy bread"
++    When I capture the reference of the first todo element
++    And I click the "toggle-all" checkbox
++    Then the first todo element is still the same DOM node
++    And all todos have class "completed"
++
++  @contract
++  Scenario: Toggle-all clear preserves <li> element identities
++    Given the todo list has 3 completed items
++    When I capture the reference of the first todo element
++    And I click the "toggle-all" checkbox
++    Then the first todo element is still the same DOM node
++    And no todo has class "completed"
++
++  @contract
++  Scenario: Entering edit mode preserves the <li> element identity
++    Given the todo list has 1 item with title "Buy milk"
++    When I capture the reference of the first todo element
++    And I double-click the todo label
++    Then the first todo element is still the same DOM node
++    And the todo has class "editing"
++
++  @contract
++  Scenario: Saving an edit preserves the <li> element identity
++    Given the todo list has 1 item with title "Buy milk"
++    When I capture the reference of the first todo element
++    And I double-click the todo label
++    And I change the edit input to "Buy organic milk"
++    And I press Enter in the edit input
++    Then the first todo element is still the same DOM node
++    And the todo list shows 1 item with title "Buy organic milk"
++
++  @contract
++  Scenario: Cancelling an edit preserves the <li> element identity
++    Given the todo list has 1 item with title "Buy milk"
++    When I capture the reference of the first todo element
++    And I double-click the todo label
++    And I change the edit input to "Buy organic milk"
++    And I press Escape in the edit input
++    Then the first todo element is still the same DOM node
++    And the todo list shows 1 item with title "Buy milk"
++
++  @contract
++  Scenario: Destroying a todo preserves surrounding <li> element identities
++    Given the todo list has items "Buy milk", "Buy eggs"
++    When I capture the reference of the second todo element
++    And I click the destroy button on the todo titled "Buy milk"
++    Then the second todo element is still the same DOM node
++    And the todo list shows 1 item with title "Buy eggs"
+\ No newline at end of file
+diff --git a/features/support/steps.js b/features/support/steps.js
+index b669a8f..384a877 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -527,4 +527,71 @@ function escapeHtml(doc, str) {
+   const div = doc.createElement('div');
+   div.textContent = str;
+   return div.innerHTML;
+-}
+\ No newline at end of file
++}
++
++// ── DOM identity ────────────────────────────────────────────────────────────
++
++const capturedElements = new Map();
++
++When('I capture the reference of the first todo element', function () {
++  const li = this.document.querySelector('.todo-list li:first-child');
++  if (!li) throw new Error('No todo element found');
++  capturedElements.set('first', li);
++});
++
++When('I capture the reference of the second todo element', function () {
++  const items = this.document.querySelectorAll('.todo-list li');
++  if (items.length < 2) throw new Error('Less than 2 todo elements found');
++  capturedElements.set('second', items[1]);
++});
++
++Then('the first todo element is still the same DOM node', function () {
++  const captured = capturedElements.get('first');
++  if (!captured) throw new Error('No captured reference for first todo element');
++  assert.ok(captured.isConnected, 'Element is no longer connected to the DOM');
++  const todoList = this.document.querySelector('.todo-list');
++  assert.ok(todoList.contains(captured), 'Element is no longer a child of the todo-list');
++});
++
++Then('the second todo element is still the same DOM node', function () {
++  const captured = capturedElements.get('second');
++  if (!captured) throw new Error('No captured reference for second todo element');
++  assert.ok(captured.isConnected, 'Element is no longer connected to the DOM');
++  const todoList = this.document.querySelector('.todo-list');
++  assert.ok(todoList.contains(captured), 'Element is no longer a child of the todo-list');
++});
++
++// ── Source-level conformance ──────────────────────────────────────────────────
++
++When('I inspect the source of {string}', function (relativePath) {
++  const filePath = path.join(ROOT, relativePath);
++  if (!fs.existsSync(filePath))
++    throw new Error('Source file not found: ' + filePath);
++  this._inspectedSource = fs.readFileSync(filePath, 'utf8');
++});
++
++Then('the source MUST NOT contain a full-list re-render pattern that destroys all child elements', function () {
++  const src = this._inspectedSource;
++  if (!src) throw new Error('No source has been inspected');
++
++  const lines = src.split('\n');
++  const violations = [];
++
++  for (let i = 0; i < lines.length; i++) {
++    const line = lines[i];
++    if (/todoList\.innerHTML\s*=/.test(line) &&
++        !/todoList\.innerHTML\s*=\s*todoList\.innerHTML/.test(line)) {
++      violations.push('Line ' + (i + 1) + ': ' + line.trim());
++    }
++  }
++
++  if (violations.length > 0) {
++    assert.fail(
++      'Source code MUST NOT destroy and recreate todo-list elements. ' +
++      'Found ' + violations.length + ' violation(s):\n' +
++      violations.join('\n') + '\n\n' +
++      'Fix: mutate existing <li> nodes in place (classList.toggle, .checked =, .textContent =) ' +
++      'instead of assigning todoList.innerHTML.'
++    );
++  }
++});
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..1060973
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,52 @@
++{
++  "version": 1,
++  "cycle": "R6-mid-flash",
++  "captain": "v1-captain",
++  "leg": 2,
++  "description": "Fix DOM-identity defects: preserve element identity across todo state transitions",
++  "defect": {
++    "source": "Cypress acceptance suite (fixed, external)",
++    "failures": [
++      "1) Mark all as completed: should allow me to mark all items as completed",
++      "2) Mark all as completed: should allow me to clear the complete state of all items",
++      "3) Item: should allow me to mark items as complete",
++      "4) Item: should allow me to un-mark items as complete",
++      "5) Item: should allow me to edit an item",
++      "6) Editing: should hide other controls when editing",
++      "7) Editing: should save edits on blur",
++      "8) Editing: should trim entered text",
++      "9) Editing: should remove the item if an empty text string was entered",
++      "10) Editing: should cancel edits on escape"
++    ],
++    "rootCause": "render() in js/app.js destroys all <li> elements (todoList.innerHTML = '') and recreates them on every state change. This detaches all DOM node references that a real browser holds, causing Cypress 'detached from DOM' errors. Additionally, the editing dblclick handler sets todo.editing on the in-memory object but render() re-reads from localStorage (which lacks the editing flag), so editing state is lost in the re-render."
++  },
++  "workItems": [
++    {
++      "id": "dom-identity-fix",
++      "role": "crew",
++      "description": "Refactor render() to mutate existing <li> nodes in place instead of destroying and recreating them. For each state transition (toggle completed, toggle-all, enter/edit/save/cancel editing, destroy), the corresponding <li> DOM node must remain the same element — only its class names, checked properties, and text content should change.",
++      "specs": [
++        "features/dom-identity.feature",
++        "features/todo-management.feature",
++        "assets/app-spec.md"
++      ],
++      "acceptanceCriteria": [
++        "All 10 Cypress acceptance suite tests pass",
++        "All @contract scenarios in features/dom-identity.feature pass (including source-level conformance check)",
++        "All existing feature scenarios continue to pass",
++        "The first scenario in features/dom-identity.feature (source-level conformance) MUST fail on the current code and pass after the fix"
++      ],
++      "notes": [
++        "The fix is app-side: PRESERVE element identity. When toggling a todo's completed state, toggle the class on the existing <li> and the checked property on the existing checkbox — do not remove and recreate the <li>.",
++        "For editing: the dblclick handler must save the editing flag to localStorage (or pass it through in-memory without re-reading from localStorage) BEFORE calling render(), so the new render pass sees it.",
++        "The source-level conformance check in features/dom-identity.feature@contract:1 statically checks that js/app.js does not assign todoList.innerHTML. This is a guard against regression.",
++        "Do not change the Cypress acceptance test — it is fixed and correct.",
++        "Do not change the Cucumber step definitions — the @contract DOM identity scenarios are already implemented."
++      ]
++    }
++  ],
++  "verification": {
++    "run": "npm test",
++    "expected": "All scenarios pass (including the 9 @contract scenarios in features/dom-identity.feature)"
++  }
++}
+\ No newline at end of file

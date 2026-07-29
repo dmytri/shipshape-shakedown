@@ -1,0 +1,96 @@
+diff --git a/features/edit-todo.feature b/features/edit-todo.feature
+index f8bd19c..ff9699e 100644
+--- a/features/edit-todo.feature
++++ b/features/edit-todo.feature
+@@ -21,3 +21,18 @@ Feature: Edit todo
+     And I press Escape
+     Then I should see "Buy milk" in the todo list
+     And I should not see "Buy eggs" in the todo list
++
++  Scenario: Remove the todo when edited to an empty string
++    Given I have a todo "Buy milk"
++    When I double-click the todo "Buy milk"
++    And I clear the edit input
++    And I press Enter
++    Then I should see no todos
++
++  Scenario: Editing must not throw when blur and Enter fire in the same interaction
++    Given I have a todo "Buy milk"
++    When I double-click the todo "Buy milk"
++    And I clear the edit input
++    And I press Enter in the edit input and blur fires
++    Then I should see no todos
++    And no error is thrown
+diff --git a/features/routing.feature b/features/routing.feature
+new file mode 100644
+index 0000000..1342a73
+--- /dev/null
++++ b/features/routing.feature
+@@ -0,0 +1,33 @@
++Feature: Routing
++  As a user
++  I want to navigate between filter views using the URL and browser history
++  So I can use the back button to return to a previous view
++
++  Background:
++    Given the app is loaded
++
++  Scenario: Filter link updates the URL hash
++    Given I have a todo "Buy milk"
++    When I click the "Active" filter
++    Then the URL hash should be "#/active"
++
++  Scenario: Hashchange re-renders the todo list
++    Given I have a todo "Buy milk"
++    And I have a completed todo "Buy eggs"
++    When I navigate to "#/active"
++    Then I should see "Buy milk" in the todo list
++    And I should not see "Buy eggs" in the todo list
++
++  Scenario: Back button returns to previous filter view
++    Given I have a todo "Buy milk"
++    And I have a completed todo "Buy eggs"
++    When I click the "Active" filter
++    Then I should see "Buy milk" in the todo list
++    And I should not see "Buy eggs" in the todo list
++    When I navigate back
++    Then I should see "Buy milk" in the todo list
++    And I should see "Buy eggs" in the todo list
++
++  Scenario: Filter handler must not prevent anchor default navigation
++    Given the app source at "js/app.js"
++    Then the filter click handler does not call "preventDefault"
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..bab52f6
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,28 @@
++{
++  "watches": [
++    {
++      "name": "edit-blur-safety",
++      "description": "Edit interaction must not throw when blur and Enter fire in the same real-browser interaction",
++      "targets": [
++        "features/edit-todo.feature:Editing must not throw when blur and Enter fire in the same interaction"
++      ]
++    },
++    {
++      "name": "routing-hash-update",
++      "description": "Filter links must update the URL hash so the back button works in a real browser",
++      "targets": [
++        "features/routing.feature:Filter link updates the URL hash",
++        "features/routing.feature:Back button returns to previous filter view",
++        "features/routing.feature:Filter handler must not prevent anchor default navigation"
++      ]
++    },
++    {
++      "name": "regression",
++      "description": "Existing scenarios must remain green after the fixes",
++      "targets": [
++        "features/edit-todo.feature",
++        "features/routing.feature"
++      ]
++    }
++  ]
++}

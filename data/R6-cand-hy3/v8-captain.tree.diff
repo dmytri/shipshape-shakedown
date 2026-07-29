@@ -1,0 +1,31 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 1a81925..a24c346 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -41,9 +41,9 @@ removal-safety pin.
+   pin is what makes that defect visible to QM. The behavioural pin
+   `edit.feature:An empty edit destroys the todo` still passes in happy-dom and is listed alongside
+   as a regression guard.
+-- `watchbill.json` `watch1` (re-established this leg; Boatswain struck it at `bef763c`) lists both
+-  scenarios as the QM target set. The conformance scenario is the binding pin: it REDDENS against the
+-  broken served build and GREENS once the guard lands. The behavioural scenario
++- `watchbill.json` `watch1` (re-established this Captain leg; Boatswain struck it at `834bfda`, leaving the file absent on deck) lists both
++  scenarios as the QM target set — the sole channel that makes the conformance scenario a binding QM target. The conformance scenario is the binding pin: it REDDENS against the
++  broken served build (`examples/shakedown/js/app.js`, whose stale-item removal still uses the unguarded `if (stale.parentNode)` form) and GREENS once that build carries the `parentNode.contains(stale)` guard. The behavioural scenario
+   `edit.feature:An empty edit destroys the todo` is the regression guard alongside it.
+ - Where the fix lands: the in-repo `js/app.js` ALREADY carries the `c92479c` hardening
+   (`if (stale.parentNode && stale.parentNode.contains(stale)) stale.parentNode.removeChild(stale)`),
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..4f3df21
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,8 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/edit-removal-safety.feature:The empty-edit removal must not issue an unguarded removeChild",
++      "features/edit.feature:An empty edit destroys the todo"
++    ]
++  }
++}

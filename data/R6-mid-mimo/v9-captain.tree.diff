@@ -1,0 +1,228 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index cdec2f8..87ca423 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -4,22 +4,36 @@
+ 
+ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
+ 
+-## DOM-identity constraint
++## Cycle 3 — Browser acceptance defects
+ 
+-The external browser acceptance suite (Cypress) fails on every toggle interaction because the `render()` function in `js/app.js` destroys and recreates all `<li>` elements on every state change (`todoList.innerHTML = ''` followed by element-by-element reconstruction). This detaches any DOM reference the browser holds.
++Two acceptance-suite failures remain after the DOM-identity fix.
++Both are real product defects visible only in a real browser.
+ 
+-The in-harness suite (happy-dom + Cucumber) does not catch this because its step definitions re-query the DOM fresh after each action, never holding a reference across a state change.
++### Defect BROWSER-1: removeChild during re-entrant blur (editing to empty)
+ 
+-**The fix:** The `render()` function MUST preserve existing DOM nodes when their data has not changed. When toggling a single todo's `completed` state, mutate the existing `<li>` element's class list in place rather than destroying and recreating it. When toggling all, mutate each `<li>` in place. The `innerHTML = ''` pattern is the defect; it must be replaced with in-place DOM mutation for unchanged nodes.
++**Acceptance test:** `should remove the item if an empty text string was entered`
++**Spec:** `features/browser-acceptance-defects.feature:27`
++**Root cause:** When the user clears the edit input and presses Enter, both `blur` and `keydown(Enter)` fire. Both call `finishEditing()` → `destroyTodo()` → `render()`. The first `render()` removes the `<li>` via `removeChild`, which detaches the `<input>`, firing `blur` synchronously mid-orphan-removal-loop. The blur handler re-enters `render()`, removing the same orphan. The original loop's `existingLis[j]` now references a node whose `parentNode` no longer considers it a child → `removeChild` throws `NotFoundError`.
++**Fix指引:**
++1. Guard the orphan-removal loop: only call `removeChild` if `existingLis[j].parentNode === todoList` (or simply check `parentNode` is not null)
++2. Clear `editingId` in `destroyTodo()` to prevent stale editing state
+ 
+-**Routing defect (test 5):** After navigating between filter views and using browser back, the todo list shows empty. The hashchange handler may not be firing correctly in a real browser, or the filter state is not being restored on navigation.
++### Defect BROWSER-2: Filter click handler blocks hash update (back button)
++
++**Acceptance test:** `should respect the back button`
++**Spec:** `features/browser-acceptance-defects.feature:66`
++**Root cause:** The filter link click handler calls `e.preventDefault()`, which stops the default anchor behaviour (updating `window.location.hash`). The handler calls `setFilter()` directly, which updates the filter state but does NOT update the hash. So clicking filter links does not push history entries. When the user presses the browser back button, `history.back()` has nothing to go back to — the hash stays the same, `hashchange` never fires, and the filter does not change.
++**Fix指引:**
++1. Remove `e.preventDefault()` from the filter click handler and let the default anchor behaviour update the hash (the existing `hashchange` listener will call `handleHashChange()` → `setFilter()`)
++2. OR update `window.location.hash` manually in the click handler before calling `setFilter`
++
++### Previous defects (resolved)
++
++- DOM-identity (toggle/destroy) — resolved by in-place DOM mutation in render()
+ 
+ ## Acceptance test failure evidence
+ 
+-The external suite runs Cypress against the build. Five failures, all DOM-identity or routing:
++The external suite runs Cypress against the build. Two failures remain:
+ 
+-1. `Mark all as completed > should allow me to mark all items as completed` — `cy.eq()` fails because element detached after toggle-all click
+-2. `Mark all as completed > should allow me to clear the complete state of all items` — same detachment pattern
+-3. `Item > should allow me to mark items as complete` — `cy.find()` fails because element detached after checkbox click
+-4. `Item > should allow me to un-mark items as complete` — same detachment pattern
+-5. `Routing > should respect the back button` — expected `.todo-list li:visible` not found after back navigation
++1. `Editing > should remove the item if an empty text string was entered` — `removeChild` fails because of re-entrant blur during orphan removal
++2. `Routing > should respect the back button` — `.todo-list li:visible` not found after back navigation because filter clicks don't update the hash
+diff --git a/features/browser-acceptance-defects.feature b/features/browser-acceptance-defects.feature
+new file mode 100644
+index 0000000..27baa0f
+--- /dev/null
++++ b/features/browser-acceptance-defects.feature
+@@ -0,0 +1,84 @@
++Feature: Browser acceptance defects
++  As a user interacting with the app in a real browser
++  I want the app to handle real browser event sequences correctly
++  So that editing-to-empty and back-button routing work without errors
++
++  Background:
++    Given the app is loaded
++
++  # ── Defect 1: Editing to empty via blur + Enter ────────────────────────
++  # In a real browser, pressing Enter on an empty edit input fires both
++  # a keydown(Enter) event and a blur event (because the input loses
++  # focus during DOM manipulation).  Both handlers call finishEditing()
++  # → destroyTodo() → render().  The first render()'s orphan-removal
++  # loop calls parentNode.removeChild(li), which detaches the input,
++  # firing blur synchronously mid-loop.  The blur handler re-enters
++  # render(), removing the same orphan.  The original loop then tries
++  # removeChild on a node whose parentNode no longer considers it a
++  # child, throwing: "Failed to execute 'removeChild' on 'Node'".
++  #
++  # The in-harness suite dispatches only one event at a time, so the
++  # re-entrant render never occurs and the scenario passes.
++
++  Rule: Editing to empty must not throw when both blur and Enter fire
++
++    Scenario: Clearing edit input via simultaneous blur and Enter destroys the todo without error
++      Given a todo "Buy milk" exists
++      When the user double-clicks the label of todo "Buy milk"
++      And the user clears the edit input and fires blur and Enter together
++      Then the todo "Buy milk" no longer exists
++      And the todo list is empty
++
++    Scenario: Destroying an editing todo clears the editing state
++      Given a todo "Buy milk" exists
++      When the user double-clicks the label of todo "Buy milk"
++      And the user clears the edit input and fires blur and Enter together
++      Then no todo is in editing mode
++
++  # ── Defect 2: Routing — back button after filter clicks ────────────────
++  # The filter click handler calls e.preventDefault() but never updates
++  # window.location.hash.  So clicking filter links does not push
++  # history entries.  When the user presses the browser back button,
++  # history.back() has nothing to go back to — the hash stays the same,
++  # hashchange never fires, and the filter does not change.
++  #
++  # The in-harness suite manually sets the hash via navigate() which
++  # always pushes a history entry, masking the defect.  In a real
++  # browser, clicking a filter link should update the hash so that
++  # history.back() restores the previous filter.
++
++  Rule: Filter links must update the URL hash so back button works
++
++    Scenario: Clicking a filter link updates the hash
++      Given a todo "Buy milk" exists
++      When the user clicks the "Active" filter link
++      Then the window hash is "#/active"
++
++    Scenario: Clicking the All filter link updates the hash
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | false     |
++        | Walk the dog | true      |
++      When the user navigates to "#/active"
++      And the user clicks the "All" filter link
++      Then the window hash is "#/"
++
++    Scenario: Back button after clicking Active filter shows previous view
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | false     |
++        | Walk the dog | true      |
++      When the user clicks the "Active" filter link
++      Then only the todo "Buy milk" is visible
++      When the user presses the browser back button without manual hashchange
++      Then both todos are visible
++
++    Scenario: Back button after clicking Completed filter shows previous view
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | false     |
++        | Walk the dog | true      |
++      When the user clicks the "Completed" filter link
++      Then only the todo "Walk the dog" is visible
++      When the user presses the browser back button without manual hashchange
++      Then both todos are visible
+diff --git a/features/support/steps.js b/features/support/steps.js
+index 6156352..2442b72 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -387,3 +387,49 @@ When('the user presses the browser back button', function () {
+   this.window.history.back();
+   this.window.dispatchEvent(new this.window.Event('hashchange'));
+ });
++
++// ── Browser-acceptance defect steps ──────────────────────────────────────
++
++// Fires blur THEN keydown(Enter) on the edit input, reproducing the real-browser
++// event sequence when a user presses Enter while the input is focused.
++// In a real browser both events fire; the double-destroy causes removeChild to
++// fail. This step lets the in-harness suite exercise the same path.
++When('the user clears the edit input and fires blur and Enter together', function () {
++  const editInput = this.document.querySelector('.todo-list li.editing .edit');
++  editInput.value = '';
++  // Blur fires first in real browsers, then keydown(Enter)
++  editInput.dispatchEvent(new this.window.Event('blur', { bubbles: true }));
++  editInput.dispatchEvent(new this.window.KeyboardEvent('keydown', { keyCode: 13, bubbles: true }));
++});
++
++// Asserts that no <li> in the todo list has the 'editing' class.
++Then('no todo is in editing mode', function () {
++  const editingItems = this.document.querySelectorAll('.todo-list li.editing');
++  expect(editingItems.length).to.equal(0);
++});
++
++// Presses browser back WITHOUT manually dispatching hashchange.
++// In a real browser history.back() fires hashchange synchronously.
++// In happy-dom the hash changes but hashchange fires asynchronously,
++// so the app may not re-render in time — reproducing the real defect.
++When('the user presses the browser back button without manual hashchange', function () {
++  this.window.history.back();
++  // Do NOT dispatch hashchange — let the browser/happy-dom handle it naturally.
++});
++
++// Clicks a filter link by its visible text ("All", "Active", or "Completed").
++When('the user clicks the {string} filter link', function (name) {
++  const links = this.document.querySelectorAll('.filters a');
++  for (const link of links) {
++    if (link.textContent === name) {
++      link.click();
++      return;
++    }
++  }
++  throw new Error(`Filter link "${name}" not found`);
++});
++
++// Asserts the current window.location.hash.
++Then('the window hash is {string}', function (expectedHash) {
++  expect(this.window.location.hash).to.equal(expectedHash);
++});
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..0830820
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,26 @@
++{
++  "defects": [
++    {
++      "id": "BROWSER-1",
++      "title": "removeChild fails when blur and Enter both fire on empty edit input",
++      "spec": "features/browser-acceptance-defects.feature:27",
++      "acceptance_failure": "should remove the item if an empty text string was entered",
++      "root_cause": "finishEditing is called twice (blur + keydown), causing re-entrant removeChild in the orphan-removal loop",
++      "fix指引": [
++        "Guard the orphan-removal loop: check parentNode before calling removeChild",
++        "Clear editingId in destroyTodo to prevent stale editing state"
++      ]
++    },
++    {
++      "id": "BROWSER-2",
++      "title": "Filter click handler prevents hash update, breaking back button",
++      "spec": "features/browser-acceptance-defects.feature:66",
++      "acceptance_failure": "should respect the back button",
++      "root_cause": "Filter link click handler calls e.preventDefault() without updating window.location.hash, so history.back() has nothing to restore",
++      "fix指引": [
++        "Remove e.preventDefault() from the filter click handler and let the default anchor behavior update the hash",
++        "OR update window.location.hash manually in the click handler before calling setFilter"
++      ]
++    }
++  ]
++}

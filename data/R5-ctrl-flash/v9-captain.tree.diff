@@ -1,0 +1,196 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 8afb6d7..197fbd5 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -2,40 +2,52 @@
+ 
+ # Captain Notes
+ 
+-## Voyage: Spec the event-binding helper capture-flag defect
++## Voyage: Spec the re-entrant blur removeChild guard
+ 
+ ### Situation
+ 
+ External browser acceptance suite (Cypress) reports 1 remaining failure:
+-- Save edits on blur — expected `<li.editing>` to contain "buy some sausages"
+ 
+-The prior 4 Cypress failures (detached DOM from `cy.eq()` / `cy.find()`) were resolved by commits `c0eee4c` and `1fb3dfe`, which replaced the innerHTML rebuild with in-place node mutation.
++```
++1) TodoMVC - shakedown
++     Editing
++       should remove the item if an empty text string was entered:
++   NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed
++   is no longer a child of this node. Perhaps it was moved in a 'blur' event handler?
++```
+ 
+-The remaining failure has a different root cause: the `on()` helper function at `js/app.js:72` silently drops the `useCapture` argument:
++Stack trace: `render:156` → `removeTodo:250` → `editTodo:279` → keydown handler `:347`.
+ 
+-```javascript
+-function on(el, evt, fn) {
+-    el.addEventListener(evt, fn);  // ignores 4th argument
+-}
+-```
++Root cause: In a real browser, pressing Enter in an empty edit input triggers:
++1. keydown handler → `editTodo(id, '')` → `removeTodo(id)` → `render()`
++2. `render()` calls `removeChild` on the stale `<li>` containing the focused edit input
++3. Browser fires `blur` synchronously during `removeChild` (unfocusing steps)
++4. The blur handler (captured on `todoList`) re-enters → `editTodo(id, '')` → `removeTodo(id)` → `render()` again
++5. The nested `render()` removes the same `<li>` first
++6. Control returns to the outer loop, which tries `removeChild` on an already-detached node → NotFoundError
+ 
+-The blur handler is registered as `on(todoList, 'blur', handler, true)`, but `true` is never forwarded to `addEventListener`. In a real browser, `blur` does not bubble, so the delegated handler on `todoList` never fires. The harness passes because it dispatches `new Event('blur', {bubbles: true})` which forces bubbling.
++The in-harness suite (happy-dom) does NOT reproduce this because happy-dom either doesn't fire blur during `removeChild` or handles the event loop differently.
+ 
+ ### What was done
+ 
+-Added one `@conformance` scenario to `features/conformance/dom-identity.feature`:
+-- "The event binding helper passes the useCapture flag to addEventListener"
+-
+-This scenario detects when the `on()` helper calls `addEventListener` with only 2 arguments (event, handler) instead of 3 (event, handler, capture).
++- Added one `@conformance` scenario to `features/conformance/dom-identity.feature`:
++  "Stale-node removal guards against re-entrant blur during removeChild"
++- Added step definitions in `features/support/conformance-steps.js` that detect whether
++  the render function's stale-node removal loop guards `removeChild` with a `parentNode` check.
++- Created `watchbill.json` enumerating all 31 scenario targets.
+ 
+ ### Current verification state
+ 
+-30 scenarios in default tier (`--tags "not @captain and not @shipwright"`):
+-- 29 pass
+-- 1 fails: conformance scenario detecting the missing capture flag
++31 scenarios:
++- 30 pass
++- 1 fails: the new conformance scenario (correctly detects the missing guard)
+ 
+ ### Remaining
+ 
+-QM dispatches on `main` with `watchbill.json` (lists all 30 targets). Crew receives 1 failing conformance target and fixes `js/app.js`:
+-- Change `function on(el, evt, fn)` to `function on(el, evt, fn, capture)`
+-- Change `el.addEventListener(evt, fn)` to `el.addEventListener(evt, fn, capture)`
+\ No newline at end of file
++QM dispatches with `watchbill.json`. Crew receives 1 failing conformance target and fixes `js/app.js`:
++- In the render function's stale-node removal loop, guard each `removeChild` call:
++  ```javascript
++  if (existingItems[id].parentNode) {
++    existingItems[id].parentNode.removeChild(existingItems[id]);
++  }
++  ```
+\ No newline at end of file
+diff --git a/features/conformance/dom-identity.feature b/features/conformance/dom-identity.feature
+index 5b75de3..5f4fdfa 100644
+--- a/features/conformance/dom-identity.feature
++++ b/features/conformance/dom-identity.feature
+@@ -34,4 +34,10 @@ Feature: DOM identity preservation
+   Scenario: The event binding helper passes the useCapture flag to addEventListener
+     Given the project has an event binding helper function
+     When I check whether the helper passes the useCapture argument to addEventListener
+-    Then the helper passes the useCapture flag to the native addEventListener
+\ No newline at end of file
++    Then the helper passes the useCapture flag to the native addEventListener
++
++  @conformance
++  Scenario: Stale-node removal guards against re-entrant blur during removeChild
++    Given the project has a render function that writes to the todo list
++    When I check whether the render function guards removeChild with a parentNode check in the stale-node removal loop
++    Then the render function guards stale-node removal against re-entrant blur events
+\ No newline at end of file
+diff --git a/features/support/conformance-steps.js b/features/support/conformance-steps.js
+index 98a429d..43aeb70 100644
+--- a/features/support/conformance-steps.js
++++ b/features/support/conformance-steps.js
+@@ -285,4 +285,53 @@ Then('the helper passes the useCapture flag to the native addEventListener', fun
+     'with {bubbles: true}.\n' +
+     'FIX: Change the helper signature to accept and forward a capture parameter: ' +
+     'function on(el, evt, fn, capture) { el.addEventListener(evt, fn, capture); }');
++});
++
++// ---------------------------------------------------------------------------
++// Conformance: Re-entrant blur guard in stale-node removal
++// ---------------------------------------------------------------------------
++
++When('I check whether the render function guards removeChild with a parentNode check in the stale-node removal loop', function () {
++  const source = this.appSource;
++  // Find the block in render() where stale items are removed.
++  // The anti-pattern:  for (...) { ... removeChild(...) }  with NO parentNode guard before removeChild.
++  //
++  // The fix is to check parentNode before calling removeChild, so that a re-entrant
++  // call (e.g. blur event during removeChild) that already removed the node does not
++  // cause a NotFoundError.
++  //
++  // Strategy: find the for-loop that iterates over existingItems and calls removeChild.
++  // Then check whether there is a parentNode or parentElement check in the loop body
++  // before the removeChild call.
++  const loopMatch = source.match(/for\s*\(\s*(?:var\s+)?(\w+)\s+in\s+existingItems\s*\)\s*\{([^}]*)\}/);
++  if (!loopMatch) {
++    this.renderGuardsRemoveChild = false;
++    return;
++  }
++  const loopBody = loopMatch[2];
++  const hasRemoveChild = /removeChild\s*\(/.test(loopBody);
++  if (!hasRemoveChild) {
++    this.renderGuardsRemoveChild = true; // no removeChild call → not vulnerable
++    return;
++  }
++  // Check if there's a parentNode or parentElement check before removeChild
++  // Look for: if (...) { ... removeChild(...) }  where the condition mentions parentNode/parentElement
++  // or: var x = ...; if (x.parentNode) { x.parentNode.removeChild(x); }
++  const hasParentGuard = /if\s*\([^)]*parentNode[^)]*\)/.test(loopBody) ||
++                         /if\s*\([^)]*parentElement[^)]*\)/.test(loopBody);
++  this.renderGuardsRemoveChild = hasParentGuard;
++});
++
++Then('the render function guards stale-node removal against re-entrant blur events', function () {
++  assert.ok(this.renderGuardsRemoveChild,
++    'FAIL: In a real browser, calling removeChild on a focused <li> triggers a blur ' +
++    'event synchronously on the edit input. The blur handler (captured on todoList) ' +
++    're-enters editTodo → render, which removes the same <li> again. ' +
++    'When control returns to the outer stale-removal loop, the node is no longer a child ' +
++    'of its parent, and removeChild throws NotFoundError.\n' +
++    'FIX: Guard every removeChild call in the stale-node removal loop with a parentNode check:\n' +
++    '  if (existingItems[id].parentNode) {\n' +
++    '    existingItems[id].parentNode.removeChild(existingItems[id]);\n' +
++    '  }\n' +
++    'This makes the operation idempotent under re-entrant blur.');
+ });
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..7f463a7
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,33 @@
++[
++  { "scenario": "No todos hides main and footer sections" },
++  { "scenario": "Create a new todo by pressing Enter" },
++  { "scenario": "Trimming whitespace from new todo title" },
++  { "scenario": "Empty todo is not created" },
++  { "scenario": "Show the active todo count" },
++  { "scenario": "Pluralize item count correctly" },
++  { "scenario": "Double-clicking a todo label activates editing mode" },
++  { "scenario": "Save edit by pressing Enter" },
++  { "scenario": "Save edit by blurring the input" },
++  { "scenario": "Cancel edit by pressing Escape" },
++  { "scenario": "Empty title destroys the todo on save" },
++  { "scenario": "Toggle a single todo as complete" },
++  { "scenario": "Mark all todos as complete" },
++  { "scenario": "Clear completed button is hidden when no completed todos" },
++  { "scenario": "Clear completed button removes completed todos" },
++  { "scenario": "Toggle-all reflects individual completion state" },
++  { "scenario": "Todos are persisted to localStorage" },
++  { "scenario": "Todos are restored from localStorage on load" },
++  { "scenario": "Completion state is persisted" },
++  { "scenario": "Default route shows all todos" },
++  { "scenario": "Active route shows only active todos" },
++  { "scenario": "Completed route shows only completed todos" },
++  { "scenario": "Selected filter class toggles with route change" },
++  { "scenario": "Completing a todo in a filtered view hides it" },
++  { "scenario": "Render function does not rebuild the todo list via innerHTML" },
++  { "scenario": "Render function does not unconditionally remove all list-item children" },
++  { "scenario": "Render function reuses existing list-item elements instead of always creating new ones" },
++  { "scenario": "The event binding helper passes the useCapture flag to addEventListener" },
++  { "scenario": "Stale-node removal guards against re-entrant blur during removeChild" },
++  { "scenario": "No active perturbation in implementation code" },
++  { "scenario": "Watchbill shape conformance" }
++]
+\ No newline at end of file

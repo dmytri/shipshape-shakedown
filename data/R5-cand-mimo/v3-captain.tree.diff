@@ -1,0 +1,13 @@
+diff --git a/watchbill.json b/watchbill.json
+index bab52f6..de85d08 100644
+--- a/watchbill.json
++++ b/watchbill.json
+@@ -2,7 +2,7 @@
+   "watches": [
+     {
+       "name": "edit-blur-safety",
+-      "description": "Edit interaction must not throw when blur and Enter fire in the same real-browser interaction",
++      "description": "In a real browser, blur fires before keydown Enter on the same input. Both handleTodoListBlur and handleTodoListKeyDown call editTodo, which for an empty string calls deleteTodo then render(). The first render() removes the <li> from the DOM; the second render() tries removeChild on a node already removed, throwing NotFoundError. Fix: make editTodo/edit handlers idempotent when blur and keydown both fire on the same edit, and/or guard render() against stale DOM references.",
+       "targets": [
+         "features/edit-todo.feature:Editing must not throw when blur and Enter fire in the same interaction"
+       ]

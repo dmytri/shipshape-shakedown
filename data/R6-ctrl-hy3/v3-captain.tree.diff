@@ -1,0 +1,51 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 5093d76..819ea50 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -39,6 +39,16 @@ no commit, push, or dispatch happened.
+   framework built-in capabilities. Confirm if Director is preferred.
+ - File split: spec recommends `js/app.js` + `js/models/todo.js` + `js/controllers/todos.js`.
+   Left to Crew; not a scenario requirement.
++- Browser-only readiness defect (shakedown finding): a real browser fails the acceptance
++  `beforeEach` with a `cy.then()` timeout waiting on the global `appHasStarted`. `js/app.js`
++  already sets `window.appHasStarted = true` in `init()`, but `index.html` ships no
++  `<script src="js/app.js">` tag, so the app never loads in a real browser. The happy-dom
++  harness (`features/support/world.js`) masks this by manually `window.eval`-ing `js/app.js`,
++  which is why the in-harness suite passed. Crew fix: add `<script src="js/app.js"></script>`
++  to `index.html` (end of body, after the `.todoapp` section). The pin is the `@contract`
++  scenario "The served page loads the application script" in `features/todomvc.feature`, on the
++  watchbill; it reads the page artifact and reddens now, independent of the harness, so the
++  browser-only defect has an in-harness red target.
+ 
+ ## Next
+ 
+diff --git a/features/todomvc.feature b/features/todomvc.feature
+index a3b5b06..e69d17e 100644
+--- a/features/todomvc.feature
++++ b/features/todomvc.feature
+@@ -22,6 +22,12 @@ Feature: TodoMVC app behaviour
+   Scenario: App signals readiness through the global appHasStarted flag
+     Then the global flag "appHasStarted" is set to a truthy value
+ 
++  Rule: App is wired into the served page
++
++  @contract
++  Scenario: The served page loads the application script
++    Then the page at "index.html" references the application script "js/app.js"
++
+   Rule: Creating todos
+ 
+   Scenario: New-todo input is focused on load
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..93064ab
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,7 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/todomvc.feature:The served page loads the application script"
++    ]
++  }
++}

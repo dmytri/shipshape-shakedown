@@ -1,0 +1,384 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..1f53282
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,26 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
++
++## Build: TodoMVC (vanilla JS)
++
++Greenfield build. The harness pre-provided `features/support/world.js` (loads the real
++`index.html` plus `js/app.js` into a happy-dom window before every scenario) and a cucumber-js
++`test` script in `package.json`. No `RIGGING.md` yet: fitting out the methods, tiers, and
++perturbation token is owed from Shipshape fitting out before QM can run.
++
++## Decisions captured in the specs
++
++- Persistence key: `todos-vanilla` (spec format `todos-[framework]`; the framework token is `vanilla`).
++- Behaviour is covered by eight feature files; the ordered scope is in `watchbill.json`.
++
++## Next cycle
++
++- Dispatch Shipwright to fit out `RIGGING.md`: derive `prove`, `verify`, `sweep`, `plank-join` from
++  cucumber-js, the `@logic` default tier, and the perturbation token from the shared shape.
++- Then dispatch QM over `watchbill.json`; QM routes failing targets to Crew to write `index.html`
++  (from `assets/app-template.index.html`, comments stripped) and `js/app.js` (vanilla, no preprocessors).
++- Step-def authors: the `the app is reloaded` step must preserve the current `location.hash` across
++  the happy-dom window rebuild, or the routing-persistence scenario cannot hold its state.
+diff --git a/features/add-todo.feature b/features/add-todo.feature
+new file mode 100644
+index 0000000..77b6ad3
+--- /dev/null
++++ b/features/add-todo.feature
+@@ -0,0 +1,24 @@
++Feature: Adding todos
++  As a todo app user
++  I want to add new todos from the top input
++  So that I can capture what needs doing
++
++  Scenario: Creating a new todo appends it to the list
++    Given the app has no todos
++    When the user types "Buy milk" into the new todo input and presses Enter
++    Then the todo list shows the todo "Buy milk"
++    And the new todo input is empty
++
++  Scenario: Whitespace-only input creates no todo
++    Given the app has no todos
++    When the user types "   " into the new todo input and presses Enter
++    Then the todo list is empty
++
++  Scenario: Leading and trailing whitespace is trimmed from a new todo
++    Given the app has no todos
++    When the user types "  Write tests  " into the new todo input and presses Enter
++    Then the todo list shows the todo "Write tests"
++
++  Scenario: The new todo input is focused on load
++    Given the app has no todos
++    Then the new todo input is focused
+diff --git a/features/clear-completed.feature b/features/clear-completed.feature
+new file mode 100644
+index 0000000..38489ac
+--- /dev/null
++++ b/features/clear-completed.feature
+@@ -0,0 +1,18 @@
++Feature: Clearing completed todos
++  As a todo app user
++  I want to remove finished items in one action
++  So that the list stays focused on what remains
++
++  Scenario: Clicking clear completed removes completed todos
++    Given the app has the todo "Buy milk"
++    And the app has the completed todo "Write tests"
++    When the user clicks clear completed
++    Then the todo list shows only the todo "Buy milk"
++
++  Scenario: The clear completed button is hidden when nothing is completed
++    Given the app has the todo "Buy milk"
++    Then the clear completed button is not visible
++
++  Scenario: The clear completed button is visible when a todo is completed
++    Given the app has the completed todo "Buy milk"
++    Then the clear completed button is visible
+diff --git a/features/complete.feature b/features/complete.feature
+new file mode 100644
+index 0000000..bb5e963
+--- /dev/null
++++ b/features/complete.feature
+@@ -0,0 +1,46 @@
++Feature: Completing and toggling todos
++  As a todo app user
++  I want to mark todos complete individually or all at once
++  So that I can track what is done
++
++  Scenario: Checking a todo marks it completed
++    Given the app has the todo "Buy milk"
++    When the user checks the todo "Buy milk"
++    Then the todo "Buy milk" is marked completed
++
++  Scenario: Unchecking a todo marks it active
++    Given the app has the completed todo "Buy milk"
++    When the user unchecks the todo "Buy milk"
++    Then the todo "Buy milk" is not marked completed
++
++  Scenario: Toggling all marks every todo complete
++    Given the app has the todo "Buy milk"
++    And the app has the todo "Write tests"
++    When the user checks the mark all as complete checkbox
++    Then every todo is marked completed
++
++  Scenario: Toggling all again marks every todo active
++    Given the app has the completed todo "Buy milk"
++    And the app has the completed todo "Write tests"
++    When the user unchecks the mark all as complete checkbox
++    Then every todo is not marked completed
++
++  Scenario: The mark-all checkbox becomes checked when all todos are complete
++    Given the app has the todo "Buy milk"
++    And the app has the todo "Write tests"
++    When the user checks the todo "Buy milk"
++    And the user checks the todo "Write tests"
++    Then the mark all as complete checkbox is checked
++
++  Scenario: The mark-all checkbox becomes unchecked when a todo is unchecked
++    Given the app has the completed todo "Buy milk"
++    And the app has the completed todo "Write tests"
++    When the user unchecks the todo "Buy milk"
++    Then the mark all as complete checkbox is unchecked
++
++  Scenario: Clearing completed todos resets the mark-all checkbox
++    Given the app has the todo "Buy milk"
++    And the app has the todo "Write tests"
++    When the user checks the mark all as complete checkbox
++    And the user clicks clear completed
++    Then the mark all as complete checkbox is unchecked
+diff --git a/features/counter.feature b/features/counter.feature
+new file mode 100644
+index 0000000..8b4a8cf
+--- /dev/null
++++ b/features/counter.feature
+@@ -0,0 +1,18 @@
++Feature: Active todo counter
++  As a todo app user
++  I want to see how many items remain
++  So that I can gauge my remaining work
++
++  Scenario: The active count is wrapped in a strong element
++    Given the app has the todo "Buy milk"
++    Then the counter's strong element contains "1"
++
++  Scenario Outline: The counter pluralizes the active count
++    Given the app has <active> active todos
++    Then the counter shows "<active> <plural> left"
++
++    Examples:
++      | active | plural |
++      | 1      | item   |
++      | 2      | items  |
++      | 5      | items  |
+diff --git a/features/display.feature b/features/display.feature
+new file mode 100644
+index 0000000..2eef388
+--- /dev/null
++++ b/features/display.feature
+@@ -0,0 +1,9 @@
++Feature: Todo display and visibility
++  As a todo app user
++  I want the interface to reflect whether I have todos
++  So that I only see controls when they are useful
++
++  Scenario: Empty list hides the main and footer sections
++    Given the app has no todos
++    Then the main section is not visible
++    And the footer section is not visible
+diff --git a/features/edit.feature b/features/edit.feature
+new file mode 100644
+index 0000000..619fe0d
+--- /dev/null
++++ b/features/edit.feature
+@@ -0,0 +1,40 @@
++Feature: Editing todos
++  As a todo app user
++  I want to rename a todo in place
++  So that I can correct mistakes without removing the item
++
++  Scenario: Double-clicking a label activates editing mode
++    Given the app has the todo "Buy milk"
++    When the user double-clicks the label of the todo "Buy milk"
++    Then the todo "Buy milk" is in editing mode
++
++  Scenario: Saving an edit on Enter updates the title
++    Given the app has the todo "Buy milk"
++    And the todo "Buy milk" is in editing mode
++    When the user changes the edit input to "Buy oat milk" and presses Enter
++    Then the todo list shows the todo "Buy oat milk"
++
++  Scenario: Saving an edit on blur updates the title
++    Given the app has the todo "Buy milk"
++    And the todo "Buy milk" is in editing mode
++    When the user changes the edit input to "Buy oat milk" and blurs the input
++    Then the todo list shows the todo "Buy oat milk"
++
++  Scenario: Leading and trailing whitespace is trimmed when saving an edit
++    Given the app has the todo "Buy milk"
++    And the todo "Buy milk" is in editing mode
++    When the user changes the edit input to "  Buy oat milk  " and presses Enter
++    Then the todo list shows the todo "Buy oat milk"
++
++  Scenario: An empty edit destroys the todo
++    Given the app has the todo "Buy milk"
++    And the todo "Buy milk" is in editing mode
++    When the user changes the edit input to "   " and presses Enter
++    Then the todo list is empty
++
++  Scenario: Pressing Escape discards the edit
++    Given the app has the todo "Buy milk"
++    And the todo "Buy milk" is in editing mode
++    When the user changes the edit input to "Buy oat milk" and presses Escape
++    Then the todo list shows the todo "Buy milk"
++    And the todo "Buy milk" is not in editing mode
+diff --git a/features/persistence.feature b/features/persistence.feature
+new file mode 100644
+index 0000000..0eb929c
+--- /dev/null
++++ b/features/persistence.feature
+@@ -0,0 +1,37 @@
++Feature: Persistence to localStorage
++  As a todo app user
++  I want my todos to survive a page reload
++  So that my list is not lost when I close the tab
++
++  Scenario: Todos are persisted to localStorage on creation
++    Given the app has no todos
++    When the user types "Buy milk" into the new todo input and presses Enter
++    Then localStorage holds a todo record for "Buy milk"
++
++  Scenario: Todos are reloaded from localStorage on page load
++    Given localStorage holds the todo "Buy milk"
++    When the app is reloaded
++    Then the todo list shows the todo "Buy milk"
++
++  Scenario: A completed todo keeps its completed state across reload
++    Given localStorage holds the completed todo "Buy milk"
++    When the app is reloaded
++    Then the todo "Buy milk" is marked completed
++
++  Scenario: Editing mode is not persisted across reload
++    Given localStorage holds the todo "Buy milk"
++    When the app is reloaded
++    And the todo "Buy milk" is in editing mode
++    And the app is reloaded
++    Then the todo "Buy milk" is not in editing mode
++
++  Scenario: Todos persist under the todos-vanilla key
++    Given the app has no todos
++    When the user types "Buy milk" into the new todo input and presses Enter
++    Then localStorage has the key "todos-vanilla"
++
++  @contract
++  Scenario: Persisted todo records use the id, title and completed keys
++    Given localStorage holds the todo "Buy milk"
++    Then the persisted record for "Buy milk" has the keys "id", "title" and "completed"
++    And the persisted record for "Buy milk" has "completed" equal to false
+diff --git a/features/routing.feature b/features/routing.feature
+new file mode 100644
+index 0000000..4b0ea4d
+--- /dev/null
++++ b/features/routing.feature
+@@ -0,0 +1,48 @@
++Feature: Routing and filtering
++  As a todo app user
++  I want to filter the list by status
++  So that I can focus on active or completed items
++
++  Scenario: The default route shows all todos
++    Given the app has the completed todo "Buy milk"
++    And the app has the active todo "Write tests"
++    Then the todo list shows the todos "Buy milk" and "Write tests"
++
++  Scenario: The active route shows only active todos
++    Given the app has the completed todo "Buy milk"
++    And the app has the active todo "Write tests"
++    When the user navigates to "#/active"
++    Then the todo list shows only the todo "Write tests"
++
++  Scenario: The completed route shows only completed todos
++    Given the app has the completed todo "Buy milk"
++    And the app has the active todo "Write tests"
++    When the user navigates to "#/completed"
++    Then the todo list shows only the todo "Buy milk"
++
++  Scenario: The hash-bang route shows all todos
++    Given the app has the completed todo "Buy milk"
++    And the app has the active todo "Write tests"
++    When the user navigates to "#!/"
++    Then the todo list shows the todos "Buy milk" and "Write tests"
++
++  Scenario: The selected filter link reflects the active route
++    Given the app has the todo "Buy milk"
++    And the app has the todo "Write tests"
++    When the user navigates to "#/active"
++    Then the "Active" filter link is selected
++
++  Scenario: Toggling a todo while filtered updates the visible list
++    Given the app has the completed todo "Buy milk"
++    And the app has the active todo "Write tests"
++    When the user navigates to "#/active"
++    And the user checks the todo "Write tests"
++    Then the todo list is empty
++
++  Scenario: The active filter persists across reload
++    Given localStorage holds the completed todo "Buy milk"
++    And localStorage holds the active todo "Write tests"
++    When the user navigates to "#/completed"
++    And the app is reloaded
++    Then the "Completed" filter link is selected
++    And the todo list shows only the todo "Buy milk"
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..cc667dd
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,58 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/display.feature:Empty list hides the main and footer sections",
++      "features/add-todo.feature:Creating a new todo appends it to the list",
++      "features/add-todo.feature:Whitespace-only input creates no todo",
++      "features/add-todo.feature:Leading and trailing whitespace is trimmed from a new todo",
++      "features/add-todo.feature:The new todo input is focused on load"
++    ]
++  },
++  "watch2": {
++    "scenarios": [
++      "features/complete.feature:Checking a todo marks it completed",
++      "features/complete.feature:Unchecking a todo marks it active",
++      "features/complete.feature:Toggling all marks every todo complete",
++      "features/complete.feature:Toggling all again marks every todo active",
++      "features/complete.feature:The mark-all checkbox becomes checked when all todos are complete",
++      "features/complete.feature:The mark-all checkbox becomes unchecked when a todo is unchecked",
++      "features/complete.feature:Clearing completed todos resets the mark-all checkbox",
++      "features/counter.feature:The active count is wrapped in a strong element",
++      "features/counter.feature:The counter pluralizes the active count",
++      "features/clear-completed.feature:Clicking clear completed removes completed todos",
++      "features/clear-completed.feature:The clear completed button is hidden when nothing is completed",
++      "features/clear-completed.feature:The clear completed button is visible when a todo is completed"
++    ]
++  },
++  "watch3": {
++    "scenarios": [
++      "features/edit.feature:Double-clicking a label activates editing mode",
++      "features/edit.feature:Saving an edit on Enter updates the title",
++      "features/edit.feature:Saving an edit on blur updates the title",
++      "features/edit.feature:Leading and trailing whitespace is trimmed when saving an edit",
++      "features/edit.feature:An empty edit destroys the todo",
++      "features/edit.feature:Pressing Escape discards the edit"
++    ]
++  },
++  "watch4": {
++    "scenarios": [
++      "features/persistence.feature:Todos are persisted to localStorage on creation",
++      "features/persistence.feature:Todos are reloaded from localStorage on page load",
++      "features/persistence.feature:A completed todo keeps its completed state across reload",
++      "features/persistence.feature:Editing mode is not persisted across reload",
++      "features/persistence.feature:Todos persist under the todos-vanilla key",
++      "features/persistence.feature:Persisted todo records use the id, title and completed keys"
++    ]
++  },
++  "watch5": {
++    "scenarios": [
++      "features/routing.feature:The default route shows all todos",
++      "features/routing.feature:The active route shows only active todos",
++      "features/routing.feature:The completed route shows only completed todos",
++      "features/routing.feature:The hash-bang route shows all todos",
++      "features/routing.feature:The selected filter link reflects the active route",
++      "features/routing.feature:Toggling a todo while filtered updates the visible list",
++      "features/routing.feature:The active filter persists across reload"
++    ]
++  }
++}

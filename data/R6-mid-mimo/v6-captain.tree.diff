@@ -1,0 +1,111 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..e24c0f2
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,20 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
++
++## Current cycle: DOM identity defect
++
++The external Cypress acceptance suite reports five failures (tests 1-5). All trace to one root cause: `render()` in `js/app.js` does `todoList.innerHTML = ''` and recreates every `<li>` from scratch on every state change. This destroys all DOM node references.
++
++**Affected acceptance-suite tests:**
++- "Mark all as completed" (tests 1, 2): clicking toggle-all or individual checkboxes triggers a full list rebuild; Cypress holds a stale `<li>` reference.
++- "Item" mark/unmark (tests 3, 4): same root cause on individual toggle.
++- "Routing - back button" (test 5): hashchange triggers `render()`, which rebuilds the list; the selector `.todo-list li:visible` finds nothing because nodes were destroyed and recreated.
++
++**Fix direction for Crew:** Mutate existing `<li>` nodes in place. When toggling a todo, find the existing `<li>` by `data-id`, toggle its `completed` class and checkbox `checked` attribute. When the filter changes, show/hide existing `<li>` elements rather than rebuilding. The `render()` function should reconcile existing nodes, not destroy and recreate them.
++
++**Specs planted:** `features/dom-identity.feature` (2 `@conformance` scenarios) and `features/hashchange-routing.feature` (1 `@conformance` scenario). These will fail on the current code because the step definitions for node-identity checks do not exist yet and, once authored, will expose the DOM replacement.
++
++**Watchbill:** `watchbill.json` orders QM to target these three scenarios.
+diff --git a/features/dom-identity.feature b/features/dom-identity.feature
+new file mode 100644
+index 0000000..1849b44
+--- /dev/null
++++ b/features/dom-identity.feature
+@@ -0,0 +1,27 @@
++Feature: DOM identity preservation
++  As a user interacting with my todo list
++  I want the app to update existing elements in place
++  So that the browser retains element identity across state changes
++
++  Background:
++    Given the app is loaded
++
++  @conformance
++  Scenario: Toggling a todo preserves the list-item DOM nodes
++    Given the following todos exist:
++      | title        | completed |
++      | Buy milk     | false     |
++      | Walk the dog | false     |
++    Then each todo list-item node has a stable identity
++    When the user toggles the checkbox for todo "Buy milk"
++    Then each original todo list-item node is still in the DOM
++
++  @conformance
++  Scenario: Toggle-all preserves all list-item DOM nodes
++    Given the following todos exist:
++      | title        | completed |
++      | Buy milk     | false     |
++      | Walk the dog | false     |
++    Then each todo list-item node has a stable identity
++    When the user clicks the toggle-all checkbox
++    Then each original todo list-item node is still in the DOM
+diff --git a/features/hashchange-routing.feature b/features/hashchange-routing.feature
+new file mode 100644
+index 0000000..d1270d1
+--- /dev/null
++++ b/features/hashchange-routing.feature
+@@ -0,0 +1,25 @@
++Feature: Hashchange-driven rendering
++  As a user navigating with browser controls
++  I want the todo list to update when the URL hash changes
++  So that the back and forward buttons work correctly
++
++  Background:
++    Given the app is loaded
++
++  Scenario: Filtering by active shows only active todos
++    Given the following todos exist:
++      | title        | completed |
++      | Buy milk     | true      |
++      | Walk the dog | false     |
++    When the user navigates to "#/active"
++    Then only the todo "Walk the dog" is visible
++
++  @conformance
++  Scenario: Hashchange preserves list-item DOM nodes while re-rendering the filter
++    Given the following todos exist:
++      | title        | completed |
++      | Buy milk     | true      |
++      | Walk the dog | false     |
++    Then each todo list-item node has a stable identity
++    When the user navigates to "#/active"
++    Then each original todo list-item node is still in the DOM
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..70d0f3f
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,15 @@
++[
++  {
++    "watch": "dom-identity",
++    "targets": [
++      "features/dom-identity.feature:Toggling a todo preserves the list-item DOM nodes",
++      "features/dom-identity.feature:Toggle-all preserves all list-item DOM nodes"
++    ]
++  },
++  {
++    "watch": "hashchange-routing",
++    "targets": [
++      "features/hashchange-routing.feature:Hashchange preserves list-item DOM nodes while re-rendering the filter"
++    ]
++  }
++]

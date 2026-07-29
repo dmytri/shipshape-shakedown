@@ -1,0 +1,68 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 0e58980..90d6950 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -32,8 +32,10 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ 
+ **Root cause:** `render()` in `js/app.js` has no `todoList.contains(node)` guard before `removeChild` in its stale-removal loop (line ~114). The `querySelectorAll` snapshot is stale by the time the loop reaches the node, because a re-entrant `render()` call already removed it.
+ 
+-**Specs written:** `features/editing-conformance.feature` — new `@conformance` scenario `render checks containment before removing a stale list item`.
++**Specs written:** `features/editing-conformance.feature` — `@conformance` scenario `render checks containment before removing a stale list item`.
+ 
+-**Watchbill:** `watchbill.json` targeting the new conformance scenario.
++**Watchbill:** `watchbill.json` targeting the conformance scenario.
+ 
+-**Next:** QM dispatch to implement the undefined step definition for the new conformance check and verify it goes red on current code, then Crew to add the `contains` guard in `render()`.
++**Verification:** The conformance scenario correctly fails on current code, confirming the defect exists. The step definition was updated to reject `usedIds[id]` as a valid guard, since it checks the todo data model rather than DOM attachment status.
++
++**Next:** QM dispatch to verify the conformance scenario fails (confirmed), then Crew to add `todoList.contains(node)` guard inside the stale-removal loop in `render()`.
+diff --git a/features/step_definitions/todomvc.steps.js b/features/step_definitions/todomvc.steps.js
+index b28776c..a62df49 100644
+--- a/features/step_definitions/todomvc.steps.js
++++ b/features/step_definitions/todomvc.steps.js
+@@ -356,15 +356,20 @@ Then(/^the js\/app\.js render function contains a contains-guard before removeCh
+   if (!fnMatch) throw new Error('Could not locate render function in js/app.js');
+   const body = fnMatch[1];
+   // The guard must check element membership or relevance before calling removeChild.
+-  // Acceptable guards: todoList.contains(el), el.isConnected, or a usedIds map lookup.
++  // Acceptable guards: todoList.contains(el), el.isConnected, or el.parentNode.
++  // Note: usedIds[id] is NOT a valid guard because it checks the todo data model,
++  // not whether the DOM element is still attached. A re-entrant render() call can
++  // remove an element before the current render() reaches it in the stale-removal loop.
+   const hasContainsGuard = /todoList\.contains/.test(body) ||
+                            /\.isConnected/.test(body) ||
+-                           /usedIds\[/.test(body);
++                           /\.parentNode/.test(body);
+   const hasRemoveChild = /removeChild/.test(body);
+   if (!hasContainsGuard) {
+     throw new Error(
+       'render does not contain a contains-guard before removeChild. ' +
+-      'Expected a check such as todoList.contains(el) or usedIds[id] before calling removeChild.'
++      'Expected a check such as todoList.contains(el), el.isConnected, or el.parentNode ' +
++      'before calling removeChild. Note: usedIds[id] is not a valid guard because it ' +
++      'checks the todo data model, not DOM attachment status.'
+     );
+   }
+   if (!hasRemoveChild) {
+@@ -373,7 +378,7 @@ Then(/^the js\/app\.js render function contains a contains-guard before removeCh
+     );
+   }
+   // Verify the guard appears before removeChild in the source.
+-  const guardIdx = body.search(/todoList\.contains|\.isConnected|usedIds\[/);
++  const guardIdx = body.search(/todoList\.contains|\.isConnected|\.parentNode/);
+   const removeIdx = body.indexOf('removeChild');
+   if (guardIdx >= removeIdx) {
+     throw new Error(
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..a141c8d
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,7 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/editing-conformance.feature:render checks containment before removing a stale list item"
++    ]
++  }
++}

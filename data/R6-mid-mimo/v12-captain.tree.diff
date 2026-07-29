@@ -1,0 +1,122 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index c7a0619..515f420 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -4,27 +4,41 @@
+ 
+ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
+ 
+-## Cycle 5 — Root cause identified: editingId not cleared on destroy
++## Cycle 6 — Root cause refined: parentNode guard must compare to todoList
+ 
+ **Acceptance test:** `should remove the item if an empty text string was entered`
+ **Spec:** `features/browser-acceptance-defects.feature:44` (new `@contract` scenario)
+-**Root cause refined:** The `parentNode` guard in the orphan-removal loop (added in Cycle 3) prevents the crash in isolation, but `destroyTodo()` does NOT clear `editingId`. When both `blur` and `keydown(Enter)` fire during real-browser editing-to-empty, the sequence is:
+-1. `blur` → `finishEditing()` → `destroyTodo()` → `render()` → orphan removed
+-2. `keydown(Enter)` → `finishEditing()` → `destroyTodo()` → `render()` → orphan re-attached (because `editingId` still matches) then removed again
+ 
+-The re-attachment during the second `render()` is the defect. The `parentNode` guard catches it in the simple case, but the re-entrant blur timing in a real browser creates the `removeChild` error.
++**Root cause (refined from Cycle 5):** The existing orphan-removal guard at line 152 checks `existingLis[j].parentNode` for truthiness — it verifies the node is attached to *some* parent — but does not verify the parent is specifically `todoList`. In a real browser, the sequence is:
+ 
+-**Fix指引:** Add `editingId = null;` in `destroyTodo()` when the destroyed todo is the one being edited.
++1. `keydown(Enter)` → `finishEditing('')` → `destroyTodo()` → `render()`
++2. During `render()`, the orphan-removal loop calls `removeChild(li)`, which detaches the input from the DOM.
++3. The input losing focus fires `blur` synchronously.
++4. `blur` → `finishEditing()` → `destroyTodo()` → `render()` (re-entrant)
++5. Second `render()` finds no remaining todos; orphan already detached — no crash here.
++6. But the re-entrant `render()` can re-attach a node during its loop, changing the node's `parentNode`.
++7. The original loop's next `removeChild` call now targets a node whose parent is no longer `todoList` → `NotFoundError`.
++
++**Fix指引:** Change line 152 from:
++```js
++if (!keptIds[orphanId] && existingLis[j].parentNode)
++```
++to:
++```js
++if (!keptIds[orphanId] && existingLis[j].parentNode === todoList)
++```
++
++This ensures orphan removal only attempts detachment from the correct container, rejecting nodes that were re-attached elsewhere by a re-entrant event handler.
+ 
+ ### Previous defects (resolved)
+ 
+ - DOM-identity (toggle/destroy) — resolved by in-place DOM mutation in render()
+-- parentNode guard — added but insufficient alone; the editingId-clear fix is the true fix
++- editingId cleared in destroyTodo — present in code, covered by `@contract`
+ 
+ ### Defect BROWSER-2: Filter click handler blocks hash update (back button)
+ 
+ **Acceptance test:** `should respect the back button`
+-**Spec:** `features/browser-acceptance-defects.feature:66`
++**Spec:** `features/browser-acceptance-defects.feature:70`
+ **Root cause:** The filter link click handler calls `e.preventDefault()`, which stops the default anchor behaviour (updating `window.location.hash`). The handler calls `setFilter()` directly, which updates the filter state but does NOT update the hash. So clicking filter links does not push history entries. When the user presses the browser back button, `history.back()` has nothing to go back to — the hash stays the same, `hashchange` never fires, and the filter does not change.
+ **Fix指引:**
+ 1. Remove `e.preventDefault()` from the filter click handler and let the default anchor behaviour update the hash (the existing `hashchange` listener will call `handleHashChange()` → `setFilter()`)
+diff --git a/features/browser-acceptance-defects.feature b/features/browser-acceptance-defects.feature
+index 04a0541..80bc1fb 100644
+--- a/features/browser-acceptance-defects.feature
++++ b/features/browser-acceptance-defects.feature
+@@ -40,6 +40,11 @@ Feature: Browser acceptance defects
+     Given the app source is loaded
+     Then the render function contains a parentNode guard in the orphan-removal loop
+ 
++  @contract
++  Scenario: Render orphan-removal guard rejects nodes whose parent is not the todo list
++    Given the app source is loaded
++    Then the orphan-removal guard in render checks parentNode equals todoList
++
+   @contract
+   Scenario: Destroying a todo clears editing state to prevent re-attachment during re-entrant render
+     Given the app source is loaded
+diff --git a/features/support/steps.js b/features/support/steps.js
+index 76bb5a5..a23e811 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -461,6 +461,22 @@ Then('the destroyTodo function clears the editingId variable', function () {
+   expect(clearsEditingId, 'destroyTodo must clear editingId to prevent re-attachment of orphaned nodes during re-entrant render (blur during removeChild)').to.be.true;
+ });
+ 
++Then('the orphan-removal guard in render checks parentNode equals todoList', function () {
++  // The orphan-removal loop must reject nodes whose parent has changed — not merely
++  // check parentNode is truthy.  In a real browser, re-entrant blur during removeChild
++  // can re-attach the orphan to a different parent; a truthy-only guard passes, and
++  // removeChild then throws NotFoundError because the parent is no longer todoList.
++  // The guard must compare parentNode to todoList (the .todo-list container).
++  const source = this._appSource;
++  const startIdx = source.indexOf('existingLis[j]');
++  if (startIdx === -1) throw new Error('orphan-removal loop over existingLis not found');
++  // Grab 400 chars around the guard — enough to capture the if-condition
++  const loopSection = source.substring(Math.max(0, startIdx - 100), startIdx + 400);
++  // Must contain an if-condition that references BOTH parentNode and todoList
++  const hasTodoListComparison = /parentNode\s*===\s*todoList|todoList\s*===\s*parentNode/.test(loopSection);
++  expect(hasTodoListComparison, 'The orphan-removal guard must compare parentNode to todoList (e.g. existingLis[j].parentNode === todoList), not merely check parentNode is truthy. A truthy-only guard fails when re-entrant blur re-attaches the orphan to a different parent.').to.be.true;
++});
++
+ Then('the render function contains a parentNode guard in the orphan-removal loop', function () {
+   // The orphan-removal loop in render() must guard against detached nodes.
+   // In a real browser, re-entrant blur during removeChild causes the node
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..6b31f9d
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,19 @@
++[
++  {
++    "watch": "editing-defect",
++    "targets": [
++      "features/browser-acceptance-defects.feature:44",
++      "features/browser-acceptance-defects.feature:25",
++      "features/browser-acceptance-defects.feature:32"
++    ]
++  },
++  {
++    "watch": "routing-defect",
++    "targets": [
++      "features/browser-acceptance-defects.feature:67",
++      "features/browser-acceptance-defects.feature:72",
++      "features/browser-acceptance-defects.feature:81",
++      "features/browser-acceptance-defects.feature:91"
++    ]
++  }
++]

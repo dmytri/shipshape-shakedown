@@ -1,0 +1,25 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 241b4a4..bb2f3b7 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -13,3 +13,7 @@ The previous `dom-identity` defect (render rebuilt every `<li>`, fixed in commit
+ happy-dom is lenient and does not throw on `removeChild` of a non-child, so the in-harness suite cannot reproduce the crash. The fix is product intent, not a hint: the reconcile (or the edit-commit) must not remove, or attempt to remove, a node that is no longer a child of the list. `features/edit-empty-commit.feature` pins this as a `@conformance` source check, because the in-harness DOM cannot reproduce the crash. QM authors the checker that reddens on the current code; Crew fixes the product from that spec.
+ 
+ This defect is browser-only and must not be forced into a failing in-harness product scenario. The `@conformance` source check is the sanctioned guard.
++
++## Standing state (this leg)
++
++The prior voyage struck `watchbill.json` as voyage-complete, leaving the `@conformance` pin inert. Re-established `watchbill.json` -> `edit-empty-commit-reconcile` targeting `features/edit-empty-commit.feature:An empty-edit commit does not remove a detached list element`. The source check (`features/support/reconcile_safety.js`) reddens on the unguarded `todoList.removeChild(li)` and greens on the fixed code; verified by a planted-red probe before re-watchbilling. QM re-runs the watch to confirm the acceptance build carries the guard.
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..d22cbc9
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,7 @@
++{
++  "edit-empty-commit-reconcile": {
++    "scenarios": [
++      "features/edit-empty-commit.feature:An empty-edit commit does not remove a detached list element"
++    ]
++  }
++}

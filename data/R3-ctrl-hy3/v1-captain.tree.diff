@@ -1,0 +1,255 @@
+diff --git a/features/todo-completion.feature b/features/todo-completion.feature
+new file mode 100644
+index 0000000..58acccb
+--- /dev/null
++++ b/features/todo-completion.feature
+@@ -0,0 +1,42 @@
++Feature: Todo completion and removal
++  As a user of the todo app
++  I want to mark todos done and clear them
++  So that I can manage what remains
++
++  Scenario: Checking a todo marks it completed
++    Given the app is loaded with the todo "Buy milk"
++    When the user checks the todo "Buy milk"
++    Then the todo "Buy milk" has the completed state
++    And the todo "Buy milk" has the "completed" class
++
++  Scenario: Toggling a single todo updates the mark-all checkbox
++    Given the app is loaded with the todos "Buy milk" and "Walk dog"
++    When the user checks the todo "Buy milk"
++    Then the mark-all checkbox is unchecked
++
++  Scenario: Marking the last todo done checks the mark-all checkbox
++    Given the app is loaded with the todos "Buy milk" and "Walk dog"
++    When the user checks the todo "Buy milk"
++    And the user checks the todo "Walk dog"
++    Then the mark-all checkbox is checked
++
++  Scenario: The mark-all checkbox toggles every todo
++    Given the app is loaded with the todos "Buy milk" and "Walk dog"
++    When the user checks the mark-all checkbox
++    Then the todo "Buy milk" has the completed state
++    And the todo "Walk dog" has the completed state
++
++  Scenario: Clearing completed todos removes them
++    Given the app is loaded with the todos "Buy milk" and "Walk dog"
++    And the todo "Buy milk" is completed
++    When the user clears completed todos
++    Then the todo list shows 1 todo titled "Walk dog"
++
++  Scenario: Clear-completed button hides when no completed todos exist
++    Given the app is loaded with the todo "Buy milk"
++    Then the clear-completed button is hidden
++
++  Scenario: Clear-completed button shows when completed todos exist
++    Given the app is loaded with the todo "Buy milk"
++    And the todo "Buy milk" is completed
++    Then the clear-completed button is visible
+diff --git a/features/todo-creation.feature b/features/todo-creation.feature
+new file mode 100644
+index 0000000..cee7886
+--- /dev/null
++++ b/features/todo-creation.feature
+@@ -0,0 +1,36 @@
++Feature: Todo creation and list display
++  As a user of the todo app
++  I want to add and view todos
++  So that I can track my tasks
++
++  Scenario: New todo input is focused on page load
++    Given the app is loaded
++    Then the new-todo input is focused
++
++  Scenario: Entering a title creates a new todo and clears the input
++    Given the app is loaded with no todos
++    When the user enters "Buy milk" into the new-todo input
++    Then the todo list shows 1 todo titled "Buy milk"
++    And the new-todo input is empty
++
++  Scenario: A blank title creates no todo
++    Given the app is loaded with no todos
++    When the user enters "   " into the new-todo input
++    Then the todo list shows 0 todos
++
++  Scenario: No todos hides the main and footer sections
++    Given the app is loaded with no todos
++    Then the main section is hidden
++    And the footer section is hidden
++
++  Scenario: Counter shows no items left with an empty list
++    Given the app is loaded with no todos
++    Then the counter shows "0 items left"
++
++  Scenario: Counter shows one item left with a single active todo
++    Given the app is loaded with the todo "Buy milk"
++    Then the counter shows "1 item left"
++
++  Scenario: Counter shows the plural count for several active todos
++    Given the app is loaded with the todos "Buy milk" and "Walk dog"
++    Then the counter shows "2 items left"
+diff --git a/features/todo-editing.feature b/features/todo-editing.feature
+new file mode 100644
+index 0000000..246de67
+--- /dev/null
++++ b/features/todo-editing.feature
+@@ -0,0 +1,35 @@
++Feature: Todo editing
++  As a user of the todo app
++  I want to rename a todo in place
++  So that I can correct a task without recreating it
++
++  Scenario: Double-clicking a label enters editing mode
++    Given the app is loaded with the todo "Buy milk"
++    When the user double-clicks the label of the todo "Buy milk"
++    Then the todo "Buy milk" is in editing mode
++
++  Scenario: Saving an edit on Enter updates the title
++    Given the app is loaded with the todo "Buy milk"
++    And the todo "Buy milk" is in editing mode
++    When the user edits the todo to "Buy almond milk" and presses Enter
++    Then the todo list shows 1 todo titled "Buy almond milk"
++    And the todo "Buy almond milk" is not in editing mode
++
++  Scenario: Saving an edit on blur updates the title
++    Given the app is loaded with the todo "Buy milk"
++    And the todo "Buy milk" is in editing mode
++    When the user edits the todo to "Buy almond milk" and blurs the field
++    Then the todo list shows 1 todo titled "Buy almond milk"
++
++  Scenario: Editing to an empty title destroys the todo
++    Given the app is loaded with the todo "Buy milk"
++    And the todo "Buy milk" is in editing mode
++    When the user edits the todo to "   " and presses Enter
++    Then the todo list shows 0 todos
++
++  Scenario: Escape on an edit discards the change
++    Given the app is loaded with the todo "Buy milk"
++    And the todo "Buy milk" is in editing mode
++    When the user edits the todo to "Buy almond milk" and presses Escape
++    Then the todo list shows 1 todo titled "Buy milk"
++    And the todo "Buy milk" is not in editing mode
+diff --git a/features/todo-persistence.feature b/features/todo-persistence.feature
+new file mode 100644
+index 0000000..a15b9e1
+--- /dev/null
++++ b/features/todo-persistence.feature
+@@ -0,0 +1,19 @@
++Feature: Todo persistence
++  As a user of the todo app
++  I want my todos to survive a reload
++  So that my list is not lost
++
++  Scenario: Todos persist to localStorage under the todos-vanilla key
++    Given the app is loaded with no todos
++    When the user enters "Buy milk" into the new-todo input
++    Then localStorage holds a "todos-vanilla" entry containing "Buy milk"
++
++  Scenario: Reloading restores persisted todos
++    Given the app is loaded with the todo "Buy milk" already stored in localStorage
++    Then the todo list shows 1 todo titled "Buy milk"
++
++  Scenario: Editing mode is not persisted
++    Given the app is loaded with the todo "Buy milk"
++    And the todo "Buy milk" is in editing mode
++    When the user reloads the app
++    Then the todo "Buy milk" is not in editing mode
+diff --git a/features/todo-routing.feature b/features/todo-routing.feature
+new file mode 100644
+index 0000000..a319ad9
+--- /dev/null
++++ b/features/todo-routing.feature
+@@ -0,0 +1,37 @@
++Feature: Todo routing and filtering
++  As a user of the todo app
++  I want to filter my todos by status
++  So that I can focus on active or completed work
++
++  Scenario: Active route shows only incomplete todos
++    Given the app is loaded with the todos "Buy milk" and "Walk dog"
++    And the todo "Buy milk" is completed
++    When the user navigates to the "active" route
++    Then the visible todo list shows 1 todo titled "Walk dog"
++
++  Scenario: Completed route shows only completed todos
++    Given the app is loaded with the todos "Buy milk" and "Walk dog"
++    And the todo "Buy milk" is completed
++    When the user navigates to the "completed" route
++    Then the visible todo list shows 1 todo titled "Buy milk"
++
++  Scenario: Changing the route marks the selected filter link
++    Given the app is loaded with no todos
++    When the user navigates to the "active" route
++    Then the "active" filter link is selected
++
++  Scenario: The all route is the default selection
++    Given the app is loaded with no todos
++    Then the "all" filter link is selected
++
++  Scenario: Active filter persists across a reload
++    Given the app is loaded with no todos
++    When the user navigates to the "active" route
++    And the user reloads the app
++    Then the "active" filter link is selected
++
++  Scenario: Checking an item in the active filter hides it
++    Given the app is loaded with the todos "Buy milk" and "Walk dog"
++    And the user navigates to the "active" route
++    When the user checks the todo "Buy milk"
++    Then the visible todo list shows 1 todo titled "Walk dog"
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..8b15d49
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,50 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/todo-creation.feature:New todo input is focused on page load",
++      "features/todo-creation.feature:Entering a title creates a new todo and clears the input",
++      "features/todo-creation.feature:A blank title creates no todo",
++      "features/todo-creation.feature:No todos hides the main and footer sections",
++      "features/todo-creation.feature:Counter shows no items left with an empty list",
++      "features/todo-creation.feature:Counter shows one item left with a single active todo",
++      "features/todo-creation.feature:Counter shows the plural count for several active todos"
++    ]
++  },
++  "watch2": {
++    "scenarios": [
++      "features/todo-completion.feature:Checking a todo marks it completed",
++      "features/todo-completion.feature:Toggling a single todo updates the mark-all checkbox",
++      "features/todo-completion.feature:Marking the last todo done checks the mark-all checkbox",
++      "features/todo-completion.feature:The mark-all checkbox toggles every todo",
++      "features/todo-completion.feature:Clearing completed todos removes them",
++      "features/todo-completion.feature:Clear-completed button hides when no completed todos exist",
++      "features/todo-completion.feature:Clear-completed button shows when completed todos exist"
++    ]
++  },
++  "watch3": {
++    "scenarios": [
++      "features/todo-editing.feature:Double-clicking a label enters editing mode",
++      "features/todo-editing.feature:Saving an edit on Enter updates the title",
++      "features/todo-editing.feature:Saving an edit on blur updates the title",
++      "features/todo-editing.feature:Editing to an empty title destroys the todo",
++      "features/todo-editing.feature:Escape on an edit discards the change"
++    ]
++  },
++  "watch4": {
++    "scenarios": [
++      "features/todo-persistence.feature:Todos persist to localStorage under the todos-vanilla key",
++      "features/todo-persistence.feature:Reloading restores persisted todos",
++      "features/todo-persistence.feature:Editing mode is not persisted"
++    ]
++  },
++  "watch5": {
++    "scenarios": [
++      "features/todo-routing.feature:Active route shows only incomplete todos",
++      "features/todo-routing.feature:Completed route shows only completed todos",
++      "features/todo-routing.feature:Changing the route marks the selected filter link",
++      "features/todo-routing.feature:The all route is the default selection",
++      "features/todo-routing.feature:Active filter persists across a reload",
++      "features/todo-routing.feature:Checking an item in the active filter hides it"
++    ]
++  }
++}

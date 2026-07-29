@@ -1,0 +1,538 @@
+diff --git a/.shipshape/plank-join-report.json b/.shipshape/plank-join-report.json
+new file mode 100644
+index 0000000..1c68763
+--- /dev/null
++++ b/.shipshape/plank-join-report.json
+@@ -0,0 +1,13 @@
++{
++  "implPaths": [
++    "index.html",
++    "js",
++    "css"
++  ],
++  "stepPatternsCount": 0,
++  "planksCount": 0,
++  "planksProvisionalCount": 0,
++  "captainScenariosCount": 18,
++  "faults": [],
++  "exitCode": 0
++}
+\ No newline at end of file
+diff --git a/.shipshape/plank-join.mjs b/.shipshape/plank-join.mjs
+new file mode 100644
+index 0000000..c984eec
+--- /dev/null
++++ b/.shipshape/plank-join.mjs
+@@ -0,0 +1,249 @@
++#!/usr/bin/env node
++
++// plank-join.mjs — Shipshape plank-join checker.
++//
++// Reads implementation directories (RIGGING.md ## Directories: implementation)
++// for @planks and @planks-provisional annotations. Reads step definitions from
++// step-definition files under the verification directory for their pattern
++// strings. Reports each seam with its plank and the join result.
++//
++// Exit 0 if: every @planks string matches a current step definition pattern,
++// every @planks-provisional names a scenario that carries @captain,
++// and every behaviour-bearing step pattern is planked.
++//
++// Exit 1 otherwise, with a list of faults.
++
++import fs from 'node:fs';
++import path from 'node:path';
++import { globSync } from 'node:fs';
++
++const ROOT = path.resolve(
++  import.meta.dirname || path.dirname(new URL(import.meta.url).pathname),
++  '..'
++);
++
++// Read RIGGING.md directory values
++function readRiggingValue(section, key) {
++  const rigPath = path.join(ROOT, 'RIGGING.md');
++  if (!fs.existsSync(rigPath)) return [];
++  const text = fs.readFileSync(rigPath, 'utf8');
++  const lines = text.split('\n');
++  let inSection = false;
++  const values = [];
++  for (const line of lines) {
++    if (line.startsWith('## ') && inSection) break;
++    if (line === `## ${section}`) { inSection = true; continue; }
++    if (inSection && line.trim().startsWith(`- ${key}:`)) {
++      const v = line.replace(`- ${key}:`, '').trim();
++      values.push(v);
++    }
++  }
++  return values;
++}
++
++const implPaths = readRiggingValue('Directories', 'implementation');
++const specPath = readRiggingValue('Directories', 'specs')[0] || 'features';
++const verifPath = readRiggingValue('Directories', 'verification')[0] || 'features/support';
++
++// --- Collect step definition patterns ---
++// Scan .js files under verification for /(Given|When|Then)\(\s*['"`]([^'"`]+)['"`]/g
++const stepPatterns = new Map(); // pattern -> { file, keyword }
++const verifDir = path.join(ROOT, verifPath);
++if (fs.existsSync(verifDir)) {
++  const files = fs.readdirSync(verifDir).filter(f => f.endsWith('.js'));
++  for (const f of files) {
++    const src = fs.readFileSync(path.join(verifDir, f), 'utf8');
++    const regex = /(Given|When|Then)\s*\(\s*['"`]([^'"`]+)['"`]/g;
++    let m;
++    while ((m = regex.exec(src)) !== null) {
++      const pattern = m[2];
++      if (!stepPatterns.has(pattern)) {
++        stepPatterns.set(pattern, { file: f, keyword: m[1] });
++        // Also normalize for And/But — the step definition keyword maps to the pattern
++      }
++    }
++  }
++}
++
++// --- Collect @captain scenarios ---
++const captainScenarios = new Set();
++const specDir = path.join(ROOT, specPath);
++if (fs.existsSync(specDir)) {
++  const featureFiles = [];
++  function walkDir(dir) {
++    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
++      const full = path.join(dir, entry.name);
++      if (entry.isDirectory()) walkDir(full);
++      else if (entry.name.endsWith('.feature')) featureFiles.push(full);
++    }
++  }
++  walkDir(specDir);
++  for (const ff of featureFiles) {
++    const src = fs.readFileSync(ff, 'utf8');
++    const tagLines = src.split('\n');
++    let currentTags = [];
++    for (const line of tagLines) {
++      const trimmed = line.trim();
++      if (trimmed.startsWith('@')) {
++        // Collect tags on the line above a Scenario
++        if (trimmed.startsWith('@')) currentTags = trimmed.split(/\s+/).map(t => t.trim());
++      } else if (trimmed.startsWith('Scenario')) {
++        const scName = trimmed.replace(/^Scenario(?:\s*Outline)?:\s*/, '').trim();
++        const hasCaptain = currentTags.includes('@captain');
++        const relFile = path.relative(ROOT, ff);
++        const ref = `${relFile}:${scName}`;
++        if (hasCaptain) captainScenarios.add(ref);
++        currentTags = [];
++      } else if (!trimmed.startsWith('@') && trimmed.length > 0) {
++        currentTags = [];
++      }
++    }
++  }
++}
++
++// --- Scan implementation files for @planks and @planks-provisional ---
++// We look for /** */ docblock comments containing @planks or @planks-provisional
++// Also scan for bare @planks outside docblocks (fallback token search)
++
++const planks = []; // { file, line, annotation, value, isProvisional }
++const planksProvisional = [];
++
++function scanFile(filePath) {
++  const src = fs.readFileSync(filePath, 'utf8');
++  const lines = src.split('\n');
++
++  // Collect docblock comments
++  let inDocblock = false;
++  let docblockContent = '';
++  let docblockStart = 0;
++
++  for (let i = 0; i < lines.length; i++) {
++    const line = lines[i];
++    if (line.trimStart().startsWith('/**')) {
++      inDocblock = true;
++      docblockContent = line;
++      docblockStart = i;
++    } else if (inDocblock) {
++      docblockContent += '\n' + line;
++      if (line.trim().endsWith('*/')) {
++        // Process docblock
++        const planksMatch = docblockContent.match(/@planks\s*\(\s*["'`]([^"'`]+)["'`]\s*\)/g);
++        if (planksMatch) {
++          for (const pm of planksMatch) {
++            const value = pm.match(/\(s*["'`]([^"'`]+)["'`]\s*\)/)[1];
++            planks.push({ file: filePath, line: docblockStart, annotation: pm, value, isProvisional: false });
++          }
++        }
++        const provMatch = docblockContent.match(/@planks-provisional\s*\(\s*["'`]([^"'`]+)["'`]\s*\)/g);
++        if (provMatch) {
++          for (const pm of provMatch) {
++            const value = pm.match(/\(s*["'`]([^"'`]+)["'`]\s*\)/)[1];
++            planksProvisional.push({ file: filePath, line: docblockStart, annotation: pm, value });
++          }
++        }
++        inDocblock = false;
++        docblockContent = '';
++      }
++    }
++  }
++}
++
++// Walk implementation paths
++for (const impl of implPaths) {
++  // Handle glob patterns
++  if (impl.includes('*')) {
++    // Simple glob: just match pattern literally against filesystem
++    const parts = impl.split('/');
++    let base = ROOT;
++    for (const part of parts) {
++      if (part === '*') {
++        // Match any single directory
++        // Not doing full glob — just skip
++        break;
++      } else {
++        base = path.join(base, part);
++      }
++    }
++    if (fs.existsSync(base) && fs.statSync(base).isDirectory()) {
++      const entries = fs.readdirSync(base);
++      for (const entry of entries) {
++        if (entry.startsWith('.')) continue;
++        const full = path.join(base, entry);
++        if (fs.statSync(full).isDirectory()) {
++          const files = fs.readdirSync(full).filter(f => f.endsWith('.js') || f.endsWith('.html') || f.endsWith('.css'));
++          for (const f of files) scanFile(path.join(full, f));
++        } else if (full.endsWith('.js') || full.endsWith('.html') || full.endsWith('.css')) {
++          scanFile(full);
++        }
++      }
++    }
++    continue;
++  }
++
++  const fullPath = path.join(ROOT, impl);
++  if (!fs.existsSync(fullPath)) continue;
++  if (fs.statSync(fullPath).isDirectory()) {
++    const files = fs.readdirSync(fullPath).filter(f => f.endsWith('.js') || f.endsWith('.html') || f.endsWith('.css'));
++    for (const f of files) scanFile(path.join(fullPath, f));
++  } else if (fullPath.endsWith('.js') || fullPath.endsWith('.html') || fullPath.endsWith('.css')) {
++    scanFile(fullPath);
++  }
++}
++
++// --- Report ---
++let exitCode = 0;
++const faults = [];
++
++// Check @planks against step patterns
++for (const p of planks) {
++  if (!stepPatterns.has(p.value)) {
++    faults.push(`UNMATCHED_PLANK: ${p.value} in ${path.relative(ROOT, p.file)}:${p.line} matches no step definition pattern`);
++    exitCode = 1;
++  }
++}
++
++// Check @planks-provisional against @captain scenarios
++for (const p of planksProvisional) {
++  if (!captainScenarios.has(p.value)) {
++    faults.push(`STALE_PROVISIONAL: ${p.value} in ${path.relative(ROOT, p.file)}:${p.line} names a scenario with no @captain tag`);
++    exitCode = 1;
++  }
++}
++
++// Check every step pattern is planked
++for (const [pattern, info] of stepPatterns) {
++  const planked = planks.some(p => p.value === pattern);
++  if (!planked) {
++    faults.push(`UNPLANKED_STEP: "${pattern}" in ${info.file} (${info.key}) has no @planks annotation on any implementation seam`);
++    exitCode = 1;
++  }
++}
++
++// --- Summary ---
++const summary = {
++  implPaths,
++  stepPatternsCount: stepPatterns.size,
++  planksCount: planks.length,
++  planksProvisionalCount: planksProvisional.length,
++  captainScenariosCount: captainScenarios.size,
++  faults,
++  exitCode,
++};
++
++fs.writeFileSync(
++  path.join(ROOT, '.shipshape', 'plank-join-report.json'),
++  JSON.stringify(summary, null, 2)
++);
++
++// Print for verification
++for (const fault of faults) {
++  console.error(fault);
++}
++
++if (exitCode === 0) {
++  console.log(`plank-join OK: ${planks.length} @planks, ${planksProvisional.length} @planks-provisional, ${stepPatterns.size} step patterns, ${captainScenarios.size} @captain scenarios`);
++} else {
++  console.error(`plank-join FAILED: ${faults.length} fault(s)`);
++}
++
++process.exit(exitCode);
+\ No newline at end of file
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..f712296
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,34 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
++
++## Voyage 1 — TodoMVC app
++
++**Intent**: Build a TodoMVC app from `assets/app-spec.md` using `assets/app-template.index.html` as base markup. Vanilla JS, no preprocessors, localStorage persistence.
++
++**Assets**: `assets/app-spec.md` is the authoritative spec. `assets/app-template.index.html` is the base template.
++
++**Specs written**: `features/todos.feature` — 25 scenarios covering all functional areas:
++- Empty state display
++- Creating todos (with trim, empty validation)
++- Completing/reactivating
++- Mark all as complete
++- Editing (enter, blur, escape, empty destroy)
++- Deleting
++- Todo count/pluralization
++- Routing (#/, #/active, #/completed)
++- Persistence
++- localStorage format
++
++**Production code needed** (not yet written):
++- `index.html` — from template, clean up comments and sample items
++- `css/app.css` — optional style overrides
++- `js/app.js` — vanilla JS app with localStorage persistence and hash routing
++
++**Watchbill**: `watchbill.json` lists all 25 scenarios in a single watch group.
++
++**Next**: QM reads the feature specs and verifies against the production code once built. Dispatch QM after `index.html`, `js/app.js`, and `css/app.css` are written.
++
++**Open questions**: None.
+\ No newline at end of file
+diff --git a/features/todos.feature b/features/todos.feature
+new file mode 100644
+index 0000000..1b5d5c0
+--- /dev/null
++++ b/features/todos.feature
+@@ -0,0 +1,171 @@
++Feature: TodoMVC app
++  As a user
++  I want to manage a todo list
++  So that I can keep track of tasks I need to do
++
++  Background:
++    Given the app is loaded
++
++  # ─── Display state ───────────────────────────────────────────────────────
++
++  Scenario: No todos shows empty state
++    Given the todo list is empty
++    Then "#main" should be hidden
++    And "#footer" should be hidden
++
++  # ─── Creating todos ──────────────────────────────────────────────────────
++
++  Scenario: Create a new todo
++    When I type "Buy milk" into the new-todo input
++    And I press Enter
++    Then I should see 1 todo in the list
++    And the new-todo input should be cleared
++
++  Scenario: Empty input is ignored
++    When I type "   " into the new-todo input
++    And I press Enter
++    Then the todo list should still be empty
++
++  Scenario: Trims whitespace from input
++    When I type "  Buy eggs  " into the new-todo input
++    And I press Enter
++    Then I should see a todo with title "Buy eggs"
++
++  # ─── Completing todos ────────────────────────────────────────────────────
++
++  Scenario: Complete a todo
++    Given I have a todo titled "Buy milk"
++    When I click the toggle checkbox for "Buy milk"
++    Then the "Buy milk" todo should have class "completed"
++    And the "Buy milk" todo should have its "completed" property set
++
++  Scenario: Reactivate a completed todo
++    Given I have a completed todo titled "Buy milk"
++    When I click the toggle checkbox for "Buy milk"
++    Then the "Buy milk" todo should not have class "completed"
++
++  # ─── Mark all as complete ────────────────────────────────────────────────
++
++  Scenario: Mark all as complete toggles all todos
++    Given I have todos: "Buy milk", "Buy eggs", "Pay bills"
++    When I click the "toggle-all" checkbox
++    Then all todos should be marked completed
++
++  Scenario: Toggle-all updates when individual todos are checked
++    Given I have todos: "Buy milk", "Buy eggs", "Pay bills"
++    When I complete all todos individually
++    Then the "toggle-all" checkbox should be checked
++
++  Scenario: Clear completed button hides after clearing
++    Given I have a completed todo titled "Buy milk"
++    And I have an active todo titled "Buy eggs"
++    When I click "Clear completed"
++    Then there should be 1 todo in the list
++    And the "Clear completed" button should be hidden
++
++  # ─── Editing todos ───────────────────────────────────────────────────────
++
++  Scenario: Double-click enters editing mode
++    Given I have a todo titled "Buy milk"
++    When I double-click the label for "Buy milk"
++    Then the "Buy milk" todo item should have class "editing"
++    And the edit input for "Buy milk" should be focused
++
++  Scenario: Save edit on Enter
++    Given I am editing the todo "Buy milk"
++    When I change the edit input value to "Buy oat milk"
++    And I press Enter in the edit input
++    Then I should see a todo with title "Buy oat milk"
++    And the "Buy milk" todo item should not have class "editing"
++
++  Scenario: Save edit on blur
++    Given I am editing the todo "Buy milk"
++    When I change the edit input value to "Buy oat milk"
++    And the edit input loses focus
++    Then I should see a todo with title "Buy oat milk"
++
++  Scenario: Cancel edit with Escape
++    Given I am editing the todo "Buy milk"
++    When I change the edit input value to "Buy oat milk"
++    And I press Escape in the edit input
++    Then I should see a todo with title "Buy milk"
++    And the "Buy milk" todo item should not have class "editing"
++
++  Scenario: Empty edit destroys the todo
++    Given I am editing the todo "Buy milk"
++    When I change the edit input value to ""
++    And I press Enter in the edit input
++    Then the todo list should be empty
++
++  # ─── Destroying todos ────────────────────────────────────────────────────
++
++  Scenario: Delete a todo with destroy button
++    Given I have a todo titled "Buy milk"
++    When I click the destroy button for "Buy milk"
++    Then the todo list should be empty
++
++  # ─── Todo count ──────────────────────────────────────────────────────────
++
++  Scenario: Todo count shows active items
++    Given I have a completed todo titled "Buy milk"
++    And I have an active todo titled "Buy eggs"
++    Then the todo-count should show "1 item left"
++
++  Scenario: Todo count is pluralized
++    Given I have todos: "Buy milk", "Buy eggs"
++    Then the todo-count should show "2 items left"
++
++  # ─── Routing ─────────────────────────────────────────────────────────────
++
++  Scenario: All route shows all todos
++    Given I have a completed todo titled "Buy milk"
++    And I have an active todo titled "Buy eggs"
++    When I navigate to "#/"
++    Then I should see 2 todos in the list
++
++  Scenario: Active route shows only active todos
++    Given I have a completed todo titled "Buy milk"
++    And I have an active todo titled "Buy eggs"
++    When I navigate to "#/active"
++    Then I should see 1 todo in the list
++    And the filter link for "Active" should have class "selected"
++
++  Scenario: Completed route shows only completed todos
++    Given I have a completed todo titled "Buy milk"
++    And I have an active todo titled "Buy eggs"
++    When I navigate to "#/completed"
++    Then I should see 1 todo in the list
++    And the filter link for "Completed" should have class "selected"
++
++  Scenario: Item hidden when filter changes after update
++    Given I have an active todo titled "Buy eggs"
++    And I navigate to "#/active"
++    When I complete the todo "Buy eggs"
++    Then I should see 0 todos in the list
++
++  # ─── Persistence ─────────────────────────────────────────────────────────
++
++  Scenario: Todos persist across page reloads
++    Given I have a todo titled "Buy milk"
++    When I reload the app
++    Then I should see a todo with title "Buy milk"
++
++  Scenario: Completed state persists
++    Given I have a completed todo titled "Buy milk"
++    When I reload the app
++    Then the "Buy milk" todo should have class "completed"
++
++  Scenario: Editing mode is not persisted
++    Given I am editing the todo "Buy milk"
++    When I reload the app
++    Then the "Buy milk" todo item should not have class "editing"
++
++  # ─── localStorage format ─────────────────────────────────────────────────
++
++  Scenario: Uses correct storage key format
++    Given I have a todo titled "Buy milk"
++    Then localStorage should contain a key matching "todos-"
++
++  Scenario: Todo items have required fields in localStorage
++    Given I have a todo titled "Buy milk"
++    Then localStorage todo data should include fields "id", "title", "completed"
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..37d3ba4
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,36 @@
++{
++  "watches": [
++    {
++      "id": "voyage-1",
++      "name": "TodoMVC core behaviour",
++      "scenarios": [
++        "features/todos.feature:No todos shows empty state",
++        "features/todos.feature:Create a new todo",
++        "features/todos.feature:Empty input is ignored",
++        "features/todos.feature:Trims whitespace from input",
++        "features/todos.feature:Complete a todo",
++        "features/todos.feature:Reactivate a completed todo",
++        "features/todos.feature:Mark all as complete toggles all todos",
++        "features/todos.feature:Toggle-all updates when individual todos are checked",
++        "features/todos.feature:Clear completed button hides after clearing",
++        "features/todos.feature:Double-click enters editing mode",
++        "features/todos.feature:Save edit on Enter",
++        "features/todos.feature:Save edit on blur",
++        "features/todos.feature:Cancel edit with Escape",
++        "features/todos.feature:Empty edit destroys the todo",
++        "features/todos.feature:Delete a todo with destroy button",
++        "features/todos.feature:Todo count shows active items",
++        "features/todos.feature:Todo count is pluralized",
++        "features/todos.feature:All route shows all todos",
++        "features/todos.feature:Active route shows only active todos",
++        "features/todos.feature:Completed route shows only completed todos",
++        "features/todos.feature:Item hidden when filter changes after update",
++        "features/todos.feature:Todos persist across page reloads",
++        "features/todos.feature:Completed state persists",
++        "features/todos.feature:Editing mode is not persisted",
++        "features/todos.feature:Uses correct storage key format",
++        "features/todos.feature:Todo items have required fields in localStorage"
++      ]
++    }
++  ]
++}
+\ No newline at end of file

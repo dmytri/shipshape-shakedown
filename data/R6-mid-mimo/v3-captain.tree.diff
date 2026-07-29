@@ -1,0 +1,84 @@
+diff --git a/features/dom-stability.feature b/features/dom-stability.feature
+new file mode 100644
+index 0000000..38ff759
+--- /dev/null
++++ b/features/dom-stability.feature
+@@ -0,0 +1,38 @@
++Feature: DOM stability
++  As a user
++  I want the todo list to preserve DOM elements across state changes
++  So that browser-held element references remain valid during interactions
++
++  Background:
++    Given the app is loaded
++
++  Rule: Element identity preservation
++
++    Scenario: Toggling a todo checkbox preserves DOM element references
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | false     |
++        | Walk the dog | false     |
++        | Clean house  | false     |
++      And the DOM element reference for todo "Walk the dog" is captured
++      When the user toggles the checkbox for todo "Buy milk"
++      Then the captured DOM element reference is still attached to the DOM
++
++    Scenario: Toggling all todos preserves DOM element references
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | false     |
++        | Walk the dog | false     |
++      And the DOM element reference for todo "Walk the dog" is captured
++      When the user clicks the toggle-all checkbox
++      Then the captured DOM element reference is still attached to the DOM
++
++    Scenario: Destroying a todo preserves DOM element references
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | false     |
++        | Walk the dog | false     |
++        | Clean house  | false     |
++      And the DOM element reference for todo "Walk the dog" is captured
++      When the user destroys the todo "Buy milk"
++      Then the captured DOM element reference is still attached to the DOM
+diff --git a/features/support/steps.js b/features/support/steps.js
+index c60bd32..faa8588 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -328,3 +328,20 @@ Then('the second item in localStorage {string} has id {int}', function (key, id)
+   const arr = JSON.parse(stored);
+   expect(arr[1].id).to.equal(id);
+ });
++
++Given('the DOM element reference for todo {string} is captured', function (title) {
++  const labels = this.document.querySelectorAll('.todo-list label');
++  for (const label of labels) {
++    if (label.textContent === title) {
++      this.capturedElement = label.closest('li');
++      break;
++    }
++  }
++});
++
++Then('the captured DOM element reference is still attached to the DOM', function () {
++  const el = this.capturedElement;
++  expect(el).to.not.be.null;
++  expect(el.parentNode).to.not.be.null;
++  expect(this.document.body.contains(el)).to.be.true;
++});
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..4535301
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,9 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/dom-stability.feature:Toggling a todo checkbox preserves DOM element references",
++      "features/dom-stability.feature:Toggling all todos preserves DOM element references",
++      "features/dom-stability.feature:Destroying a todo preserves DOM element references"
++    ]
++  }
++}

@@ -1,0 +1,235 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index fe38096..a13cd5c 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -16,7 +16,34 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ - Storage key: `todos-vanillajs` per spec convention (`todos-[framework]`).
+ - Tier: happy-dom (default). The spec requires DOM rendering; happy-dom is the cheapest tier that observes it.
+ - Scantling for localStorage shape at `scantlings/todo-storage.json`.
++- Scantling for DOM element identity at `scantlings/dom-identity.json`.
++
++## Defects found
++
++**Real-browser DOM-identity defects.** Acceptance suite (Cypress, real browser) reports 10 failures. All trace to one root cause: `render()` in `js/app.js` does `todoList.innerHTML = ''` on every state change, destroying and recreating all `<li>` elements.
++
++1. **Toggle-all / toggle-item (failures 1-4):** `render()` rebuilds the todo list, invalidating element references the browser held — Cypress reports "element detached from DOM".
++2. **Editing visibility (failures 5-10):** The `dblclick` handler calls `render()` then does `li.querySelector('.edit')` on the old, detached `<li>`. The detached element's `.edit` input has `display: none` (no `.editing` class on the detached subtree), so Cypress cannot interact with it. The `focus()` call on a `display:none` element does nothing in a real browser.
++
++**In-harness suite passes** because steps bypass the real event handling (editing is triggered via localStorage writes, not actual `dblclick`). This is expected for a browser-only defect.
++
++## Spec changes this cycle
++
++- Added 5 @browser scenarios to `features/todo-management.feature` (DOM element identity for toggle, toggle-all, editing visibility, edit-mode focus).
++- Added 1 @conformance scenario to `features/todo-management.feature` referencing `scantlings/dom-identity.json` — can pass in happy-dom via source-level pattern check.
++- Created `scantlings/dom-identity.json` defining forbidden patterns (innerHTML replacement) and required patterns (classList.toggle, in-document focus).
++- Created `watchbill.json` with all scenario references grouped by watch.
++
++## Fix required
++
++The fix is production-code only (Captain does not implement):
++- **Replace `todoList.innerHTML = ''` pattern** with in-place mutation: toggle `className` / `classList` on existing `<li>` elements instead of destroying and recreating them.
++- **After `render()` in the dblclick handler**, query the NEW `<li>` for the `.edit` input and focus it, not the old detached reference.
++- Alternative: skip `render()` entirely for completion-toggling (just toggle the class and checkbox in place) and for editing (just toggle the `.editing` class and show/hide the edit input).
+ 
+ ## Next
+ 
+-Dispatch QM with `watchbill.json` targets when production code exists.
+\ No newline at end of file
++Dispatch QM with `watchbill.json` targets to verify:
++- All 40 existing scenarios still pass in happy-dom.
++- The @conformance scenario fails on current code (innerHTML pattern found).
++- The @browser scenarios are acknowledged as requiring a real-browser tier.
+\ No newline at end of file
+diff --git a/features/todo-management.feature b/features/todo-management.feature
+index 6b8c127..4f57cca 100644
+--- a/features/todo-management.feature
++++ b/features/todo-management.feature
+@@ -57,6 +57,14 @@ Feature: Todo management
+     Then the todo does not have class "completed"
+     And the toggle checkbox is not checked
+ 
++  @browser
++  Scenario: The todo element is the same DOM node when its completion state changes
++    Given the todo list has 1 item with title "Buy milk"
++    When I capture the todo element reference
++    And I click the toggle checkbox on the todo
++    Then the captured todo element is still attached to the DOM
++    And the captured todo element has class "completed"
++
+   Rule: Toggle all
+ 
+   Scenario: Toggle all todos to completed
+@@ -74,6 +82,13 @@ Feature: Todo management
+     When I complete the first 2 todos
+     Then the "toggle-all" checkbox is checked
+ 
++  @browser
++  Scenario: Toggle-all does not replace todo DOM elements
++    Given the todo list has items "Buy milk", "Buy eggs", "Buy bread"
++    When I capture all todo element references
++    And I click the "toggle-all" checkbox
++    Then all captured todo elements are still attached to the DOM
++
+   Rule: Editing todos
+ 
+   Scenario: Double-click a todo label to enter edit mode
+@@ -121,6 +136,26 @@ Feature: Todo management
+     Then the todo does not have class "editing"
+     And the todo list shows 1 item with title "Buy milk"
+ 
++  @browser
++  Scenario: The edit input is visible when editing starts
++    Given the todo list has 1 item with title "Buy milk"
++    When I double-click the todo label
++    Then the edit input is visible
++
++  @browser
++  Scenario: The label is not visible during editing
++    Given the todo list has 1 item with title "Buy milk"
++    When I double-click the todo label
++    Then the todo label is not visible
++
++  @browser
++  Scenario: The todo element is the same DOM node when entering and cancelling edit mode
++    Given the todo list has 1 item with title "Buy milk"
++    When I capture the todo element reference
++    And I double-click the todo label
++    And I press Escape in the edit input
++    Then the captured todo element is still attached to the DOM
++
+   Rule: Destroying todos
+ 
+   Scenario: Delete a todo by clicking the destroy button
+@@ -166,4 +201,11 @@ Feature: Todo management
+     Given the todo list has 2 items with titles "Buy milk", "Buy eggs"
+     And the first todo is completed
+     When I inspect localStorage
+-    Then the stored data conforms to the "Todo Storage Shape" schema in "scantlings/todo-storage.json"
+\ No newline at end of file
++    Then the stored data conforms to the "Todo Storage Shape" schema in "scantlings/todo-storage.json"
++
++  @conformance
++  Scenario: The render() function preserves DOM element identity
++    Given the app source at "js/app.js"
++    When the conformance verifier checks the "DOM Element Identity Preservation" contract in "scantlings/dom-identity.json"
++    Then no forbidden patterns are found
++    And all required patterns are present
+\ No newline at end of file
+diff --git a/scantlings/dom-identity.json b/scantlings/dom-identity.json
+new file mode 100644
+index 0000000..360964c
+--- /dev/null
++++ b/scantlings/dom-identity.json
+@@ -0,0 +1,24 @@
++{
++  "title": "DOM Element Identity Preservation",
++  "description": "The render() function must preserve existing <li> element identity across state changes. InnerHTML replacement (todoList.innerHTML = '') destroys all child nodes, breaking browser references and visibility checks. Mutation in place — toggle classes, update text, toggle visibility — preserves element identity.",
++  "forbidden": [
++    {
++      "pattern": "todoList.innerHTML = ''",
++      "explanation": "Replacing innerHTML destroys all child nodes, invalidating element references held by the browser/Cypress"
++    },
++    {
++      "pattern": "todoList.innerHTML = \"\"",
++      "explanation": "Same as above with double-quote syntax"
++    }
++  ],
++  "required": [
++    {
++      "pattern": "li.classList.toggle",
++      "explanation": "Toggling classList on existing elements preserves DOM identity"
++    },
++    {
++      "pattern": "editInput.focus()",
++      "explanation": "Focus must target the new (recently rendered) edit input, not a detached reference; the focus() call must act on a node still in the document"
++    }
++  ]
++}
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..1aaa9fa
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,80 @@
++{
++  "watches": [
++    {
++      "name": "Todo management - existing behaviour",
++      "scenarios": [
++        "features/todo-management.feature: Add a new todo by pressing Enter",
++        "features/todo-management.feature: Trim whitespace from the todo title",
++        "features/todo-management.feature: Ignore empty input",
++        "features/todo-management.feature: Ignore whitespace-only input",
++        "features/todo-management.feature: Hide main and footer when there are no todos",
++        "features/todo-management.feature: Show main and footer when there is a todo",
++        "features/todo-management.feature: Show the new-todo input is focused on load",
++        "features/todo-management.feature: Mark a todo as completed by clicking the checkbox",
++        "features/todo-management.feature: Unmark a completed todo by clicking the checkbox again",
++        "features/todo-management.feature: Toggle all todos to completed",
++        "features/todo-management.feature: Toggle all clears when all are already completed",
++        "features/todo-management.feature: Toggle-all checkbox reflects individual completions",
++        "features/todo-management.feature: Double-click a todo label to enter edit mode",
++        "features/todo-management.feature: Save edit by pressing Enter",
++        "features/todo-management.feature: Save edit on blur",
++        "features/todo-management.feature: Destroy todo when edit is cleared to empty",
++        "features/todo-management.feature: Destroy todo when edit is whitespace-only",
++        "features/todo-management.feature: Cancel edit by pressing Escape",
++        "features/todo-management.feature: Delete a todo by clicking the destroy button",
++        "features/todo-management.feature: Clear all completed todos",
++        "features/todo-management.feature: Hide clear-completed button when no todos are completed",
++        "features/todo-management.feature: Show clear-completed button when at least one todo is completed",
++        "features/todo-management.feature: Display count of active todos (plural)",
++        "features/todo-management.feature: Display count of active todos (singular)",
++        "features/todo-management.feature: Display zero count"
++      ]
++    },
++    {
++      "name": "Todo management - DOM identity (browser-only)",
++      "scenarios": [
++        "features/todo-management.feature: The todo element is the same DOM node when its completion state changes",
++        "features/todo-management.feature: Toggle-all does not replace todo DOM elements",
++        "features/todo-management.feature: The edit input is visible when editing starts",
++        "features/todo-management.feature: The label is not visible during editing",
++        "features/todo-management.feature: The todo element is the same DOM node when entering and cancelling edit mode"
++      ]
++    },
++    {
++      "name": "Todo management - conformance",
++      "scenarios": [
++        "features/todo-management.feature: The render() function preserves DOM element identity"
++      ]
++    },
++    {
++      "name": "Todo persistence",
++      "scenarios": [
++        "features/todo-persistence.feature: Persist a new todo to localStorage",
++        "features/todo-persistence.feature: Persist a completed state to localStorage",
++        "features/todo-persistence.feature: Persist title edit to localStorage",
++        "features/todo-persistence.feature: Remove deleted todo from localStorage",
++        "features/todo-persistence.feature: Restore todos from localStorage on page load",
++        "features/todo-persistence.feature: Restore completed state from localStorage",
++        "features/todo-persistence.feature: Editing state is not persisted"
++      ]
++    },
++    {
++      "name": "Todo routing",
++      "scenarios": [
++        "features/todo-routing.feature: All todos are visible at the default route",
++        "features/todo-routing.feature: Filter to active todos",
++        "features/todo-routing.feature: Active-filtered item hides when checked",
++        "features/todo-routing.feature: Filter to completed todos",
++        "features/todo-routing.feature: Completed-filtered item hides when unchecked",
++        "features/todo-routing.feature: Clicking a filter link updates the selected class",
++        "features/todo-routing.feature: Selected filter persists on reload"
++      ]
++    },
++    {
++      "name": "Schema contracts",
++      "scenarios": [
++        "features/todo-management.feature: The localStorage shape conforms to the storage schema"
++      ]
++    }
++  ]
++}
+\ No newline at end of file

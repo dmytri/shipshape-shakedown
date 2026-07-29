@@ -1,0 +1,35 @@
+diff --git a/features/conformance/dom-identity.feature b/features/conformance/dom-identity.feature
+index 8baeae8..8c3e743 100644
+--- a/features/conformance/dom-identity.feature
++++ b/features/conformance/dom-identity.feature
+@@ -10,13 +10,13 @@ Feature: DOM identity preservation
+   The fix: replace `todoList.innerHTML = html` with a diff loop that
+   reuses existing <li> elements.
+ 
+-  @captain @conformance
++  @logic @conformance
+   Scenario: Render function does not rebuild the todo list via innerHTML
+     Given the project has a render function that writes to the todo list
+     When I check whether the render function assigns innerHTML on the todo-list container
+     Then the render function does not use innerHTML reassignment on the todo list
+ 
+-  @captain @conformance
++  @logic @conformance
+   Scenario: Render function mutates existing nodes in place for completion toggles
+     Given the project has a render function that handles completion state
+     When I check whether a completion toggle triggers a full innerHTML rebuild
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..e431168
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,8 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/conformance/dom-identity.feature:Render function does not rebuild the todo list via innerHTML",
++      "features/conformance/dom-identity.feature:Render function mutates existing nodes in place for completion toggles"
++    ]
++  }
++}
+\ No newline at end of file

@@ -1,0 +1,95 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 92587fa..226cfe9 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -7,20 +7,42 @@ These notes carry only what the next cycle needs.
+ 
+ ## State
+ 
+-Greenfield bootstrap. `assets/app-spec.md` and `assets/app-template.index.html` define the
+-product. Verification support ships: `features/support/world.js` loads the real `index.html`
+-and `js/app.js` into happy-dom, exposes `this.document` / `this.window`, and drives routing
+-via `this.navigate(hash)`. Dependencies (cucumber, happy-dom) installed.
++Greenfield bootstrap complete. Durable specs written. Watchbill targets the conformance
++scenario that pins the DOM-identity defect.
++
++## Defect — DOM element identity destroyed by re-render
++
++The acceptance suite (Cypress, real browser) reports 5 failures, root cause in all 5:
++
++- `render()` replaces `todoList.innerHTML` with `.map(...).join('')` on every state change.
++- This destroys ALL DOM nodes inside `.todo-list` and creates new ones.
++- Cypress holds references across command chains; after the replace, those references are
++  detached from the DOM and the assertion fails.
++- The in-harness suite (happy-dom) cannot reproduce this because every step re-queries the
++  DOM fresh via `this.document.querySelector(...)`.
++
++The app-spec.md already describes the correct behaviour: "toggling the class `completed` on
++its parent `<li>`" — implying mutation, not replacement. The implementation uses
++innerHTML instead.
++
++## What was written
++
++- Added `@conformance` scenario: "The render function preserves DOM element identity" to
++  `features/todo-management.feature`. This scenario checks the source for innerHTML
++  replacement on the todo list. It is currently UNDEFINED (no step definitions exist yet).
++  When QM writes the verification, it will FAIL on the current code because the render
++  function does `todoList.innerHTML = ...`.
+ 
+ ## Decisions
+ 
+-- Vanilla JavaScript, no preprocessors (per spec).
+-- Hash-based routing (no router library; happy-dom world.js dispatches hashchange).
+-- localStorage key: `todos-vanilla`.
+-- Item shape: `{ id: string, title: string, completed: boolean }`.
+-- Single-file app (`js/app.js`), no controllers/models split, per simplest-sufficient-change.
++- No product scenarios were added for element identity. The existing product scenarios
++  already cover the functional behaviour (class toggling, checked state). The DOM-identity
++  requirement is a method/quality concern, pinned by the `@conformance` scenario.
++- The fix is to rewrite `render()` to mutate existing DOM nodes (toggle classList, update
++  checkbox.checked) instead of replacing innerHTML. This preserves element identity across
++  interactions.
+ 
+ ## Next
+ 
+-Watchbill written. QM reads `features/todo-management.feature` and dispatches Crew per
+-failing target.
+\ No newline at end of file
++QM dispatches. Watchbill target: the `@conformance` scenario. QM writes the step
++definitions, proves the scenario fails, dispatches Crew.
+\ No newline at end of file
+diff --git a/features/todo-management.feature b/features/todo-management.feature
+index 3c16850..909aeb9 100644
+--- a/features/todo-management.feature
++++ b/features/todo-management.feature
+@@ -169,4 +169,10 @@ Feature: Todo Management
+     Given the user has a todo titled "Buy milk"
+     When the user starts editing the todo
+     And the app is reloaded
+-    Then the todo is not in editing mode
+\ No newline at end of file
++    Then the todo is not in editing mode
++
++  @conformance
++  Scenario: The render function preserves DOM element identity
++    Given the application source at "js/app.js"
++    When I inspect the render function for innerHTML replacement on the todo list
++    Then the render function does not replace the todo list inner HTML
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..3663efb
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,10 @@
++{
++  "watches": [
++    {
++      "label": "DOM identity conformance",
++      "targets": [
++        "features/todo-management.feature:The render function preserves DOM element identity"
++      ]
++    }
++  ]
++}
+\ No newline at end of file

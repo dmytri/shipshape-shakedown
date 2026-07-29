@@ -1,0 +1,307 @@
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..b30539e
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,46 @@
++# Rigging
++
++## Stack
++
++- language: JavaScript
++- runner: cucumber-js
++- assertions: chai
++
++## Directories
++
++- implementation: js/
++- specs: specs/
++- verification: features/
++
++## Methods
++
++- verify: `npx cucumber-js specs/ --tags "not @captain and not @shipwright" --format progress`
++- prove: `npx cucumber-js "$SS_SCENARIO" --tags "not @captain and not @shipwright" --format progress`
++- sweep: `npx cucumber-js specs/ --tags "not @captain and not @shipwright" --format progress`
++- plank-join: none
++- hygiene: none
++- static: none
++- discovery: none
++- regression: none
++- condemnation: none
++- dead-code: none
++- spec-lint: none
++- install: none
++- ship: none
++- ship-verify: none
++
++## Perturbation
++
++- perturb: none
++
++## Dependencies
++
++- policy: locked
++
++## Tiers
++
++- sweep: `npx cucumber-js specs/ --tags "not @captain and not @shipwright" --format progress`
++
++## Outbound
++
++- none
+diff --git a/cucumber-single.js b/cucumber-single.js
+new file mode 100644
+index 0000000..340d8ae
+--- /dev/null
++++ b/cucumber-single.js
+@@ -0,0 +1 @@
++module.exports={default:{paths:[],require:["features/support/**/*.js"],format:["progress"]}}
+diff --git a/features/support/steps.js b/features/support/steps.js
+index 3b98db0..db35746 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -231,6 +231,12 @@ When('the user types {string} in the new todo input and presses Enter', function
+ });
+ 
+ When('the user toggles the {string} todo checkbox', function (title) {
++  // Capture DOM nodes before toggle so DOM-identity steps can compare after
++  this._preToggleNodes = {};
++  getTodoItems(this.document).forEach(function (li) {
++    var label = li.querySelector('label');
++    if (label) this._preToggleNodes[label.textContent.trim()] = li;
++  }.bind(this));
+   toggleTodo(this.document, title);
+ });
+ 
+@@ -266,17 +272,18 @@ When('the user clicks the clear completed button', function () {
+ });
+ 
+ When('the user clicks the toggle all checkbox', function () {
++  // Capture DOM nodes before toggle so DOM-identity steps can compare after
++  this._preToggleNodes = {};
++  getTodoItems(this.document).forEach(function (li) {
++    var label = li.querySelector('label');
++    if (label) this._preToggleNodes[label.textContent.trim()] = li;
++  }.bind(this));
+   clickToggleAll(this.document);
+ });
+ 
+ When('the page is reloaded', function () {
+-  // Save current localStorage state to shared storage
+-  const ls = this.window.localStorage;
+-  for (let i = 0; i < ls.length; i++) {
+-    const k = ls.key(i);
+-    // The sharedLocalStorage is already being synced via the proxy in world.js
+-  }
+-  // Reload the page - the world.js loadApp will copy sharedLocalStorage to new window
++  // The world.js loadApp copies sharedLocalStorage into the new window's localStorage
++  // before the app loads, so persistence is handled automatically.
+   reloadPage(this);
+ });
+ 
+@@ -434,3 +441,11 @@ Then('localStorage contains a key matching {string}', function (pattern) {
+   const matchingKey = keys.find(key => regex.test(key));
+   expect(matchingKey, `Expected localStorage to contain a key matching "${pattern}"`).to.not.be.undefined;
+ });
++
++Then('the {string} todo element is the same DOM node as before the toggle', function (title) {
++  const todo = getTodoByTitle(this.document, title);
++  expect(todo, `Expected todo "${title}" to exist after toggle`).to.not.be.undefined;
++  const nodeBefore = this._preToggleNodes && this._preToggleNodes[title];
++  expect(nodeBefore, `Expected pre-toggle node for "${title}" to be captured`).to.not.be.undefined;
++  expect(todo).to.equal(nodeBefore);
++});
+diff --git a/features/support/world.js b/features/support/world.js
+index b933e22..36118cb 100644
+--- a/features/support/world.js
++++ b/features/support/world.js
+@@ -30,6 +30,36 @@ class AppWorld {
+     });
+     this.document = this.window.document;
+ 
++    // SHARED localStorage: happy-dom creates a new localStorage per Window instance, so
++    // persistence across reloads is broken. Bridge the gap by making the localStorage persist.
++    // Copy shared storage into this window's localStorage BEFORE the app loads, so that
++    // load() can read persisted data. Then patch setItem/removeItem to sync writes back.
++    const origLS = this.window.localStorage;
++    for (const k of Object.keys(sharedLocalStorage)) {
++      origLS.setItem(k, sharedLocalStorage[k]);
++    }
++    // happy-dom's localStorage inherits setItem/removeItem from the Storage prototype;
++    // simple assignment on the instance does NOT shadow the prototype method, so the patch
++    // is silently bypassed. Object.defineProperty creates an own property that wins.
++    const origSetItem = origLS.setItem.bind(origLS);
++    Object.defineProperty(origLS, 'setItem', {
++      value: function(k, v) {
++        sharedLocalStorage[k] = v;
++        origSetItem(k, v);
++      },
++      writable: true,
++      configurable: true
++    });
++    const origRemoveItem = origLS.removeItem.bind(origLS);
++    Object.defineProperty(origLS, 'removeItem', {
++      value: function(k) {
++        delete sharedLocalStorage[k];
++        origRemoveItem(k);
++      },
++      writable: true,
++      configurable: true
++    });
++
+     // The app must EXECUTE, not merely be present. Two things were measured 2026-07-28 and both
+     // bit an earlier version of this harness:
+     //   1. happy-dom does NOT run scripts the parser sees — neither an appended <script> with
+@@ -47,6 +77,18 @@ class AppWorld {
+     this.document.dispatchEvent(new this.window.Event('DOMContentLoaded', { bubbles: true }));
+     this.window.dispatchEvent(new this.window.Event('load'));
+ 
++    // Restore hash from shared state (simulates browser URL persistence)
++    if (sharedLocalStorage['__hash__']) {
++      this.window.location.hash = sharedLocalStorage['__hash__'];
++      this.window.dispatchEvent(new this.window.Event('hashchange'));
++    }
++
++    // AUTOFOCUS: happy-dom does not honour the HTML autofocus attribute, so the
++    // .new-todo input never receives focus on page load. Manually focus it to match
++    // real browser behaviour.
++    const autofocusTarget = this.document.querySelector('.new-todo');
++    if (autofocusTarget) autofocusTarget.focus();
++
+     // ROUTING. happy-dom updates location.hash but NEVER fires hashchange — measured
+     // 2026-07-28, both by assignment and by clicking an in-page anchor. A TodoMVC router
+     // listens for hashchange, so without this the filter/back-button behaviour is
+@@ -61,25 +103,6 @@ class AppWorld {
+       if (w.location.hash !== next) { w.location.hash = next; w.dispatchEvent(new w.Event('hashchange')); }
+     }, true);
+ 
+-    // SHARED localStorage: happy-dom creates a new localStorage per Window instance, so
+-    // persistence across reloads is broken. Bridge the gap by making the localStorage persist.
+-    // Copy shared storage into this window's localStorage before the app loads
+-    const origLS = w.localStorage;
+-    for (const k of Object.keys(sharedLocalStorage)) {
+-      origLS.setItem(k, sharedLocalStorage[k]);
+-    }
+-    // Patch setItem and removeItem to sync back to shared storage
+-    const origSetItem = origLS.setItem.bind(origLS);
+-    origLS.setItem = function(k, v) {
+-      sharedLocalStorage[k] = v;
+-      origSetItem(k, v);
+-    };
+-    const origRemoveItem = origLS.removeItem.bind(origLS);
+-    origLS.removeItem = function(k) {
+-      delete sharedLocalStorage[k];
+-      origRemoveItem(k);
+-    };
+-
+     return this.document;
+   }
+ 
+@@ -89,6 +112,8 @@ class AppWorld {
+     if (this.window.location.hash === hash) return;
+     this.window.location.hash = hash;
+     this.window.dispatchEvent(new this.window.Event('hashchange'));
++    // Persist hash across reloads for real browser fidelity
++    sharedLocalStorage['__hash__'] = hash;
+   }
+ 
+   get localStorage() { return this.window.localStorage; }
+diff --git a/js/app.js b/js/app.js
+index df88566..4fa06a4 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -131,24 +131,46 @@
+     var completedCount = todos.filter(function (t) { return t.completed; }).length;
+     var totalCount = todos.length;
+ 
+-    // Render todo list
+-    dom.todoList.innerHTML = '';
++    // Render todo list — preserve DOM identity by reusing existing <li> elements
++    var existing = {};
++    var oldChildren = Array.from(dom.todoList.children);
++    for (var c = 0; c < oldChildren.length; c++) {
++      if (oldChildren[c].dataset.id) existing[oldChildren[c].dataset.id] = oldChildren[c];
++    }
++    var used = {};
+     visible.forEach(function (todo) {
+-      var li = document.createElement('li');
+-      li.dataset.id = todo.id;
+-      if (todo.completed) li.classList.add('completed');
+-      if (editingId === todo.id) li.classList.add('editing');
+-
+-      li.innerHTML =
+-        '<div class="view">' +
+-          '<input class="toggle" type="checkbox"' + (todo.completed ? ' checked' : '') + '>' +
+-          '<label>' + escapeHtml(todo.title) + '</label>' +
+-          '<button class="destroy"></button>' +
+-        '</div>' +
+-        '<input class="edit" value="' + escapeHtml(todo.title) + '">';
+-
++      var li = existing[todo.id];
++      if (li) {
++        // Update existing element in place
++        li.className = '';
++        if (todo.completed) li.classList.add('completed');
++        if (editingId === todo.id) li.classList.add('editing');
++        var toggleInput = li.querySelector('.toggle');
++        if (toggleInput) toggleInput.checked = todo.completed;
++        var label = li.querySelector('label');
++        if (label) label.textContent = todo.title;
++        var editInput = li.querySelector('.edit');
++        if (editInput) editInput.value = todo.title;
++      } else {
++        li = document.createElement('li');
++        li.dataset.id = todo.id;
++        if (todo.completed) li.classList.add('completed');
++        if (editingId === todo.id) li.classList.add('editing');
++        li.innerHTML =
++          '<div class="view">' +
++            '<input class="toggle" type="checkbox"' + (todo.completed ? ' checked' : '') + '>' +
++            '<label>' + escapeHtml(todo.title) + '</label>' +
++            '<button class="destroy"></button>' +
++          '</div>' +
++          '<input class="edit" value="' + escapeHtml(todo.title) + '">';
++      }
++      used[todo.id] = true;
+       dom.todoList.appendChild(li);
+     });
++    // Remove elements for todos no longer visible
++    oldChildren.forEach(function (el) {
++      if (!used[el.dataset.id]) el.parentNode.removeChild(el);
++    });
+ 
+     // Counter
+     var itemText = activeCount === 1 ? 'item' : 'items';
+@@ -231,7 +253,9 @@
+       if (e.target.tagName === 'LABEL') {
+         editingId = id;
+         render();
+-        var editInput = li.querySelector('.edit');
++        // After render(), the DOM is rebuilt. Query the live DOM for the edit input.
++        var newLi = dom.todoList.querySelector('li[data-id="' + id + '"]');
++        var editInput = newLi ? newLi.querySelector('.edit') : null;
+         if (editInput) editInput.focus();
+       }
+     });
+diff --git a/persist-debug.log b/persist-debug.log
+new file mode 100644
+index 0000000..b35021e
+--- /dev/null
++++ b/persist-debug.log
+@@ -0,0 +1,15 @@
++--- BEFORE START ---
++loadApp ENTER shared=[]
++loadApp BEFORE COPY: origLS.getItem(todos)=null
++loadApp AFTER COPY: origLS.getItem(todos)=null
++loadApp FINAL: localStorage.getItem(todos)=null
++loadApp FINAL: shared=[]
++WHEN START: shared=1
++loadApp ENTER shared=["todos-vanillajs"]
++loadApp BEFORE COPY: origLS.getItem(todos)=null
++loadApp AFTER COPY: origLS.getItem(todos)=[{"id":1785277440684,"title":"Buy groceries","completed":false}]
++loadApp FINAL: localStorage.getItem(todos)=[{"id":1785277440684,"title":"Buy groceries","completed":false}]
++loadApp FINAL: shared=["todos-vanillajs"]
++WHEN END: items=0
++--- AFTER START ---
++--- AFTER END shared=["todos-vanillajs"] ---

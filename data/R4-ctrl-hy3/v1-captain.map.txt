@@ -1,0 +1,25 @@
+# banked: 2026-07-28T17:07:36Z
+# verdict: PENDING
+# leg: {  "name": "v1-captain",  "model": "tencent/hy3",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/R4-ctrl-hy3/sim",  "timeout_s": 3600,  "max_tokens": 32768,  "skills": [    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills/shipshape",    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills/captain",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== v1-captain.session.jsonl ===
+  turns=14  wall=185.8s  in=95702  out=22034  cache_read=377152  cost=$0.0394
+  role reads: captain@t0 -> shipshape@t4
+  roles loaded: captain, shipshape
+  ~ repeated tool signature at turns [5, 11] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    1997/188        0 $0.0004  read, read, read
+    t1    7836/780     1920 $0.0016  bash
+    t2    1259/195     9664 $0.0006  bash
+    t3    1599/303    10816 $0.0008  bash
+    t4    1788/1295   12288 $0.0014  read, bash
+    t5   26050/134        0 $0.0037  read
+    t6   34131/14732      0 $0.0133  write, write, write, write, write, write, write
+    t7   15012/1170   34048 $0.0040  write
+    t8    1000/321    48960 $0.0020  bash
+    t9    1544/420    49856 $0.0022  bash
+    t10    531/454    51328 $0.0021  bash
+    t11   1252/595    51776 $0.0023  bash
+    t12    744/705    52928 $0.0024  bash
+    t13    959/742    53568 $0.0024  -

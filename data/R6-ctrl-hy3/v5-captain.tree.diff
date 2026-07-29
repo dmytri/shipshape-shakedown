@@ -1,0 +1,95 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 5328810..fa13012 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -71,7 +71,27 @@ Two further browser-only acceptance defects, pinned as new scenarios on `watchbi
+   source level by a `@contract` page-reference pin:
+   - `features/todomvc.feature:The served page links the application stylesheet`
+   Crew fix: add the stylesheet `<link>` to `index.html` (CSS chain per build intent:
+-  `todomvc-common/base.css`, `todomvc-app-css/index.css`, then `css/app.css`).
++  `todomvc-common/base.css`, `todmvc-app-css/index.css`, then `css/app.css`).
++
++- **Empty-edit commit throws removeChild in a real browser (acceptance: Editing, should
++  remove the item if an empty text string was entered).** Committing an edit that empties the
++  text removes the item but never ends the editing session: `commitEdit` leaves the `editing`
++  class on the removed list item and calls `render()`. In a real browser, removing the focused
++  edit `<input>` during that render fires a synchronous `blur`; `handleEditBlur` re-invokes
++  `commitEdit`, whose `render()` detaches the same `<li>` before the outer `removeChild` runs,
++  so `render` at `js/app.js:134` throws `NotFoundError: ... no longer a child ... moved in a
++  'blur' event handler`. happy-dom does NOT fire `blur` on removal (verified in-harness:
++  `blur fired after removeChild: false`), and a manual blur on the already-detached node is
++  harmless, so the in-harness suite cannot reproduce it. The pin is source-level, not
++  behavioural:
++  - `features/todomvc.feature:The edit-commit path discharges its re-entrancy guard`
++    (tagged `@conformance`, references `scantlings/edit-commit.json`). The QM-owned bespoke
++    checker reads `js/app.js` and reddens while the edit session is not ended on commit.
++  Crew fix: end the editing session before the post-commit re-render, e.g. remove the
++  `editing` class from the list item in `commitEdit` (any branch that re-renders), so the
++  blur handler's `editing`-class guard makes the re-entrant call a no-op. A `render`-level
++  `parentNode` guard on `removeChild` is an acceptable alternative; either turns the check
++  green.
+ 
+ ## Next
+ 
+diff --git a/features/todomvc.feature b/features/todomvc.feature
+index 38e22f5..97d4a4d 100644
+--- a/features/todomvc.feature
++++ b/features/todomvc.feature
+@@ -141,6 +141,12 @@ Feature: TodoMVC app behaviour
+     And the user clears the edit input of "Buy a unicorn" and presses Enter
+     Then the todo "Buy a unicorn" is not present in the list
+ 
++  @conformance
++  Scenario: The edit-commit path discharges its re-entrancy guard
++    Given the application script at "js/app.js"
++    When the verifier checks the "edit-commit re-entrancy" scantling in "scantlings/edit-commit.json"
++    Then no counterexample is found
++
+   Scenario: Escape cancels an edit discarding changes
+     Given the todo "Buy a unicorn" is active
+     When the user double-clicks the label of "Buy a unicorn"
+diff --git a/scantlings/edit-commit.json b/scantlings/edit-commit.json
+new file mode 100644
+index 0000000..34a7843
+--- /dev/null
++++ b/scantlings/edit-commit.json
+@@ -0,0 +1,26 @@
++{
++  "$schema": "http://json-schema.org/draft-07/schema#",
++  "title": "edit-commit re-entrancy guard",
++  "description": "Source-level guard for the edit-commit path in the vanilla TodoMVC app. Committing an edit that empties the text must remove the item and end the editing session before the post-commit re-render, so a blur event arriving after the commit is a no-op instead of re-invoking the commit and double-removing the list item node.",
++  "seam": {
++    "file": "js/app.js",
++    "functions": ["commitEdit", "handleEditBlur"]
++  },
++  "defect": {
++    "acceptanceFailure": "TodoMVC > Editing > should remove the item if an empty text string was entered",
++    "error": "NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is no longer a child of this node. Perhaps it was moved in a 'blur' event handler?",
++    "origin": "render() at js/app.js:134 (list.removeChild) called from commitEdit() from handleEditKeydown()",
++    "mechanism": "In a real browser, removing the focused edit <input> (inside the list item) during the keydown-triggered render() fires a synchronous blur. handleEditBlur re-invokes commitEdit while the outer render() is still detaching that same list item, so a second render() removes the node before the outer removeChild runs, throwing NotFoundError. The edit session is never ended on commit, so the blur guard (which tests the 'editing' class) still passes and re-commits.",
++    "harnessMask": "happy-dom does not fire blur when a focused node is removed (verified in-harness: blur fired = false), so the in-harness suite cannot reproduce the double-removeChild. The guard therefore lives at the source level."
++  },
++  "invariant": "Committing an edit ends the editing session before the post-commit render(), so a re-entrant blur handler is a no-op rather than re-invoking the commit and double-removing the node.",
++  "acceptanceChecks": [
++    "commitEdit removes the 'editing' class from the committed list item before it calls render(), OR",
++    "handleEditBlur guards the re-invoke so it cannot fire once the edit is committed or the list item is already removed from the document"
++  ],
++  "currentState": "commitEdit leaves the 'editing' class on the removed list item and never ends the editing session; handleEditBlur re-invokes commitEdit on it. The checker reddens on the current source.",
++  "conformance": {
++    "verifier": "QM-owned bespoke checker (no independent engine discharges this structural invariant). Reads js/app.js and asserts the invariant above.",
++    "plantedRed": "Proven red by the current source: no end-of-edit-session guard is present, so the checker fails. After Crew ends the editing session on commit, the check turns green."
++  }
++}
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..6c501a0
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,7 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/todomvc.feature:The edit-commit path discharges its re-entrancy guard"
++    ]
++  }
++}

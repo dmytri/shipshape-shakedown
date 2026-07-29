@@ -1,0 +1,105 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 12da68c..cf042e6 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -6,36 +6,34 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ 
+ ## Build: TodoMVC (vanilla JS)
+ 
+-Greenfield build. The harness pre-provided `features/support/world.js` (loads the real
+-`index.html` plus `js/app.js` into a happy-dom window before every scenario) and a cucumber-js
+-`test` script in `package.json`. No `RIGGING.md` yet: fitting out the methods, tiers, and
+-perturbation token is owed from Shipshape fitting out before QM can run.
++Greenfield build, now fitted out. The executable tier loads the real `index.html` and `js/app.js`
++into happy-dom; `RIGGING.md` defines `prove`, `verify`, `sweep`, and `plank-join`. Eight feature
++files cover behaviour. `features/edit-removal-safety.feature` carries the new browser-only
++removal-safety pin.
+ 
+-## Decisions captured in the specs
++## Decisions captured
+ 
+ - Persistence key: `todos-vanilla` (spec format `todos-[framework]`; the framework token is `vanilla`).
+-- Behaviour is covered by eight feature files; the ordered scope is in `watchbill.json`.
+-
+-## Next cycle
+-
+-- Dispatch Shipwright to fit out `RIGGING.md`: derive `prove`, `verify`, `sweep`, `plank-join` from
+-  cucumber-js, the `@logic` default tier, and the perturbation token from the shared shape.
+-- Then dispatch QM over `watchbill.json`; QM routes failing targets to Crew to write `index.html`
+-  (from `assets/app-template.index.html`, comments stripped) and `js/app.js` (vanilla, no preprocessors).
+-- Step-def authors: the `the app is reloaded` step must preserve the current `location.hash` across
+-  the happy-dom window rebuild, or the routing-persistence scenario cannot hold its state.
+-
+-## Voyage: DOM identity on state change (browser-only defect)
+-
+-- Acceptance (Cypress, real browser) fails because `render()` rebuilds `.todo-list` via
+-  `innerHTML = ''`, detaching the list-item nodes a client holds before a click. happy-dom also
+-  detaches on `innerHTML = ''`, so the in-suite cucumber tier CAN reproduce it.
+-- `features/complete.feature` and `features/edit.feature` now pin element-identity preservation:
+-  five scenarios capture a list-item node, perform the state change, and assert the same node is
+-  still attached. They redden on the current `render()`-rebuild code and green only when the app
+-  mutates the existing node in place (toggle class/checkbox, update mark-all, cancel edit in place).
+-- `watchbill.json` `watch1` lists the five scenarios as the QM target set. QM must add the two new
+-  step patterns (`the list item for {string} is captured`, `the list item for {string} is the
+-  captured node`); until then they are undefined and the scenarios fail as intended.
+-- Crew fix lives in `js/app.js` seams (`toggle`, `toggleAll`, the Escape branch in `init`): mutate
+-  the live node instead of calling `render()` for these interactions. No production code written here.
++- The ordered scope is in `watchbill.json`.
++
++## Voyage: empty-edit removal crashes a real browser (browser-only defect)
++
++- Acceptance (Cypress, real browser) fails: "should remove the item if an empty text string was
++  entered" throws `NotFoundError: removeChild ... node no longer a child` from `render`'s
++  stale-list-item removal (`js/app.js:175`), reached through `removeTodo` -> `commitEdit` on the
++  edit keydown. The Cypress advice names a `blur` event handler as the mover.
++- happy-dom cannot reproduce it: a single keydown path removes an attached node cleanly, and
++  happy-dom's own `removeChild` on a detached node throws the same way a real browser does, so no
++  in-suite scenario reddens. Forcing an in-harness failure would be an impossible scenario, so the
++  behaviour is pinned by a source-level `@conformance` check instead.
++- Root cause: `render` removes stale list items with `if (stale.parentNode) stale.parentNode.removeChild(stale)`.
++  A `parentNode` truthiness test is not a connectivity test; in a real browser the edit `blur`
++  handler re-enters `commitEdit`/`render`, so a stale node already detached or moved by the first
++  render reaches a throwing `removeChild`.
++- Pin: `features/edit-removal-safety.feature` carries a `@conformance` scenario that checks the
++  source for an unguarded `removeChild` on a stale list item. It reddens on the current code and
++  greens once the removal is guarded (a connectivity check such as `parentNode.contains(node)` or
++  `node.isConnected`, or the node's own `remove()`).
++- `watchbill.json` `watch1` lists the new scenario plus `edit.feature:An empty edit destroys the todo`
++  as the QM target set for Crew's fix in `js/app.js` (`commitEdit` / `removeTodo` / `render`).
++- Crew fix lives in `js/app.js`; no production code written here.
+diff --git a/features/edit-removal-safety.feature b/features/edit-removal-safety.feature
+new file mode 100644
+index 0000000..0c764d8
+--- /dev/null
++++ b/features/edit-removal-safety.feature
+@@ -0,0 +1,16 @@
++Feature: Editing removal safety
++  As a TodoMVC maintainer
++  I want the empty-edit removal to stay safe under a real browser event model
++  So that removing an item on an empty edit does not throw NotFoundError
++
++  Rule: The empty-edit removal must not reach a throwing removeChild on a detached node
++    An empty edit commits its removal through the edit blur handler as well as the keydown
++    handler in a real browser, so render may run twice over the same change. A stale list item
++    that an earlier render already detached or moved must never reach a removeChild that throws
++    NotFoundError, so render may only remove a stale item while it is still attached to its parent.
++
++  @conformance
++  Scenario: The empty-edit removal must not issue an unguarded removeChild
++    Given the app source at "js/app.js"
++    When the verifier checks the edit-commit removal path
++    Then no removeChild is issued on a list item without a connectivity guard
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..54ad5a3
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,8 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/edit.feature:An empty edit destroys the todo",
++      "features/edit-removal-safety.feature:The empty-edit removal must not issue an unguarded removeChild"
++    ]
++  }
++}

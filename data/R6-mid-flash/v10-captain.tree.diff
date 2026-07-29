@@ -1,0 +1,202 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index fe38096..f434ef3 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -2,21 +2,40 @@
+ 
+ # Captain Notes
+ 
+-Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
+-
+ ## Standing state
+ 
+ - Greenfield build of TodoMVC (Vanilla JS, no preprocessors, localStorage persistence).
+-- Harness bootstrapped: `package.json` with `@cucumber/cucumber` + `happy-dom`, `features/support/world.js` loads real `index.html` + `js/app.js` into happy-dom per-scenario, disposes after. Routing patched to fire `hashchange` on click.
+-- Assets landed: `assets/app-spec.md` (product spec), `assets/app-template.index.html` (base markup).
+-- Durable work this cycle: spec feature files under `features/`, `watchbill.json`.
++- Harness: Cucumber + happy-dom, loads real index.html + js/app.js per-scenario.
++- 42 scenarios: 39 behaviour scenarios pass, 3 @contract scenarios (1 storage shape, 2 conformance).
++- Assets: `assets/app-spec.md` (product spec), `assets/app-template.index.html` (base markup).
++
++## Defects found via external browser acceptance suite (Cypress)
++
++### 1. DOM Detachment (affects toggle/toggle-all/completed state changes)
++
++- **Cause**: `render()` in `js/app.js` calls `todoList.innerHTML = ''` then rebuilds every `<li>` from scratch. In a real browser, any reference Cypress held to a DOM node before the interaction is invalidated after re-render.
++- **Evidence**: 4 Cypress failures on "Mark all as completed" and individual toggling — `cy.eq()/cy.find() failed because the page updated as a result of this command... element is no longer attached to the DOM`.
++- **Existing in-harness coverage**: The toggle scenarios pass because happy-dom does not track element identity across re-renders. A source-level conformance check captures this.
++- **Fix**: Mutate existing `<li>` nodes in place — toggle `.completed` class on the parent `<li>`, toggle `.toggle` checkbox `checked` property, instead of destroying and recreating elements. Applies to:
++  - Individual toggle checkbox click handler
++  - Toggle-all click handler
++  - Any other state change that currently triggers full re-render
++
++### 2. Editing Mode Broken (affects dblclick → edit input visibility)
++
++- **Cause**: The dblclick handler sets `todo.editing = true` then calls `render()`. `render()` begins with `todos = getTodos()` which reads from localStorage — but `editing` is never persisted to localStorage. So the in-memory flag is discarded, the new `<li>` never gets `.editing` class, and the edit input stays `display: none`.
++- **Evidence**: 6 Cypress failures on editing operations — `cy.clear()/cy.type() failed because element has CSS property: display: none` and `expected '<label>' not to be 'visible'`.
++- **Existing in-harness coverage**: The editing step definition in `steps.js` bypasses the real dblclick handler by writing `editing: true` directly into localStorage before dispatching hashchange. This means the test passes even though the app's actual dblclick handler is broken. A source-level conformance check captures this.
++- **Fix approach A**: Keep transient state (editing) in a separate in-memory map or pass current todos to `render()` instead of re-reading from localStorage.
++- **Fix approach B (preferred)**: Mutate the existing `<li>` in place on dblclick — add `.editing` class to the `<li>`, show the `.edit` input, hide the `.view`, without calling full `render()`.
+ 
+ ## Decisions
+ 
+-- Storage key: `todos-vanillajs` per spec convention (`todos-[framework]`).
+-- Tier: happy-dom (default). The spec requires DOM rendering; happy-dom is the cheapest tier that observes it.
+-- Scantling for localStorage shape at `scantlings/todo-storage.json`.
++- Both defects share the same root cause: `render()` is a destructive full rebuild. The proper fix is to switch to in-place DOM mutation for state changes, only calling a full render on initial load or after a wholesale change (filter switch, clear completed).
++- The spec (`assets/app-spec.md`) already describes the correct behaviour — the implementation diverges.
++- Conformance checks are @contract scenarios that read `js/app.js` source and reject the anti-patterns. They fail on current code.
++- watchbill.json created with two targets: DOM-DETACHMENT and EDITING-BROKEN.
+ 
+ ## Next
+ 
+-Dispatch QM with `watchbill.json` targets when production code exists.
+\ No newline at end of file
++Dispatch QM with watchbill targets. Implement source-level fix: mutate DOM in place, eliminate destructive re-render for toggle and edit state changes.
+\ No newline at end of file
+diff --git a/features/support/steps.js b/features/support/steps.js
+index b669a8f..c376445 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -497,6 +497,86 @@ Then('the stored data conforms to the {string} schema in {string}', function (sc
+ 
+ // ── Helpers ─────────────────────────────────────────────────────────────────
+ 
++// ── Source-level conformance checks ───────────────────────────────────────
++
++Given('the app source at {string}', function (path) {
++  this.appSourcePath = path;
++  this.appSource = fs.readFileSync(path, 'utf8');
++});
++
++When('I check for the render anti-patterns', function () {
++  // No-op: the source was captured in the Given step.
++  // Assertions run in the Then steps.
++});
++
++Then('the render function does not destroy and recreate list-item DOM nodes', function () {
++  const src = this.appSource;
++  // Detect the anti-pattern: setting innerHTML on the todo-list inside render()
++  // This destroys all existing <li> elements, causing DOM detachment.
++  const hasInnerHtmlInRender = /render\s*\(\)[\s\S]*?todoList\.innerHTML/.test(src);
++  if (hasInnerHtmlInRender) {
++    throw new Error(
++      'Conformance FAIL: render() sets todoList.innerHTML, which destroys and ' +
++      'recreates all list-item DOM nodes. This causes DOM detachment in a real browser ' +
++      'when toggling completed state, because any reference held before the render ' +
++      'cycle is invalidated. Fix: mutate existing <li> nodes in place - toggle the ' +
++      '`.completed` class on the parent <li> and update the `.toggle` checkbox ' +
++      'checked property without re-creating the elements.'
++    );
++  }
++});
++
++Then('the render function does not discard transient state by re-reading from storage', function () {
++  const src = this.appSource;
++  // Detect the anti-pattern: render() calls getTodos() from localStorage,
++  // which clears any transient in-memory state (like the editing flag).
++  const renderCallsGetTodos = /render\s*\(\)[\s\S]*?getTodos\s*\(/.test(src);
++  if (renderCallsGetTodos) {
++    throw new Error(
++      'Conformance FAIL: render() calls getTodos() which re-reads from localStorage, ' +
++      'discarding transient in-memory state such as the `editing` flag. ' +
++      'The dblclick handler sets todo.editing = true, but render() then reads from ' +
++      'localStorage where editing is never persisted, so the flag is lost and the ' +
++      '`.editing` class is never applied to the <li>. ' +
++      'Fix 1: save the editing state from the in-memory todo before getTodos() overwrites it. ' +
++      'Fix 2: pass current todos to render() instead of re-reading from storage. ' +
++      'Fix 3: mutate DOM nodes in place so render() does not need to rebuild state from storage.'
++    );
++  }
++});
++
++When('I check for the editing anti-patterns', function () {
++  // No-op: source captured in Given; assertions run in Then steps.
++});
++
++Then('the dblclick handler does not call render before persisting the editing flag', function () {
++  const src = this.appSource;
++  // Detect: in dblclick listeners, render() is called after setting todo.editing = true
++  // but before the editing state is saved/persisted.
++  const dblclickSetsThenRenders = /dblclick[\s\S]*?editing\s*=\s*true[\s\S]*?render\s*\(/.test(src);
++  if (dblclickSetsThenRenders) {
++    throw new Error(
++      'Conformance FAIL: the dblclick handler sets todo.editing = true then calls render(), ' +
++      'but render() re-reads from localStorage where the editing flag was never saved. ' +
++      'Fix: either save the editing flag to a transient in-memory store before calling render, ' +
++      'or mutate the existing <li> node in place (add .editing class) without re-rendering the list.'
++    );
++  }
++});
++
++Then('the render function does not re-read from localStorage when transient state is active', function () {
++  const src = this.appSource;
++  // Same check as the render anti-pattern, but scoped for clarity in the editing context
++  const renderCallsGetTodos = /render\s*\(\)[\s\S]*?getTodos\s*\(/.test(src);
++  if (renderCallsGetTodos) {
++    throw new Error(
++      'Conformance FAIL: render() re-reads todos from localStorage via getTodos(), ' +
++      'which discards transient in-memory state like the editing flag. ' +
++      'Fix: keep transient state in a separate in-memory store or pass it through to render().'
++    );
++  }
++});
++
+ function addTodoItem(document, window, title, completed) {
+   const li = document.createElement('li');
+   if (completed) li.classList.add('completed');
+diff --git a/features/todo-management.feature b/features/todo-management.feature
+index 6b8c127..6e1a247 100644
+--- a/features/todo-management.feature
++++ b/features/todo-management.feature
+@@ -57,6 +57,13 @@ Feature: Todo management
+     Then the todo does not have class "completed"
+     And the toggle checkbox is not checked
+ 
++  @contract
++  Scenario: The render function preserves list-item DOM identity on toggle
++    Given the app source at "js/app.js"
++    When I check for the render anti-patterns
++    Then the render function does not destroy and recreate list-item DOM nodes
++    And the render function does not discard transient state by re-reading from storage
++
+   Rule: Toggle all
+ 
+   Scenario: Toggle all todos to completed
+@@ -83,6 +90,13 @@ Feature: Todo management
+     And the edit input contains "Buy milk"
+     And the edit input has focus
+ 
++  @contract
++  Scenario: The editing state survives re-render through the real dblclick handler
++    Given the app source at "js/app.js"
++    When I check for the editing anti-patterns
++    Then the dblclick handler does not call render before persisting the editing flag
++    And the render function does not re-read from localStorage when transient state is active
++
+   Scenario: Save edit by pressing Enter
+     Given the todo list has 1 item with title "Buy milk"
+     When I double-click the todo label
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..1b4d37c
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,16 @@
++[
++  {
++    "id": "DOM-DETACHMENT",
++    "targets": [
++      "features/todo-management.feature:61"
++    ],
++    "description": "The render() function destroys and recreates all list-item DOM nodes via todoList.innerHTML = '', causing detached DOM references. Fix: mutate existing <li> nodes in place - toggle the `.completed` class on the parent <li> and update the `.toggle` checkbox checked property without re-creating the elements."
++  },
++  {
++    "id": "EDITING-BROKEN",
++    "targets": [
++      "features/todo-management.feature:94"
++    ],
++    "description": "The dblclick handler sets todo.editing = true then calls render(), but render() re-reads from localStorage (getTodos()) where the editing flag was never persisted. Fix: keep editing state in an in-memory store or pass current todos to render() instead of re-reading from localStorage. Or better: mutate the existing <li> node in place (add/remove `.editing` class) without re-rendering the list."
++  }
++]
+\ No newline at end of file

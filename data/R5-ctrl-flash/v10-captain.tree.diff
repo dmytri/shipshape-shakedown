@@ -1,0 +1,256 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 197fbd5..fa3b58d 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -16,38 +16,73 @@ External browser acceptance suite (Cypress) reports 1 remaining failure:
+    is no longer a child of this node. Perhaps it was moved in a 'blur' event handler?
+ ```
+ 
+-Stack trace: `render:156` → `removeTodo:250` → `editTodo:279` → keydown handler `:347`.
++Stack trace: `render:159` → `removeTodo:254` → `editTodo:283` → keydown handler `:351`.
+ 
+ Root cause: In a real browser, pressing Enter in an empty edit input triggers:
+ 1. keydown handler → `editTodo(id, '')` → `removeTodo(id)` → `render()`
+ 2. `render()` calls `removeChild` on the stale `<li>` containing the focused edit input
+ 3. Browser fires `blur` synchronously during `removeChild` (unfocusing steps)
+ 4. The blur handler (captured on `todoList`) re-enters → `editTodo(id, '')` → `removeTodo(id)` → `render()` again
+-5. The nested `render()` removes the same `<li>` first
+-6. Control returns to the outer loop, which tries `removeChild` on an already-detached node → NotFoundError
++5. Even WITH a parentNode guard in render's stale-removal loop, the nested call to
++   `editTodo` → `removeTodo` → `render()` may execute before the outer `removeChild`
++   completes, because browser blur event timing is implementation-dependent.
++6. The real bug is that `editTodo` does not check whether the todo still exists in the
++   model before calling `removeTodo`. The re-entrant blur call calls `removeTodo(id)`
++   on an already-removed todo, which calls `render()` again unnecessarily — and in
++   some browser implementations, the stale `<li>` is still in the DOM when blur fires,
++   so the nested render's removeChild throws NotFoundError.
+ 
+ The in-harness suite (happy-dom) does NOT reproduce this because happy-dom either doesn't fire blur during `removeChild` or handles the event loop differently.
+ 
+-### What was done
++### What was done (leg 1)
+ 
+-- Added one `@conformance` scenario to `features/conformance/dom-identity.feature`:
+-  "Stale-node removal guards against re-entrant blur during removeChild"
+-- Added step definitions in `features/support/conformance-steps.js` that detect whether
+-  the render function's stale-node removal loop guards `removeChild` with a `parentNode` check.
+-- Created `watchbill.json` enumerating all 31 scenario targets.
++- Added a `@conformance` scenario checking for a parentNode guard in render's stale-removal loop.
++- That guard is necessary but NOT sufficient — the acceptance test still fails.
++
++### What was done (this leg)
++
++- Updated the `@conformance` scenario to detect the true defect:
++  "editTodo guards against re-entrant calls for already-removed todos"
++- Updated step definitions in `features/support/conformance-steps.js` to check whether
++  `editTodo` calls `findTodo(id)` at the top and returns early if the todo is gone.
++- Created `watchbill.json` with the 1 remaining failing target.
++- Removed stale step definitions that checked for the parentNode guard alone.
++
++### Why the parentNode guard is insufficient
++
++In a spec-compliant browser, `removeChild` removes the node from the parent's children
++atomically BEFORE dispatching blur. In that case, the nested render's `qsa('li', todoList)`
++returns an empty list and the nested render is a no-op. However, some implementations may
++fire blur during `removeChild` before the removal is fully reflected in querySelectorAll.
++In those browsers:
++- The nested render's `qsa('li', todoList)` STILL finds the `<li>`
++- The stale-removal loop tries to remove it
++- The parentNode guard passes (node still has parentNode)
++- `removeChild` throws NotFoundError (node was already removed by outer `removeChild`)
++
++The robust fix is to prevent the re-entrant render entirely by guarding `editTodo` itself.
+ 
+ ### Current verification state
+ 
+ 31 scenarios:
+ - 30 pass
+-- 1 fails: the new conformance scenario (correctly detects the missing guard)
++- 1 fails: the updated conformance scenario (correctly detects the missing guard in editTodo)
+ 
+ ### Remaining
+ 
+ QM dispatches with `watchbill.json`. Crew receives 1 failing conformance target and fixes `js/app.js`:
+-- In the render function's stale-node removal loop, guard each `removeChild` call:
++- In `editTodo`, add a check at the top to return early if the todo no longer exists:
+   ```javascript
+-  if (existingItems[id].parentNode) {
+-    existingItems[id].parentNode.removeChild(existingItems[id]);
++  function editTodo(id, newTitle) {
++    var todo = findTodo(id);
++    if (!todo) return;  // already removed — no-op under re-entrant blur
++    newTitle = newTitle.trim();
++    if (!newTitle) {
++      removeTodo(id);
++      return;
++    }
++    todo.title = newTitle;
++    store.save(todos);
++    render();
+   }
+   ```
+\ No newline at end of file
+diff --git a/features/conformance/dom-identity.feature b/features/conformance/dom-identity.feature
+index 5f4fdfa..d23d647 100644
+--- a/features/conformance/dom-identity.feature
++++ b/features/conformance/dom-identity.feature
+@@ -37,7 +37,7 @@ Feature: DOM identity preservation
+     Then the helper passes the useCapture flag to the native addEventListener
+ 
+   @conformance
+-  Scenario: Stale-node removal guards against re-entrant blur during removeChild
++  Scenario: editTodo guards against re-entrant calls for already-removed todos
+     Given the project has a render function that writes to the todo list
+-    When I check whether the render function guards removeChild with a parentNode check in the stale-node removal loop
+-    Then the render function guards stale-node removal against re-entrant blur events
+\ No newline at end of file
++    When I check whether editTodo guards against calling removeTodo for already-removed todos
++    Then editTodo does not call removeTodo or render for todos that are no longer in the model
+\ No newline at end of file
+diff --git a/features/support/conformance-steps.js b/features/support/conformance-steps.js
+index 43aeb70..9c34c1f 100644
+--- a/features/support/conformance-steps.js
++++ b/features/support/conformance-steps.js
+@@ -288,50 +288,74 @@ Then('the helper passes the useCapture flag to the native addEventListener', fun
+ });
+ 
+ // ---------------------------------------------------------------------------
+-// Conformance: Re-entrant blur guard in stale-node removal
++// Conformance: editTodo re-entrant guard for already-removed todos
+ // ---------------------------------------------------------------------------
+ 
+-When('I check whether the render function guards removeChild with a parentNode check in the stale-node removal loop', function () {
++When('I check whether editTodo guards against calling removeTodo for already-removed todos', function () {
+   const source = this.appSource;
+-  // Find the block in render() where stale items are removed.
+-  // The anti-pattern:  for (...) { ... removeChild(...) }  with NO parentNode guard before removeChild.
++  // The anti-pattern: editTodo unconditionally calls removeTodo(id) when newTitle
++  // is empty, even if the todo has already been removed from the model (e.g. via
++  // a re-entrant blur call).
+   //
+-  // The fix is to check parentNode before calling removeChild, so that a re-entrant
+-  // call (e.g. blur event during removeChild) that already removed the node does not
+-  // cause a NotFoundError.
++  // The fix: at the top of editTodo, call findTodo(id) and return early if the
++  // todo no longer exists in the model, BEFORE trimming and checking for empty.
++  // This prevents removeTodo(id) and render() from being called re-entrantly
++  // when the todo was already removed by the outer execution.
+   //
+-  // Strategy: find the for-loop that iterates over existingItems and calls removeChild.
+-  // Then check whether there is a parentNode or parentElement check in the loop body
+-  // before the removeChild call.
+-  const loopMatch = source.match(/for\s*\(\s*(?:var\s+)?(\w+)\s+in\s+existingItems\s*\)\s*\{([^}]*)\}/);
+-  if (!loopMatch) {
+-    this.renderGuardsRemoveChild = false;
++  // Strategy: extract the editTodo function body and check whether there is a
++  // findTodo call that guards the empty-title branch.
++  const editTodoMatch = source.match(/function\s+editTodo\s*\([^)]*\)\s*\{([\s\S]*?)\n  \}/);
++  if (!editTodoMatch) {
++    this.editTodoGuardsReentrant = false;
+     return;
+   }
+-  const loopBody = loopMatch[2];
+-  const hasRemoveChild = /removeChild\s*\(/.test(loopBody);
+-  if (!hasRemoveChild) {
+-    this.renderGuardsRemoveChild = true; // no removeChild call → not vulnerable
++  const editBody = editTodoMatch[1];
++
++  // Check if the very first thing editTodo does is call findTodo and return
++  // if not found. Pattern:
++  //   var todo = findTodo(id);
++  //   if (!todo) return;
++  const hasEarlyFindTodo = /var\s+\w+\s*=\s*findTodo\s*\(\s*\w+\s*\)/.test(editBody);
++  const hasEarlyReturn = /if\s*\(\s*!\s*\w+\s*\)\s*return/.test(editBody);
++
++  // Check that the early guard is BEFORE the call to removeTodo
++  const removeTodoCallIndex = editBody.indexOf('removeTodo(');
++  const findTodoCallIndex = editBody.indexOf('findTodo(');
++  if (findTodoCallIndex === -1) {
++    this.editTodoGuardsReentrant = false;
+     return;
+   }
+-  // Check if there's a parentNode or parentElement check before removeChild
+-  // Look for: if (...) { ... removeChild(...) }  where the condition mentions parentNode/parentElement
+-  // or: var x = ...; if (x.parentNode) { x.parentNode.removeChild(x); }
+-  const hasParentGuard = /if\s*\([^)]*parentNode[^)]*\)/.test(loopBody) ||
+-                         /if\s*\([^)]*parentElement[^)]*\)/.test(loopBody);
+-  this.renderGuardsRemoveChild = hasParentGuard;
++  if (removeTodoCallIndex === -1) {
++    this.editTodoGuardsReentrant = true; // no removeTodo call → not vulnerable
++    return;
++  }
++
++  // The early guard must: call findTodo, check !result, return, all BEFORE removeTodo
++  this.editTodoGuardsReentrant = hasEarlyFindTodo && hasEarlyReturn &&
++    findTodoCallIndex < removeTodoCallIndex;
+ });
+ 
+-Then('the render function guards stale-node removal against re-entrant blur events', function () {
+-  assert.ok(this.renderGuardsRemoveChild,
+-    'FAIL: In a real browser, calling removeChild on a focused <li> triggers a blur ' +
+-    'event synchronously on the edit input. The blur handler (captured on todoList) ' +
+-    're-enters editTodo → render, which removes the same <li> again. ' +
+-    'When control returns to the outer stale-removal loop, the node is no longer a child ' +
+-    'of its parent, and removeChild throws NotFoundError.\n' +
+-    'FIX: Guard every removeChild call in the stale-node removal loop with a parentNode check:\n' +
+-    '  if (existingItems[id].parentNode) {\n' +
+-    '    existingItems[id].parentNode.removeChild(existingItems[id]);\n' +
+-    '  }\n' +
+-    'This makes the operation idempotent under re-entrant blur.');
++Then('editTodo does not call removeTodo or render for todos that are no longer in the model', function () {
++  assert.ok(this.editTodoGuardsReentrant,
++    'FAIL: In a real browser, when pressing Enter in an empty edit input, the keydown ' +
++    'handler calls editTodo(id, ""), which trims to "" and calls removeTodo(id) → render(). ' +
++    'During removeChild in render(), the browser fires blur on the edit input synchronously. ' +
++    'The blur handler re-enters editTodo(id, ""), which again trims to "" and calls ' +
++    'removeTodo(id) → render() — even though the todo was already removed from the ' +
++    'model by the outer call. This triggers a nested render that throws NotFoundError ' +
++    'when trying to removeChild on an already-detached <li>.\n' +
++    '\n' +
++    'FIX: At the top of editTodo, check whether the todo still exists before processing:\n' +
++    '  function editTodo(id, newTitle) {\n' +
++    '    var todo = findTodo(id);\n' +
++    '    if (!todo) return;  // already removed — no-op under re-entrant blur\n' +
++    '    newTitle = newTitle.trim();\n' +
++    '    if (!newTitle) {\n' +
++    '      removeTodo(id);\n' +
++    '      return;\n' +
++    '    }\n' +
++    '    todo.title = newTitle;\n' +
++    '    store.save(todos);\n' +
++    '    render();\n' +
++    '  }');
+ });
+\ No newline at end of file
+diff --git a/js/app.js b/js/app.js
+index 3cfb1c0..927dfe1 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -32,8 +32,8 @@
+    * @planks("the project has an event binding helper function")
+    * @planks("I check whether the helper passes the useCapture argument to addEventListener")
+    * @planks("the helper passes the useCapture flag to the native addEventListener")
+-   * @planks("I check whether the render function guards removeChild with a parentNode check in the stale-node removal loop")
+-   * @planks("the render function guards stale-node removal against re-entrant blur events")
++   * @planks("I check whether editTodo guards against calling removeTodo for already-removed todos")
++   * @planks("editTodo does not call removeTodo or render for todos that are no longer in the model")
+    */
+   var ENTER_KEY = 13;
+   var ESC_KEY = 27;
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..2cc405b
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,10 @@
++[
++  {
++    "scenario": "editTodo guards against re-entrant calls for already-removed todos",
++    "feature": "features/conformance/dom-identity.feature",
++    "status": "failing",
++    "description": "editTodo does not guard against re-entrant calls when the todo has already been removed from the model. This causes removeTodo(id) → render() to be called twice: once from the keydown handler, and once from the blur handler that fires synchronously during removeChild in the outer render. The nested render throws NotFoundError when trying to removeChild on an already-detached <li>.",
++    "fix": "In editTodo, call findTodo(id) at the top and return early if the todo no longer exists, before trimming the title or calling removeTodo.",
++    "location": "js/app.js:editTodo"
++  }
++]
+\ No newline at end of file

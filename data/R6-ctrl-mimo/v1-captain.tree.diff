@@ -1,0 +1,360 @@
+diff --git a/.gplintrc b/.gplintrc
+new file mode 100644
+index 0000000..a3a7fe3
+--- /dev/null
++++ b/.gplintrc
+@@ -0,0 +1,11 @@
++{
++  "no-unnamed-features": "error",
++  "no-unnamed-scenarios": "error",
++  "no-superfluous-tags": "warn",
++  "keywords-in-logical-order": [
++    "error",
++    {
++      "detectMissingKeywords": true
++    }
++  ]
++}
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..6e1f8f5
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,15 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
++
++## Voyage 1 — Greenfield TodoMVC
++
++**User intent:** Build a TodoMVC app per `assets/app-spec.md`, using `assets/app-template.index.html` as base markup. Vanilla JavaScript, no preprocessors, persists to localStorage.
++
++**Stack:** Plain JS in browser, Cucumber + happy-dom for verification.
++
++**Spec:** `features/todomvc-app.feature` — 26 scenarios covering add, complete, edit, delete, clear-completed, counter, filtering, persistence, and visibility.
++
++**Rigging note:** No `RIGGING.md` yet. The five required values (language: JavaScript, runtime: browser, packageManager: npm, implementation dir: root, specs dir: features) are discoverable. Rigging will be written during fitting out at harbour.
+diff --git a/features/todomvc-app.feature b/features/todomvc-app.feature
+new file mode 100644
+index 0000000..bfa43cb
+--- /dev/null
++++ b/features/todomvc-app.feature
+@@ -0,0 +1,193 @@
++Feature: TodoMVC application
++  As a user managing tasks
++  I want a single-page todo list application
++  So that I can track, complete, and organise my work
++
++  Background:
++    Given the app is loaded
++
++  Rule: Adding todos
++
++    Scenario: Add a new todo by pressing Enter
++      Given the todo list is empty
++      When the user types "Buy groceries" into the new-todo input and presses Enter
++      Then a todo "Buy groceries" appears in the list
++      And the new-todo input is empty
++      And the item count shows "1 item left"
++
++    Scenario: Trim whitespace from new todo titles
++      Given the app is loaded
++      When the user types "  Buy groceries  " into the new-todo input and presses Enter
++      Then a todo "Buy groceries" appears in the list
++
++    Scenario: Empty input is not added as a todo
++      Given the app is loaded
++      When the user presses Enter without typing anything
++      Then no todo is added to the list
++
++  Rule: Completing todos
++
++    Scenario: Mark a single todo as completed
++      Given the user has added todo "Buy groceries"
++      When the user toggles the checkbox for todo "Buy groceries"
++      Then todo "Buy groceries" is marked as completed
++      And the item count shows "0 items left"
++
++    Scenario: Unmark a completed todo
++      Given the user has added completed todo "Buy groceries"
++      When the user toggles the checkbox for todo "Buy groceries"
++      Then todo "Buy groceries" is not marked as completed
++      And the item count shows "1 item left"
++
++    Scenario: Mark all todos as completed
++      Given the user has added todo "Buy groceries"
++      And the user has added todo "Walk the dog"
++      When the user toggles the Mark all as complete checkbox
++      Then all todos are marked as completed
++      And the item count shows "0 items left"
++
++    Scenario: Unmark all todos via Mark all as complete
++      Given the user has added completed todo "Buy groceries"
++      And the user has added completed todo "Walk the dog"
++      When the user toggles the Mark all as complete checkbox
++      Then no todo is marked as completed
++      And the item count shows "2 items left"
++
++    Scenario: Mark all checkbox is unchecked when not all todos are completed
++      Given the user has added todo "Buy groceries"
++      And the user has added todo "Walk the dog"
++      When the user toggles the checkbox for todo "Buy groceries"
++      Then the Mark all as complete checkbox is not checked
++
++    Scenario: Mark all checkbox is checked when all todos are completed
++      Given the user has added todo "Buy groceries"
++      And the user has added todo "Walk the dog"
++      When the user toggles the checkbox for todo "Buy groceries"
++      And the user toggles the checkbox for todo "Walk the dog"
++      Then the Mark all as complete checkbox is checked
++
++  Rule: Editing todos
++
++    Scenario: Activate editing mode on double-click
++      Given the user has added todo "Buy groceries"
++      When the user double-clicks the label for todo "Buy groceries"
++      Then todo "Buy groceries" is in editing mode
++
++    Scenario: Save edit on Enter
++      Given the user has added todo "Buy groceries"
++      When the user double-clicks the label for todo "Buy groceries"
++      And the user types "Buy milk" into the edit input and presses Enter
++      Then a todo "Buy milk" appears in the list
++      And todo "Buy milk" is not in editing mode
++
++    Scenario: Save edit on blur
++      Given the user has added todo "Buy groceries"
++      When the user double-clicks the label for todo "Buy groceries"
++      And the user types "Buy milk" into the edit input and blurs
++      Then a todo "Buy milk" appears in the list
++
++    Scenario: Delete todo when edit is empty
++      Given the user has added todo "Buy groceries"
++      When the user double-clicks the label for todo "Buy groceries"
++      And the user clears the edit input and presses Enter
++      Then no todo "Buy groceries" exists
++
++    Scenario: Discard edit on Escape
++      Given the user has added todo "Buy groceries"
++      When the user double-clicks the label for todo "Buy groceries"
++      And the user types "Buy milk" into the edit input and presses Escape
++      Then a todo "Buy groceries" appears in the list
++      And todo "Buy groceries" is not in editing mode
++
++  Rule: Deleting todos
++
++    Scenario: Remove a todo by clicking its destroy button
++      Given the user has added todo "Buy groceries"
++      When the user clicks the destroy button for todo "Buy groceries"
++      Then no todo "Buy groceries" exists
++      And the todo list is empty
++
++  Rule: Clearing completed todos
++
++    Scenario: Clear completed removes finished todos
++      Given the user has added completed todo "Buy groceries"
++      And the user has added todo "Walk the dog"
++      When the user clicks the Clear completed button
++      Then no todo "Buy groceries" exists
++      And a todo "Walk the dog" appears in the list
++
++    Scenario: Clear completed button is hidden when no todos are completed
++      Given the user has added todo "Buy groceries"
++      When the app is loaded
++      Then the Clear completed button is hidden
++
++  Rule: Counter
++
++    Scenario: Counter shows correct active count
++      Given the user has added todo "Buy groceries"
++      And the user has added todo "Walk the dog"
++      And the user has added completed todo "Read a book"
++      When the app is loaded
++      Then the item count shows "2 items left"
++
++    Scenario: Counter pluralises correctly
++      Given the user has added todo "Buy groceries"
++      When the app is loaded
++      Then the item count shows "1 item left"
++
++  Rule: Filtering
++
++    Scenario: Filter shows all todos by default
++      Given the user has added todo "Buy groceries"
++      And the user has added completed todo "Read a book"
++      When the user navigates to "#/"
++      Then a todo "Buy groceries" appears in the list
++      And a todo "Read a book" appears in the list
++
++    Scenario: Active filter shows only incomplete todos
++      Given the user has added todo "Buy groceries"
++      And the user has added completed todo "Read a book"
++      When the user navigates to "#/active"
++      Then a todo "Buy groceries" appears in the list
++      And no todo "Read a book" appears in the list
++
++    Scenario: Completed filter shows only completed todos
++      Given the user has added todo "Buy groceries"
++      And the user has added completed todo "Read a book"
++      When the user navigates to "#/completed"
++      Then no todo "Buy groceries" appears in the list
++      And a todo "Read a book" appears in the list
++
++    Scenario: Active filter link is selected when hash is #/active
++      Given the app is loaded
++      When the user navigates to "#/active"
++      Then the "Active" filter link is selected
++
++    Scenario: Completed filter hides the Clear completed button when empty
++      Given the user has added todo "Buy groceries"
++      When the user navigates to "#/completed"
++      Then the Clear completed button is hidden
++
++  Rule: Persistence
++
++    Scenario: Todos persist across page reload
++      Given the user has added todo "Buy groceries"
++      And the user has added completed todo "Read a book"
++      When the app is reloaded
++      Then a todo "Buy groceries" appears in the list
++      And a todo "Read a book" appears in the list
++      And the item count shows "1 item left"
++
++  Rule: Visibility
++
++    Scenario: Main section and footer are hidden when there are no todos
++      Given the todo list is empty
++      When the app is loaded
++      Then the main section is hidden
++      And the footer is hidden
++
++    Scenario: Main section and footer appear when a todo is added
++      Given the todo list is empty
++      When the user types "Buy groceries" into the new-todo input and presses Enter
++      Then the main section is visible
++      And the footer is visible
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..0dcf1e7
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,117 @@
++{
++  "watches": [
++    {
++      "name": "todomvc-core",
++      "targets": [
++        {
++          "spec": "features/todomvc-app.feature",
++          "scenario": "Add a new todo by pressing Enter"
++        },
++        {
++          "spec": "features/todomvc-app.feature",
++          "scenario": "Trim whitespace from new todo titles"
++        },
++        {
++          "spec": "features/todomvc-app.feature",
++          "scenario": "Empty input is not added as a todo"
++        },
++        {
++          "spec": "features/todomvc-app.feature",
++          "scenario": "Mark a single todo as completed"
++        },
++        {
++          "spec": "features/todomvc-app.feature",
++          "scenario": "Unmark a completed todo"
++        },
++        {
++          "spec": "features/todomvc-app.feature",
++          "scenario": "Mark all todos as completed"
++        },
++        {
++          "spec": "features/todomvc-app.feature",
++          "scenario": "Unmark all todos via Mark all as complete"
++        },
++        {
++          "spec": "features/todomvc-app.feature",
++          "scenario": "Mark all checkbox is unchecked when not all todos are completed"
++        },
++        {
++          "spec": "features/todomvc-app.feature",
++          "scenario": "Mark all checkbox is checked when all todos are completed"
++        },
++        {
++          "spec": "features/todomvc-app.feature",
++          "scenario": "Activate editing mode on double-click"
++        },
++        {
++          "spec": "features/todomvc-app.feature",
++          "scenario": "Save edit on Enter"
++        },
++        {
++          "spec": "features/todomvc-app.feature",
++          "scenario": "Save edit on blur"
++        },
++        {
++          "spec": "features/todomvc-app.feature",
++          "scenario": "Delete todo when edit is empty"
++        },
++        {
++          "spec": "features/todomvc-app.feature",
++          "scenario": "Discard edit on Escape"
++        },
++        {
++          "spec": "features/todomvc-app.feature",
++          "scenario": "Remove a todo by clicking its destroy button"
++        },
++        {
++          "spec": "features/todomvc-app.feature",
++          "scenario": "Clear completed removes finished todos"
++        },
++        {
++          "spec": "features/todomvc-app.feature",
++          "scenario": "Clear completed button is hidden when no todos are completed"
++        },
++        {
++          "spec": "features/todomvc-app.feature",
++          "scenario": "Counter shows correct active count"
++        },
++        {
++          "spec": "features/todomvc-app.feature",
++          "scenario": "Counter pluralises correctly"
++        },
++        {
++          "spec": "features/todomvc-app.feature",
++          "scenario": "Filter shows all todos by default"
++        },
++        {
++          "spec": "features/todomvc-app.feature",
++          "scenario": "Active filter shows only incomplete todos"
++        },
++        {
++          "spec": "features/todomvc-app.feature",
++          "scenario": "Completed filter shows only completed todos"
++        },
++        {
++          "spec": "features/todomvc-app.feature",
++          "scenario": "Active filter link is selected when hash is #/active"
++        },
++        {
++          "spec": "features/todomvc-app.feature",
++          "scenario": "Completed filter hides the Clear completed button when empty"
++        },
++        {
++          "spec": "features/todomvc-app.feature",
++          "scenario": "Todos persist across page reload"
++        },
++        {
++          "spec": "features/todomvc-app.feature",
++          "scenario": "Main section and footer are hidden when there are no todos"
++        },
++        {
++          "spec": "features/todomvc-app.feature",
++          "scenario": "Main section and footer appear when a todo is added"
++        }
++      ]
++    }
++  ]
++}

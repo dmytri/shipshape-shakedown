@@ -1,0 +1,77 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 6e1f8f5..abf81eb 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -13,3 +13,15 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ **Spec:** `features/todomvc-app.feature` — 26 scenarios covering add, complete, edit, delete, clear-completed, counter, filtering, persistence, and visibility.
+ 
+ **Rigging note:** No `RIGGING.md` yet. The five required values (language: JavaScript, runtime: browser, packageManager: npm, implementation dir: root, specs dir: features) are discoverable. Rigging will be written during fitting out at harbour.
++
++## Voyage 2 — Editing empty-delete browser safety
++
++**Defect:** External browser acceptance suite reports `NotFoundError: Failed to execute 'removeChild' on 'Node'` when deleting a todo via empty edit. The `focusout` handler calls `saveEdit(li)` after the `keydown` handler has already removed the `<li>` from the DOM via `removeTodo` → `render()`. In happy-dom the second call is skipped (detached `closest` returns null); in a real browser the async `focusout` fires after the keydown handler returns and `closest` traverses the detached tree successfully.
++
++**Root cause:** `saveEdit` in `js/app.js` has no guard against operating on a detached `<li>`. The `focusout` handler at line ~270 unconditionally calls `saveEdit(li)` when the `<li>` has class `editing`, without checking whether the node is still in the DOM.
++
++**Specs written:** `features/editing-empty-safety.feature` (product behaviour), `features/editing-conformance.feature` (source-level guard check).
++
++**Watchbill:** `watchbill.json` with two watches targeting the new scenarios.
++
++**Next:** QM dispatch to implement the undefined steps and verify the scenarios go red on current code, then Crew to fix `saveEdit`.
+diff --git a/features/editing-conformance.feature b/features/editing-conformance.feature
+new file mode 100644
+index 0000000..b2a634c
+--- /dev/null
++++ b/features/editing-conformance.feature
+@@ -0,0 +1,11 @@
++Feature: Editing implementation conformance
++  As the project
++  I want the editing handlers to guard against DOM operations on detached elements
++  So that empty-edit deletion works safely in all browsers
++
++  Background:
++    Given the app is loaded
++
++  @conformance
++  Scenario: saveEdit does not call removeTodo or render when the todo list item is detached
++    Then the js/app.js saveEdit function contains a detached-node guard
+diff --git a/features/editing-empty-safety.feature b/features/editing-empty-safety.feature
+new file mode 100644
+index 0000000..5e4678d
+--- /dev/null
++++ b/features/editing-empty-safety.feature
+@@ -0,0 +1,16 @@
++Feature: Editing safety
++  As a user editing a todo
++  I want the app to handle focus transitions safely
++  So that deleting a todo via empty edit never throws a DOM error in any browser
++
++  Background:
++    Given the app is loaded
++
++  Rule: Empty edit deletion under focus transitions
++
++    Scenario: Deleting a todo via empty edit does not throw when focusout fires after keydown
++      Given the user has added todo "Buy groceries"
++      When the user double-clicks the label for todo "Buy groceries"
++      And the user clears the edit input and presses Enter
++      And the edit input receives a focusout event
++      Then no todo "Buy groceries" exists
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..433b760
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,12 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/editing-empty-safety.feature:Deleting a todo via empty edit does not throw when focusout fires after keydown"
++    ]
++  },
++  "watch2": {
++    "scenarios": [
++      "features/editing-conformance.feature:saveEdit does not call removeTodo or render when the todo list item is detached"
++    ]
++  }
++}

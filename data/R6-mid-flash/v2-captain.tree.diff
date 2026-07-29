@@ -1,0 +1,157 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index fe38096..4e4bdde 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -7,16 +7,33 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ ## Standing state
+ 
+ - Greenfield build of TodoMVC (Vanilla JS, no preprocessors, localStorage persistence).
+-- Harness bootstrapped: `package.json` with `@cucumber/cucumber` + `happy-dom`, `features/support/world.js` loads real `index.html` + `js/app.js` into happy-dom per-scenario, disposes after. Routing patched to fire `hashchange` on click.
+-- Assets landed: `assets/app-spec.md` (product spec), `assets/app-template.index.html` (base markup).
+-- Durable work this cycle: spec feature files under `features/`, `watchbill.json`.
++- Harness bootstrapped: `package.json` with `@cucumber/cucumber` + `happy-dom`.
++- Durable specs: `features/todo-management.feature`, `features/todo-persistence.feature`, `features/todo-routing.feature`.
++- Scantling at `scantlings/todo-storage.json`.
++
++## Voyage R6 — Browser DOM identity & editing visibility
++
++**Defects reported by external Cypress acceptance suite (10 failures):**
++
++1. **Failures 1-4 (DOM detachment):** `render()` clears `todoList.innerHTML = ''` and rebuilds every `<li>` from scratch on every state change (toggle, toggle-all). In a real browser, Cypress holds references to pre-click nodes; after `render()` destroys and recreates them, the references detach.
++   - **Fix required:** Mutate existing `<li>` nodes in-place (toggle class/checkbox) instead of rebuilding the list.
++
++2. **Failures 5-10 (Edit input not visible):** The dblclick handler sets `todo.editing = true`, then calls `render()`. `render()` starts with `todos = getTodos()` (re-reads from localStorage), discarding the transient `editing` flag. New `<li>` never gets `.editing` class, so `.edit` stays `display: none`.
++   - **Fix required:** Stop re-reading from localStorage at the top of `render()`; use the in-memory `todos` array so transient state persists across renders.
++
++Both share root cause: `render()` destroys and rebuilds DOM nodes instead of mutating in-place. Not reproducible in happy-dom harness (step definitions hack around both issues). Conformance scenarios added to fail on current source.
++
++## Added artifacts this cycle
++
++- `features/support/conformance.js` — source-level conformance step definitions
++- `watchbill.json` — references the three conformance scenarios
++- `features/todo-management.feature` — added `@conformance` scenarios under Completing todos, Toggle all, and Editing todos rules
+ 
+ ## Decisions
+ 
+-- Storage key: `todos-vanillajs` per spec convention (`todos-[framework]`).
+-- Tier: happy-dom (default). The spec requires DOM rendering; happy-dom is the cheapest tier that observes it.
+-- Scantling for localStorage shape at `scantlings/todo-storage.json`.
++- Conformance checks (source scanning) used because happy-dom cannot reproduce the browser-only DOM detachment or editing-visibility defects.
++- `@conformance` tag keeps these scenarios out of the `@contract` workflow and flags them for QM bespoke processing.
+ 
+ ## Next
+ 
+-Dispatch QM with `watchbill.json` targets when production code exists.
+\ No newline at end of file
++Dispatch QM with `watchbill.json` targets. Conformance scenarios must REDDEN on current code (source contains the anti-patterns). QM implements bespoke checker steps, then Crew fixes `js/app.js` to mutate in-place.
+\ No newline at end of file
+diff --git a/features/support/conformance.js b/features/support/conformance.js
+new file mode 100644
+index 0000000..32c29cd
+--- /dev/null
++++ b/features/support/conformance.js
+@@ -0,0 +1,44 @@
++const { Given, Then } = require('@cucumber/cucumber');
++const assert = require('node:assert');
++const fs = require('node:fs');
++const path = require('node:path');
++
++const ROOT = path.resolve(__dirname, '..', '..');
++const APP_PATH = path.join(ROOT, 'js', 'app.js');
++
++Given('the app source is inspected', function () {
++  const src = fs.readFileSync(APP_PATH, 'utf8');
++  this.appSource = src;
++});
++
++Then('the render function must not clear the todo list via element replace', function () {
++  const src = this.appSource;
++  // The anti-pattern is render() clearing todoList.innerHTML and rebuilding LIs.
++  // Acceptable: in-place mutation of existing nodes.
++  // Reject: todoList.innerHTML = '' or todoList.textContent = '' inside render().
++  // Also reject: a loop that creates new <li> and appends, preceded by clearing the list.
++  const hasInnerHtmlClear = /todoList\.innerHTML\s*=\s*['"]\s*['"]/.test(src);
++  const hasTextContentClear = /todoList\.textContent\s*=\s*['"]\s*['"]/.test(src);
++  assert.ok(
++    !hasInnerHtmlClear && !hasTextContentClear,
++    'render() must not clear the todo list via innerHTML/textContent assignment — ' +
++    'mutate existing nodes in-place to preserve DOM element identity across state changes'
++  );
++});
++
++Then('the render function must not re-read todos from localStorage', function () {
++  const src = this.appSource;
++  // The anti-pattern is render() calling getTodos() which re-reads from localStorage,
++  // discarding transient in-memory state like the editing flag.
++  // Render should use the in-memory todos array, not re-read from storage.
++  // Check for the specific pattern: inside the render function body, a call to getTodos()
++  // Look for 'todos = getTodos()' or 'var todos = getTodos()' or 'let todos = getTodos()'
++  const hasGetTodosInRender =
++    /render\s*\(\s*\)\s*\{[^}]*todos\s*=\s*getTodos\s*\(\s*\)/.test(src) ||
++    /render\s*\(\s*\)\s*\{[\s\S]*?todos\s*=\s*getTodos\s*\(\s*\)/.test(src);
++  assert.ok(
++    !hasGetTodosInRender,
++    'render() must not call getTodos() — it must use the in-memory todos array ' +
++    'so that transient state like the editing flag is preserved across renders'
++  );
++});
+\ No newline at end of file
+diff --git a/features/todo-management.feature b/features/todo-management.feature
+index 6b8c127..74f9e6a 100644
+--- a/features/todo-management.feature
++++ b/features/todo-management.feature
+@@ -45,6 +45,11 @@ Feature: Todo management
+ 
+   Rule: Completing todos
+ 
++  @conformance
++  Scenario: Toggle operations preserve DOM element identity
++    Given the app source is inspected
++    Then the render function must not clear the todo list via element replace
++
+   Scenario: Mark a todo as completed by clicking the checkbox
+     Given the todo list has 1 item with title "Buy milk"
+     When I click the toggle checkbox on the todo
+@@ -59,6 +64,11 @@ Feature: Todo management
+ 
+   Rule: Toggle all
+ 
++  @conformance
++  Scenario: Toggle-all operations preserve DOM element identity
++    Given the app source is inspected
++    Then the render function must not clear the todo list via element replace
++
+   Scenario: Toggle all todos to completed
+     Given the todo list has items "Buy milk", "Buy eggs", "Buy bread"
+     When I click the "toggle-all" checkbox
+@@ -76,6 +86,11 @@ Feature: Todo management
+ 
+   Rule: Editing todos
+ 
++  @conformance
++  Scenario: Double-click on a label must show the edit input
++    Given the app source is inspected
++    Then the render function must not re-read todos from localStorage
++
+   Scenario: Double-click a todo label to enter edit mode
+     Given the todo list has 1 item with title "Buy milk"
+     When I double-click the todo label
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..7a03ee3
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,12 @@
++{
++  "watches": [
++    {
++      "name": "browser-dom-identity",
++      "scenarios": [
++        "todo-management.feature: Toggle operations preserve DOM element identity",
++        "todo-management.feature: Toggle-all operations preserve DOM element identity",
++        "todo-management.feature: Double-click on a label must show the edit input"
++      ]
++    }
++  ]
++}
+\ No newline at end of file

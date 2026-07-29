@@ -1,0 +1,123 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index fe38096..b0e0c25 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -4,19 +4,34 @@
+ 
+ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
+ 
++## Defects found
++
++Browser acceptance suite reports 10 failures, all from the same root cause: `render()` in `js/app.js` rebuilds the entire `<li>` list from scratch on every state change, causing:
++
++1. **DOM detachment** (4 failures): Toggle/toggle-all/destroy handlers call `render()`, which replaces all `<li>` nodes. Cypress references to pre-click elements become detached.
++
++2. **Editing state lost** (6 failures): The dblclick handler sets `todo.editing = true` on the in-memory object, then calls `render()`, which re-reads from localStorage (never updated with `editing`). The `editing` class is never applied to the `<li>`, so the `.edit` input stays `display: none` per `todomvc-app-css`.
++
++Fix: Mutate existing DOM nodes in place (toggle class, checkbox state) instead of calling `render()`.
++
++## Durable changes this cycle
++
++- `features/dom-identity.feature` (new): `@contract` source-level conformance checks that pin the DOM-identity requirement
++- `watchbill.json` (new): Watch targets for the conformance checks
++
+ ## Standing state
+ 
+ - Greenfield build of TodoMVC (Vanilla JS, no preprocessors, localStorage persistence).
+-- Harness bootstrapped: `package.json` with `@cucumber/cucumber` + `happy-dom`, `features/support/world.js` loads real `index.html` + `js/app.js` into happy-dom per-scenario, disposes after. Routing patched to fire `hashchange` on click.
+-- Assets landed: `assets/app-spec.md` (product spec), `assets/app-template.index.html` (base markup).
+-- Durable work this cycle: spec feature files under `features/`, `watchbill.json`.
++- Harness: `@cucumber/cucumber` + `happy-dom`, loads real `index.html` + `js/app.js`.
++- Assets: `assets/app-spec.md` (product spec), `assets/app-template.index.html` (base markup).
++- Durable specs: `features/todo-management.feature`, `features/todo-persistence.feature`, `features/todo-routing.feature`, `features/dom-identity.feature`.
+ 
+ ## Decisions
+ 
+-- Storage key: `todos-vanillajs` per spec convention (`todos-[framework]`).
+-- Tier: happy-dom (default). The spec requires DOM rendering; happy-dom is the cheapest tier that observes it.
++- Storage key: `todos-vanillajs` per spec convention.
++- Tier: happy-dom (default).
+ - Scantling for localStorage shape at `scantlings/todo-storage.json`.
+ 
+ ## Next
+ 
+-Dispatch QM with `watchbill.json` targets when production code exists.
+\ No newline at end of file
++Dispatch QM with `watchbill.json` targets. The conformance checks in `dom-identity.feature` will fail on the current code (the `@contract` steps inspect the source for in-place mutation patterns absent in `js/app.js`). Crew must implement the fix: mutate DOM nodes in toggle/dblclick/destroy handlers instead of calling `render()`, and update the conformance step definitions to verify the source patterns.
+\ No newline at end of file
+diff --git a/features/dom-identity.feature b/features/dom-identity.feature
+new file mode 100644
+index 0000000..86ddbac
+--- /dev/null
++++ b/features/dom-identity.feature
+@@ -0,0 +1,48 @@
++Feature: DOM identity
++  As a user
++  I want todo items to keep their DOM identity when I interact with them
++  So that the app works correctly with browser automation
++
++  Background:
++    Given the app is loaded
++
++  Rule: Toggle completion mutates in place
++
++  @contract
++  Scenario: The toggle click handler does not rebuild the todo list
++    Given the app source at "js/app.js"
++    When I check the toggle checkbox click handler
++    Then the handler toggles the "completed" class on the existing list item
++    And the handler does not call render() or set innerHTML on the todo list
++
++  @contract
++  Scenario: The double-click handler does not rebuild the todo list
++    Given the app source at "js/app.js"
++    When I check the label double-click handler
++    Then the handler adds the "editing" class to the existing list item
++    And the handler does not call render() or set innerHTML on the todo list
++
++  @contract
++  Scenario: The destroy button handler does not rebuild the entire list
++    Given the app source at "js/app.js"
++    When I check the destroy button click handler
++    Then the handler removes the list item element directly
++    And the handler does not set innerHTML on the todo list
++
++  Rule: Editing state is managed on the existing DOM node
++
++  @contract
++  Scenario: Double-clicking the label does not lose editing state through render
++    Given the app source at "js/app.js"
++    When I check the label double-click handler
++    Then the handler adds the "editing" class to the existing list item before any re-render
++    And the handler does not re-read todo state from localStorage after setting editing
++
++  Rule: Toggle-all mutates in place
++
++  @contract
++  Scenario: The toggle-all handler does not rebuild the todo list
++    Given the app source at "js/app.js"
++    When I check the toggle-all click handler
++    Then the handler toggles the "completed" class on each existing list item
++    And the handler does not set innerHTML on the todo list
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..ce33edd
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,14 @@
++{
++  "watches": [
++    {
++      "id": "dom-identity-conformance",
++      "scenarios": [
++        "features/dom-identity.feature: The toggle click handler does not rebuild the todo list",
++        "features/dom-identity.feature: The double-click handler does not rebuild the todo list",
++        "features/dom-identity.feature: The destroy button handler does not rebuild the entire list",
++        "features/dom-identity.feature: Double-clicking the label does not lose editing state through render",
++        "features/dom-identity.feature: The toggle-all handler does not rebuild the todo list"
++      ]
++    }
++  ]
++}
+\ No newline at end of file

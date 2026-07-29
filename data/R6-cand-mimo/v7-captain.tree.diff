@@ -1,0 +1,154 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 9de8922..6315091 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -20,3 +20,9 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ - Routing via `hashchange` event on `window`, filtering at model level
+ - No external dependencies beyond todomvc-common and todomvc-app-css (devDependencies already installed: @cucumber/cucumber, happy-dom)
+ - The test harness (`features/support/world.js`) loads `index.html` and `js/app.js`, executes via happy-dom `window.eval`, and fires DOMContentLoaded/load events
++
++## Voyage 2 — DOM identity and escape-cancel fixes
++
++**Root cause 1: DOM element identity destroyed on every render.** `render()` in `js/app.js` uses `dom.todoList.innerHTML = ''` and recreates all `<li>` elements from scratch on every state change (toggle, toggle-all, clear-completed). A real browser holds a reference to an element; after `render()`, that reference is detached from the DOM. Cypress reports `element-has-detached-from-dom`. Fix: preserve element identity by updating existing `<li>` elements in place (toggle class, update checkbox) instead of destroying and recreating the entire list.
++
++**Root cause 2: Escape key does not cancel edits in real browsers.** In a real browser, pressing Escape on the focused edit input fires `blur` before `keydown`. The `blur` handler calls `editTodo()` which commits the edit to the data model. Then the `keydown` handler sets `editingId = null` and re-renders, but the data is already changed. The in-harness suite masks this because it dispatches `keydown` before `blur`. Fix: track Escape key state and guard the blur handler so it skips the commit when Escape was just pressed.
+diff --git a/features/support/steps.js b/features/support/steps.js
+index 3b98db0..d23fe54 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -113,6 +113,10 @@ function pressEnterOnEditInput(doc) {
+ function pressEscapeOnEditInput(doc) {
+   const input = getEditInput(doc);
+   if (input) {
++    // In a real browser, pressing Escape on a focused input fires blur
++    // BEFORE keydown. Dispatch blur first to match real browser event order,
++    // so the app must guard its blur handler against Escape-initiated blur.
++    input.dispatchEvent(new doc.defaultView.Event('blur', { bubbles: true }));
+     input.dispatchEvent(new doc.defaultView.KeyboardEvent('keydown', {
+       key: 'Escape',
+       code: 'Escape',
+@@ -216,6 +220,13 @@ Given('the app has a todo {string} and a completed todo {string}', function (act
+   createCompletedTodo(this.document, completedTitle);
+ });
+ 
++Given('the {string} todo element is captured', function (title) {
++  if (!this._capturedElements) this._capturedElements = [];
++  const el = getTodoByTitle(this.document, title);
++  expect(el, `Cannot capture: todo "${title}" not found`).to.not.be.undefined;
++  this._capturedElements.push(el);
++});
++
+ Given('the user navigates to {string}', function (hash) {
+   this.navigate(hash);
+   // Manually trigger render after navigation
+@@ -434,3 +445,14 @@ Then('localStorage contains a key matching {string}', function (pattern) {
+   const matchingKey = keys.find(key => regex.test(key));
+   expect(matchingKey, `Expected localStorage to contain a key matching "${pattern}"`).to.not.be.undefined;
+ });
++
++Then('the captured element is still attached to the DOM', function () {
++  expect(this._capturedElements, 'No elements were captured in a Given step').to.not.be.undefined;
++  expect(this._capturedElements.length, 'No elements were captured in a Given step').to.be.greaterThan(0);
++  this._capturedElements.forEach((el, i) => {
++    expect(
++      el.isConnected,
++      `Captured element #${i + 1} was detached from the DOM — the app likely destroyed and recreated it instead of updating in place`
++    ).to.be.true;
++  });
++});
+diff --git a/features/support/world.js b/features/support/world.js
+index b933e22..359ee94 100644
+--- a/features/support/world.js
++++ b/features/support/world.js
+@@ -118,6 +118,8 @@ Before(function () {
+   for (const k of Object.keys(sharedLocalStorage)) {
+     delete sharedLocalStorage[k];
+   }
++  // Clear captured DOM element references from prior scenarios
++  this._capturedElements = [];
+   this.loadApp();
+ });
+ 
+diff --git a/specs/dom-identity.feature b/specs/dom-identity.feature
+new file mode 100644
+index 0000000..42f4c98
+--- /dev/null
++++ b/specs/dom-identity.feature
+@@ -0,0 +1,34 @@
++Feature: DOM element identity preservation
++  As a user interacting with the todo list
++  I want the app to update existing elements in place when state changes
++  So that my browser's reference to an element remains valid across interactions
++
++  Scenario: Toggling a todo preserves its DOM element identity
++    Given the app has a todo "Buy groceries"
++    And the "Buy groceries" todo element is captured
++    When the user toggles the "Buy groceries" todo checkbox
++    Then the captured element is still attached to the DOM
++    And the "Buy groceries" todo has class "completed"
++
++  Scenario: Marking all as complete preserves DOM element identities
++    Given the app has todos "Buy groceries" and "Clean house"
++    And the "Buy groceries" todo element is captured
++    And the "Clean house" todo element is captured
++    When the user clicks the toggle all checkbox
++    Then the captured element is still attached to the DOM
++    And all todos have class "completed"
++
++  Scenario: Unmarking all preserves DOM element identities
++    Given the app has completed todos "Buy groceries" and "Clean house"
++    And the "Buy groceries" todo element is captured
++    And the "Clean house" todo element is captured
++    When the user clicks the toggle all checkbox
++    Then the captured element is still attached to the DOM
++    And no todos have class "completed"
++
++  Scenario: Unmarking a completed todo preserves its DOM element identity
++    Given the app has a completed todo "Buy groceries"
++    And the "Buy groceries" todo element is captured
++    When the user toggles the "Buy groceries" todo checkbox
++    Then the captured element is still attached to the DOM
++    And the "Buy groceries" todo does not have class "completed"
+diff --git a/specs/edit-cancel.feature b/specs/edit-cancel.feature
+new file mode 100644
+index 0000000..1c1e8a2
+--- /dev/null
++++ b/specs/edit-cancel.feature
+@@ -0,0 +1,18 @@
++Feature: Edit cancellation robustness
++  As a user editing a todo title
++  I want pressing Escape to reliably discard my changes
++  So that I can cancel an edit even when the browser fires blur before keydown
++
++  Scenario: Escape discards edits despite browser blur-before-keydown ordering
++    Given the app has a todo "Buy groceries"
++    When the user double-clicks the "Buy groceries" todo label
++    And the user types "Buy milk" in the edit input and presses Escape
++    Then a todo with title "Buy groceries" appears in the todo list
++    And the todo "Buy milk" does not exist
++
++  Scenario: Escape discards edits with no data model side effects
++    Given the app has a todo "Buy groceries"
++    When the user double-clicks the "Buy groceries" todo label
++    And the user types "" in the edit input and presses Escape
++    Then a todo with title "Buy groceries" appears in the todo list
++    And the todo list shows 1 todos
+diff --git a/watchbill.json b/watchbill.json
+index 42389ad..8a00cdd 100644
+--- a/watchbill.json
++++ b/watchbill.json
+@@ -35,7 +35,13 @@
+       "specs/persistence.feature:localStorage key format",
+       "specs/visibility.feature:Main and footer hidden when no todos",
+       "specs/visibility.feature:Main and footer shown when todos exist",
+-      "specs/visibility.feature:Removing the last todo hides sections"
++      "specs/visibility.feature:Removing the last todo hides sections",
++      "specs/dom-identity.feature:Toggling a todo preserves its DOM element identity",
++      "specs/dom-identity.feature:Marking all as complete preserves DOM element identities",
++      "specs/dom-identity.feature:Unmarking all preserves DOM element identities",
++      "specs/dom-identity.feature:Unmarking a completed todo preserves its DOM element identity",
++      "specs/edit-cancel.feature:Escape discards edits despite browser blur-before-keydown ordering",
++      "specs/edit-cancel.feature:Escape discards edits with no data model side effects"
+     ]
+   }
+ }

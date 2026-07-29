@@ -1,0 +1,404 @@
+diff --git a/features/editing.feature b/features/editing.feature
+new file mode 100644
+index 0000000..6c271d7
+--- /dev/null
++++ b/features/editing.feature
+@@ -0,0 +1,51 @@
++Feature: Editing
++  As a todo app user
++  I want to edit the text of a todo
++  So that I can correct mistakes without losing the item
++
++  Scenario: Editing saves on Enter
++  Given the app has the following todos:
++    | title    | completed |
++    | Old text | false     |
++  When the user double-clicks the label of the first todo item
++  And the user sets the edit input of the first todo item to "New text"
++  And the user presses Enter in the edit input of the first todo item
++  Then the first todo item does not have class "editing"
++  And the first todo item's label reads "New text"
++  And the first todo item's stored "title" value is "New text"
++
++  Scenario: Editing saves on blur
++  Given the app has the following todos:
++    | title    | completed |
++    | Old text | false     |
++  When the user double-clicks the label of the first todo item
++  And the user sets the edit input of the first todo item to "Blurred"
++  And the edit input of the first todo item loses focus
++  Then the first todo item does not have class "editing"
++  And the first todo item's label reads "Blurred"
++
++  Scenario: Editing discards changes on Escape
++  Given the app has the following todos:
++    | title    | completed |
++    | Old text | false     |
++  When the user double-clicks the label of the first todo item
++  And the user sets the edit input of the first todo item to "Changed"
++  And the user presses Escape in the edit input of the first todo item
++  Then the first todo item does not have class "editing"
++  And the first todo item's label reads "Old text"
++
++  Scenario: Editing to empty destroys the todo
++  Given the app has the following todos:
++    | title     | completed |
++    | Remove me | false     |
++  When the user double-clicks the label of the first todo item
++  And the user sets the edit input of the first todo item to "   "
++  And the user presses Enter in the edit input of the first todo item
++  Then ".todo-list" contains exactly 0 todo items
++
++  Scenario: Editing focuses the edit input
++  Given the app has the following todos:
++    | title    | completed |
++    | Focus me | false     |
++  When the user double-clicks the label of the first todo item
++  Then the edit input of the first todo item is focused
+diff --git a/features/persistence.feature b/features/persistence.feature
+new file mode 100644
+index 0000000..4404081
+--- /dev/null
++++ b/features/persistence.feature
+@@ -0,0 +1,43 @@
++Feature: Persistence
++  As a todo app user
++  I want my todos to survive a page reload
++  So that I do not lose my list
++
++  Scenario: New todos persist to localStorage
++  Given the app is loaded
++  When the user types "Buy milk" into ".new-todo"
++  And the user presses Enter in ".new-todo"
++  Then localStorage "todos-vanillajs" contains 1 item
++  And the persisted item at index 0 has title "Buy milk"
++  And the persisted item at index 0 has completed false
++
++  Scenario: Completing a todo persists to localStorage
++  Given the app has the following todos:
++    | title | completed |
++    | Task  | false     |
++  When the user clicks the toggle of the first todo item
++  Then the persisted item at index 0 has completed true
++
++  @contract
++  Scenario: Persisted todo items conform to the todo item schema
++  Given the app has the following todos:
++    | title | completed |
++    | Alpha | false     |
++    | Beta  | true      |
++  Then localStorage "todos-vanillajs" is a JSON array
++  And each item in localStorage "todos-vanillajs" conforms to the "todo item" schema in "scantlings/todos-localstorage.md"
++
++  Scenario: Editing state is not persisted
++  Given the app has the following todos:
++    | title | completed |
++    | Task  | false     |
++  When the user double-clicks the label of the first todo item
++  Then the persisted item at index 0 has exactly the keys "id", "title", "completed"
++
++  Scenario: Todos are restored after a reload
++  Given the app has the following todos:
++    | title | completed |
++    | Kept  | false     |
++  When the app is reloaded
++  Then ".todo-list" contains exactly 1 todo item
++  And the first todo item's label reads "Kept"
+diff --git a/features/routing.feature b/features/routing.feature
+new file mode 100644
+index 0000000..6db0c84
+--- /dev/null
++++ b/features/routing.feature
+@@ -0,0 +1,62 @@
++Feature: Routing
++  As a todo app user
++  I want to filter my todos by status
++  So that I can focus on what is active or done
++
++  Scenario: Default route shows all to-do items
++  Given the app has the following todos:
++    | title | completed |
++    | A     | false     |
++    | B     | true      |
++  Then ".todo-list" contains exactly 2 todo items
++  And the ".filters a.selected" has href "#/"
++
++  Scenario: Active route hides completed todos
++  Given the app has the following todos:
++    | title | completed |
++    | A     | false     |
++    | B     | true      |
++  When the user navigates to "#/active"
++  Then the todo item with label "A" is visible
++  And the todo item with label "B" is hidden
++  And the ".filters a.selected" has href "#/active"
++
++  Scenario: Completed route hides active todos
++  Given the app has the following todos:
++    | title | completed |
++    | A     | false     |
++    | B     | true      |
++  When the user navigates to "#/completed"
++  Then the todo item with label "A" is hidden
++  And the todo item with label "B" is visible
++  And the ".filters a.selected" has href "#/completed"
++
++  Scenario: Checking a todo in the active filter hides it
++  Given the app has the following todos:
++    | title | completed |
++    | A     | false     |
++    | B     | true      |
++  And the user navigates to "#/active"
++  When the user clicks the toggle of the todo item with label "A"
++  Then the todo item with label "A" is hidden
++
++  Scenario: Editing a todo in a filtered state updates its label
++  Given the app has the following todos:
++    | title | completed |
++    | A     | false     |
++  And the user navigates to "#/active"
++  When the user double-clicks the label of the todo item with label "A"
++  And the user sets the edit input of the todo item with label "A" to "Renamed"
++  And the user presses Enter in the edit input of the todo item with label "A"
++  Then the todo item with label "Renamed" is visible
++
++  Scenario: Active filter is restored after a reload
++  Given the app has the following todos:
++    | title | completed |
++    | A     | false     |
++    | B     | true      |
++  And the user navigates to "#/active"
++  When the app is reloaded
++  Then the ".filters a.selected" has href "#/active"
++  And the todo item with label "A" is visible
++  And the todo item with label "B" is hidden
+diff --git a/features/todos.feature b/features/todos.feature
+new file mode 100644
+index 0000000..949cbcf
+--- /dev/null
++++ b/features/todos.feature
+@@ -0,0 +1,133 @@
++Feature: Todos
++  As a todo app user
++  I want to create, complete, and remove todo items
++  So that I can track what needs doing
++
++  Scenario: Empty state hides main and footer
++  Given the app is loaded
++  Then the element with id "main" is hidden
++  And the element with id "footer" is hidden
++
++  Scenario: New todo input is focused on load
++  Given the app is loaded
++  Then ".new-todo" is focused
++
++  Scenario: Creating a todo appends it and clears the input
++  Given the app is loaded
++  When the user types "Buy a unicorn" into ".new-todo"
++  And the user presses Enter in ".new-todo"
++  Then ".todo-list" contains exactly 1 todo item
++  And the first todo item's label reads "Buy a unicorn"
++  And the ".new-todo" input value is empty
++
++  Scenario: Blank whitespace-only new todo is ignored
++  Asserts the app trims and rejects empty input
++  Given the app is loaded
++  When the user types "   " into ".new-todo"
++  And the user presses Enter in ".new-todo"
++  Then ".todo-list" contains exactly 0 todo items
++
++  Scenario: Toggling a todo marks it completed
++  Given the app has the following todos:
++    | title    | completed |
++    | Taste JS | false     |
++  When the user clicks the toggle of the first todo item
++  Then the first todo item has class "completed"
++  And the first todo item's stored "completed" value is true
++
++  Scenario: Double-clicking a label enters editing mode
++  Given the app has the following todos:
++    | title    | completed |
++    | Taste JS | false     |
++  When the user double-clicks the label of the first todo item
++  Then the first todo item has class "editing"
++  And the first todo item's edit input value is "Taste JS"
++
++  Scenario: Clicking destroy removes the todo
++  Given the app has the following todos:
++    | title    | completed |
++    | Taste JS | false     |
++  When the user clicks the destroy button of the first todo item
++  Then ".todo-list" contains exactly 0 todo items
++
++  Scenario: Counter shows one active item with singular label
++  Given the app has the following todos:
++    | title | completed |
++    | Only  | false     |
++  Then the ".todo-count" reads "1 item left"
++
++  Scenario: Counter shows several active items with plural label
++  Given the app has the following todos:
++    | title | completed |
++    | A     | false     |
++    | B     | false     |
++  Then the ".todo-count" reads "2 items left"
++
++  Scenario: Counter shows zero active items with plural label
++  Given the app has the following todos:
++    | title | completed |
++    | A     | true      |
++  Then the ".todo-count" reads "0 items left"
++
++  Scenario: Counter number is wrapped in a strong element
++  Given the app has the following todos:
++    | title | completed |
++    | A     | false     |
++  Then the ".todo-count strong" contains the text "1"
++
++  Scenario: Clear completed removes only completed todos
++  Given the app has the following todos:
++    | title  | completed |
++    | Active | false     |
++    | Done   | true      |
++  When the user clicks ".clear-completed"
++  Then ".todo-list" contains exactly 1 todo item
++  And the remaining todo item's label reads "Active"
++
++  Scenario: Clear completed button is hidden with no completed todos
++  Given the app has the following todos:
++    | title  | completed |
++    | Active | false     |
++  Then ".clear-completed" is hidden
++
++  Scenario: Mark all as complete checks every todo
++  Given the app has the following todos:
++    | title | completed |
++    | A     | false     |
++    | B     | false     |
++  When the user clicks "#toggle-all"
++  Then every todo item has class "completed"
++  And "#toggle-all" is checked
++
++  Scenario: Mark all as complete unchecks every todo
++  Given the app has the following todos:
++    | title | completed |
++    | A     | true      |
++    | B     | true      |
++  When the user clicks "#toggle-all"
++  Then no todo item has class "completed"
++  And "#toggle-all" is not checked
++
++  Scenario: Toggle-all reflects all single items checked
++  Given the app has the following todos:
++    | title | completed |
++    | A     | false     |
++    | B     | false     |
++  When the user clicks the toggle of the first todo item
++  And the user clicks the toggle of the second todo item
++  Then "#toggle-all" is checked
++
++  Scenario: Toggle-all is unchecked when not all items are complete
++  Given the app has the following todos:
++    | title | completed |
++    | A     | true      |
++    | B     | false     |
++  Then "#toggle-all" is not checked
++
++  Scenario: Toggle-all clears after clear completed
++  Given the app has the following todos:
++    | title  | completed |
++    | Active | false     |
++    | Done   | true      |
++  When the user clicks ".clear-completed"
++  Then "#toggle-all" is not checked
+diff --git a/scantlings/todos-localstorage.md b/scantlings/todos-localstorage.md
+new file mode 100644
+index 0000000..c3c3d56
+--- /dev/null
++++ b/scantlings/todos-localstorage.md
+@@ -0,0 +1,27 @@
++# Scantling: todos-vanillajs localStorage shape
++
++Mechanical shape of the TodoMVC persistence contract. The app stores the todo
++collection in `localStorage` under the key `todos-vanillajs`. The stored value
++is a JSON array. Every element conforms to the `todo item` schema. The app MUST
++NOT persist any field outside this shape, including an `editing` flag.
++
++## todo item
++
++```json
++{
++  "$schema": "https://json-schema.org/draft/2020-12/schema",
++  "title": "todo item",
++  "type": "object",
++  "additionalProperties": false,
++  "required": ["id", "title", "completed"],
++  "properties": {
++    "id": { "type": ["integer", "string"] },
++    "title": { "type": "string" },
++    "completed": { "type": "boolean" }
++  }
++}
++```
++
++## todos-vanillajs value
++
++A JSON array whose elements each conform to the `todo item` schema above.
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..0affaaf
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,52 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/todos.feature:Empty state hides main and footer",
++      "features/todos.feature:New todo input is focused on load",
++      "features/todos.feature:Creating a todo appends it and clears the input",
++      "features/todos.feature:Blank whitespace-only new todo is ignored",
++      "features/todos.feature:Toggling a todo marks it completed",
++      "features/todos.feature:Double-clicking a label enters editing mode",
++      "features/todos.feature:Clicking destroy removes the todo",
++      "features/todos.feature:Counter shows one active item with singular label",
++      "features/todos.feature:Counter shows several active items with plural label",
++      "features/todos.feature:Counter shows zero active items with plural label",
++      "features/todos.feature:Counter number is wrapped in a strong element",
++      "features/todos.feature:Clear completed removes only completed todos",
++      "features/todos.feature:Clear completed button is hidden with no completed todos",
++      "features/todos.feature:Mark all as complete checks every todo",
++      "features/todos.feature:Mark all as complete unchecks every todo",
++      "features/todos.feature:Toggle-all reflects all single items checked",
++      "features/todos.feature:Toggle-all is unchecked when not all items are complete",
++      "features/todos.feature:Toggle-all clears after clear completed"
++    ]
++  },
++  "watch2": {
++    "scenarios": [
++      "features/editing.feature:Editing saves on Enter",
++      "features/editing.feature:Editing saves on blur",
++      "features/editing.feature:Editing discards changes on Escape",
++      "features/editing.feature:Editing to empty destroys the todo",
++      "features/editing.feature:Editing focuses the edit input"
++    ]
++  },
++  "watch3": {
++    "scenarios": [
++      "features/persistence.feature:New todos persist to localStorage",
++      "features/persistence.feature:Completing a todo persists to localStorage",
++      "features/persistence.feature:Persisted todo items conform to the todo item schema",
++      "features/persistence.feature:Editing state is not persisted",
++      "features/persistence.feature:Todos are restored after a reload"
++    ]
++  },
++  "watch4": {
++    "scenarios": [
++      "features/routing.feature:Default route shows all to-do items",
++      "features/routing.feature:Active route hides completed todos",
++      "features/routing.feature:Completed route hides active todos",
++      "features/routing.feature:Checking a todo in the active filter hides it",
++      "features/routing.feature:Editing a todo in a filtered state updates its label",
++      "features/routing.feature:Active filter is restored after a reload"
++    ]
++  }
++}

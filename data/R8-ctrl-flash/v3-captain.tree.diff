@@ -1,0 +1,244 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index a2aa334..5d7a6af 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -4,22 +4,24 @@
+ 
+ ## Current state
+ 
+-The app shows a blank page in a browser because neither `index.html` nor `js/app.js` exist at the project root. The existing `todos.feature` and `world.js` already presuppose these files, so the suite fails at the Before hook.
++All 33 original scenarios pass under happy-dom. Browser acceptance suite reveals 5 real-browser defects caused by render() replacing DOM nodes via innerHTML instead of mutating existing elements in place. All 33 happy-dom scenarios pass because step definitions re-query the DOM on each assertion, masking the node-identity problem.
+ 
+ ## This voyage's work
+ 
+-Created `features/app-index.feature` — a plumbing spec that explicitly pins:
+-- `index.html` must exist at the project root
+-- It must load `js/app.js` via a script tag
+-- It must contain the new-todo input, the main section, and the footer section from the template
++`features/dom-identity.feature` — 8 scenarios pinning DOM node identity during state changes:
++- Toggle single todo preserves element identity (watches 1a, 1b)
++- Toggle-all preserves element identity (watches 2a, 2b)
++- Toggle-all checkbox reflects individual toggle and clear-completed state (watches 3a, 3b)
++- Delete and clear-completed also pinned as regression (no watch needed — they already pass)
+ 
+-Updated `watchbill.json` with `watch1` naming the new scenario, shifting the existing watches to 2-10.
++5 scenarios fail on current code, exactly matching the acceptance-suite failures.
++
++`watchbill.json` — 3 watches, 6 scenario references, all targeting dom-identity.feature.
+ 
+ ## Next leg
+ 
+-QM dispatches watch1. Crew builds `index.html` from `assets/app-template.index.html` and creates the `js/app.js` module. The scenario in `features/app-index.feature` is the binding prerequisite — watch1 must go green before the deeper watches are reachable.
++QM dispatches watch1. Crew must fix render() to mutate existing DOM nodes in place when toggling completion state, stopping innerHTML replacement from detaching elements.
+ 
+ ## Open
+ 
+-- `RIGGING.md` is absent. The project needs a `focused` command, `specs` directory, and `implementation` directory mapped. Shipwright can derive it at first fitting.
+-- Once `index.html` and `js/app.js` exist, the watch2-10 scenarios exercise runtime behaviour through happy-dom in world.js.
+\ No newline at end of file
++None.
+\ No newline at end of file
+diff --git a/features/dom-identity.feature b/features/dom-identity.feature
+new file mode 100644
+index 0000000..823dbc4
+--- /dev/null
++++ b/features/dom-identity.feature
+@@ -0,0 +1,92 @@
++Feature: DOM node identity during state changes
++  As a user interacting with the todo list
++  I want the list item elements to stay attached to the DOM when their state changes
++  So that the browser does not lose references to elements during normal interactions
++
++  Rule: Toggling a single todo's completion preserves its DOM node
++
++  Scenario: Toggling a todo preserves the list item element
++    Given the app is loaded with todos:
++      | title        |
++      | Buy groceries |
++      | Walk the dog  |
++    When I capture the list item element for "Buy groceries"
++    And I toggle the "Buy groceries" todo
++    Then the captured list item element is still connected to the DOM
++    And the captured list item element has class "completed"
++
++  Scenario: Un-toggling a completed todo preserves its DOM node
++    Given the app is loaded with todos:
++      | title        | completed |
++      | Buy groceries | true      |
++      | Walk the dog  | false     |
++    When I capture the list item element for "Buy groceries"
++    And I toggle the "Buy groceries" todo
++    Then the captured list item element is still connected to the DOM
++    And the captured list item element does not have class "completed"
++
++  Rule: Marking all as complete preserves every list item's DOM node
++
++  Scenario: Marking all as complete preserves every list item element
++    Given the app is loaded with todos:
++      | title        |
++      | Buy groceries |
++      | Walk the dog  |
++      | Write code    |
++    When I capture all list item elements
++    And I toggle the mark-all-complete checkbox
++    Then every captured list item element is still connected to the DOM
++    And every captured list item element has class "completed"
++
++  Scenario: Clearing all complete on toggle-all preserves every list item element
++    Given the app is loaded with todos:
++      | title        | completed |
++      | Buy groceries | true      |
++      | Walk the dog  | true      |
++      | Write code    | true      |
++    When I capture all list item elements
++    And I toggle the mark-all-complete checkbox
++    Then every captured list item element is still connected to the DOM
++    And no captured list item element has class "completed"
++
++  Rule: Toggle-all checkbox reflects individual toggle state
++
++  Scenario: Toggle-all checkbox checks when all items completed individually
++    Given the app is loaded with todos:
++      | title        |
++      | Buy groceries |
++      | Walk the dog  |
++    When I toggle the "Buy groceries" todo
++    And I toggle the "Walk the dog" todo
++    Then the mark-all-complete checkbox is checked
++
++  Scenario: Toggle-all checkbox unchecks when clearing completed
++    Given the app is loaded with todos:
++      | title        | completed |
++      | Buy groceries | true      |
++      | Walk the dog  | false     |
++      | Write code    | true      |
++    When I click the clear-completed button
++    Then the mark-all-complete checkbox is not checked
++
++  Rule: Deleting a todo removes its DOM node cleanly
++
++  Scenario: Deleting a todo removes the element from the DOM
++    Given the app is loaded with todos:
++      | title        |
++      | Buy groceries |
++      | Walk the dog  |
++    When I capture the list item element for "Buy groceries"
++    And I click the destroy button for "Buy groceries"
++    Then the captured list item element is not connected to the DOM
++
++  Rule: Clearing completed removes only completed elements
++
++  Scenario: Clearing completed removes completed elements from the DOM
++    Given the app is loaded with todos:
++      | title        | completed |
++      | Buy groceries | true      |
++      | Walk the dog  | false     |
++    When I capture the list item element for "Buy groceries"
++    And I click the clear-completed button
++    Then the captured list item element is not connected to the DOM
+\ No newline at end of file
+diff --git a/features/support/dom-identity-steps.js b/features/support/dom-identity-steps.js
+new file mode 100644
+index 0000000..7b99891
+--- /dev/null
++++ b/features/support/dom-identity-steps.js
+@@ -0,0 +1,77 @@
++const { Given, When, Then } = require('@cucumber/cucumber');
++const assert = require('node:assert');
++
++/* ------------------------------------------------------------------ */
++/*  Capture element references before an action                        */
++/* ------------------------------------------------------------------ */
++
++When('I capture the list item element for {string}', function (title) {
++  const items = this.document.querySelectorAll('.todo-list li');
++  for (let i = 0; i < items.length; i++) {
++    const label = items[i].querySelector('label');
++    if (label && label.textContent.trim() === title) {
++      this.capturedElement = items[i];
++      return;
++    }
++  }
++  assert.fail(`Todo "${title}" not found for capture`);
++});
++
++When('I capture all list item elements', function () {
++  this.capturedElements = Array.from(this.document.querySelectorAll('.todo-list li'));
++  assert.ok(this.capturedElements.length > 0, 'No list items to capture');
++});
++
++/* ------------------------------------------------------------------ */
++/*  DOM connectivity assertions                                        */
++/* ------------------------------------------------------------------ */
++
++Then('the captured list item element is still connected to the DOM', function () {
++  assert.ok(this.capturedElement, 'No captured element to check');
++  assert.ok(this.capturedElement.isConnected,
++    'Captured element is detached from the DOM — the list was re-rendered');
++});
++
++Then('the captured list item element is not connected to the DOM', function () {
++  assert.ok(this.capturedElement, 'No captured element to check');
++  assert.ok(!this.capturedElement.isConnected,
++    'Captured element is still connected to the DOM');
++});
++
++Then('every captured list item element is still connected to the DOM', function () {
++  assert.ok(this.capturedElements, 'No captured elements to check');
++  assert.ok(this.capturedElements.length > 0, 'Captured elements array is empty');
++  const detached = this.capturedElements.filter(function (el) { return !el.isConnected; });
++  assert.strictEqual(detached.length, 0,
++    detached.length + ' captured element(s) are detached from the DOM — the list was re-rendered');
++});
++
++/* ------------------------------------------------------------------ */
++/*  Class assertions on captured elements                              */
++/* ------------------------------------------------------------------ */
++
++Then('the captured list item element has class {string}', function (className) {
++  assert.ok(this.capturedElement, 'No captured element to check');
++  assert.ok(this.capturedElement.classList.contains(className),
++    'Captured element does not have class "' + className + '"');
++});
++
++Then('the captured list item element does not have class {string}', function (className) {
++  assert.ok(this.capturedElement, 'No captured element to check');
++  assert.ok(!this.capturedElement.classList.contains(className),
++    'Captured element unexpectedly has class "' + className + '"');
++});
++
++Then('every captured list item element has class {string}', function (className) {
++  assert.ok(this.capturedElements, 'No captured elements to check');
++  const missing = this.capturedElements.filter(function (el) { return !el.classList.contains(className); });
++  assert.strictEqual(missing.length, 0,
++    missing.length + ' captured element(s) do not have class "' + className + '"');
++});
++
++Then('no captured list item element has class {string}', function (className) {
++  assert.ok(this.capturedElements, 'No captured elements to check');
++  const found = this.capturedElements.filter(function (el) { return el.classList.contains(className); });
++  assert.strictEqual(found.length, 0,
++    found.length + ' captured element(s) unexpectedly have class "' + className + '"');
++});
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..13b2710
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,14 @@
++{
++  "watch1": [
++    "features/dom-identity.feature:Toggling a todo preserves the list item element",
++    "features/dom-identity.feature:Un-toggling a completed todo preserves its DOM node"
++  ],
++  "watch2": [
++    "features/dom-identity.feature:Marking all as complete preserves every list item element",
++    "features/dom-identity.feature:Clearing all complete on toggle-all preserves every list item element"
++  ],
++  "watch3": [
++    "features/dom-identity.feature:Toggle-all checkbox checks when all items completed individually",
++    "features/dom-identity.feature:Toggle-all checkbox unchecks when clearing completed"
++  ]
++}
+\ No newline at end of file

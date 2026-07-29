@@ -1,0 +1,195 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 905013d..8afb6d7 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -2,37 +2,40 @@
+ 
+ # Captain Notes
+ 
+-## Voyage: Promote @captain conformance scenarios into binding verification
++## Voyage: Spec the event-binding helper capture-flag defect
+ 
+ ### Situation
+ 
+-External browser acceptance suite (Cypress) reports 5 failures:
+-1. Mark all as completed — `cy.eq()` detached from DOM
+-2. Clear complete state — `cy.eq()` detached from DOM
+-3. Mark items as complete — `cy.find()` detached from DOM
+-4. Unmark items as complete — `cy.find()` detached from DOM
+-5. Save edits on blur — expected `<li.editing>` to contain new text
++External browser acceptance suite (Cypress) reports 1 remaining failure:
++- Save edits on blur — expected `<li.editing>` to contain "buy some sausages"
+ 
+-All 5 stem from the same root cause: the `render()` function in `js/app.js` unconditionally removes ALL existing `<li>` children and deletes every entry from the `existingItems` tracking map, then recreates every node from scratch. Any browser-held reference (from `cy.eq()`, `cy.find()`, or a blur event target) is invalidated.
++The prior 4 Cypress failures (detached DOM from `cy.eq()` / `cy.find()`) were resolved by commits `c0eee4c` and `1fb3dfe`, which replaced the innerHTML rebuild with in-place node mutation.
+ 
+-### What was done
++The remaining failure has a different root cause: the `on()` helper function at `js/app.js:72` silently drops the `useCapture` argument:
++
++```javascript
++function on(el, evt, fn) {
++    el.addEventListener(evt, fn);  // ignores 4th argument
++}
++```
+ 
+-Promoted 5 `@captain @conformance` scenarios to binding `@conformance` status:
++The blur handler is registered as `on(todoList, 'blur', handler, true)`, but `true` is never forwarded to `addEventListener`. In a real browser, `blur` does not bubble, so the delegated handler on `todoList` never fires. The harness passes because it dispatches `new Event('blur', {bubbles: true})` which forces bubbling.
++
++### What was done
+ 
+-- `features/conformance/dom-identity.feature` (3 scenarios) — 2 detect the current defect, 1 guards innerHTML
+-- `features/conformance/perturbation-quiescence.feature` (1 scenario) — guards stale perturbation tokens
+-- `features/conformance/watchbill-shape.feature` (1 scenario) — verifies watchbill JSON shape
++Added one `@conformance` scenario to `features/conformance/dom-identity.feature`:
++- "The event binding helper passes the useCapture flag to addEventListener"
+ 
+-Updated `cucumber.js` conformance profile tag from `'@captain and @conformance'` to `'@conformance'`.
++This scenario detects when the `on()` helper calls `addEventListener` with only 2 arguments (event, handler) instead of 3 (event, handler, capture).
+ 
+ ### Current verification state
+ 
+-29 scenarios in default tier (`--tags "not @captain and not @shipwright"`):
+-- 27 pass
+-- 2 fail (the DOM identity scenarios that detect the removeChild + map-clearing anti-patterns)
++30 scenarios in default tier (`--tags "not @captain and not @shipwright"`):
++- 29 pass
++- 1 fails: conformance scenario detecting the missing capture flag
+ 
+ ### Remaining
+ 
+-QM dispatches on `main` with current `watchbill.json` (unchanged — already lists all 29 targets). Crew receives 2 failing conformance targets and fixes `js/app.js`:
+-- Stale-removal loop: remove and `delete` only items whose `data-id` is NOT in the current filtered todo set
+-- Keep the rest in `existingItems` map for in-place mutation (toggle class, update .checked, change textContent)
+\ No newline at end of file
++QM dispatches on `main` with `watchbill.json` (lists all 30 targets). Crew receives 1 failing conformance target and fixes `js/app.js`:
++- Change `function on(el, evt, fn)` to `function on(el, evt, fn, capture)`
++- Change `el.addEventListener(evt, fn)` to `el.addEventListener(evt, fn, capture)`
+\ No newline at end of file
+diff --git a/features/conformance/dom-identity.feature b/features/conformance/dom-identity.feature
+index 6cd982b..5b75de3 100644
+--- a/features/conformance/dom-identity.feature
++++ b/features/conformance/dom-identity.feature
+@@ -28,4 +28,10 @@ Feature: DOM identity preservation
+   Scenario: Render function reuses existing list-item elements instead of always creating new ones
+     Given the project has a render function that writes to the todo list
+     When I check whether the render function creates new list-item elements for items that already exist
+-    Then the render function reuses existing list-item elements for items that are already in the DOM
+\ No newline at end of file
++    Then the render function reuses existing list-item elements for items that are already in the DOM
++
++  @conformance
++  Scenario: The event binding helper passes the useCapture flag to addEventListener
++    Given the project has an event binding helper function
++    When I check whether the helper passes the useCapture argument to addEventListener
++    Then the helper passes the useCapture flag to the native addEventListener
+\ No newline at end of file
+diff --git a/features/support/conformance-steps.js b/features/support/conformance-steps.js
+index 15b95ca..98a429d 100644
+--- a/features/support/conformance-steps.js
++++ b/features/support/conformance-steps.js
+@@ -224,4 +224,65 @@ Then('the render function reuses existing list-item elements for items that are
+     'FIX: In the stale-removal loop, only `delete` items that are NOT in the filtered ' +
+     'todo set. Keep items that should be preserved in the map so they can be reused ' +
+     'and mutated in place instead of being recreated.');
++});
++
++// ---------------------------------------------------------------------------
++// Conformance: Event binding helper passes useCapture flag
++// ---------------------------------------------------------------------------
++
++Given('the project has an event binding helper function', function () {
++  const appPath = path.join(ROOT, 'js', 'app.js');
++  assert.ok(fs.existsSync(appPath), 'js/app.js not found');
++  const source = fs.readFileSync(appPath, 'utf8');
++  this.appSource = source;
++  // Check that a helper named 'on' exists and wraps addEventListener
++  const hasOnHelper = /function\s+on\s*\(/.test(source);
++  const hasAddEventListener = /addEventListener\s*\(/.test(source);
++  assert.ok(hasOnHelper && hasAddEventListener,
++    'Expected an event binding helper function that wraps addEventListener');
++});
++
++When('I check whether the helper passes the useCapture argument to addEventListener', function () {
++  const source = this.appSource;
++  // Detect whether the 'on' helper passes a capture flag to addEventListener.
++  //
++  // The BUG: function on(el, evt, fn) { el.addEventListener(evt, fn); }
++  // The `on` helper takes only 3 params and addEventListener has only 2 args,
++  // so the 4th useCapture argument is silently dropped.
++  //
++  // The FIX: function on(el, evt, fn, capture) { el.addEventListener(evt, fn, capture); }
++  // The helper takes a 4th param and addEventListener receives 3 args.
++  //
++  // Strategy: extract the function body of the `on` helper and check whether
++  // addEventListener is called with exactly 2 arguments (bug) or 3+ (fixed).
++  const onMatch = source.match(/function\s+on\s*\(([^)]*)\)\s*\{([^}]*)\}/);
++  if (!onMatch) {
++    this.onHelperHasCapture = false;
++    return;
++  }
++  const onBody = onMatch[2];
++  // Find addEventListener call inside the on body
++  const addEventListenerCall = onBody.match(/addEventListener\s*\(([^)]*)\)/);
++  if (!addEventListenerCall) {
++    this.onHelperHasCapture = false;
++    return;
++  }
++  const args = addEventListenerCall[1].split(',').map(function (a) { return a.trim(); });
++  // If addEventListener has 3 args, the third is the capture flag.
++  // If only 2 args, the capture flag is not passed.
++  this.onHelperHasCapture = args.length >= 3;
++});
++
++Then('the helper passes the useCapture flag to the native addEventListener', function () {
++  assert.ok(this.onHelperHasCapture,
++    'FAIL: The event binding helper function does NOT pass the useCapture/' +
++    'options argument to the native addEventListener. ' +
++    'The helper wraps addEventListener with only 2 arguments (event, handler), ' +
++    'silently dropping any capture flag the caller provides. ' +
++    'In a real browser, delegated handlers on non-bubbling events such as ' +
++    '"blur" never fire because the capture flag is lost. ' +
++    'The harness does not catch this because it dispatches synthetic events ' +
++    'with {bubbles: true}.\n' +
++    'FIX: Change the helper signature to accept and forward a capture parameter: ' +
++    'function on(el, evt, fn, capture) { el.addEventListener(evt, fn, capture); }');
+ });
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..4328306
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,32 @@
++[
++  { "scenario": "Todo management — No todos hides main and footer sections" },
++  { "scenario": "Todo management — Create a new todo by pressing Enter" },
++  { "scenario": "Todo management — Trimming whitespace from new todo title" },
++  { "scenario": "Todo management — Empty todo is not created" },
++  { "scenario": "Todo management — Show the active todo count" },
++  { "scenario": "Todo management — Pluralize item count correctly" },
++  { "scenario": "Todo completion — Toggle a single todo as complete" },
++  { "scenario": "Todo completion — Mark all todos as complete" },
++  { "scenario": "Todo completion — Clear completed button is hidden when no completed todos" },
++  { "scenario": "Todo completion — Clear completed button removes completed todos" },
++  { "scenario": "Todo completion — Toggle-all reflects individual completion state" },
++  { "scenario": "Todo editing — Double-clicking a todo label activates editing mode" },
++  { "scenario": "Todo editing — Save edit by pressing Enter" },
++  { "scenario": "Todo editing — Save edit by blurring the input" },
++  { "scenario": "Todo editing — Cancel edit by pressing Escape" },
++  { "scenario": "Todo editing — Empty title destroys the todo on save" },
++  { "scenario": "Routing — Default route shows all todos" },
++  { "scenario": "Routing — Active route shows only active todos" },
++  { "scenario": "Routing — Completed route shows only completed todos" },
++  { "scenario": "Routing — Selected filter class toggles with route change" },
++  { "scenario": "Routing — Completing a todo in a filtered view hides it" },
++  { "scenario": "Persistence — Todos are persisted to localStorage" },
++  { "scenario": "Persistence — Todos are restored from localStorage on load" },
++  { "scenario": "Persistence — Completion state is persisted" },
++  { "scenario": "DOM identity — Render function does not rebuild the todo list via innerHTML" },
++  { "scenario": "DOM identity — Render function does not unconditionally remove all list-item children" },
++  { "scenario": "DOM identity — Render function reuses existing list-item elements instead of always creating new ones" },
++  { "scenario": "DOM identity — The event binding helper passes the useCapture flag to addEventListener" },
++  { "scenario": "Perturbation — No active perturbation in implementation code" },
++  { "scenario": "Watchbill — Watchbill shape conformance" }
++]
+\ No newline at end of file

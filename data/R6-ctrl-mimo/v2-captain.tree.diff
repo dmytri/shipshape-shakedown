@@ -1,0 +1,62 @@
+diff --git a/features/step_definitions/todomvc.steps.js b/features/step_definitions/todomvc.steps.js
+index e79d947..8c3b0b6 100644
+--- a/features/step_definitions/todomvc.steps.js
++++ b/features/step_definitions/todomvc.steps.js
+@@ -280,3 +280,25 @@ Then('the footer is visible', function () {
+     throw new Error('Footer is hidden but expected visible');
+   }
+ });
++
++When('the user captures the todo list item for {string}', function (title) {
++  // Store a live DOM reference so a later step can verify the element
++  // was not destroyed and recreated by a re-render.
++  const li = this.getTodoLi(title);
++  if (!li) throw new Error(`No todo found for "${title}"`);
++  this._capturedTodoLi = li;
++});
++
++Then('the captured todo list item is still attached to the DOM', function () {
++  if (!this._capturedTodoLi) {
++    throw new Error('No todo list item was captured by a preceding capture step');
++  }
++  if (!this.document.body.contains(this._capturedTodoLi)) {
++    throw new Error(
++      'The captured todo list item was detached from the DOM after re-render. ' +
++      'The app destroyed and recreated DOM nodes instead of updating them in place. ' +
++      'This breaks browser automation tools that hold element references across actions.'
++    );
++  }
++  delete this._capturedTodoLi;
++});
+diff --git a/features/todomvc-app.feature b/features/todomvc-app.feature
+index bfa43cb..ed285a2 100644
+--- a/features/todomvc-app.feature
++++ b/features/todomvc-app.feature
+@@ -27,6 +27,14 @@ Feature: TodoMVC application
+ 
+   Rule: Completing todos
+ 
++    @contract
++    Scenario: Toggling a todo preserves the todo list item element identity
++      Given the user has added todo "Buy groceries"
++      And the user has added todo "Walk the dog"
++      When the user captures the todo list item for "Walk the dog"
++      And the user toggles the checkbox for todo "Buy groceries"
++      Then the captured todo list item is still attached to the DOM
++
+     Scenario: Mark a single todo as completed
+       Given the user has added todo "Buy groceries"
+       When the user toggles the checkbox for todo "Buy groceries"
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..0e16b26
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,7 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/todomvc-app.feature:Toggling a todo preserves the todo list item element identity"
++    ]
++  }
++}

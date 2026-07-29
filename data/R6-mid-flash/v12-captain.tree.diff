@@ -1,0 +1,106 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index fe38096..748d99e 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -11,12 +11,33 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ - Assets landed: `assets/app-spec.md` (product spec), `assets/app-template.index.html` (base markup).
+ - Durable work this cycle: spec feature files under `features/`, `watchbill.json`.
+ 
++## Current voyage
++
++**Acceptance-suite failures (real browser Cypress, fixed test, 10 failures):**
++
++| Group | Failure | Root cause | Fix required |
++|-------|---------|------------|--------------|
++| A (tests 1-4) | DOM detachment on toggle/toggle-all | `render()` replaces all `<li>` via `innerHTML = ''`; browser references to previous nodes become detached | Mutate existing DOM in place — toggle `.completed` class and `.checked` on existing nodes instead of rebuilding list |
++| B (tests 5-10) | Edit input not visible / label not hidden | dblclick handler sets `todo.editing = true` in memory then calls `render()` which reloads `todos` from localStorage (via `getTodos()`). `setTodos()` strips `editing` flag before save, so `editing` class NEVER applied; edit input stays `display: none` | Preserve `editing` through render: either pass transient state explicitly, or set `editing` directly on DOM without re-rendering |
++
++**Scenarios that will fail with honest step definitions:**
++- `Edit input is visible when entering edit mode` — QM creates step using `getComputedStyle`, fails because `editing` class never applied → `display: none`
++- `View controls are hidden when editing` — QM creates step using `getComputedStyle`, fails because `.view` never gets `display: none`
++
++**Perturbation needed in watchbill:** `render()` seam (`js/app.js`) for DOM-identity defect (browser-only, harness cannot reproduce).
++
+ ## Decisions
+ 
+ - Storage key: `todos-vanillajs` per spec convention (`todos-[framework]`).
+-- Tier: happy-dom (default). The spec requires DOM rendering; happy-dom is the cheapest tier that observes it.
++- Tier: happy-dom (default).
+ - Scantling for localStorage shape at `scantlings/todo-storage.json`.
++- Fixed acceptance suite (Cypress, real browser) is authoritative; harness workarounds in step definitions mask bugs.
++- Editing visibility scenarios use step concepts QM must implement with computed-style checks.
+ 
+ ## Next
+ 
+-Dispatch QM with `watchbill.json` targets when production code exists.
+\ No newline at end of file
++Dispatch QM with `watchbill.json` targets.
++
++## Per-voyage trim boundary
++
++Voyage: R6-mid-flash. Clean deck from this point: watchbill written, specs updated, CAPTAIN.md synced.
+\ No newline at end of file
+diff --git a/features/todo-management.feature b/features/todo-management.feature
+index 6b8c127..711b970 100644
+--- a/features/todo-management.feature
++++ b/features/todo-management.feature
+@@ -83,6 +83,16 @@ Feature: Todo management
+     And the edit input contains "Buy milk"
+     And the edit input has focus
+ 
++  Scenario: Edit input is visible when entering edit mode
++    Given the todo list has 1 item with title "Buy milk"
++    When I double-click the todo label
++    Then the edit input for the first todo is visible
++
++  Scenario: View controls are hidden when editing
++    Given the todo list has 1 item with title "Buy milk"
++    When I double-click the todo label
++    Then the view controls for the first todo are hidden
++
+   Scenario: Save edit by pressing Enter
+     Given the todo list has 1 item with title "Buy milk"
+     When I double-click the todo label
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..08f3a87
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,36 @@
++{
++  "watches": [
++    {
++      "name": "Editing mode visibility",
++      "description": "Edit input must be visible and view controls hidden when in editing mode",
++      "scenarios": [
++        "features/todo-management.feature:Edit input is visible when entering edit mode",
++        "features/todo-management.feature:View controls are hidden when editing"
++      ]
++    },
++    {
++      "name": "DOM identity perturbation",
++      "description": "Browser DOM-identity defect: render() replaces list <li> elements on every mutation, detaching references. Existing toggle scenarios pass in harness but fail in real browser. Perturb at the render() seam to force in-place mutation.",
++      "perturbation": {
++        "file": "js/app.js",
++        "seam": "render() function — todoList.innerHTML = '' rebuilds the entire list, destroying element identity",
++        "binding": [
++          "features/todo-management.feature:Toggle all todos to completed",
++          "features/todo-management.feature:Toggle all clears when all are already completed",
++          "features/todo-management.feature:Mark a todo as completed by clicking the checkbox",
++          "features/todo-management.feature:Unmark a completed todo by clicking the checkbox again"
++        ]
++      }
++    },
++    {
++      "name": "Editing save and cancel",
++      "scenarios": [
++        "features/todo-management.feature:Save edit by pressing Enter",
++        "features/todo-management.feature:Save edit on blur",
++        "features/todo-management.feature:Destroy todo when edit is cleared to empty",
++        "features/todo-management.feature:Destroy todo when edit is whitespace-only",
++        "features/todo-management.feature:Cancel edit by pressing Escape"
++      ]
++    }
++  ]
++}
+\ No newline at end of file

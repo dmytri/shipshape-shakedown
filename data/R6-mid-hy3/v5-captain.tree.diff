@@ -1,0 +1,247 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index bb2f3b7..922b968 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -6,14 +6,14 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ 
+ ## Defect under sail
+ 
+-The external browser acceptance suite (real browser, Cypress) now fails on one TodoMVC behaviour: editing a todo to an empty string and committing with Enter. The error is `NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is no longer a child of this node. Perhaps it was moved in a 'blur' event handler?`
++The external browser acceptance suite (real browser, Cypress) fails on one TodoMVC behaviour: editing a todo to an empty string and committing with Enter. The error is `NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is no longer a child of this node. Perhaps it was moved in a 'blur' event handler?`
+ 
+-The previous `dom-identity` defect (render rebuilt every `<li>`, fixed in commit 1f6f0ad) is closed. This is a different, browser-only defect. Root cause: the edit-commit path is reached from two handlers. The `keydown` Enter handler calls `commitEdit`, which splices the todo and calls `render`; `render` removes the item's `<li>`. A real browser fires `blur`/`focusout` on the removed edit input during that `removeChild`, before the node detaches, so `isConnected` is still true and the `editing` class is still present. The `focusout` guard does not catch this, so it calls `commitEdit` a second time and `render` calls `removeChild` again on the already-detached node.
++Root cause, traced from the failure stack (`app.js:107` render removeChild, reached from `commitEdit` from the `keydown` Enter handler at `app.js:197`): a real browser fires `focusout`/`blur` on the removed edit input **during** the list-element `removeChild`, while the `<li>` is still connected and still carries the `editing` class. The `focusout` handler guards re-entry with `!li.isConnected || !li.classList.contains('editing')`, but at that instant `isConnected` is true and `editing` is still present, so it calls `commitEdit` a second time. `render` runs again, a nested `removeChild` detaches the node, and the outer `removeChild` then throws `NotFoundError`.
+ 
+-happy-dom is lenient and does not throw on `removeChild` of a non-child, so the in-harness suite cannot reproduce the crash. The fix is product intent, not a hint: the reconcile (or the edit-commit) must not remove, or attempt to remove, a node that is no longer a child of the list. `features/edit-empty-commit.feature` pins this as a `@conformance` source check, because the in-harness DOM cannot reproduce the crash. QM authors the checker that reddens on the current code; Crew fixes the product from that spec.
++The empty-edit branch of `commitEdit` removes the todo but never clears the `editing` class (normal edits rely on `render`'s `updateItem` to clear it, but the removed item never reaches `updateItem`). The fix is product intent, not a hint: the empty-edit commit must end the editing state (remove the `editing` class) before the reconcile, so the focusout guard blocks re-entrancy. The earlier `todoList.contains(li)` guard on the render `removeChild` is necessary but NOT sufficient — at re-entrant-`focusout` time the node is still a child, so that guard alone does not stop the crash. This is why the prior `contain`-only pin stayed green while the browser still failed.
+ 
+-This defect is browser-only and must not be forced into a failing in-harness product scenario. The `@conformance` source check is the sanctioned guard.
++happy-dom is lenient: it never throws on `removeChild` of a non-child and never fires a blur during `removeChild`, so the in-harness suite cannot reproduce the crash as a runtime assertion. `features/edit-empty-commit.feature` pins the behaviour as a `@conformance` source check, because the in-harness DOM cannot reproduce the crash. QM authors/extends the checker (`features/support/reconcile_safety.js`) so it reddens on the current code — it now requires BOTH (1) the reconcile removes only current children AND (2) the empty-edit commit ends the editing state before the reconcile — and greens on the corrected code. This is the sanctioned guard; the defect must not be forced into a failing in-harness product scenario.
+ 
+ ## Standing state (this leg)
+ 
+-The prior voyage struck `watchbill.json` as voyage-complete, leaving the `@conformance` pin inert. Re-established `watchbill.json` -> `edit-empty-commit-reconcile` targeting `features/edit-empty-commit.feature:An empty-edit commit does not remove a detached list element`. The source check (`features/support/reconcile_safety.js`) reddens on the unguarded `todoList.removeChild(li)` and greens on the fixed code; verified by a planted-red probe before re-watchbilling. QM re-runs the watch to confirm the acceptance build carries the guard.
++`watchbill.json` -> `watch1` targeting `features/edit-empty-commit.feature:An empty-edit commit ends editing before the list reconciles`. The source check reddens on the unguarded empty-edit commit and greens once Crew clears the `editing` class (or detaches the `<li>`) in the empty-edit branch of `commitEdit`. QM re-runs the watch to confirm the acceptance build carries the guard.
+diff --git a/features/edit-empty-commit.feature b/features/edit-empty-commit.feature
+index 2618e1d..3b9504e 100644
+--- a/features/edit-empty-commit.feature
++++ b/features/edit-empty-commit.feature
+@@ -1,14 +1,18 @@
+ Feature: Empty-edit commit DOM safety
+   As a todo app user
+   I want committing an empty edit to remove the item without a DOM error
+-  So that the blur a real browser fires after the commit does not crash the app
++  So that the blur a real browser fires on the removed edit input does not re-enter the
++  edit-commit path and crash the app with a NotFoundError
+ 
+-  Rule: A real browser fires a blur on the removed edit input during the list removal, which
+-  re-enters the edit-commit path. The reconcile must never call removeChild on a node that is no
+-  longer a child of the list, or the browser raises a NotFoundError.
++  Rule: A real browser fires a blur/focusout on the removed edit input during the list
++  element's removal. The edit-commit path must not be reachable from that re-entrant
++  blur. The empty-edit commit must end the item's editing state (remove the "editing"
++  class) before the list reconciles, so the focusout guard
++  ("!li.classList.contains('editing')") blocks the re-entrant commitEdit and no second
++  removeChild is attempted on a node already detached from the list.
+ 
+   @conformance
+-  Scenario: An empty-edit commit does not remove a detached list element
++  Scenario: An empty-edit commit ends editing before the list reconciles
+     Given the app source at "js/app.js"
+-    When the empty-edit commit reconcile is checked for a detached-node removeChild
+-    Then the reconcile never removes a list element that is not a current child of the todo list
++    When the empty-edit commit path is checked for a re-entrant edit commit
++    Then the empty-edit commit ends the editing state before the reconcile and the reconcile removes only current children of the todo list
+diff --git a/features/support/reconcile_safety.js b/features/support/reconcile_safety.js
+index 5e90929..02c5a8e 100644
+--- a/features/support/reconcile_safety.js
++++ b/features/support/reconcile_safety.js
+@@ -1,18 +1,30 @@
+ 'use strict';
+ 
+-// Conformance verification support: statically verify the todo-list reconcile never
+-// removes a list element that is not a current child of the list.
++// Conformance verification support: statically verify two linked properties of the
++// todo-list edit-commit path in js/app.js.
+ //
+-// happy-dom never throws on removeChild of a detached node, so this defect cannot be
+-// reproduced as a runtime assertion in the harness. The Captain pinned it as a
+-// @conformance source check instead: the reconcile (in js/app.js) must guard every
+-// `todoList.removeChild(child)` with a current-child check (todoList.contains(child),
+-// child.isConnected, or child.parentNode === todoList) so a re-entrant edit-commit path
+-// cannot call removeChild on a node already detached from the list.
++//   1. Defense in depth: the reconcile (render) must only ever call
++//      `todoList.removeChild(child)` on a node that is a current child of the list
++//      (guarded by `todoList.contains(child)`, `child.isConnected`, or
++//      `child.parentNode === todoList`).
+ //
+-// The checker reads js/app.js as source and asserts the structural property. It is owned
+-// verification support under QM, not a Captain-owned scantling file: it asserts real
+-// structure (the source's guard), not a spied call.
++//   2. Root cause: the empty-edit commit (commitEdit, when the trimmed title is the
++//      empty string) must END the item's editing state before the reconcile runs.
++//      A real browser fires a blur/focusout on the removed edit input DURING the
++//      list-element removal (removeChild), while the <li> is still connected and
++//      still carries the `editing` class. The focusout handler guards re-entry with
++//      `!li.classList.contains('editing')`; if the empty-edit branch never clears
++//      that class, the focusout re-enters commitEdit, render runs a second time, and
++//      a nested removeChild detaches the node before the outer removeChild completes,
++//      raising NotFoundError in a real browser.
++//
++// happy-dom never throws on removeChild of a detached node and never fires a blur
++// during removeChild, so this defect cannot be reproduced as a runtime assertion in
++// the harness. The Captain pins it as a @conformance source check instead.
++//
++// The checker reads js/app.js as source and asserts the structural properties. It is
++// owned verification support under QM, not a Captain-owned scantling file: it asserts
++// real structure (the source's guard and the editing-state reset), not a spied call.
+ 
+ function matchBracePair(src, openIdx) {
+   let depth = 0;
+@@ -26,6 +38,40 @@ function matchBracePair(src, openIdx) {
+   return -1;
+ }
+ 
++function extractFunction(source, name) {
++  // The edit-commit function is always `commitEdit`; a regex literal avoids the
++  // template-literal escape pitfalls that silently drop the parenthesised parameter.
++  const m = /const\s+commitEdit\s*=\s*\([^)]*\)\s*=>\s*\{/.exec(source);
++  if (!m) return null;
++  const open = source.indexOf('{', m.index);
++  const close = matchBracePair(source, open);
++  if (close === -1) return null;
++  return source.slice(open, close + 1);
++}
++
++
++function findEmptyEditBranch(fnBody) {
++  // Locate `if (title === '') { ... }` (title = edit.value.trim()). Return the index of
++  // the `if` token and the brace body, or null if there is no empty-title branch.
++  const m = /if\s*\(\s*title\s*===\s*(''|""\s*)\s*\)\s*\{/.exec(fnBody);
++  if (!m) return null;
++  const open = fnBody.indexOf('{', m.index);
++  const close = matchBracePair(fnBody, open);
++  if (close === -1) return null;
++  return { start: m.index, body: fnBody.slice(open, close + 1) };
++}
++
++function clearsEditingOrDetaches(branch) {
++  // The empty-edit branch must end the editing state (remove the `editing` class) or
++  // detach the <li> itself, so a re-entrant focusout cannot re-commit it.
++  return (
++    /classList\.(remove|toggle)\(\s*['"]editing['"]/.test(branch) ||
++    /className\s*=/.test(branch) ||
++    /parentNode\.removeChild/.test(branch) ||
++    /\.remove\(\s*\)/.test(branch)
++  );
++}
++
+ function findListVar(source) {
+   const m = /const\s+(\w+)\s*=\s*\$\(\s*'\.todo-list'\s*\)/.exec(source);
+   return m ? m[1] : null;
+@@ -111,6 +157,9 @@ function checkReconcile(source) {
+   if (!listVar) {
+     return { ok: false, reason: "could not locate the todo-list element reference ($('.todo-list'))" };
+   }
++  const issues = [];
++
++  // (1) Defense: the reconcile may only remove a current child of the list.
+   const reconcile = extractReconcile(source);
+   const re = new RegExp(`\\b${listVar}\\.removeChild\\(\\s*([^)]*)\\)`, 'g');
+   let m;
+@@ -122,20 +171,52 @@ function checkReconcile(source) {
+       offenders.push({ childArg, cond: cond || 'none' });
+     }
+   }
+-  if (offenders.length === 0) {
+-    return { ok: true, reason: 'reconcile removes only current children of the todo list (or removes nothing)' };
++  if (offenders.length > 0) {
++    issues.push(
++      'reconcile can remove a list element that is not a current child: ' +
++        offenders
++          .map(
++            (o) =>
++              `${listVar}.removeChild(${o.childArg}) is not guarded by a current-child check (enclosing condition: ${o.cond})`,
++          )
++          .join('; '),
++    );
++  }
++
++  // (2) Root cause: the empty-edit commit must end the editing state before the
++  // reconcile removes the <li>, so a real browser's re-entrant focusout cannot call
++  // commitEdit a second time and removeChild a node already detached from the list.
++  const commit = extractFunction(source, 'commitEdit');
++  if (!commit) {
++    issues.push('could not locate the commitEdit function');
++  } else {
++    const branch = findEmptyEditBranch(commit);
++    if (!branch) {
++      issues.push('commitEdit has no empty-title branch that removes the item');
++    } else {
++      // Accept clearing anywhere on the empty-edit path: in the empty branch itself or
++      // earlier in commitEdit (before the empty-title branch), since either placement
++      // ends the editing state before the reconcile runs.
++      const prefix = commit.slice(0, branch.start);
++      const editedPath = prefix + '\n' + branch.body;
++      if (!clearsEditingOrDetaches(editedPath)) {
++        issues.push(
++          'the empty-edit commit branch removes the todo but does not clear the "editing" ' +
++            'class or detach the <li> before the reconcile, so a re-entrant focusout can call ' +
++            'commitEdit a second time and removeChild on an already-detached node (NotFoundError)',
++        );
++      }
++    }
++  }
++
++  if (issues.length > 0) {
++    return { ok: false, reason: issues.join('. ') };
+   }
+-  const detail = offenders
+-    .map((o) => `${listVar}.removeChild(${o.childArg}) is not guarded by a current-child check (enclosing condition: ${o.cond})`)
+-    .join('; ');
+   return {
+-    ok: false,
++    ok: true,
+     reason:
+-      `reconcile can remove a list element that is not a current child: ${detail}. ` +
+-      'A re-entrant edit-commit (keydown Enter followed by the focusout a real browser fires on the ' +
+-      'removed edit input) can call removeChild on a node already detached from the list, raising ' +
+-      'NotFoundError in a real browser.',
++      'empty-edit commit ends the editing state before the reconcile, and the reconcile removes only current children of the todo list',
+   };
+ }
+ 
+-module.exports = { checkReconcile, _internals: { matchBracePair, findListVar, extractReconcile, enclosingIfCondition, hasCurrentChildGuard } };
++module.exports = { checkReconcile, _internals: { matchBracePair, findListVar, extractReconcile, extractFunction, findEmptyEditBranch, clearsEditingOrDetaches, enclosingIfCondition, hasCurrentChildGuard } };
+diff --git a/features/support/step_definitions/steps.js b/features/support/step_definitions/steps.js
+index 7388ead..97ebd1d 100644
+--- a/features/support/step_definitions/steps.js
++++ b/features/support/step_definitions/steps.js
+@@ -393,12 +393,12 @@ Given('the app source at {string}', function (relPath) {
+   this.appSource = fs.readFileSync(full, 'utf8');
+ });
+ 
+-When('the empty-edit commit reconcile is checked for a detached-node removeChild', function () {
++When('the empty-edit commit path is checked for a re-entrant edit commit', function () {
+   assert(this.appSource != null, 'verification support: load the app source first with "the app source at"');
+   this.reconcileReport = checkReconcile(this.appSource);
+ });
+ 
+-Then('the reconcile never removes a list element that is not a current child of the todo list', function () {
++Then('the empty-edit commit ends the editing state before the reconcile and the reconcile removes only current children of the todo list', function () {
+   const report = this.reconcileReport;
+   assert(report && report.ok === true,
+     `reconcile safety check failed: ${report ? report.reason : 'check was not run'}`);
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..0e4ec6b
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,7 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/edit-empty-commit.feature:An empty-edit commit ends editing before the list reconciles"
++    ]
++  }
++}

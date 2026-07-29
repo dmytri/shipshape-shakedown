@@ -1,0 +1,29 @@
+# banked: 2026-07-29T01:01:48Z
+# verdict: PENDING
+# leg: {  "name": "v2-qm",  "model": "tencent/hy3",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/R6-cand-hy3/sim",  "timeout_s": 3600,  "max_tokens": 32768,  "skills": [    "/home/exedev/shipshape-shakedown/experiments/methods-candidate/skills/shipshape",    "/home/exedev/shipshape-shakedown/experiments/methods-candidate/skills/qm",    "/home/exedev/shipshape-shakedown/experiments/methods-candidate/skills/crew",    "/home/exedev/shipshape-shakedown/experiments/methods-candidate/skills/boatswain",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== v2-qm.session.jsonl ===
+  turns=19  wall=356.9s  in=142140  out=30219  cache_read=747072  cost=$0.0636
+  role reads: qm@t0 -> shipshape@t0 -> crew@t9 -> boatswain@t9
+  roles loaded: boatswain, crew, qm, shipshape
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    2267/244        0 $0.0005  read, read
+    t1   16295/204        0 $0.0024  bash
+    t2     972/350    16256 $0.0009  read
+    t3    9080/549    17152 $0.0022  bash, read, read
+    t4    3154/242    26112 $0.0015  read, read
+    t5   34032/1020       0 $0.0054  read, read
+    t6    3317/3940   34560 $0.0040  bash, bash
+    t7   42351/1047       0 $0.0065  edit
+    t8     759/279    42688 $0.0018  bash
+    t9    1037/3448   43392 $0.0037  read, read
+    t10   8048/9647   44416 $0.0083  read
+    t11  10102/750    52352 $0.0037  edit
+    t12    785/308    62464 $0.0025  bash
+    t13    520/444    63168 $0.0025  bash
+    t14   2544/3881   63616 $0.0048  bash
+    t15   3545/465    66944 $0.0031  bash
+    t16    707/1014   70464 $0.0032  bash
+    t17   1245/1152   71168 $0.0033  bash
+    t18   1380/1235   72320 $0.0034  -

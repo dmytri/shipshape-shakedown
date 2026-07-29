@@ -1,0 +1,146 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index cdaeca1..8752724 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -15,6 +15,18 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ 
+ **Total scenarios:** 21
+ 
++## Voyage 2: DOM-identity preservation (browser acceptance fix)
++
++**Product defect:** The external browser acceptance suite (Cypress) fails 4 scenarios with "element has detached from DOM". The app's `render()` function destroys and rebuilds the entire todo list (`list.innerHTML = ''`) on every state change. A real browser holds element references across command chains; when the node is replaced, those references become stale.
++
++**Spec written:**
++- `features/dom-identity.feature` — 4 scenarios covering DOM-identity preservation on toggle, toggle-all, and edit-save
++- `features/support/steps.js` — added capture/assertion steps for DOM node identity checks
++
++**Root cause in `js/app.js`:** The `render()` function at line ~119 does `list.innerHTML = ''` then recreates all `<li>` elements. The fix is to mutate existing nodes in place: when toggling a todo, find its `<li>`, toggle the class and checkbox state, do NOT rebuild the list. Only full re-renders (add/remove) should touch the list structure.
++
++**Total scenarios:** 28 (24 passing, 4 failing — the 4 new ones pin the defect)
++
+ **Implementation plan (for QM/Crew):**
+ - `index.html` at project root, adapted from `assets/app-template.index.html` (remove template comments, update paths to `node_modules/` CSS)
+ - `js/app.js` at project root — single-file vanilla JS implementation
+diff --git a/features/dom-identity.feature b/features/dom-identity.feature
+new file mode 100644
+index 0000000..98f1f8e
+--- /dev/null
++++ b/features/dom-identity.feature
+@@ -0,0 +1,44 @@
++Feature: DOM identity preservation
++  As a user interacting with the todo list
++  When I toggle a todo or perform other state-changing actions
++  The existing DOM elements must remain attached to the document
++  So that browser-driven interactions (which hold element references across commands)
++  do not break with "element has detached from DOM" errors
++
++  Rule: Toggling a todo preserves the <li> node identity
++
++    Scenario: Clicking the toggle checkbox does not replace the todo <li> element
++      Given the user has created a todo "Buy milk"
++      And the user has created a todo "Walk dog"
++      When the user captures the DOM identity of the first todo
++      And the user toggles the first todo
++      Then the first todo <li> element must still be the same DOM node
++      And the first todo should be completed
++
++    Scenario: Clicking the toggle checkbox on a completed todo does not replace the <li> element
++      Given the user has created a completed todo "Buy milk"
++      When the user captures the DOM identity of the first todo
++      And the user toggles the first todo
++      Then the first todo <li> element must still be the same DOM node
++      And the first todo should not be completed
++
++  Rule: Toggle-all preserves <li> node identities
++
++    Scenario: Clicking toggle-all does not replace any todo <li> elements
++      Given the user has created a todo "Buy milk"
++      And the user has created a todo "Walk dog"
++      When the user captures the DOM identity of all todos
++      And the user clicks the toggle-all checkbox
++      Then all todo <li> elements must still be the same DOM nodes
++      And all todos should be completed
++
++  Rule: Editing a todo preserves the <li> node identity
++
++    Scenario: Saving an edit does not replace the todo <li> element
++      Given the user has created a todo "Buy milk"
++      When the user captures the DOM identity of the first todo
++      And the user double-clicks the first todo label
++      And the user types "Buy soy milk" in the edit input
++      And the user presses Enter in the edit input
++      Then the first todo <li> element must still be the same DOM node
++      And the first todo should have title "Buy soy milk"
+diff --git a/features/support/steps.js b/features/support/steps.js
+index ba23e0b..e356a85 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -374,3 +374,50 @@ Then('the {string} filter link should not be selected', function (name) {
+     throw new Error(`Expected "${name}" filter link to NOT be selected`);
+   }
+ });
++
++// ---------------------------------------------------------------------------
++// DOM identity preservation steps
++// ---------------------------------------------------------------------------
++
++When('the user captures the DOM identity of the first todo', function () {
++  const li = todoItems.call(this)[0];
++  if (!li) throw new Error('No todo items found to capture');
++  this._capturedFirstLi = li;
++});
++
++When('the user captures the DOM identity of all todos', function () {
++  const items = todoItems.call(this);
++  if (!items.length) throw new Error('No todo items found to capture');
++  this._capturedAllLis = items.slice();
++});
++
++Then('the first todo <li> element must still be the same DOM node', function () {
++  if (!this._capturedFirstLi) throw new Error('No DOM identity was captured for the first todo');
++  const currentItems = todoItems.call(this);
++  if (!currentItems.length) throw new Error('No todo items found after action');
++  if (currentItems[0] !== this._capturedFirstLi) {
++    throw new Error(
++      'DOM identity violation: the first todo <li> was replaced after the action. '
++      + 'The app must mutate the existing node in place, not rebuild the list.'
++    );
++  }
++});
++
++Then('all todo <li> elements must still be the same DOM nodes', function () {
++  if (!this._capturedAllLis) throw new Error('No DOM identities were captured for the todos');
++  const currentItems = todoItems.call(this);
++  if (currentItems.length !== this._capturedAllLis.length) {
++    throw new Error(
++      `DOM identity violation: expected ${this._capturedAllLis.length} todo items, found ${currentItems.length}. `
++      + 'The app must mutate existing nodes in place, not rebuild the list.'
++    );
++  }
++  for (var i = 0; i < currentItems.length; i++) {
++    if (currentItems[i] !== this._capturedAllLis[i]) {
++      throw new Error(
++        `DOM identity violation: todo <li> at index ${i} was replaced after the action. `
++        + 'The app must mutate existing nodes in place, not rebuild the list.'
++      );
++    }
++  }
++});
+diff --git a/watchbill.json b/watchbill.json
+index e673f22..ea537ce 100644
+--- a/watchbill.json
++++ b/watchbill.json
+@@ -46,5 +46,13 @@
+     "scenarios": [
+       "features/persistence.feature:Todos survive a page reload"
+     ]
++  },
++  "watch7": {
++    "scenarios": [
++      "features/dom-identity.feature:Clicking the toggle checkbox does not replace the todo <li> element",
++      "features/dom-identity.feature:Clicking the toggle checkbox on a completed todo does not replace the <li> element",
++      "features/dom-identity.feature:Clicking toggle-all does not replace any todo <li> elements",
++      "features/dom-identity.feature:Saving an edit does not replace the todo <li> element"
++    ]
+   }
+ }

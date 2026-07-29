@@ -1,0 +1,334 @@
+diff --git a/cucumber.js b/cucumber.js
+index 3224bab..dee4ee3 100644
+--- a/cucumber.js
++++ b/cucumber.js
+@@ -18,4 +18,9 @@ module.exports = {
+     tags: 'not @captain and not @shipwright',
+     format: ['summary'],
+   },
++  conformance: {
++    require: ['features/support/**/*.js'],
++    tags: '@captain and @conformance',
++    format: ['summary'],
++  },
+ };
+\ No newline at end of file
+diff --git a/features/conformance/dom-identity.feature b/features/conformance/dom-identity.feature
+new file mode 100644
+index 0000000..8baeae8
+--- /dev/null
++++ b/features/conformance/dom-identity.feature
+@@ -0,0 +1,23 @@
++Feature: DOM identity preservation
++
++  When the todo list state changes (toggle, add, remove, edit) the render
++  function MUST mutate existing DOM nodes in place — toggle classes, set
++  .checked, update textContent — rather than rebuilding the list from
++  scratch via innerHTML. Rebuilding destroys every existing <li> node,
++  which detaches any browser-held reference and causes Cypress
++  acceptance tests to fail with "element detached from DOM".
++
++  The fix: replace `todoList.innerHTML = html` with a diff loop that
++  reuses existing <li> elements.
++
++  @captain @conformance
++  Scenario: Render function does not rebuild the todo list via innerHTML
++    Given the project has a render function that writes to the todo list
++    When I check whether the render function assigns innerHTML on the todo-list container
++    Then the render function does not use innerHTML reassignment on the todo list
++
++  @captain @conformance
++  Scenario: Render function mutates existing nodes in place for completion toggles
++    Given the project has a render function that handles completion state
++    When I check whether a completion toggle triggers a full innerHTML rebuild
++    Then a completion toggle does not rebuild the list via innerHTML
+\ No newline at end of file
+diff --git a/features/support/conformance-steps.js b/features/support/conformance-steps.js
+new file mode 100644
+index 0000000..7b4919b
+--- /dev/null
++++ b/features/support/conformance-steps.js
+@@ -0,0 +1,153 @@
++const { Given, When, Then } = require('@cucumber/cucumber');
++const assert = require('assert');
++const fs = require('node:fs');
++const path = require('node:path');
++
++const ROOT = path.resolve(__dirname, '..', '..');
++
++// ---------------------------------------------------------------------------
++// Conformance: Perturbation quiescence
++// ---------------------------------------------------------------------------
++
++Given('the project has a perturbation token in its implementation', function () {
++  // Always true — the scenario checks for its absence after loading
++  this.perturbationFiles = [];
++  const implDirs = ['.', 'js'];
++  const marker = /PERTURBATION/i;
++  for (const dir of implDirs) {
++    const absDir = path.resolve(ROOT, dir);
++    if (!fs.existsSync(absDir)) continue;
++    const entries = fs.readdirSync(absDir, { withFileTypes: true });
++    for (const entry of entries) {
++      if (entry.isFile() && entry.name.endsWith('.js')) {
++        const content = fs.readFileSync(path.join(absDir, entry.name), 'utf8');
++        if (marker.test(content)) {
++          this.perturbationFiles.push(path.join(dir, entry.name));
++        }
++      }
++    }
++  }
++  // No-op; the When step will perform the search
++});
++
++When('I search for the PERTURBATION marker in implementation files', function () {
++  // this.perturbationFiles is already populated by the Given step
++});
++
++Then('the token is absent, or verification is red', function () {
++  // If a PERTURBATION marker exists AND verification is green, that's a violation.
++  // This scenario is tagged @conformance so it runs during conformance checks,
++  // not during normal verification. We check the files here.
++  if (this.perturbationFiles.length > 0) {
++    assert.fail(
++      `PERTURBATION token found in implementation files: ${this.perturbationFiles.join(', ')}\n` +
++      'Remove the token before shipping.'
++    );
++  }
++});
++
++// ---------------------------------------------------------------------------
++// Conformance: Watchbill shape
++// ---------------------------------------------------------------------------
++
++Given('the project has a watchbill at the repository root', function () {
++  const watchbillPath = path.join(ROOT, 'watchbill.json');
++  this.watchbillExists = fs.existsSync(watchbillPath);
++  if (this.watchbillExists) {
++    try {
++      this.watchbill = JSON.parse(fs.readFileSync(watchbillPath, 'utf8'));
++    } catch (e) {
++      this.watchbill = null;
++    }
++  }
++});
++
++When('I validate its shape against the Watchbill policy', function () {
++  // Shape validation: must be an array of objects with "scenario" string
++  if (this.watchbillExists) {
++    this.watchbillValid = Array.isArray(this.watchbill) &&
++      this.watchbill.every(item =>
++        item !== null &&
++        typeof item === 'object' &&
++        typeof item.scenario === 'string'
++      );
++  } else {
++    this.watchbillValid = null; // absent = conforming by construction
++  }
++});
++
++Then('the watchbill is valid, or absent and conforming', function () {
++  if (this.watchbillExists) {
++    assert.ok(this.watchbillValid,
++      'watchbill.json exists but has an invalid shape. Expected an array of objects with "scenario" strings.');
++  }
++  // If absent, it's conforming by construction
++});
++
++// ---------------------------------------------------------------------------
++// Conformance: DOM identity preservation
++// ---------------------------------------------------------------------------
++
++Given('the project has a render function that writes to the todo list', function () {
++  const appPath = path.join(ROOT, 'js', 'app.js');
++  assert.ok(fs.existsSync(appPath), 'js/app.js not found');
++  const source = fs.readFileSync(appPath, 'utf8');
++  this.appSource = source;
++  // Check that a render-like function exists (contains "render" reference and todo-list usage)
++  const hasRender = /render/i.test(source);
++  const writesToList = /todoList/i.test(source) || /\.todo-list/i.test(source);
++  assert.ok(hasRender && writesToList,
++    'Expected a render function that writes to the todo list');
++});
++
++When('I check whether the render function assigns innerHTML on the todo-list container', function () {
++  const source = this.appSource;
++  // Look for patterns like: todoList.innerHTML =  or  .querySelector('.todo-list').innerHTML =
++  const innerHtmlOnList = (
++    /todoList\.innerHTML\s*=/.test(source) ||
++    /\.todo-list['"]?\)?\.innerHTML\s*=/.test(source) ||
++    /todo-list['"]?\s*\)?\s*\.innerHTML\s*=/.test(source)
++  );
++  this.usesInnerHtmlOnList = innerHtmlOnList;
++});
++
++Then('the render function does not use innerHTML reassignment on the todo list', function () {
++  assert.ok(!this.usesInnerHtmlOnList,
++    'FAIL: The render function assigns innerHTML on the todo list container. ' +
++    'This destroys all existing <li> DOM nodes, detaching references held by the browser. ' +
++    'FIX: Mutate existing nodes in place — toggle classes, update .checked, change textContent — ' +
++    'instead of rebuilding the full list via innerHTML.');
++});
++
++Given('the project has a render function that handles completion state', function () {
++  const appPath = path.join(ROOT, 'js', 'app.js');
++  assert.ok(fs.existsSync(appPath), 'js/app.js not found');
++  const source = fs.readFileSync(appPath, 'utf8');
++  this.appSource = source;
++  const handlesCompletion = /completed|toggle|completedClass|checked/.test(source);
++  assert.ok(handlesCompletion,
++    'Expected a render function that handles completion state');
++});
++
++When('I check whether a completion toggle triggers a full innerHTML rebuild', function () {
++  const source = this.appSource;
++  // Look for patterns indicating innerHTML rebuild in toggle-related code
++  // The key pattern is: render() is called after toggle AND render rebuilds via innerHTML
++  const hasToggleFunction = /function\s+toggle/i.test(source);
++  const hasRenderCall = /render\s*\(/.test(source);
++  const hasInnerHtmlRebuild = (
++    /todoList\.innerHTML\s*=/.test(source) ||
++    /innerHTML\s*=.*\+/.test(source) ||
++    /innerHTML\s*=\s*['"]/.test(source)
++  );
++  this.toggleTriggersFullRebuild = hasToggleFunction && hasRenderCall && hasInnerHtmlRebuild;
++});
++
++Then('a completion toggle does not rebuild the list via innerHTML', function () {
++  assert.ok(!this.toggleTriggersFullRebuild,
++    'FAIL: A completion toggle triggers a full innerHTML rebuild of the todo list. ' +
++    'This detaches all existing DOM nodes, causing Cypress "element detached from DOM" errors. ' +
++    'FIX: When toggling completion, mutate the existing <li> node in place: ' +
++    'add/remove the "completed" class on the parent <li>, toggle the checkbox .checked property, ' +
++    'rather than calling render() which rebuilds the entire list.');
++});
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..557b4c0
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,122 @@
++[
++  {
++    "watch": "display",
++    "scenario": "No todos hides main and footer sections",
++    "source": "features/todo-management.feature"
++  },
++  {
++    "watch": "display",
++    "scenario": "Create a new todo by pressing Enter",
++    "source": "features/todo-management.feature"
++  },
++  {
++    "watch": "display",
++    "scenario": "Trimming whitespace from new todo title",
++    "source": "features/todo-management.feature"
++  },
++  {
++    "watch": "display",
++    "scenario": "Empty todo is not created",
++    "source": "features/todo-management.feature"
++  },
++  {
++    "watch": "display",
++    "scenario": "Show the active todo count",
++    "source": "features/todo-management.feature"
++  },
++  {
++    "watch": "display",
++    "scenario": "Pluralize item count correctly",
++    "source": "features/todo-management.feature"
++  },
++  {
++    "watch": "completion",
++    "scenario": "Toggle a single todo as complete",
++    "source": "features/todo-completion.feature"
++  },
++  {
++    "watch": "completion",
++    "scenario": "Mark all todos as complete",
++    "source": "features/todo-completion.feature"
++  },
++  {
++    "watch": "completion",
++    "scenario": "Clear completed button is hidden when no completed todos",
++    "source": "features/todo-completion.feature"
++  },
++  {
++    "watch": "completion",
++    "scenario": "Clear completed button removes completed todos",
++    "source": "features/todo-completion.feature"
++  },
++  {
++    "watch": "completion",
++    "scenario": "Toggle-all reflects individual completion state",
++    "source": "features/todo-completion.feature"
++  },
++  {
++    "watch": "editing",
++    "scenario": "Double-clicking a todo label activates editing mode",
++    "source": "features/todo-editing.feature"
++  },
++  {
++    "watch": "editing",
++    "scenario": "Save edit by pressing Enter",
++    "source": "features/todo-editing.feature"
++  },
++  {
++    "watch": "editing",
++    "scenario": "Save edit by blurring the input",
++    "source": "features/todo-editing.feature"
++  },
++  {
++    "watch": "editing",
++    "scenario": "Cancel edit by pressing Escape",
++    "source": "features/todo-editing.feature"
++  },
++  {
++    "watch": "editing",
++    "scenario": "Empty title destroys the todo on save",
++    "source": "features/todo-editing.feature"
++  },
++  {
++    "watch": "routing",
++    "scenario": "Default route shows all todos",
++    "source": "features/routing.feature"
++  },
++  {
++    "watch": "routing",
++    "scenario": "Active route shows only active todos",
++    "source": "features/routing.feature"
++  },
++  {
++    "watch": "routing",
++    "scenario": "Completed route shows only completed todos",
++    "source": "features/routing.feature"
++  },
++  {
++    "watch": "routing",
++    "scenario": "Selected filter class toggles with route change",
++    "source": "features/routing.feature"
++  },
++  {
++    "watch": "routing",
++    "scenario": "Completing a todo in a filtered view hides it",
++    "source": "features/routing.feature"
++  },
++  {
++    "watch": "persistence",
++    "scenario": "Todos are persisted to localStorage",
++    "source": "features/persistence.feature"
++  },
++  {
++    "watch": "persistence",
++    "scenario": "Todos are restored from localStorage on load",
++    "source": "features/persistence.feature"
++  },
++  {
++    "watch": "persistence",
++    "scenario": "Completion state is persisted",
++    "source": "features/persistence.feature"
++  }
++]
+\ No newline at end of file

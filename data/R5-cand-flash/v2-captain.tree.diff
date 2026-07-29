@@ -1,0 +1,86 @@
+diff --git a/.shipshape/conformance-rules.mjs b/.shipshape/conformance-rules.mjs
+index 4271cf7..410a33a 100644
+--- a/.shipshape/conformance-rules.mjs
++++ b/.shipshape/conformance-rules.mjs
+@@ -74,6 +74,45 @@ const RULES = {
+     }
+   },
+ 
++  // Rule: No guessed literal delays where a signal is observable
++  "no-guessed-delays": {
++    description: "No guessed literal delays (setTimeout with literal ms > 0); prefer signals",
++    check: (content, filePath) => {
++      if (!filePath.endsWith('.js') && !filePath.endsWith('.mjs')) return [];
++      const violations = [];
++      const delayRe = /setTimeout\s*\(\s*(?:function|\(|[a-zA-Z_$][a-zA-Z0-9_$]*\s*=>)/;
++      // More precise: catch setTimeout with a numeric literal
++      const literalRe = /setTimeout\s*\(\s*(?:[^,]+)\s*,\s*(\d+)\s*\)/g;
++      let match;
++      while ((match = literalRe.exec(content)) !== null) {
++        const ms = parseInt(match[1], 10);
++        if (ms > 0) {
++          const lineNum = content.substring(0, match.index).split('\n').length;
++          violations.push({ line: lineNum, text: match[0].substring(0, 60), file: filePath, detail: `Literal delay ${ms}ms` });
++        }
++      }
++      return violations;
++    }
++  },
++
++  // Rule: Render MUST NOT replace the todo list DOM nodes via innerHTML
++  // Toggling a todo, toggle-all, or clear-completed MUST mutate existing nodes
++  // in place so browser references stay attached.
++  "no-innerhtml-todolist": {
++    description: "Render MUST mutate existing DOM nodes in place; todoList.innerHTML replacement breaks browser element references",
++    check: (content, filePath) => {
++      if (filePath !== 'js/app.js') return [];
++      const violations = [];
++      const re = /todoList\.innerHTML\s*=\s*/g;
++      let match;
++      while ((match = re.exec(content)) !== null) {
++        const lineNum = content.substring(0, match.index).split('\n').length;
++        violations.push({ line: lineNum, file: filePath, detail: "todoList.innerHTML = ... replaces all DOM nodes; mutate in place instead" });
++      }
++      return violations;
++    }
++  },
++
+   // Rule: No guessed literal delays where a signal is observable
+   "no-guessed-delays": {
+     description: "No guessed literal delays (setTimeout with literal ms > 0); prefer signals",
+diff --git a/features/todomvc-conformance.feature b/features/todomvc-conformance.feature
+new file mode 100644
+index 0000000..503303a
+--- /dev/null
++++ b/features/todomvc-conformance.feature
+@@ -0,0 +1,10 @@
++Feature: TodoMVC conformance
++  As a developer
++  I want structural rules enforced by conformance checks
++  So that browser-acceptable behaviour is preserved through rebuilds
++
++  @conformance
++  Scenario: Toggling a todo mutates existing DOM nodes in place
++    Given the app source at "js/app.js"
++    When the conformance verifier checks the render function
++    Then no assignment to "todoList.innerHTML" is found in the implementation
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+index d166147..eae725c 100644
+--- a/watchbill.json
++++ b/watchbill.json
+@@ -57,6 +57,13 @@
+         "features/todomvc-persistence.feature:Todos survive a page reload",
+         "features/todomvc-persistence.feature:Completed state survives a page reload"
+       ]
++    },
++    {
++      "id": "watch-4-conformance",
++      "description": "Methodology conformance — DOM identity preservation, innerHTML ban in render",
++      "targets": [
++        "features/todomvc-conformance.feature:Toggling a todo mutates existing DOM nodes in place"
++      ]
+     }
+   ]
+ }
+\ No newline at end of file

@@ -1,0 +1,249 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 406eb14..eeb5fb1 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -2,29 +2,36 @@
+ 
+ # Captain Notes
+ 
+-## Voyage: TodoMVC build — Specs and watchbill authored
++## Voyage: DOM identity — Specs strengthened
+ 
+-Spec source: `assets/app-spec.md`
+-Template source: `assets/app-template.index.html`
+-Implementation: Vanilla JavaScript, no preprocessors, localStorage persistence.
+-Verification tier: happy-dom (already rigged — world.js exists, tier default @logic).
++An external Cypress acceptance suite reports "element detached from DOM" errors on:
++- Mark all as completed
++- Clear complete state of all items
++- Mark items as complete
++- Un-mark items as complete
++- Save edits on blur
+ 
+-### Specs authored covering all app-spec.md behaviours
++Root cause: `render()` in `js/app.js` removes ALL existing `<li>` elements from the DOM
++(unconditional for-in loop with removeChild), then recreates them.  The existing conformance
++scenarios only checked for `innerHTML` text in source (passing), missing this removeChild-based
++rebuild.  New scenarios detect the real pattern.
+ 
+-- `features/todo-management.feature` — new todo, no-todos visibility, counter, whitespace trim, empty guard
+-- `features/todo-completion.feature` — toggle single, mark all, clear completed, toggle-all sync
+-- `features/todo-editing.feature` — double-click edit, save on Enter/blur, cancel on Escape, empty destroys
+-- `features/routing.feature` — #/, #/active, #/completed routes, selected class, live filter on state change
+-- `features/persistence.feature` — localStorage save/restore, completion persistence, no editing state persisted
++### Changes
+ 
+-### watchbill.json
++- `features/conformance/dom-identity.feature` — 2 new scenarios:
++  1. Source check: detects unconditionial removeChild loop + createElement after (RED)
++  2. Runtime check: captures li element references, toggles all, asserts same nodes remain (RED)
++- `features/support/conformance-steps.js` — step definitions for the new scenarios
++- `watchbill.json` — 2 targets pointing at the failing scenarios
+ 
+-24 scenario targets across 5 watches. Ordered: display -> completion -> editing -> routing -> persistence.
++The 2 new scenarios FAIL on current code.  All 26 existing scenarios still PASS.
+ 
+-### Next
++### Fix needed (for Crew)
+ 
+-Dispatch QM on `main` with the watchbill. Context MUST clear before QM.
++The "Remove stale nodes" loop in `render()` must only remove nodes whose IDs are NOT in the
++current filtered list, not all nodes.  After that, the update loop will find existing nodes
++and mutate them in place (classList.toggle, .checked, textContent) instead of recreating them.
+ 
+-### Open questions
++### Next
+ 
+-- `todos-[framework]` key format per spec: using `todos-todomvc-shakedown` given package name. Confirm or override before persistence spec passes.
+\ No newline at end of file
++Dispatch QM on `main` with the watchbill. Context MUST clear before QM.
+\ No newline at end of file
+diff --git a/features/conformance/dom-identity.feature b/features/conformance/dom-identity.feature
+index 8c3e743..160973e 100644
+--- a/features/conformance/dom-identity.feature
++++ b/features/conformance/dom-identity.feature
+@@ -1,14 +1,17 @@
+ Feature: DOM identity preservation
+ 
+-  When the todo list state changes (toggle, add, remove, edit) the render
+-  function MUST mutate existing DOM nodes in place — toggle classes, set
+-  .checked, update textContent — rather than rebuilding the list from
+-  scratch via innerHTML. Rebuilding destroys every existing <li> node,
+-  which detaches any browser-held reference and causes Cypress
+-  acceptance tests to fail with "element detached from DOM".
++  When the todo list state changes (toggle, add, remove, edit) every
++  existing <li> element MUST be mutated in place (toggle classes, set
++  .checked, update textContent) rather than removed from the DOM and
++  recreated.  Removing and recreating elements destroys every existing
++  <li> node, which invalidates browser-held references and causes
++  Cypress acceptance tests to fail with "element detached from DOM".
+ 
+-  The fix: replace `todoList.innerHTML = html` with a diff loop that
+-  reuses existing <li> elements.
++  The render function's stale-node removal loop currently iterates ALL
++  existing items and calls removeChild on every one, then creates new
++  nodes for the full filtered list — equivalent to an innerHTML rebuild
++  without using innerHTML.  Fix: the stale-removal loop MUST test
++  membership in the filtered list and only remove nodes NOT present.
+ 
+   @logic @conformance
+   Scenario: Render function does not rebuild the todo list via innerHTML
+@@ -17,7 +20,22 @@ Feature: DOM identity preservation
+     Then the render function does not use innerHTML reassignment on the todo list
+ 
+   @logic @conformance
+-  Scenario: Render function mutates existing nodes in place for completion toggles
++  Scenario: Render function does not detach and recreate every list item on state change
++    Given the project has a render function that writes to the todo list
++    When I check whether the render function removes every child <li> before recreating them
++    Then the render function preserves existing <li> elements across state changes
++
++  @logic @conformance
++  Scenario: Completion toggle mutates existing DOM node in place
+     Given the project has a render function that handles completion state
+-    When I check whether a completion toggle triggers a full innerHTML rebuild
+-    Then a completion toggle does not rebuild the list via innerHTML
+\ No newline at end of file
++    When I check whether a completion toggle rebuilds the list by detaching all nodes
++    Then a completion toggle does not detach and recreate any <li> elements
++
++  @logic @conformance
++  Scenario: Toggle-all does not replace existing <li> elements
++    Given the app has loaded with no persisted todos
++    And I create a todo titled "Buy milk"
++    And I create a todo titled "Walk the dog"
++    When I capture the dataset.id of every todo-list li
++    And I click the toggle-all checkbox
++    Then every original todo-list li remains in the DOM with its dataset.id unchanged
+\ No newline at end of file
+diff --git a/features/support/conformance-steps.js b/features/support/conformance-steps.js
+index 7b4919b..95bdcbc 100644
+--- a/features/support/conformance-steps.js
++++ b/features/support/conformance-steps.js
+@@ -150,4 +150,107 @@ Then('a completion toggle does not rebuild the list via innerHTML', function ()
+     'FIX: When toggling completion, mutate the existing <li> node in place: ' +
+     'add/remove the "completed" class on the parent <li>, toggle the checkbox .checked property, ' +
+     'rather than calling render() which rebuilds the entire list.');
++});
++
++// ---------------------------------------------------------------------------
++// Conformance: DOM identity — strong checks (source analysis)
++// ---------------------------------------------------------------------------
++
++When('I check whether the render function removes every child <li> before recreating them', function () {
++  const source = this.appSource;
++  // Detect the pattern where a loop over collected items unconditionally
++  // calls removeChild on every one.  The bug is:
++  //   for (var id in existingItems) {
++  //     existingItems[id].parentNode.removeChild(existingItems[id]);
++  //     delete existingItems[id];
++  //   }
++  // This removes ALL children, not only those absent from the filtered list.
++  // After the delete loop, existingItems is empty, so every item is recreated.
++  const hasRemoveChildLoop = (
++    /for\s*\([^)]*\bin\b[^)]*\)[^;]*removeChild/.test(source) ||
++    /removeChild\([^)]+\)\s*;\s*\n\s*delete/.test(source)
++  );
++  // Also check whether createElement appears after removeChild in render()
++  const hasCreateElementAfterRemove = (
++    /removeChild[^]*createElement/.test(source)
++  );
++  // Check if render() has an unconditional remove of all items followed by recreation
++  this.removesAllChildrenAndRecreates = hasRemoveChildLoop && hasCreateElementAfterRemove;
++});
++
++Then('the render function preserves existing <li> elements across state changes', function () {
++  assert.ok(!this.removesAllChildrenAndRecreates,
++    'FAIL: The render function removes ALL existing <li> elements from the DOM ' +
++    'before recreating them on every state change.  This is equivalent to an innerHTML rebuild ' +
++    'and destroys every browser-held element reference, causing Cypress ' +
++    '"element detached from DOM" errors.  ' +
++    'FIX: The stale-node removal loop must only remove <li> nodes whose IDs are ' +
++    'NOT present in the current filtered list, and the update loop must reuse existing nodes ' +
++    'in place by mutating classList, .checked, and textContent.');
++});
++
++When('I check whether a completion toggle rebuilds the list by detaching all nodes', function () {
++  const source = this.appSource;
++  // The render() function is called after every toggle.  If render() itself
++  // removes all children before recreating them, every toggle detaches all
++  // existing <li> nodes regardless of whether innerHTML is used.
++  // Check that the source has a toggle function AND it calls render() —
++  // the actual function name is toggleTodo in the current code.
++  const hasToggleFunction = /function\s+toggle/i.test(source);
++  const callsRenderFromToggle = /toggle[^}]*render\s*\(/.test(source);
++  // Check for the removeChild-all pattern inside the render function area
++  const hasRemoveChildAll = (
++    /for\s*\([^)]*\bin\b[^)]*\)[^;]*removeChild/.test(source) ||
++    /removeChild\([^)]+\)\s*;\s*\n\s*delete/.test(source)
++  );
++  this.toggleDetachesNodes = hasToggleFunction && callsRenderFromToggle && hasRemoveChildAll;
++});
++
++Then('a completion toggle does not detach and recreate any <li> elements', function () {
++  assert.ok(!this.toggleDetachesNodes,
++    'FAIL: A completion toggle causes a full detach-and-recreate cycle of all <li> ' +
++    'elements.  Even without innerHTML, the render() function removes every existing child ' +
++    'from the DOM and creates new nodes, invalidating all browser-held references.  ' +
++    'FIX: The stale-node removal loop must filter by the current filtered list, and the update ' +
++    'loop must reuse existing <li> nodes by mutating them in place.');
++});
++
++// ---------------------------------------------------------------------------
++// Conformance: DOM identity — runtime checks (real element identity)
++// ---------------------------------------------------------------------------
++
++When('I capture the dataset.id of every todo-list li', function () {
++  this.capturedLiRefs = [];
++  const items = Array.from(this.document.querySelectorAll('.todo-list li'));
++  for (var i = 0; i < items.length; i++) {
++    this.capturedLiRefs.push({ ref: items[i], id: items[i].dataset.id });
++  }
++  assert.ok(this.capturedLiRefs.length > 0,
++    'Expected at least one todo-list li to capture');
++});
++
++Then('every original todo-list li remains in the DOM with its dataset.id unchanged', function () {
++  assert.ok(Array.isArray(this.capturedLiRefs) && this.capturedLiRefs.length > 0,
++    'No captured element references — did the previous step run?');
++  const currentItems = Array.from(this.document.querySelectorAll('.todo-list li'));
++  assert.strictEqual(currentItems.length, this.capturedLiRefs.length,
++    'Expected same number of todo-list li elements after state change. ' +
++    'Count changed from ' + this.capturedLiRefs.length + ' to ' + currentItems.length + '. ' +
++    'This indicates nodes were removed and recreated rather than mutated in place.');
++  for (var i = 0; i < this.capturedLiRefs.length; i++) {
++    // Check element REFERENCE identity: the same object must still be in the DOM.
++    // If render() removed all children and created new ones, the old references
++    // will point to detached nodes and will NOT match any current DOM node.
++    const stillInDom = currentItems.indexOf(this.capturedLiRefs[i].ref) !== -1;
++    assert.ok(stillInDom,
++      'The <li> element at index ' + i + ' (id=' + this.capturedLiRefs[i].id + ') ' +
++      'was DESTROYED and replaced with a new element after the state change. ' +
++      'In a real browser, the old reference would be "detached from DOM". ' +
++      'FIX: The render() function must mutate existing <li> elements in place ' +
++      'instead of calling removeChild on all of them and creating new ones.');
++    // Also verify the dataset.id is still correct on the surviving element
++    assert.strictEqual(this.capturedLiRefs[i].ref.dataset.id, this.capturedLiRefs[i].id,
++      'dataset.id on the surviving element at index ' + i + ' changed from "' +
++      this.capturedLiRefs[i].id + '" to "' + this.capturedLiRefs[i].ref.dataset.id + '".');
++  }
+ });
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..b3bdbce
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,11 @@
++[
++  {
++    "scenario": "features/conformance/dom-identity.feature:Render function does not detach and recreate every list item on state change"
++  },
++  {
++    "scenario": "features/conformance/dom-identity.feature:Completion toggle mutates existing DOM node in place"
++  },
++  {
++    "scenario": "features/conformance/dom-identity.feature:Toggle-all does not replace existing <li> elements"
++  }
++]
+\ No newline at end of file

@@ -1,0 +1,51 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 5aec25e..241b4a4 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -6,8 +6,10 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ 
+ ## Defect under sail
+ 
+-The external browser acceptance suite fails on five TodoMVC behaviours: mark all complete, clear all complete, mark a todo complete, un-mark a todo complete, and edit a todo to empty text. The cause is one root defect: the list `render()` wipes and rebuilds every `<li>` on each item state change, so an element reference the browser holds across the click detaches from the document. The in-harness suite passed only because its steps re-query the DOM; the defect is hidden until a reference is held across the interaction.
++The external browser acceptance suite (real browser, Cypress) now fails on one TodoMVC behaviour: editing a todo to an empty string and committing with Enter. The error is `NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is no longer a child of this node. Perhaps it was moved in a 'blur' event handler?`
+ 
+-The fix is product intent, not a hint: item updates mutate the existing element in place (toggle class and checkbox state on the node that already exists) instead of rebuilding the list, and removing an item removes only that one node. `features/dom-identity.feature` pins this. The step definitions that record and re-assert element identity are verification support for QM to author.
++The previous `dom-identity` defect (render rebuilt every `<li>`, fixed in commit 1f6f0ad) is closed. This is a different, browser-only defect. Root cause: the edit-commit path is reached from two handlers. The `keydown` Enter handler calls `commitEdit`, which splices the todo and calls `render`; `render` removes the item's `<li>`. A real browser fires `blur`/`focusout` on the removed edit input during that `removeChild`, before the node detaches, so `isConnected` is still true and the `editing` class is still present. The `focusout` guard does not catch this, so it calls `commitEdit` a second time and `render` calls `removeChild` again on the already-detached node.
+ 
+-The in-harness happy-dom environment was confirmed to reproduce the node-identity loss with held references (the held `<li>` reports `isConnected: false` after the change), so each scenario in the watchbill reddens on the current code without needing a real browser.
++happy-dom is lenient and does not throw on `removeChild` of a non-child, so the in-harness suite cannot reproduce the crash. The fix is product intent, not a hint: the reconcile (or the edit-commit) must not remove, or attempt to remove, a node that is no longer a child of the list. `features/edit-empty-commit.feature` pins this as a `@conformance` source check, because the in-harness DOM cannot reproduce the crash. QM authors the checker that reddens on the current code; Crew fixes the product from that spec.
++
++This defect is browser-only and must not be forced into a failing in-harness product scenario. The `@conformance` source check is the sanctioned guard.
+diff --git a/features/edit-empty-commit.feature b/features/edit-empty-commit.feature
+new file mode 100644
+index 0000000..2618e1d
+--- /dev/null
++++ b/features/edit-empty-commit.feature
+@@ -0,0 +1,14 @@
++Feature: Empty-edit commit DOM safety
++  As a todo app user
++  I want committing an empty edit to remove the item without a DOM error
++  So that the blur a real browser fires after the commit does not crash the app
++
++  Rule: A real browser fires a blur on the removed edit input during the list removal, which
++  re-enters the edit-commit path. The reconcile must never call removeChild on a node that is no
++  longer a child of the list, or the browser raises a NotFoundError.
++
++  @conformance
++  Scenario: An empty-edit commit does not remove a detached list element
++    Given the app source at "js/app.js"
++    When the empty-edit commit reconcile is checked for a detached-node removeChild
++    Then the reconcile never removes a list element that is not a current child of the todo list
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..52b69b0
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,7 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/edit-empty-commit.feature:An empty-edit commit does not remove a detached list element"
++    ]
++  }
++}

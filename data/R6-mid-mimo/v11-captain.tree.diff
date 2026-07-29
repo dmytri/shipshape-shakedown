@@ -1,0 +1,110 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 00c372d..c7a0619 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -4,19 +4,22 @@
+ 
+ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
+ 
+-## Cycle 3 — Browser acceptance defects
++## Cycle 5 — Root cause identified: editingId not cleared on destroy
+ 
+-Two acceptance-suite failures remain after the DOM-identity fix.
+-Both are real product defects visible only in a real browser.
++**Acceptance test:** `should remove the item if an empty text string was entered`
++**Spec:** `features/browser-acceptance-defects.feature:44` (new `@contract` scenario)
++**Root cause refined:** The `parentNode` guard in the orphan-removal loop (added in Cycle 3) prevents the crash in isolation, but `destroyTodo()` does NOT clear `editingId`. When both `blur` and `keydown(Enter)` fire during real-browser editing-to-empty, the sequence is:
++1. `blur` → `finishEditing()` → `destroyTodo()` → `render()` → orphan removed
++2. `keydown(Enter)` → `finishEditing()` → `destroyTodo()` → `render()` → orphan re-attached (because `editingId` still matches) then removed again
+ 
+-### Defect BROWSER-1: removeChild during re-entrant blur (editing to empty)
++The re-attachment during the second `render()` is the defect. The `parentNode` guard catches it in the simple case, but the re-entrant blur timing in a real browser creates the `removeChild` error.
+ 
+-**Acceptance test:** `should remove the item if an empty text string was entered`
+-**Spec:** `features/browser-acceptance-defects.feature:27`
+-**Root cause:** When the user clears the edit input and presses Enter, both `blur` and `keydown(Enter)` fire. Both call `finishEditing()` → `destroyTodo()` → `render()`. The first `render()` removes the `<li>` via `removeChild`, which detaches the `<input>`, firing `blur` synchronously mid-orphan-removal-loop. The blur handler re-enters `render()`, removing the same orphan. The original loop's `existingLis[j]` now references a node whose `parentNode` no longer considers it a child → `removeChild` throws `NotFoundError`.
+-**Fix指引:**
+-1. Guard the orphan-removal loop: only call `removeChild` if `existingLis[j].parentNode === todoList` (or simply check `parentNode` is not null)
+-2. Clear `editingId` in `destroyTodo()` to prevent stale editing state
++**Fix指引:** Add `editingId = null;` in `destroyTodo()` when the destroyed todo is the one being edited.
++
++### Previous defects (resolved)
++
++- DOM-identity (toggle/destroy) — resolved by in-place DOM mutation in render()
++- parentNode guard — added but insufficient alone; the editingId-clear fix is the true fix
+ 
+ ### Defect BROWSER-2: Filter click handler blocks hash update (back button)
+ 
+@@ -26,18 +29,3 @@ Both are real product defects visible only in a real browser.
+ **Fix指引:**
+ 1. Remove `e.preventDefault()` from the filter click handler and let the default anchor behaviour update the hash (the existing `hashchange` listener will call `handleHashChange()` → `setFilter()`)
+ 2. OR update `window.location.hash` manually in the click handler before calling `setFilter`
+-
+-### Previous defects (resolved)
+-
+-- DOM-identity (toggle/destroy) — resolved by in-place DOM mutation in render()
+-
+-## Cycle 4 — Conformance check added
+-
+-Added `@contract` scenario "Render guards orphan removal against detached nodes" to `browser-acceptance-defects.feature:39`. This source-level check verifies the orphan-removal loop contains an explicit `if (... parentNode ...)` guard before calling `removeChild`. The scenario FAILS on current code (no guard exists), providing a falsifiable target for QM.
+-
+-## Acceptance test failure evidence
+-
+-The external suite runs Cypress against the build. Two failures remain:
+-
+-1. `Editing > should remove the item if an empty text string was entered` — `removeChild` fails because of re-entrant blur during orphan removal
+-2. `Routing > should respect the back button` — `.todo-list li:visible` not found after back navigation because filter clicks don't update the hash
+diff --git a/features/browser-acceptance-defects.feature b/features/browser-acceptance-defects.feature
+index eb12056..04a0541 100644
+--- a/features/browser-acceptance-defects.feature
++++ b/features/browser-acceptance-defects.feature
+@@ -40,6 +40,11 @@ Feature: Browser acceptance defects
+     Given the app source is loaded
+     Then the render function contains a parentNode guard in the orphan-removal loop
+ 
++  @contract
++  Scenario: Destroying a todo clears editing state to prevent re-attachment during re-entrant render
++    Given the app source is loaded
++    Then the destroyTodo function clears the editingId variable
++
+   # ── Defect 2: Routing — back button after filter clicks ────────────────
+   # The filter click handler calls e.preventDefault() but never updates
+   # window.location.hash.  So clicking filter links does not push
+diff --git a/features/support/steps.js b/features/support/steps.js
+index 8681542..42f5a93 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -443,6 +443,17 @@ Given('the app source is loaded', function () {
+   this._appSource = fs.readFileSync(appPath, 'utf8');
+ });
+ 
++Then('the destroyTodo function clears the editingId variable', function () {
++  // destroyTodo must clear editingId so re-entrant render does not re-attach the orphan.
++  const source = this._appSource;
++  // Find the destroyTodo function body
++  const destroyMatch = /function\s+destroyTodo\s*\([^)]*\)\s*\{([^}]+)\}/s.exec(source);
++  if (!destroyMatch) throw new Error('destroyTodo function not found in source');
++  const body = destroyMatch[1];
++  const clearsEditingId = /editingId\s*=\s*null/.test(body);
++  expect(clearsEditingId, 'destroyTodo must clear editingId to prevent re-attachment of orphaned nodes during re-entrant render (blur during removeChild)').to.be.true;
++});
++
+ Then('the render function contains a parentNode guard in the orphan-removal loop', function () {
+   // The orphan-removal loop in render() must guard against detached nodes.
+   // In a real browser, re-entrant blur during removeChild causes the node
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..6111ec7
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,10 @@
++{
++  "watches": [
++    {
++      "name": "BROWSER-1: destroyTodo must clear editingId",
++      "targets": [
++        "features/browser-acceptance-defects.feature:44"
++      ]
++    }
++  ]
++}

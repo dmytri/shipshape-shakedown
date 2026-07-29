@@ -1,0 +1,115 @@
+diff --git a/features/editing-conformance.feature b/features/editing-conformance.feature
+index 94c2692..09ee741 100644
+--- a/features/editing-conformance.feature
++++ b/features/editing-conformance.feature
+@@ -13,3 +13,7 @@ Feature: Editing implementation conformance
+   @conformance
+   Scenario: render checks containment before removing a stale list item
+     Then the js/app.js render function contains a contains-guard before removeChild
++
++  @conformance
++  Scenario: render has re-entrancy protection to prevent double-removal during focusout
++    Then the js/app.js render function contains a re-entrancy guard
+diff --git a/features/step_definitions/todomvc.steps.js b/features/step_definitions/todomvc.steps.js
+index a62df49..637c96c 100644
+--- a/features/step_definitions/todomvc.steps.js
++++ b/features/step_definitions/todomvc.steps.js
+@@ -387,3 +387,82 @@ Then(/^the js\/app\.js render function contains a contains-guard before removeCh
+     );
+   }
+ });
++
++Then(/^the js\/app\.js render function contains a re-entrancy guard$/, function () {
++  const fs = require('node:fs');
++  const path = require('node:path');
++  const appPath = path.join(__dirname, '..', '..', 'js', 'app.js');
++  const source = fs.readFileSync(appPath, 'utf8');
++
++  // The render function must have a re-entrancy guard to prevent a second
++  // render() call from executing while the first is still in progress.
++  // In a real browser, focusout fires synchronously during removeChild,
++  // which can trigger saveEdit -> removeTodo -> render() re-entrantly.
++  // Without a guard, the re-entrant render() removes a DOM node that the
++  // first render()'s stale-removal loop still expects to find, causing
++  // NotFoundError: Failed to execute 'removeChild' on 'Node'.
++  //
++  // Acceptable patterns:
++  //   var rendering = false; ... if (rendering) return; rendering = true; ... rendering = false;
++  //   var _rendering = false; ... if (_rendering) return; _rendering = true; ... _rendering = false;
++  //   Any flag variable checked at the top of render() and set before/after the body.
++
++  // Check for a flag variable declared before the render function.
++  const renderIdx = source.indexOf('function render()');
++  if (renderIdx === -1) throw new Error('Could not locate render function in js/app.js');
++
++  // Look for a re-entrancy flag pattern: a variable assigned true/false around render().
++  // Pattern: var <name> = false; ... function render() { if (<name>) return; <name> = true; ... <name> = false; }
++  const beforeRender = source.substring(0, renderIdx);
++  const renderFnMatch = source.match(/function render\(\)\s*\{([\s\S]*?)\n\t\}/);
++  if (!renderFnMatch) throw new Error('Could not parse render function body');
++  const renderBody = renderFnMatch[1];
++
++  // Find variable declarations of the form: var <identifier> = false;
++  const varDeclRegex = /var\s+(\w+)\s*=\s*false\s*;/g;
++  let match;
++  let foundGuard = false;
++
++  while ((match = varDeclRegex.exec(beforeRender)) !== null) {
++    const varName = match[1];
++    // Check that this variable is used as a guard inside render():
++    // 1. if (varName) return; or if (varName) { return; } at the top of render
++    // 2. varName = true; somewhere in render
++    // 3. varName = false; somewhere in render (cleanup)
++    const hasGuardCheck = new RegExp('if\s*\(' + varName + '\)\s*(return|\{\s*return)').test(renderBody);
++    const hasGuardSet = new RegExp(varName + '\s*=\s*true').test(renderBody);
++    const hasGuardClear = new RegExp(varName + '\s*=\s*false').test(renderBody);
++
++    if (hasGuardCheck && hasGuardSet && hasGuardClear) {
++      foundGuard = true;
++      break;
++    }
++  }
++
++  // Also check for the pattern where the flag is declared and used entirely within render().
++  if (!foundGuard) {
++    const innerFlagRegex = /var\s+(\w+)\s*=\s*false\s*;/g;
++    let innerMatch;
++    while ((innerMatch = innerFlagRegex.exec(renderBody)) !== null) {
++      const varName = innerMatch[1];
++      const hasGuardCheck = new RegExp('if\s*\(' + varName + '\)\s*(return|\{\s*return)').test(renderBody);
++      const hasGuardSet = new RegExp(varName + '\s*=\s*true').test(renderBody);
++      const hasGuardClear = new RegExp(varName + '\s*=\s*false').test(renderBody);
++      if (hasGuardCheck && hasGuardSet && hasGuardClear) {
++        foundGuard = true;
++        break;
++      }
++    }
++  }
++
++  if (!foundGuard) {
++    throw new Error(
++      'render does not contain a re-entrancy guard. ' +
++      'Expected a flag variable (e.g. var rendering = false) declared before or inside render(), ' +
++      'checked with if (rendering) return at the top of render(), set to true before the body, ' +
++      'and set to false after the body. This prevents a re-entrant render() call from executing ' +
++      'while the first is in progress, which causes NotFoundError when focusout fires during ' +
++      'removeChild and triggers saveEdit -> removeTodo -> render() re-entrantly.'
++    );
++  }
++});
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..8da978f
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,10 @@
++{
++  "watches": [
++    {
++      "name": "render-re-entrancy-guard",
++      "targets": [
++        "features/editing-conformance.feature:18:render has re-entrancy protection to prevent double-removal during focusout"
++      ]
++    }
++  ]
++}

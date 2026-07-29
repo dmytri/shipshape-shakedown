@@ -1,0 +1,147 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index fe38096..044d773 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -9,6 +9,7 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ - Greenfield build of TodoMVC (Vanilla JS, no preprocessors, localStorage persistence).
+ - Harness bootstrapped: `package.json` with `@cucumber/cucumber` + `happy-dom`, `features/support/world.js` loads real `index.html` + `js/app.js` into happy-dom per-scenario, disposes after. Routing patched to fire `hashchange` on click.
+ - Assets landed: `assets/app-spec.md` (product spec), `assets/app-template.index.html` (base markup).
++- Production code committed: `b57979c v1-crew: implement all TodoMVC scenarios from spec`.
+ - Durable work this cycle: spec feature files under `features/`, `watchbill.json`.
+ 
+ ## Decisions
+@@ -17,6 +18,24 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ - Tier: happy-dom (default). The spec requires DOM rendering; happy-dom is the cheapest tier that observes it.
+ - Scantling for localStorage shape at `scantlings/todo-storage.json`.
+ 
++## Acceptance failures (10) — DOM identity defects
++
++An external Cypress acceptance suite reports 10 failures. All share the same root cause:
++the `render()` function in `js/app.js` calls `todoList.innerHTML = ''` on every state change,
++destroying all DOM nodes. A real browser's Cypress holds references to elements before the
++action; after `render()` replaces them, those references are detached.
++
++The in-harness suite (happy-dom) passes because it re-queries the DOM fresh each step.
++
++**Fix: mutate DOM nodes in place instead of rebuilding the list.**
++- Toggle/toggle-all/clear-completed: toggle classes and properties on the existing `<li>`
++  elements instead of calling `render()`.
++- Editing: toggle the `editing` class on the existing `<li>` instead of calling `render()`.
++  The `render()` function should only run for initial render and structural changes
++  (add/remove items).
++
+ ## Next
+ 
+-Dispatch QM with `watchbill.json` targets when production code exists.
+\ No newline at end of file
++Dispatch QM with `watchbill.json` targets. The `watchbill` covers the DOM-identity
++scenarios added under the "DOM identity" Rule in `todo-management.feature`. These scenarios
++will fail on the current code and pass after the Crew implements in-place mutation.
+\ No newline at end of file
+diff --git a/features/todo-management.feature b/features/todo-management.feature
+index 6b8c127..2529aea 100644
+--- a/features/todo-management.feature
++++ b/features/todo-management.feature
+@@ -161,6 +161,73 @@ Feature: Todo management
+     Given the todo list has 1 completed item
+     Then the todo-count shows "0 items left"
+ 
++  Rule: DOM identity
++
++  Scenario: Toggling a todo preserves the element reference
++    Given the todo list has 1 item with title "Buy milk"
++    When I capture a reference to the first todo element
++    And I click the toggle checkbox on the todo
++    Then the captured reference is still attached to the DOM
++    And the captured reference has class "completed"
++    And the toggle checkbox inside the captured reference is checked
++
++  Scenario: Unmarking a todo preserves the element reference
++    Given the todo list has 1 completed item with title "Buy milk"
++    When I capture a reference to the first todo element
++    And I click the toggle checkbox on the todo
++    Then the captured reference is still attached to the DOM
++    And the captured reference does not have class "completed"
++    And the toggle checkbox inside the captured reference is not checked
++
++  Scenario: Toggle-all preserves all element references
++    Given the todo list has items "Buy milk", "Buy eggs", "Buy bread"
++    When I capture references to all todo elements
++    And I click the "toggle-all" checkbox
++    Then each captured reference is still attached to the DOM
++    And each captured reference has class "completed"
++
++  Scenario: Clear completed preserves remaining element references
++    Given the todo list has items "Buy milk", "Buy eggs", "Buy bread"
++    And the todo titled "Buy milk" is completed
++    And the todo titled "Buy eggs" is completed
++    When I capture references to all todo elements
++    And I click the "Clear completed" button
++    Then the captured references for remaining items are still attached to the DOM
++    And the captured references for completed items are detached from the DOM
++
++  Scenario: Entering edit mode preserves the element reference
++    Given the todo list has 1 item with title "Buy milk"
++    When I capture a reference to the first todo element
++    And I double-click the todo label
++    Then the captured reference is still attached to the DOM
++    And the captured reference has class "editing"
++
++  Scenario: Edit input is visible when editing
++    Given the todo list has 1 item with title "Buy milk"
++    When I double-click the todo label
++    Then the edit input is visible
++    And the view is not visible
++
++  Scenario: Saving an edit preserves the element reference
++    Given the todo list has 1 item with title "Buy milk"
++    When I capture a reference to the first todo element
++    And I double-click the todo label
++    And I change the edit input to "Buy organic milk"
++    And I press Enter in the edit input
++    Then the captured reference is still attached to the DOM
++    And the captured reference does not have class "editing"
++    And the label inside the captured reference has title "Buy organic milk"
++
++  Scenario: Cancelling an edit preserves the element reference
++    Given the todo list has 1 item with title "Buy milk"
++    When I capture a reference to the first todo element
++    And I double-click the todo label
++    And I change the edit input to "Buy organic milk"
++    And I press Escape in the edit input
++    Then the captured reference is still attached to the DOM
++    And the captured reference does not have class "editing"
++    And the label inside the captured reference has title "Buy milk"
++
+   @contract
+   Scenario: The localStorage shape conforms to the storage schema
+     Given the todo list has 2 items with titles "Buy milk", "Buy eggs"
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..29edb6d
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,22 @@
++{
++  "watches": [
++    {
++      "name": "DOM identity - toggle interactions",
++      "scenarios": [
++        "features/todo-management.feature: Toggling a todo preserves the element reference",
++        "features/todo-management.feature: Unmarking a todo preserves the element reference",
++        "features/todo-management.feature: Toggle-all preserves all element references",
++        "features/todo-management.feature: Clear completed preserves remaining element references"
++      ]
++    },
++    {
++      "name": "DOM identity - editing interactions",
++      "scenarios": [
++        "features/todo-management.feature: Entering edit mode preserves the element reference",
++        "features/todo-management.feature: Edit input is visible when editing",
++        "features/todo-management.feature: Saving an edit preserves the element reference",
++        "features/todo-management.feature: Cancelling an edit preserves the element reference"
++      ]
++    }
++  ]
++}
+\ No newline at end of file

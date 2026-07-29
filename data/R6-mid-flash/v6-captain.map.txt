@@ -1,0 +1,37 @@
+# banked: 2026-07-28T20:27:06Z
+# verdict: PENDING
+# leg: {  "name": "v6-captain",  "model": "deepseek/deepseek-v4-flash",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/R6-mid-flash/sim",  "timeout_s": 3600,  "max_tokens": 32768,  "skills": [    "/home/exedev/shipshape-shakedown/experiments/methods-midway/skills/shipshape",    "/home/exedev/shipshape-shakedown/experiments/methods-midway/skills/captain",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== v6-captain.session.jsonl ===
+  turns=26  wall=198.7s  in=92313  out=18885  cache_read=1146368  cost=$0.0337
+  role reads: captain@t0 -> shipshape@t22
+  roles loaded: captain, shipshape
+  ~ repeated tool signature at turns [11, 19, 20] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    8584/409        0 $0.0009  bash, read
+    t1    9004/167     8192 $0.0010  bash
+    t2    1567/375    16384 $0.0005  read, read, read, read, read, read
+    t3    5568/342    17920 $0.0009  read, read, read, read, read
+    t4    9784/2425   22528 $0.0018  bash, bash
+    t5    3015/223    31744 $0.0009  bash, bash
+    t6    1341/204    33792 $0.0008  bash, read
+    t7    2276/247    34816 $0.0009  bash, bash, bash
+    t8     508/4430   36864 $0.0016  bash, bash, read
+    t9    5125/2749   36864 $0.0017  read
+    t10   4268/962    41984 $0.0014  edit
+    t11   1185/451    46080 $0.0011  edit
+    t12    663/1010   47104 $0.0011  read
+    t13   3422/380    47104 $0.0013  write
+    t14    775/116    50176 $0.0010  read
+    t15   1185/659    50176 $0.0012  edit
+    t16    868/561    51200 $0.0011  bash
+    t17   1809/137    51200 $0.0012  bash
+    t18    954/112    52224 $0.0011  bash
+    t19  12667/343    52224 $0.0022  bash
+    t20    862/175    64512 $0.0013  bash
+    t21   1331/508    64512 $0.0014  read, read, bash
+    t22   1819/223    65536 $0.0014  read
+    t23  11662/805    66560 $0.0025  bash
+    t24   1452/138    77824 $0.0016  bash
+    t25    619/734    78848 $0.0017  -

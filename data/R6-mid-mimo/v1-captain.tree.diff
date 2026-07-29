@@ -1,0 +1,411 @@
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000..423a019
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,5 @@
++# Agents
++
++This project uses Shipshape for spec-driven development.
++
++See `RIGGING.md` for tooling values and methods.
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..7524e39
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,50 @@
++# Rigging
++
++## Stack
++
++- language: JavaScript
++- runtime: none
++- packageManager: npm
++
++## Directories
++
++- implementation: .
++- specs: features
++- verification: none
++- assets: assets
++- scantlings: none
++
++## Commands
++
++- discover: none
++- prove: `ref="{scenario}"; npx cucumber-js "${ref%%:*}" --name "^${ref#*:}$" --tags "not @captain and not @shipwright"`
++- sweep: none
++- coverage: none
++- step-usage: none
++- plank-inventory: none
++- typecheck: none
++- lint: none
++- conformance: none
++
++## Perturbation
++
++- message: `PERTURBATION: consider current durable context; remove when fixed`
++- perturb: `throw new Error("PERTURBATION: consider current durable context; remove when fixed");`
++
++## Tiers
++
++- default: none
++- sandbox: none
++- policy: none
++- weather: none
++- runrecord: none
++
++## Dependencies
++
++- policy: locked
++- dependency: @cucumber/cucumber
++- dependency: happy-dom
++
++## Outbound
++
++- outbound: none
+diff --git a/features/todo-counter-and-filters.feature b/features/todo-counter-and-filters.feature
+new file mode 100644
+index 0000000..5fbcbd5
+--- /dev/null
++++ b/features/todo-counter-and-filters.feature
+@@ -0,0 +1,107 @@
++Feature: Todo counter and filters
++  As a user
++  I want to see how many todos remain and filter by status
++  So that I can focus on relevant tasks
++
++  Background:
++    Given the app is loaded
++
++  Rule: No todos
++
++    Scenario: Main and footer are hidden when there are no todos
++      Then the main section is hidden
++      And the footer section is hidden
++
++  Rule: Active todo counter
++
++    Scenario: Counter shows the number of active todos
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | true      |
++        | Walk the dog | false     |
++        | Clean house  | false     |
++      Then the counter displays "2 items left"
++
++    Scenario: Counter uses singular form for one item
++      Given a todo "Buy milk" exists
++      Then the counter displays "1 item left"
++
++    Scenario: Counter shows zero for no active items
++      Given a completed todo "Buy milk" exists
++      Then the counter displays "0 items left"
++
++  Rule: Clear completed button
++
++    Scenario: Clear completed removes all completed todos
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | true      |
++        | Walk the dog | false     |
++      When the user clicks the clear-completed button
++      Then the todo "Buy milk" no longer exists
++      And the todo "Walk the dog" still exists
++
++    Scenario: Clear completed button is hidden when no todos are completed
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | false     |
++        | Walk the dog | false     |
++      Then the clear-completed button is hidden
++
++    Scenario: Clear completed button is visible when at least one todo is completed
++      Given a completed todo "Buy milk" exists
++      Then the clear-completed button is visible
++
++  Rule: Filter routing
++
++    Scenario: All filter shows all todos
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | true      |
++        | Walk the dog | false     |
++      When the user navigates to "#/"
++      Then both todos are visible
++
++    Scenario: Active filter shows only active todos
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | true      |
++        | Walk the dog | false     |
++      When the user navigates to "#/active"
++      Then only the todo "Walk the dog" is visible
++
++    Scenario: Completed filter shows only completed todos
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | true      |
++        | Walk the dog | false     |
++      When the user navigates to "#/completed"
++      Then only the todo "Buy milk" is visible
++
++    Scenario: Active filter link is selected when viewing active todos
++      When the user navigates to "#/active"
++      Then the filter link "Active" is selected
++
++    Scenario: Completed filter link is selected when viewing completed todos
++      When the user navigates to "#/completed"
++      Then the filter link "Completed" is selected
++
++    Scenario: All filter link is selected by default
++      When the user navigates to "#/"
++      Then the filter link "All" is selected
++
++    Scenario: Checking a todo while on active filter hides it from the list
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | false     |
++        | Walk the dog | false     |
++      When the user navigates to "#/active"
++      And the user toggles the checkbox for todo "Buy milk"
++      Then only the todo "Walk the dog" is visible
++
++  Rule: Main and footer visibility with todos
++
++    Scenario: Main and footer are visible when there are todos
++      Given a todo "Buy milk" exists
++      Then the main section is visible
++      And the footer section is visible
+diff --git a/features/todo-lifecycle.feature b/features/todo-lifecycle.feature
+new file mode 100644
+index 0000000..4910455
+--- /dev/null
++++ b/features/todo-lifecycle.feature
+@@ -0,0 +1,112 @@
++Feature: Todo lifecycle
++  As a user
++  I want to create, complete, edit, and remove todos
++  So that I can manage my task list
++
++  Background:
++    Given the app is loaded
++
++  Rule: New todos
++
++    Scenario: Creating a todo from input text
++      When the user types "Buy milk" in the new-todo input and presses Enter
++      Then a todo with title "Buy milk" exists in the list
++      And the new-todo input is empty
++
++    Scenario: Input is trimmed before creating a todo
++      When the user types "  Buy milk  " in the new-todo input and presses Enter
++      Then a todo with title "Buy milk" exists in the list
++
++    Scenario: Empty or whitespace-only input creates no todo
++      When the user types "   " in the new-todo input and presses Enter
++      Then the todo list is empty
++
++    Scenario: New todo input is focused on page load
++      Then the new-todo input has focus
++
++  Rule: Marking todos as complete
++
++    Scenario: Clicking the checkbox marks a todo as completed
++      Given a todo "Buy milk" exists
++      When the user toggles the checkbox for todo "Buy milk"
++      Then the todo "Buy milk" has the completed class
++
++    Scenario: Unchecking a completed todo makes it active again
++      Given a completed todo "Buy milk" exists
++      When the user toggles the checkbox for todo "Buy milk"
++      Then the todo "Buy milk" does not have the completed class
++
++  Rule: Mark all as complete
++
++    Scenario: Toggle-all checks all todos
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | false     |
++        | Walk the dog | false     |
++      When the user clicks the toggle-all checkbox
++      Then all todos are completed
++      And the toggle-all checkbox is checked
++
++    Scenario: Toggle-all unchecks when all are already complete
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | true      |
++        | Walk the dog | true      |
++      When the user clicks the toggle-all checkbox
++      Then all todos are active
++      And the toggle-all checkbox is not checked
++
++    Scenario: Toggle-all reflects state when a single todo is checked
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | true      |
++        | Walk the dog | false     |
++      Then the toggle-all checkbox is not checked
++
++  Rule: Destroying a todo
++
++    Scenario: Clicking the destroy button removes the todo
++      Given a todo "Buy milk" exists
++      When the user destroys the todo "Buy milk"
++      Then the todo "Buy milk" no longer exists
++
++  Rule: Editing a todo
++
++    Scenario: Double-clicking a todo label activates editing mode
++      Given a todo "Buy milk" exists
++      When the user double-clicks the label of todo "Buy milk"
++      Then the todo "Buy milk" is in editing mode
++      And the edit input for "Buy milk" has focus
++
++    Scenario: Editing and confirming with Enter saves the new title
++      Given a todo "Buy milk" exists
++      When the user double-clicks the label of todo "Buy milk"
++      And the user types "Buy oat milk" in the edit input and presses Enter
++      Then a todo with title "Buy oat milk" exists in the list
++      And the todo "Buy milk" no longer exists
++
++    Scenario: Editing and confirming with blur saves the new title
++      Given a todo "Buy milk" exists
++      When the user double-clicks the label of todo "Buy milk"
++      And the user types "Buy oat milk" in the edit input and presses Enter on blur
++      Then a todo with title "Buy oat milk" exists in the list
++
++    Scenario: Editing with Escape discards changes
++      Given a todo "Buy milk" exists
++      When the user double-clicks the label of todo "Buy milk"
++      And the user types "Changed" in the edit input and presses Escape
++      Then a todo with title "Buy milk" exists in the list
++      And the todo "Changed" does not exist
++
++    Scenario: Editing to empty text destroys the todo
++      Given a todo "Buy milk" exists
++      When the user double-clicks the label of todo "Buy milk"
++      And the user clears the edit input and presses Enter
++      Then the todo "Buy milk" no longer exists
++
++    Scenario: Editing is not persisted as an editing class
++      Given a todo "Buy milk" exists
++      When the user double-clicks the label of todo "Buy milk"
++      Then the todo "Buy milk" has the editing class
++      When the page is reloaded
++      Then the todo "Buy milk" does not have the editing class
+diff --git a/features/todo-persistence.feature b/features/todo-persistence.feature
+new file mode 100644
+index 0000000..168f1dd
+--- /dev/null
++++ b/features/todo-persistence.feature
+@@ -0,0 +1,36 @@
++Feature: Todo persistence
++  As a user
++  I want my todos to survive page reloads
++  So that I don't lose my task list
++
++  Background:
++    Given the app is loaded
++
++  Rule: LocalStorage persistence
++
++    Scenario: Todos survive a page reload
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | true      |
++        | Walk the dog | false     |
++      When the page is reloaded
++      Then a todo with title "Buy milk" exists in the list
++      And a todo with title "Walk the dog" exists in the list
++
++    Scenario: Completed state survives a page reload
++      Given a completed todo "Buy milk" exists
++      When the page is reloaded
++      Then the todo "Buy milk" has the completed class
++
++    Scenario: Todos are persisted to localStorage under todos-vanilla
++      Given a todo "Buy milk" exists
++      Then the localStorage key "todos-vanilla" contains an array with 1 item
++      And the first item in localStorage "todos-vanilla" has title "Buy milk"
++
++    Scenario: New todo ID increments
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | false     |
++        | Walk the dog | false     |
++      Then the first item in localStorage "todos-vanilla" has id 1
++      And the second item in localStorage "todos-vanilla" has id 2
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..e51a967
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,65 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/todo-lifecycle.feature:Creating a todo from input text",
++      "features/todo-lifecycle.feature:Input is trimmed before creating a todo",
++      "features/todo-lifecycle.feature:Empty or whitespace-only input creates no todo",
++      "features/todo-lifecycle.feature:New todo input is focused on page load"
++    ]
++  },
++  "watch2": {
++    "scenarios": [
++      "features/todo-lifecycle.feature:Clicking the checkbox marks a todo as completed",
++      "features/todo-lifecycle.feature:Unchecking a completed todo makes it active again",
++      "features/todo-lifecycle.feature:Toggle-all checks all todos",
++      "features/todo-lifecycle.feature:Toggle-all unchecks when all are already complete",
++      "features/todo-lifecycle.feature:Toggle-all reflects state when a single todo is checked"
++    ]
++  },
++  "watch3": {
++    "scenarios": [
++      "features/todo-lifecycle.feature:Clicking the destroy button removes the todo",
++      "features/todo-lifecycle.feature:Double-clicking a todo label activates editing mode",
++      "features/todo-lifecycle.feature:Editing and confirming with Enter saves the new title",
++      "features/todo-lifecycle.feature:Editing and confirming with blur saves the new title",
++      "features/todo-lifecycle.feature:Editing with Escape discards changes",
++      "features/todo-lifecycle.feature:Editing to empty text destroys the todo",
++      "features/todo-lifecycle.feature:Editing is not persisted as an editing class"
++    ]
++  },
++  "watch4": {
++    "scenarios": [
++      "features/todo-counter-and-filters.feature:Main and footer are hidden when there are no todos",
++      "features/todo-counter-and-filters.feature:Main and footer are visible when there are todos",
++      "features/todo-counter-and-filters.feature:Counter shows the number of active todos",
++      "features/todo-counter-and-filters.feature:Counter uses singular form for one item",
++      "features/todo-counter-and-filters.feature:Counter shows zero for no active items"
++    ]
++  },
++  "watch5": {
++    "scenarios": [
++      "features/todo-counter-and-filters.feature:Clear completed removes all completed todos",
++      "features/todo-counter-and-filters.feature:Clear completed button is hidden when no todos are completed",
++      "features/todo-counter-and-filters.feature:Clear completed button is visible when at least one todo is completed"
++    ]
++  },
++  "watch6": {
++    "scenarios": [
++      "features/todo-counter-and-filters.feature:All filter shows all todos",
++      "features/todo-counter-and-filters.feature:Active filter shows only active todos",
++      "features/todo-counter-and-filters.feature:Completed filter shows only completed todos",
++      "features/todo-counter-and-filters.feature:Active filter link is selected when viewing active todos",
++      "features/todo-counter-and-filters.feature:Completed filter link is selected when viewing completed todos",
++      "features/todo-counter-and-filters.feature:All filter link is selected by default",
++      "features/todo-counter-and-filters.feature:Checking a todo while on active filter hides it from the list"
++    ]
++  },
++  "watch7": {
++    "scenarios": [
++      "features/todo-persistence.feature:Todos survive a page reload",
++      "features/todo-persistence.feature:Completed state survives a page reload",
++      "features/todo-persistence.feature:Todos are persisted to localStorage under todos-vanilla",
++      "features/todo-persistence.feature:New todo ID increments"
++    ]
++  }
++}

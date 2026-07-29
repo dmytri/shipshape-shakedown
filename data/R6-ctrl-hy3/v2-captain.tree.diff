@@ -1,0 +1,29 @@
+diff --git a/features/todomvc.feature b/features/todomvc.feature
+index a88b6ee..a3b5b06 100644
+--- a/features/todomvc.feature
++++ b/features/todomvc.feature
+@@ -17,6 +17,11 @@ Feature: TodoMVC app behaviour
+     Then the "#main" section is hidden
+     And the "#footer" section is hidden
+ 
++  Rule: App readiness signal
++
++  Scenario: App signals readiness through the global appHasStarted flag
++    Then the global flag "appHasStarted" is set to a truthy value
++
+   Rule: Creating todos
+ 
+   Scenario: New-todo input is focused on load
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..e409aa4
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,7 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/todomvc.feature:App signals readiness through the global appHasStarted flag"
++    ]
++  }
++}

@@ -1,0 +1,165 @@
+diff --git a/features/dom-identity.feature b/features/dom-identity.feature
+index 9817d39..1f6f415 100644
+--- a/features/dom-identity.feature
++++ b/features/dom-identity.feature
+@@ -70,6 +70,53 @@ Feature: DOM node identity
+       Then both todos are visible
+       And all todos are active
+ 
++  Rule: DOM node identity is preserved across state changes
++
++    Scenario: Toggling a single todo keeps its DOM node alive
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | false     |
++        | Walk the dog | false     |
++      When the user notes the DOM node for todo "Buy milk"
++      When the user toggles the checkbox for todo "Buy milk"
++      Then the tracked DOM node is still the same element
++      And the todo "Buy milk" has the completed class
++      And the todo "Walk the dog" does not have the completed class
++
++    Scenario: Toggling all keeps every DOM node alive
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | false     |
++        | Walk the dog | false     |
++        | Clean house  | false     |
++      When the user notes all 3 DOM nodes in the list
++      When the user clicks the toggle-all checkbox
++      Then the tracked DOM nodes are still the same elements
++      And all todos are completed
++
++    Scenario: Unmarking all keeps every DOM node alive
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | true      |
++        | Walk the dog | true      |
++        | Clean house  | true      |
++      When the user notes all 3 DOM nodes in the list
++      When the user clicks the toggle-all checkbox
++      Then the tracked DOM nodes are still the same elements
++      And all todos are active
++
++    Scenario: Toggle-all twice keeps every DOM node alive
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | false     |
++        | Walk the dog | false     |
++      When the user notes the first DOM node in the list
++      When the user clicks the toggle-all checkbox
++      Then the tracked DOM node is still the same element
++      When the user clicks the toggle-all checkbox
++      Then the tracked DOM node is still the same element
++      And all todos are active
++
+   Rule: Routing preserves visible todos
+ 
+     Scenario: Back button after filtering shows the correct todos
+@@ -83,3 +130,15 @@ Feature: DOM node identity
+       Then only the todo "Walk the dog" is visible
+       When the user navigates to "#/"
+       Then both todos are visible
++
++    Scenario: Browser back button restores the previous filter
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | false     |
++        | Walk the dog | true      |
++      When the user navigates to "#/active"
++      Then only the todo "Buy milk" is visible
++      When the user navigates to "#/completed"
++      Then only the todo "Walk the dog" is visible
++      When the user presses the browser back button
++      Then only the todo "Buy milk" is visible
+diff --git a/features/support/steps.js b/features/support/steps.js
+index c60bd32..6156352 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -328,3 +328,62 @@ Then('the second item in localStorage {string} has id {int}', function (key, id)
+   const arr = JSON.parse(stored);
+   expect(arr[1].id).to.equal(id);
+ });
++
++// ── DOM-identity steps ───────────────────────────────────────────────────
++// These steps hold ACTUAL DOM element references across actions, so they
++// detect the defect where render() destroys and recreates <li> nodes
++// (innerHTML = '') instead of mutating them in place.
++
++When('the user notes the DOM node for todo {string}', function (title) {
++  const labels = this.document.querySelectorAll('.todo-list label');
++  for (const label of labels) {
++    if (label.textContent === title) {
++      this._trackedLi = label.closest('li');
++      return;
++    }
++  }
++  throw new Error(`Todo "${title}" not found in the DOM`);
++});
++
++When('the user notes the first DOM node in the list', function () {
++  const items = this.document.querySelectorAll('.todo-list li');
++  if (items.length === 0) throw new Error('No todo items in the list');
++  this._trackedLi = items[0];
++});
++
++When('the user notes all {int} DOM nodes in the list', function (count) {
++  const items = this.document.querySelectorAll('.todo-list li');
++  if (items.length !== count) throw new Error(`Expected ${count} items, got ${items.length}`);
++  this._trackedLis = Array.from(items);
++});
++
++Then('the tracked DOM node is still the same element', function () {
++  expect(this._trackedLi).to.exist;
++  // Walk up to the parent and check that the tracked node is still a direct child.
++  // If render() destroyed and recreated it, the original reference would be orphaned
++  // and this check would fail.
++  const parent = this._trackedLi.parentNode;
++  expect(parent).to.exist;
++  const stillPresent = Array.from(parent.childNodes).some(child => child === this._trackedLi);
++  expect(stillPresent).to.be.true;
++});
++
++Then('the tracked DOM nodes are still the same elements', function () {
++  expect(this._trackedLis).to.exist;
++  const items = this.document.querySelectorAll('.todo-list li');
++  expect(items.length).to.equal(this._trackedLis.length);
++  for (let i = 0; i < this._trackedLis.length; i++) {
++    const tracked = this._trackedLis[i];
++    const parent = tracked.parentNode;
++    expect(parent).to.exist;
++    const stillPresent = Array.from(parent.childNodes).some(child => child === tracked);
++    expect(stillPresent).to.be.true;
++  }
++});
++
++// ── Routing back-button step ──────────────────────────────────────────────
++
++When('the user presses the browser back button', function () {
++  this.window.history.back();
++  this.window.dispatchEvent(new this.window.Event('hashchange'));
++});
+diff --git a/watchbill.json b/watchbill.json
+index 53c0694..335c12b 100644
+--- a/watchbill.json
++++ b/watchbill.json
+@@ -6,12 +6,17 @@
+       "features/dom-identity.feature:Toggling preserves all three todos in the list",
+       "features/dom-identity.feature:Marking all complete preserves the list",
+       "features/dom-identity.feature:Unmarking all preserves the list",
+-      "features/dom-identity.feature:Multiple rapid toggles do not corrupt the list"
++      "features/dom-identity.feature:Multiple rapid toggles do not corrupt the list",
++      "features/dom-identity.feature:Toggling a single todo keeps its DOM node alive",
++      "features/dom-identity.feature:Toggling all keeps every DOM node alive",
++      "features/dom-identity.feature:Unmarking all keeps every DOM node alive",
++      "features/dom-identity.feature:Toggle-all twice keeps every DOM node alive"
+     ]
+   },
+   "watch2": {
+     "scenarios": [
+-      "features/dom-identity.feature:Back button after filtering shows the correct todos"
++      "features/dom-identity.feature:Back button after filtering shows the correct todos",
++      "features/dom-identity.feature:Browser back button restores the previous filter"
+     ]
+   }
+ }

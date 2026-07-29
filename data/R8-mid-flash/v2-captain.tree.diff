@@ -1,0 +1,149 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index cb2b457..4146633 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -4,27 +4,29 @@
+ 
+ ## State
+ - Greenfield bootstrap complete. RIGGING.md authored with minimal methods.
+-- 4 feature files written (42 scenarios total): todos, editing, routing, persistence.
+-- watchbill.json lists all 42 scenarios in watch1.
+-- No production code exists yet. js/ and css/ directories scaffolded and empty.
++- 5 feature files written (48 scenarios total): todos, editing, routing, persistence, dom-stability.
++- watchbill.json written with perturbation entry for DOM-stability defect.
++- Production code exists: js/app.js implements TodoMVC with a `render()`-via-innerHTML pattern.
++- Perturbation planted at `render()` seam in js/app.js (line 208).
+ 
+-## Decisions
++## Decisions (carried forward)
+ - App name for localStorage key: `todos-javascript` (per spec: `todos-[framework]`).
+-- No tier tags assigned — all scenarios are default-tier @logic-equivalent (untagged).
+-- No preprocessors; vanilla JS as specified.
+-- Framework used: none (vanilla JS), so localStorage key is `todos-javascript`.
+-- CSS: use template as-is, app.css for overrides if needed.
+-- Routing: native hashchange via window.location.hash. No Director library needed.
+-- ID format: each todo gets a unique id. Recommend Date.now() or a counter.
++- No tier tags assigned.
++- No preprocessors; vanilla JS.
++- Framework used: none (vanilla JS).
++- CSS: template as-is.
++- Routing: native hashchange. No Director library.
++- ID format: Date.now() + Math.random().
+ 
+ ## Next step
+ - Dispatch QM: fresh context, base commit HEAD, with watchbill.json.
+-- QM will fail every scenario (no implementation) and dispatch Crew.
+-- Crew will produce production code: index.html (based on template), js/app.js, js/controllers/, js/models/.
++- QM examines the 6 new dom-stability scenarios and the perturbation.
++- Crew fixes `render()` to mutate DOM nodes in-place instead of rebuilding via innerHTML.
++- Crew must also remove the perturbation after fixing.
+ - After QM green: Boatswain for custody commit.
+ 
+ ## Open questions
+-- None. Spec covers all TodoMVC functionality from assets/app-spec.md.
++- None.
+ 
+ ## Exclusions from assets
+-- No sections of assets/app-spec.md have been excluded from derived specs. All spec requirements are covered by feature scenarios.
+\ No newline at end of file
++- No sections of assets/app-spec.md have been excluded. All spec requirements covered by feature scenarios.
+\ No newline at end of file
+diff --git a/features/dom-stability.feature b/features/dom-stability.feature
+new file mode 100644
+index 0000000..14cc9e2
+--- /dev/null
++++ b/features/dom-stability.feature
+@@ -0,0 +1,54 @@
++Feature: DOM stability during state changes
++  As a browser-based user
++  I want the todo list to mutate existing DOM nodes when state changes
++  So that script references to elements remain valid after interaction
++
++  Background:
++    Given the app is loaded
++
++  Rule: Toggling a todo mutates the existing node in-place
++
++  Scenario: Toggling a todo preserves the item's DOM node
++    Given the todo list contains "Buy milk", "Walk dog", "Write code"
++    When I click the toggle checkbox on the "Buy milk" item
++    Then the "Buy milk" item should have the completed class
++    And the "Buy milk" item element is the same DOM node as before the toggle
++    And the "Walk dog" item element is the same DOM node as before the toggle
++
++  Scenario: Toggling a completed todo back to active preserves the node
++    Given the todo list contains "Buy milk", "Walk dog"
++    And "Walk dog" is completed
++    When I click the toggle checkbox on the "Walk dog" item
++    Then the "Walk dog" item should not have the completed class
++    And the "Walk dog" item element is the same DOM node as before the toggle
++    And the "Buy milk" item element is the same DOM node as before the toggle
++
++  Rule: Toggle-all mutates each item's node in-place
++
++  Scenario: Toggle-all completed preserves all item DOM nodes
++    Given the todo list contains "Buy milk", "Walk dog", "Write code"
++    When I click the toggle-all checkbox
++    Then all todos should be marked as completed
++    And each item element is the same DOM node as before the toggle-all
++
++  Scenario: Toggle-all active preserves all item DOM nodes
++    Given all todos are completed
++    When I click the toggle-all checkbox
++    Then all todos should be active
++    And each item element is the same DOM node as before the toggle-all
++
++  Rule: Clear completed preserves remaining item nodes
++
++  Scenario: Clearing completed preserves remaining items' DOM nodes
++    Given the todo list contains "Buy milk", "Walk dog", "Write code"
++    And "Buy milk" is completed
++    And "Write code" is completed
++    When I click the clear-completed button
++    Then the todo list should contain 1 item
++    And the "Walk dog" item element is the same DOM node as before clear
++
++  @conformance
++  Scenario: The render method must mutate existing nodes rather than rebuilding
++    Given the source at "js/app.js"
++    When the verifier checks the render method
++    Then the todo list is not rebuilt via innerHTML replacement during toggle, toggle-all, or clear-completed operations
+\ No newline at end of file
+diff --git a/js/app.js b/js/app.js
+index 70244bf..81f8969 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -205,6 +205,7 @@
+     if (this.filter === 'active') filtered = this.model.getActive();
+     else if (this.filter === 'completed') filtered = this.model.getCompleted();
+ 
++    throw new Error("PERTURBATION: consider current durable context; remove when fixed");
+     list.innerHTML = filtered.map(function (todo) {
+       var checked = todo.completed ? 'checked' : '';
+       var completedClass = todo.completed ? 'completed' : '';
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..3eb088d
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,19 @@
++{
++  "watches": [
++    {
++      "id": "dom-stability",
++      "scenarios": [
++        "DOM stability during state changes:Toggling a todo preserves the item's DOM node",
++        "DOM stability during state changes:Toggling a completed todo back to active preserves the node",
++        "DOM stability during state changes:Toggle-all completed preserves all item DOM nodes",
++        "DOM stability during state changes:Toggle-all active preserves all item DOM nodes",
++        "DOM stability during state changes:Clearing completed preserves remaining items' DOM nodes",
++        "DOM stability during state changes:The render method must mutate existing nodes rather than rebuilding"
++      ],
++      "perturbation": {
++        "seam": "js/app.js",
++        "target": "TodoController.prototype.render - list.innerHTML rebuild"
++      }
++    }
++  ]
++}
+\ No newline at end of file

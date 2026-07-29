@@ -1,0 +1,156 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 6b0551e..c35b9e3 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -31,3 +31,17 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ - No production code exists yet. `index.html` and `js/app.js` must be created before verification can run.
+ 
+ **Next role:** QM dispatch. Requires: (1) RIGGING.md derived by Shipwright, (2) production artifacts (`index.html`, `js/app.js`, `css/app.css`) created by Crew through QM dispatch.
++
++## Voyage 2: DOM-identity defect (browser acceptance failure)
++
++**Defect:** External Cypress acceptance suite fails with "element has detached from the DOM" on toggle, mark-all, and individual complete/uncomplete interactions. The `render()` function in `js/app.js` rebuilds the entire todo list via `innerHTML = ''` on every state change. This destroys all `<li>` DOM nodes and recreates new ones. Cypress holds references across chained commands; the old references become detached.
++
++**Root cause:** `render()` at line 67 (approx.) does `todoList.innerHTML = ''` followed by full re-creation of every `<li>`. The fix is to mutate existing nodes in place: toggle the `completed` class on the `<li>`, update the checkbox's `checked` property, without removing and re-adding the node to the DOM.
++
++**Spec added:** `features/dom-identity.feature` -- 4 scenarios that capture a DOM node reference before a state change, then assert it remains attached to the document after. Covers toggle, unmark, toggle-all, and unmark-all. All 4 scenarios fail on current code.
++
++**Step definitions added:** New steps in `features/support/steps.js` for DOM node capture and attachment assertions.
++
++**Watchbill:** `watchbill.json` created with the 4 dom-identity scenarios as watch1.
++
++**Fix direction:** Crew must refactor `render()` to preserve DOM identity. Options: (a) differential update -- only modify the changed node's class and checkbox, not rebuild the list; (b) keyed reconciliation -- match existing nodes by `data-id` and reuse them; (c) only rebuild when items are added or removed, mutate in place on toggle. The in-harness cucumber suite will continue to pass either way, but the Cypress acceptance suite requires the nodes to stay attached.
+diff --git a/features/dom-identity.feature b/features/dom-identity.feature
+new file mode 100644
+index 0000000..d07658e
+--- /dev/null
++++ b/features/dom-identity.feature
+@@ -0,0 +1,56 @@
++Feature: DOM node identity on state change
++  As a user interacting with a real browser automation tool
++  I want todo list nodes to be mutated in place when their state changes
++  So that DOM references remain valid across chained interactions
++
++  This spec guards against a class of defect where the application destroys and
++  recreates all <li> elements on every state change (e.g. via innerHTML = '' +
++  full rebuild). In a real browser, test frameworks hold references to DOM nodes
++  across chained commands. When the app replaces those nodes, the references
++  become detached and chained assertions fail with "element has detached from the
++  DOM". The correct behaviour is to mutate existing nodes in place: toggle a class,
++  update a checkbox's checked property, or show/hide — without removing and
++  re-adding the node to the DOM.
++
++  Background:
++    Given the app is loaded
++
++  Scenario: Toggling a todo preserves its DOM node identity
++    Given the user has added a todo "Buy milk"
++    And the user has added a todo "Walk the dog"
++    And the DOM node reference for todo "Buy milk" is captured
++    When the user clicks the toggle checkbox on todo "Buy milk"
++    Then the captured DOM node for todo "Buy milk" is still attached to the document
++    And the captured DOM node for todo "Buy milk" has class "completed"
++
++  Scenario: Unmarking a todo preserves its DOM node identity
++    Given the user has added a todo "Buy milk"
++    And the user has completed the todo "Buy milk"
++    And the DOM node reference for todo "Buy milk" is captured
++    When the user clicks the toggle checkbox on todo "Buy milk"
++    Then the captured DOM node for todo "Buy milk" is still attached to the document
++    And the captured DOM node for todo "Buy milk" does not have class "completed"
++
++  Scenario: Toggle-all preserves individual DOM node identities
++    Given the user has added a todo "Buy milk"
++    And the user has added a todo "Walk the dog"
++    And the DOM node reference for todo "Buy milk" is captured
++    And the DOM node reference for todo "Walk the dog" is captured
++    When the user clicks the toggle-all checkbox
++    Then the captured DOM node for todo "Buy milk" is still attached to the document
++    And the captured DOM node for todo "Walk the dog" is still attached to the document
++    And the captured DOM node for todo "Buy milk" has class "completed"
++    And the captured DOM node for todo "Walk the dog" has class "completed"
++
++  Scenario: Unmark-all preserves individual DOM node identities
++    Given the user has added a todo "Buy milk"
++    And the user has added a todo "Walk the dog"
++    And the user has completed the todo "Buy milk"
++    And the user has completed the todo "Walk the dog"
++    And the DOM node reference for todo "Buy milk" is captured
++    And the DOM node reference for todo "Walk the dog" is captured
++    When the user clicks the toggle-all checkbox
++    Then the captured DOM node for todo "Buy milk" is still attached to the document
++    And the captured DOM node for todo "Walk the dog" is still attached to the document
++    And the captured DOM node for todo "Buy milk" does not have class "completed"
++    And the captured DOM node for todo "Walk the dog" does not have class "completed"
+diff --git a/features/support/steps.js b/features/support/steps.js
+index 1ccba71..82846c4 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -446,6 +446,51 @@ Then('the {string} filter is selected', function (filterName) {
+   throw new Error(`Filter "${filterName}" not found`);
+ });
+ 
++// --- DOM identity ---
++
++Given('the DOM node reference for todo {string} is captured', function (title) {
++  if (!this._capturedNodes) this._capturedNodes = {};
++  const items = this.document.querySelectorAll('.todo-list li');
++  for (const item of items) {
++    const label = item.querySelector('label');
++    if (label.textContent === title) {
++      this._capturedNodes[title] = item;
++      return;
++    }
++  }
++  throw new Error(`Todo "${title}" not found for capture`);
++});
++
++Then('the captured DOM node for todo {string} is still attached to the document', function (title) {
++  if (!this._capturedNodes || !this._capturedNodes[title]) {
++    throw new Error(`No captured node for todo "${title}"`);
++  }
++  const node = this._capturedNodes[title];
++  if (!this.document.contains(node)) {
++    throw new Error(`Captured node for todo "${title}" is no longer attached to the document`);
++  }
++});
++
++Then('the captured DOM node for todo {string} has class {string}', function (title, className) {
++  if (!this._capturedNodes || !this._capturedNodes[title]) {
++    throw new Error(`No captured node for todo "${title}"`);
++  }
++  const node = this._capturedNodes[title];
++  if (!node.classList.contains(className)) {
++    throw new Error(`Captured node for todo "${title}" does not have class "${className}"`);
++  }
++});
++
++Then('the captured DOM node for todo {string} does not have class {string}', function (title, className) {
++  if (!this._capturedNodes || !this._capturedNodes[title]) {
++    throw new Error(`No captured node for todo "${title}"`);
++  }
++  const node = this._capturedNodes[title];
++  if (node.classList.contains(className)) {
++    throw new Error(`Captured node for todo "${title}" unexpectedly has class "${className}"`);
++  }
++});
++
+ // --- Persistence ---
+ 
+ When('the page is reloaded', async function () {
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..21eaeb1
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,10 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/dom-identity.feature:Toggling a todo preserves its DOM node identity",
++      "features/dom-identity.feature:Unmarking a todo preserves its DOM node identity",
++      "features/dom-identity.feature:Toggle-all preserves individual DOM node identities",
++      "features/dom-identity.feature:Unmark-all preserves individual DOM node identities"
++    ]
++  }
++}

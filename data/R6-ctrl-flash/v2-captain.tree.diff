@@ -1,0 +1,80 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index ec2a80b..34f2347 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -26,4 +26,22 @@ Build a vanilla-JavaScript TodoMVC per `assets/app-spec.md` using the base marku
+ 
+ ## Next
+ 
+-Dispatch QM on the watchbill. Context MUST clear before QM.
+\ No newline at end of file
++Dispatch QM on the watchbill (watch1-watch7). Context MUST clear before QM.
++
++## DOM-identity defect
++
++The `render()` function in `js/app.js` destroys and recreates all `<li>` elements on every state
++toggle (`list.innerHTML = ''` followed by `createElement('li')` per todo). This causes Cypress
++to lose references (detached-from-DOM errors) on 4 acceptance-suite scenarios:
++- mark-all toggle/uncheck
++- single-item complete/uncomplete
++
++The in-harness happy-dom tier does not reproduce this because it re-queries the DOM fresh after
++each action. There are 2 pre-existing harness failures unrelated to this defect:
++1. toggle-all checkbox checks when all become checked
++2. first item not completed on reload
++
++`features/conformance.feature` (watch7) pins the required fix: the `toggleTodo` and toggle-all
++handler MUST mutate existing DOM nodes in-place (classList.toggle, checkbox.checked) and MUST
++NOT call `render()`. Crew will implement the product fix; these conformance scenarios will
++then pass when QM runs the bespoke checker.
+\ No newline at end of file
+diff --git a/features/conformance.feature b/features/conformance.feature
+new file mode 100644
+index 0000000..56334d3
+--- /dev/null
++++ b/features/conformance.feature
+@@ -0,0 +1,25 @@
++Feature: Source conformance
++  As a maintainer
++  I want the production code to preserve DOM element identity on state toggles
++  So that browser-held references do not become detached on completion-state changes
++
++  @conformance
++  Scenario: The toggleTodo function does not call render
++    Given the source at "js/app.js"
++    When the conformance checker inspects the toggleTodo function
++    Then toggleTodo must not call render
++    And toggleTodo must toggle the completed class on the existing list item node in-place
++
++  @conformance
++  Scenario: The toggle-all handler mutates existing nodes in-place
++    Given the source at "js/app.js"
++    When the conformance checker inspects the toggle-all click handler
++    Then the handler must not call render
++    And the handler must toggle the completed class on each existing list item node in-place
++
++  @conformance
++  Scenario: The render function does not clear and rebuild the entire todo list
++    Given the source at "js/app.js"
++    When the conformance checker inspects the render function
++    Then the render function must not reassign innerHTML on the todo-list element
++    And the render function must not recreate li elements that already exist
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+index 8344b2b..75f52a2 100644
+--- a/watchbill.json
++++ b/watchbill.json
+@@ -57,5 +57,12 @@
+       "features/todos.feature:An item updated while filtered is hidden or shown accordingly",
+       "features/todos.feature:Filter state persists on reload"
+     ]
++  },
++  "watch7": {
++    "scenarios": [
++      "features/conformance.feature:The toggleTodo function does not call render",
++      "features/conformance.feature:The toggle-all handler mutates existing nodes in-place",
++      "features/conformance.feature:The render function does not clear and rebuild the entire todo list"
++    ]
+   }
+ }
+\ No newline at end of file

@@ -1,0 +1,131 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..8713e5b
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,22 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
++
++## DOM Stability Defect
++
++**Problem:** The acceptance suite (Cypress in a real browser) fails with "element has detached from DOM" errors when toggling todo completion state. The in-harness tests (happy-dom) do not catch this because happy-dom handles DOM operations differently.
++
++**Root cause:** `js/app.js` `render()` function clears `todoList.innerHTML = ''` and rebuilds all list elements from scratch on every state change. In a real browser, this invalidates element references that Cypress holds.
++
++**Fix required:** Preserve DOM element identity — mutate existing `<li>` nodes in place (toggle class, update checkbox) instead of re-rendering the entire list.
++
++**Spec added:** `features/dom-stability.feature` with 5 scenarios that fail on current code, requiring DOM nodes to remain attached after:
++1. Toggling a single todo's completed state (2 scenarios)
++2. Using toggle-all (2 scenarios)
++3. Navigating filter routes and back (1 scenario)
++
++**Step definitions added:** `features/support/steps.js` — "the user remembers the first todo-list li element" and "the remembered li element is still in the document"
++
++**Watchbill:** `watchbill.json` created with 5 target scenarios for QM to verify.
+diff --git a/features/dom-stability.feature b/features/dom-stability.feature
+new file mode 100644
+index 0000000..3668676
+--- /dev/null
++++ b/features/dom-stability.feature
+@@ -0,0 +1,59 @@
++Feature: DOM element identity stability
++  As a user interacting with the todo list
++  I want DOM elements to remain stable across state changes
++  So that my browser's view of the list does not break mid-interaction
++
++  Background:
++    Given the app is loaded
++
++  Rule: Toggling a single todo preserves element identity
++
++    Scenario: Clicking a todo's checkbox keeps the existing DOM node attached
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | false     |
++        | Walk the dog | false     |
++      When the user remembers the first todo-list li element
++      And the user toggles the checkbox for todo "Buy milk"
++      Then the remembered li element is still in the document
++
++    Scenario: Unchecking a completed todo keeps the existing DOM node attached
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | true      |
++        | Walk the dog | false     |
++      When the user remembers the first todo-list li element
++      And the user toggles the checkbox for todo "Buy milk"
++      Then the remembered li element is still in the document
++
++  Rule: Toggle-all preserves element identity
++
++    Scenario: Clicking toggle-all keeps existing DOM nodes attached
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | false     |
++        | Walk the dog | false     |
++      When the user remembers the first todo-list li element
++      And the user clicks the toggle-all checkbox
++      Then the remembered li element is still in the document
++
++    Scenario: Unchecking toggle-all keeps existing DOM nodes attached
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | true      |
++        | Walk the dog | true      |
++      When the user remembers the first todo-list li element
++      And the user clicks the toggle-all checkbox
++      Then the remembered li element is still in the document
++
++  Rule: Routing preserves element identity
++
++    Scenario: Navigating to a filter and back does not destroy existing elements
++      Given the following todos exist:
++        | title        | completed |
++        | Buy milk     | true      |
++        | Walk the dog | false     |
++      When the user remembers the first todo-list li element
++      And the user navigates to "#/active"
++      And the user navigates to "#/"
++      Then the remembered li element is still in the document
+diff --git a/features/support/steps.js b/features/support/steps.js
+index c60bd32..01fcf97 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -328,3 +328,13 @@ Then('the second item in localStorage {string} has id {int}', function (key, id)
+   const arr = JSON.parse(stored);
+   expect(arr[1].id).to.equal(id);
+ });
++
++When('the user remembers the first todo-list li element', function () {
++  const firstLi = this.document.querySelector('.todo-list li');
++  this._rememberedLi = firstLi;
++});
++
++Then('the remembered li element is still in the document', function () {
++  expect(this._rememberedLi).to.not.be.null;
++  expect(this.document.body.contains(this._rememberedLi)).to.be.true;
++});
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..967a04b
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,14 @@
++{
++  "watches": [
++    {
++      "id": "dom-stability",
++      "targets": [
++        "features/dom-stability.feature:11: Clicking a todo's checkbox keeps the existing DOM node attached",
++        "features/dom-stability.feature:20: Unchecking a completed todo keeps the existing DOM node attached",
++        "features/dom-stability.feature:31: Clicking toggle-all keeps existing DOM nodes attached",
++        "features/dom-stability.feature:40: Unchecking toggle-all keeps existing DOM nodes attached",
++        "features/dom-stability.feature:51: Navigating to a filter and back does not destroy existing elements"
++      ]
++    }
++  ]
++}

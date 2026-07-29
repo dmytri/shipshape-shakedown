@@ -1,0 +1,163 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 7753903..905013d 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -2,54 +2,37 @@
+ 
+ # Captain Notes
+ 
+-## Voyage: TodoMVC build — Specs and watchbill authored
++## Voyage: Promote @captain conformance scenarios into binding verification
+ 
+-Spec source: `assets/app-spec.md`
+-Template source: `assets/app-template.index.html`
+-Implementation: Vanilla JavaScript, no preprocessors, localStorage persistence.
+-Verification tier: happy-dom (already rigged — world.js exists, tier default @logic).
++### Situation
+ 
+-### Specs authored covering all app-spec.md behaviours
++External browser acceptance suite (Cypress) reports 5 failures:
++1. Mark all as completed — `cy.eq()` detached from DOM
++2. Clear complete state — `cy.eq()` detached from DOM
++3. Mark items as complete — `cy.find()` detached from DOM
++4. Unmark items as complete — `cy.find()` detached from DOM
++5. Save edits on blur — expected `<li.editing>` to contain new text
+ 
+-- `features/todo-management.feature` — new todo, no-todos visibility, counter, whitespace trim, empty guard
+-- `features/todo-completion.feature` — toggle single, mark all, clear completed, toggle-all sync
+-- `features/todo-editing.feature` — double-click edit, save on Enter/blur, cancel on Escape, empty destroys
+-- `features/routing.feature` — #/, #/active, #/completed routes, selected class, live filter on state change
+-- `features/persistence.feature` — localStorage save/restore, completion persistence, no editing state persisted
++All 5 stem from the same root cause: the `render()` function in `js/app.js` unconditionally removes ALL existing `<li>` children and deletes every entry from the `existingItems` tracking map, then recreates every node from scratch. Any browser-held reference (from `cy.eq()`, `cy.find()`, or a blur event target) is invalidated.
+ 
+-### Conformance specs (DOM identity preservation)
++### What was done
+ 
+-`features/conformance/dom-identity.feature` — 3 scenarios pinning that the render function MUST
+-mutate existing DOM nodes in place rather than rebuilding the list from scratch. These are
+-source-level conformance checks that detect the specific anti-patterns causing Cypress
+-"element detached from DOM" errors in real browsers:
++Promoted 5 `@captain @conformance` scenarios to binding `@conformance` status:
+ 
+-1. **No innerHTML rebuild** — the render function must not assign `innerHTML` on the todo-list
+-   container. The current code passes this check (it uses removeChild/createElement instead).
++- `features/conformance/dom-identity.feature` (3 scenarios) — 2 detect the current defect, 1 guards innerHTML
++- `features/conformance/perturbation-quiescence.feature` (1 scenario) — guards stale perturbation tokens
++- `features/conformance/watchbill-shape.feature` (1 scenario) — verifies watchbill JSON shape
+ 
+-2. **No unconditional removeChild** — the render function must not remove ALL existing <li>
+-   children from the DOM. The current code FAILS: it iterates all list items and calls
+-   `removeChild` on each without checking whether the item is still in the filtered todo set.
++Updated `cucumber.js` conformance profile tag from `'@captain and @conformance'` to `'@conformance'`.
+ 
+-3. **Tracking map must not be emptied** — the render function must not `delete` all entries
+-   from the existing-items map before the reuse loop. The current code FAILS: it deletes every
+-   entry, making `existingItems[t.id]` always return undefined, so the reuse/update branch is
+-   dead code and `createElement('li')` is always called for every item.
++### Current verification state
+ 
+-The fix (for QM/Crew to implement on next leg): in the stale-removal loop, only remove and
+-`delete` items whose `data-id` is NOT in the current filtered todo set. Keep the rest in the
+-map so they can be mutated in place (toggle class, update .checked, change textContent).
++29 scenarios in default tier (`--tags "not @captain and not @shipwright"`):
++- 27 pass
++- 2 fail (the DOM identity scenarios that detect the removeChild + map-clearing anti-patterns)
+ 
+-### watchbill.json
++### Remaining
+ 
+-29 scenario targets across 6 watches. Ordered: display -> completion -> editing -> routing ->
+-persistence -> conformance. The 5 conformance scenarios run under the `--profile conformance`
+-tag filter (`@captain and @conformance`). 2 scenarios fail on current code.
+-
+-### Next
+-
+-Dispatch QM on `main` with the watchbill. Context MUST clear before QM.
+-
+-### Open questions
+-
+-- `todos-[framework]` key format per spec: using `todos-todomvc-shakedown` given package name. Confirm or override before persistence spec passes.
+\ No newline at end of file
++QM dispatches on `main` with current `watchbill.json` (unchanged — already lists all 29 targets). Crew receives 2 failing conformance targets and fixes `js/app.js`:
++- Stale-removal loop: remove and `delete` only items whose `data-id` is NOT in the current filtered todo set
++- Keep the rest in `existingItems` map for in-place mutation (toggle class, update .checked, change textContent)
+\ No newline at end of file
+diff --git a/cucumber.js b/cucumber.js
+index dee4ee3..d95fb7f 100644
+--- a/cucumber.js
++++ b/cucumber.js
+@@ -20,7 +20,7 @@ module.exports = {
+   },
+   conformance: {
+     require: ['features/support/**/*.js'],
+-    tags: '@captain and @conformance',
++    tags: '@conformance',
+     format: ['summary'],
+   },
+ };
+\ No newline at end of file
+diff --git a/features/conformance/dom-identity.feature b/features/conformance/dom-identity.feature
+index 515f145..6cd982b 100644
+--- a/features/conformance/dom-identity.feature
++++ b/features/conformance/dom-identity.feature
+@@ -12,19 +12,19 @@ Feature: DOM identity preservation
+   remove only nodes whose data-id is no longer in the list; reuse the
+   rest, mutating their class/checked/textContent in place.
+ 
+-  @captain @conformance
++  @conformance
+   Scenario: Render function does not rebuild the todo list via innerHTML
+     Given the project has a render function that writes to the todo list
+     When I check whether the render function assigns innerHTML on the todo-list container
+     Then the render function does not use innerHTML reassignment on the todo list
+ 
+-  @captain @conformance
++  @conformance
+   Scenario: Render function does not unconditionally remove all list-item children
+     Given the project has a render function that writes to the todo list
+     When I check whether the render function removes all existing list-item children unconditionally
+     Then the render function does not remove existing list-item children unless they are stale
+ 
+-  @captain @conformance
++  @conformance
+   Scenario: Render function reuses existing list-item elements instead of always creating new ones
+     Given the project has a render function that writes to the todo list
+     When I check whether the render function creates new list-item elements for items that already exist
+diff --git a/features/conformance/perturbation-quiescence.feature b/features/conformance/perturbation-quiescence.feature
+index 30a5651..60ca6c6 100644
+--- a/features/conformance/perturbation-quiescence.feature
++++ b/features/conformance/perturbation-quiescence.feature
+@@ -4,7 +4,7 @@ Feature: Perturbation quiescence
+   directories when verification is green. A token beside green verification
+   is the stale-green alarm the Perturbation policy names.
+ 
+-  @captain @conformance
++  @conformance
+   Scenario: No active perturbation in implementation code
+     Given the project has a perturbation token in its implementation
+     When I search for the PERTURBATION marker in implementation files
+diff --git a/features/conformance/watchbill-shape.feature b/features/conformance/watchbill-shape.feature
+index 85e3103..d7cc13b 100644
+--- a/features/conformance/watchbill-shape.feature
++++ b/features/conformance/watchbill-shape.feature
+@@ -4,7 +4,7 @@ Feature: Watchbill shape conformance
+   whose shape conforms to the Watchbill policy. An absent watchbill
+   conforms by construction (the deck at rest).
+ 
+-  @captain @conformance
++  @conformance
+   Scenario: Watchbill shape conformance
+     Given the project has a watchbill at the repository root
+     When I validate its shape against the Watchbill policy
+diff --git a/tmp-test.feature b/tmp-test.feature
+new file mode 100644
+index 0000000..7dbaa14
+--- /dev/null
++++ b/tmp-test.feature
+@@ -0,0 +1,5 @@
++Feature: test
++  @conformance
++  Scenario: test
++    Given the app has loaded with no persisted todos
++    Then the main section is hidden
+\ No newline at end of file

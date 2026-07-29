@@ -1,0 +1,74 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 9de8922..15e38f6 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -20,3 +20,15 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ - Routing via `hashchange` event on `window`, filtering at model level
+ - No external dependencies beyond todomvc-common and todomvc-app-css (devDependencies already installed: @cucumber/cucumber, happy-dom)
+ - The test harness (`features/support/world.js`) loads `index.html` and `js/app.js`, executes via happy-dom `window.eval`, and fires DOMContentLoaded/load events
++
++## Voyage 2 — DOM identity and escape-key defects
++
++**Base commit:** end of Voyage 1.
++
++**Defect 1 — DOM identity loss on toggle:** The `render()` function in `js/app.js` does `dom.todoList.innerHTML = ''` and recreates all `<li>` elements from scratch on every state change. A real browser holds live DOM references; after `render()`, those references become detached. The in-harness suite re-queries after each action so it never notices. Cypress, however, holds live references and fails with "element has detached from DOM". The app spec says "toggling the class `completed` on its parent `<li>`" — this means in-place class mutation, not list reconstruction.
++
++**Fix direction (Crew):** Replace the full-list `innerHTML = ''` rebuild in `render()` with in-place mutation: find the existing `<li>` by `data-id`, toggle its `completed` class, update the checkbox `checked` state, and leave the DOM node in place. The full rebuild is only needed for add/delete/route-change operations.
++
++**Defect 2 — Escape doesn't discard edit under blur:** The escape keydown handler resets `editingId` and calls `render()`, but the blur event handler fires afterward and calls `editTodo(id, e.target.value)`, writing the typed text back. In a real browser, pressing Escape triggers blur on the focused input, so the typed value overwrites the original. The app spec says "If escape is pressed during the edit, the edit state should be left and any changes be discarded."
++
++**Fix direction (Crew):** Track an `escapePressed` flag (or similar) set in the keydown handler and checked in the blur handler so blur skips `editTodo()` when escape was the trigger.
+diff --git a/specs/edit-todo.feature b/specs/edit-todo.feature
+index dd4de99..27b918e 100644
+--- a/specs/edit-todo.feature
++++ b/specs/edit-todo.feature
+@@ -31,6 +31,15 @@ Feature: Edit todo title
+     Then a todo with title "Buy groceries" appears in the todo list
+     And the todo "Buy milk" does not exist
+ 
++  @contract
++  Scenario: Escape discards edit even when blur fires afterward
++    Given the app has a todo "Buy groceries"
++    When the user double-clicks the "Buy groceries" todo label
++    And the user types "Buy milk" in the edit input and presses Escape
++    And the edit input is blurred
++    Then a todo with title "Buy groceries" appears in the todo list
++    And the todo "Buy milk" does not exist
++
+   Scenario: Destroying a todo with an empty edit
+     Given the app has a todo "Buy groceries"
+     When the user double-clicks the "Buy groceries" todo label
+diff --git a/specs/toggle-todo.feature b/specs/toggle-todo.feature
+index f9fea3f..fa5ebb7 100644
+--- a/specs/toggle-todo.feature
++++ b/specs/toggle-todo.feature
+@@ -14,3 +14,9 @@ Feature: Toggle todo completion
+     When the user toggles the "Buy groceries" todo checkbox
+     Then the "Buy groceries" todo does not have class "completed"
+     And the todo count shows "1 item left"
++
++  @contract
++  Scenario: Toggling a todo preserves its DOM element identity
++    Given the app has a todo "Buy groceries"
++    When the user toggles the "Buy groceries" todo checkbox
++    Then the "Buy groceries" todo DOM element is unchanged after the toggle
+diff --git a/watchbill.json b/watchbill.json
+index 42389ad..e7fbd4d 100644
+--- a/watchbill.json
++++ b/watchbill.json
+@@ -8,6 +8,7 @@
+       "specs/new-todo.feature:Creating multiple todos",
+       "specs/toggle-todo.feature:Marking a todo as complete",
+       "specs/toggle-todo.feature:Unmarking a completed todo",
++      "specs/toggle-todo.feature:Toggling a todo preserves its DOM element identity",
+       "specs/toggle-all.feature:Marking all todos as complete",
+       "specs/toggle-all.feature:Unmarking all todos",
+       "specs/toggle-all.feature:Toggle all reflects individual todo state",
+@@ -15,6 +16,7 @@
+       "specs/edit-todo.feature:Saving an edit on Enter",
+       "specs/edit-todo.feature:Saving an edit on blur",
+       "specs/edit-todo.feature:Discarding an edit on Escape",
++      "specs/edit-todo.feature:Escape discards edit even when blur fires afterward",
+       "specs/edit-todo.feature:Destroying a todo with an empty edit",
+       "specs/edit-todo.feature:Trimming whitespace from edited titles",
+       "specs/counter.feature:Counter shows zero when no todos exist",

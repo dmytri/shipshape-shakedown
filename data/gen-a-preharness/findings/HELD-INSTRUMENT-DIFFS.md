@@ -92,3 +92,18 @@ running control arm remains exposed and may lose a voyage gate the same way.
 Operational rule until a bound exists: keep concurrency at 3 waves, and treat a blank voyage
 outcome or an empty selfsuite file as a possible memory kill — check `dmesg` before reading
 either as a doctrine or model signal.
+
+## 6. DISK GUARD must STOP the pilot, not fail every remaining voyage
+
+2026-07-28, P6-ctrl-cmimo: disk hit 1912M (<2048M guard). The guard correctly refused to grade —
+but the driver then ran voyages 8,9,10,11,12 back-to-back, each aborting instantly on the same
+guard, and logged PILOT END with a garbage final score built from the guard's own message. Five
+voyages of the cap were consumed in one second and the cell read as "finished" at a corrupt value.
+
+The sim itself was untouched (clean tree, last real commit intact), so the cell was resumable —
+but only because I looked. A cap consumed by aborts is indistinguishable in the log from a cap
+consumed by work.
+
+Proposed: on a disk-guard abort, STOP the pilot immediately (as PROVIDER ERROR does) with a
+distinct DISK-ABORT marker and a non-scoring exit, so the operator frees space and resumes rather
+than watching the cap evaporate. Same rule for any guard that aborts a voyage before it runs.

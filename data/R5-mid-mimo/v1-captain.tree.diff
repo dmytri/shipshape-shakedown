@@ -1,0 +1,450 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..1611de6
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,20 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
++
++## Voyage 1: TodoMVC vanilla JS
++
++**Goal:** Build a complete TodoMVC app per `assets/app-spec.md`, using `assets/app-template.index.html` as the base markup. Vanilla JavaScript, no preprocessors, persists to localStorage.
++
++**Stack:** JavaScript, browser DOM, npm for dev tooling only.
++
++**Key decisions:**
++- No framework. Plain DOM manipulation with event delegation.
++- Routing via `hashchange` event. No routing library.
++- localStorage key: `todos-vanillajs`.
++- Verification tier: happy-dom (the harness is already wired for it in `features/support/world.js`).
++- `index.html` at project root, copied from the template with sample items removed and `js/app.js` wired in.
++
++**Assets:** `assets/app-spec.md` (TodoMVC spec), `assets/app-template.index.html` (base markup). These are human-owned product material under Captain custody.
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..34eed2e
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,42 @@
++# Rigging
++## Stack
++- language: JavaScript
++- runtime: none
++- packageManager: npm
++
++## Directories
++- implementation: js
++- specs: features
++- verification: none
++- assets: assets
++- scantlings: none
++
++## Commands
++- discover: none
++- prove: `ref="{scenario}"; npx cucumber-js "${ref%%:*}" --name "^${ref#*:}$" --tags "not @captain and not @shipwright"`
++- sweep: `npx cucumber-js --tags "not @captain and not @shipwright"`
++- coverage: none
++- step-usage: none
++- plank-inventory: none
++- typecheck: none
++- lint: none
++- conformance: none
++
++## Perturbation
++- message: `PERTURBATION: consider current durable context; remove when fixed`
++- perturb: `throw new Error("PERTURBATION: consider current durable context; remove when fixed");`
++
++## Tiers
++- default: `npx cucumber-js --tags "not @captain and not @shipwright"`
++- sandbox: none
++- policy: none
++- weather: none
++- runrecord: none
++
++## Dependencies
++- policy: locked
++- dependency: @cucumber/cucumber
++- dependency: happy-dom
++
++## Outbound
++- outbound: none
+diff --git a/features/add-todo.feature b/features/add-todo.feature
+new file mode 100644
+index 0000000..bba6abc
+--- /dev/null
++++ b/features/add-todo.feature
+@@ -0,0 +1,30 @@
++Feature: Add a todo
++  As a user
++  I want to enter a new todo in the input field
++  So that I can track something I need to do
++
++  Background:
++    Given the app is loaded
++
++  Scenario: Creating a todo from a non-empty trimmed input
++    When the user types "Buy milk" into the new-todo input and presses Enter
++    Then the todo list contains 1 item
++    And the todo at position 1 has title "Buy milk"
++    And the new-todo input is empty
++
++  Scenario: Trimming whitespace before creating a todo
++    When the user types "  Buy milk  " into the new-todo input and presses Enter
++    Then the todo at position 1 has title "Buy milk"
++
++  Scenario: Pressing Enter on an empty or whitespace-only input does nothing
++    When the user types "" into the new-todo input and presses Enter
++    Then the todo list contains 0 items
++    When the user types "   " into the new-todo input and presses Enter
++    Then the todo list contains 0 items
++
++  Scenario: Multiple todos are appended in order
++    When the user types "First" into the new-todo input and presses Enter
++    And the user types "Second" into the new-todo input and presses Enter
++    Then the todo list contains 2 items
++    And the todo at position 1 has title "First"
++    And the todo at position 2 has title "Second"
+diff --git a/features/clear-completed.feature b/features/clear-completed.feature
+new file mode 100644
+index 0000000..3e8e304
+--- /dev/null
++++ b/features/clear-completed.feature
+@@ -0,0 +1,23 @@
++Feature: Clear completed todos
++  As a user
++  I want to remove all completed todos at once
++  So that I can clean up my list quickly
++
++  Background:
++    Given the app is loaded
++
++  Scenario: Clear completed removes all completed todos
++    Given a completed todo "First" exists
++    And a todo "Second" exists
++    And a completed todo "Third" exists
++    When the user clicks the clear-completed button
++    Then the todo list contains 1 item
++    And todo "Second" exists
++
++  Scenario: Clear completed button is hidden when there are no completed todos
++    Given a todo "First" exists
++    Then the clear-completed button is hidden
++
++  Scenario: Clear completed button is visible when there are completed todos
++    Given a completed todo "First" exists
++    Then the clear-completed button is visible
+diff --git a/features/counter.feature b/features/counter.feature
+new file mode 100644
+index 0000000..d99da73
+--- /dev/null
++++ b/features/counter.feature
+@@ -0,0 +1,32 @@
++Feature: Active todo counter
++  As a user
++  I want to see how many todos are still active
++  So that I know how much work remains
++
++  Background:
++    Given the app is loaded
++
++  Scenario: Counter shows zero when no todos exist
++    Then the counter shows "0 items left"
++
++  Scenario: Counter shows the number of active todos
++    Given a todo "First" exists
++    And a completed todo "Second" exists
++    Then the counter shows "1 item left"
++
++  Scenario: Counter uses plural form for more than one active todo
++    Given a todo "First" exists
++    And a todo "Second" exists
++    Then the counter shows "2 items left"
++
++  Scenario: Counter updates when a todo is completed
++    Given a todo "First" exists
++    And a todo "Second" exists
++    When the user toggles the checkbox on todo "First"
++    Then the counter shows "1 item left"
++
++  Scenario: Counter updates when a todo is removed
++    Given a todo "First" exists
++    And a todo "Second" exists
++    When the user clicks the destroy button on todo "First"
++    Then the counter shows "1 item left"
+diff --git a/features/edit-todo.feature b/features/edit-todo.feature
+new file mode 100644
+index 0000000..5449c83
+--- /dev/null
++++ b/features/edit-todo.feature
+@@ -0,0 +1,45 @@
++Feature: Edit a todo
++  As a user
++  I want to double-click a todo to edit its title
++  So that I can correct or update what I need to do
++
++  Background:
++    Given the app is loaded
++
++  Scenario: Double-clicking a todo activates editing mode
++    Given a todo "Buy milk" exists
++    When the user double-clicks the label of todo "Buy milk"
++    Then todo "Buy milk" has the editing class
++    And the edit input for todo "Buy milk" contains "Buy milk"
++    And the edit input for todo "Buy milk" is focused
++
++  Scenario: Pressing Enter saves the edit
++    Given a todo "Buy milk" exists
++    When the user double-clicks the label of todo "Buy milk"
++    And the user types "Buy oat milk" in the edit input and presses Enter
++    Then todo "Buy oat milk" exists
++    And todo "Buy milk" does not exist
++
++  Scenario: Blurring the edit input saves the edit
++    Given a todo "Buy milk" exists
++    When the user double-clicks the label of todo "Buy milk"
++    And the user types "Buy oat milk" in the edit input and blurs
++    Then todo "Buy oat milk" exists
++
++  Scenario: Trimming whitespace on save
++    Given a todo "Buy milk" exists
++    When the user double-clicks the label of todo "Buy milk"
++    And the user types "  Buy oat milk  " in the edit input and presses Enter
++    Then the todo at position 1 has title "Buy oat milk"
++
++  Scenario: Saving an empty edit removes the todo
++    Given a todo "Buy milk" exists
++    When the user double-clicks the label of todo "Buy milk"
++    And the user types "" in the edit input and presses Enter
++    Then the todo list contains 0 items
++
++  Scenario: Pressing Escape discards the edit
++    Given a todo "Buy milk" exists
++    When the user double-clicks the label of todo "Buy milk"
++    And the user types "Changed" in the edit input and presses Escape
++    Then the todo at position 1 has title "Buy milk"
+diff --git a/features/persistence.feature b/features/persistence.feature
+new file mode 100644
+index 0000000..04b7ae5
+--- /dev/null
++++ b/features/persistence.feature
+@@ -0,0 +1,31 @@
++Feature: LocalStorage persistence
++  As a user
++  I want my todos to persist when I reload the page
++  So that I do not lose my work
++
++  Rule: Todos survive a page reload
++
++    Scenario: Todos persist after reload
++      Given a todo "Buy milk" exists
++      And a completed todo "Walk the dog" exists
++      When the app is reloaded
++      Then the todo list contains 2 items
++      And todo "Buy milk" exists
++      And todo "Walk the dog" exists
++      And todo "Walk the dog" has the completed class
++
++    Scenario: Editing persists after reload
++      Given a todo "Buy milk" exists
++      When the user double-clicks the label of todo "Buy milk"
++      And the user types "Buy oat milk" in the edit input and presses Enter
++      And the app is reloaded
++      Then todo "Buy oat milk" exists
++      And todo "Buy milk" does not exist
++
++    Scenario: Removal persists after reload
++      Given a todo "Buy milk" exists
++      And a todo "Walk the dog" exists
++      When the user clicks the destroy button on todo "Buy milk"
++      And the app is reloaded
++      Then the todo list contains 1 item
++      And todo "Walk the dog" exists
+diff --git a/features/remove-todo.feature b/features/remove-todo.feature
+new file mode 100644
+index 0000000..8b2cabe
+--- /dev/null
++++ b/features/remove-todo.feature
+@@ -0,0 +1,15 @@
++Feature: Remove a todo
++  As a user
++  I want to delete a todo I no longer need
++  So that my list stays relevant
++
++  Background:
++    Given the app is loaded
++
++  Scenario: Clicking destroy removes a todo
++    Given a todo "Buy milk" exists
++    And a todo "Walk the dog" exists
++    When the user clicks the destroy button on todo "Buy milk"
++    Then the todo list contains 1 item
++    And todo "Buy milk" does not exist
++    And todo "Walk the dog" exists
+diff --git a/features/routing.feature b/features/routing.feature
+new file mode 100644
+index 0000000..164507d
+--- /dev/null
++++ b/features/routing.feature
+@@ -0,0 +1,49 @@
++Feature: Hash-based routing
++  As a user
++  I want to filter my todos by All, Active, or Completed
++  So that I can focus on the subset I care about
++
++  Background:
++    Given the app is loaded
++
++  Scenario: Default route shows all todos
++    Given a todo "Active" exists
++    And a completed todo "Done" exists
++    Then the selected filter is "All"
++    And the todo list contains 2 items
++
++  Scenario: Active filter shows only active todos
++    Given a todo "Active" exists
++    And a completed todo "Done" exists
++    When the user navigates to "#/active"
++    Then the selected filter is "Active"
++    And the todo list contains 1 item
++    And todo "Active" exists
++
++  Scenario: Completed filter shows only completed todos
++    Given a todo "Active" exists
++    And a completed todo "Done" exists
++    When the user navigates to "#/completed"
++    Then the selected filter is "Completed"
++    And the todo list contains 1 item
++    And todo "Done" exists
++
++  Scenario: Completing a todo hides it from the Active filter
++    Given the user navigates to "#/active"
++    And a todo "Buy milk" exists
++    When the user toggles the checkbox on todo "Buy milk"
++    Then the todo list contains 0 items
++
++  Scenario: Uncompleting a todo hides it from the Completed filter
++    Given the user navigates to "#/completed"
++    And a completed todo "Buy milk" exists
++    When the user toggles the checkbox on todo "Buy milk"
++    Then the todo list contains 0 items
++
++  Scenario: Active filter persists across reload
++    Given a todo "Active" exists
++    And a completed todo "Done" exists
++    When the user navigates to "#/active"
++    And the app is reloaded
++    Then the selected filter is "Active"
++    And the todo list contains 1 item
+diff --git a/features/toggle-todo.feature b/features/toggle-todo.feature
+new file mode 100644
+index 0000000..d06dd99
+--- /dev/null
++++ b/features/toggle-todo.feature
+@@ -0,0 +1,41 @@
++Feature: Toggle todo completion
++  As a user
++  I want to mark a todo as complete or active
++  So that I can track my progress
++
++  Background:
++    Given the app is loaded
++
++  Scenario: Clicking the checkbox marks a todo as completed
++    Given a todo "Buy milk" exists
++    When the user toggles the checkbox on todo "Buy milk"
++    Then todo "Buy milk" has the completed class
++
++  Scenario: Clicking the checkbox again marks a completed todo as active
++    Given a completed todo "Buy milk" exists
++    When the user toggles the checkbox on todo "Buy milk"
++    Then todo "Buy milk" does not have the completed class
++
++  Scenario: Mark all as complete toggles all todos
++    Given a todo "First" exists
++    And a todo "Second" exists
++    When the user clicks the toggle-all checkbox
++    Then todo "First" has the completed class
++    And todo "Second" has the completed class
++
++  Scenario: Mark all as complete is checked when all todos are completed
++    Given a completed todo "First" exists
++    And a completed todo "Second" exists
++    Then the toggle-all checkbox is checked
++
++  Scenario: Mark all as complete is unchecked when some todos are active
++    Given a completed todo "First" exists
++    And a todo "Second" exists
++    Then the toggle-all checkbox is not checked
++
++  Scenario: Unchecking mark-all unchecks all todos
++    Given a completed todo "First" exists
++    And a completed todo "Second" exists
++    When the user clicks the toggle-all checkbox
++    Then todo "First" does not have the completed class
++    And todo "Second" does not have the completed class
+diff --git a/features/visibility.feature b/features/visibility.feature
+new file mode 100644
+index 0000000..a49e3e6
+--- /dev/null
++++ b/features/visibility.feature
+@@ -0,0 +1,22 @@
++Feature: Section visibility
++  As a user
++  I want the main section and footer hidden when there are no todos
++  So that the interface stays clean
++
++  Background:
++    Given the app is loaded
++
++  Scenario: Main and footer are hidden when there are no todos
++    Then the main section is hidden
++    And the footer is hidden
++
++  Scenario: Main and footer appear when a todo is added
++    When the user types "Buy milk" into the new-todo input and presses Enter
++    Then the main section is visible
++    And the footer is visible
++
++  Scenario: Main and footer hide when the last todo is removed
++    Given a todo "Buy milk" exists
++    When the user clicks the destroy button on todo "Buy milk"
++    Then the main section is hidden
++    And the footer is hidden
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..d106461
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,28 @@
++{
++  "voyage": "todomvc-vanillajs",
++  "base": "4d1e121",
++  "scope": [
++    {
++      "watch": "verification",
++      "targets": [
++        "features/add-todo.feature",
++        "features/toggle-todo.feature",
++        "features/edit-todo.feature",
++        "features/remove-todo.feature",
++        "features/counter.feature",
++        "features/clear-completed.feature",
++        "features/visibility.feature",
++        "features/persistence.feature",
++        "features/routing.feature"
++      ]
++    },
++    {
++      "watch": "production",
++      "targets": [
++        "index.html",
++        "js/app.js",
++        "css/app.css"
++      ]
++    }
++  ]
++}

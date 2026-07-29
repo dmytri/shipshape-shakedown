@@ -1,0 +1,72 @@
+diff --git a/features/dom-identity-conformance.feature b/features/dom-identity-conformance.feature
+new file mode 100644
+index 0000000..28c02b4
+--- /dev/null
++++ b/features/dom-identity-conformance.feature
+@@ -0,0 +1,37 @@
++@conformance
++Feature: DOM node identity during state changes
++  As a project maintaining browser-compatible rendering
++  I want DOM nodes to persist across state-changing interactions
++  So that real-browser test runners can hold element references across chained commands
++
++  The app must not destroy and recreate list-item DOM nodes when toggling
++  completion state. A real browser (Cypress, Playwright) obtains a reference
++  to an li element, fires a click on its checkbox, then continues the command
++  chain against that same reference. If render() replaces innerHTML, every
++  prior reference detaches and the chain fails with "element has detached
++  from the DOM". The in-harness Cucumber suite re-queries between steps,
++  so it never observes this detachment. This feature pins DOM identity so
++  the defect is caught at the source level.
++
++  Background:
++    Given the app is loaded
++
++  Scenario: Toggling a single todo preserves the li DOM node identity
++    Given the following todos exist:
++      | title        | completed |
++      | Buy milk     | false     |
++      | Walk the dog | false     |
++    And the list item references are captured
++    When the user toggles the checkbox for todo "Buy milk"
++    Then every captured list item reference is still attached to the document
++    And the todo "Buy milk" has the completed class
++
++  Scenario: Toggling all todos preserves the li DOM node identity
++    Given the following todos exist:
++      | title        | completed |
++      | Buy milk     | false     |
++      | Walk the dog | false     |
++    And the list item references are captured
++    When the user clicks the toggle-all checkbox
++    Then every captured list item reference is still attached to the document
++    And all todos are completed
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..a70bb81
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,23 @@
++{
++  "base": "HEAD",
++  "watches": [
++    {
++      "name": "dom-identity-conformance",
++      "targets": [
++        "features/dom-identity-conformance.feature: Toggling a single todo preserves the li DOM node identity",
++        "features/dom-identity-conformance.feature: Toggling all todos preserves the li DOM node identity"
++      ],
++      "notes": "New @conformance scenarios. The current render() destroys and recreates all li nodes via innerHTML on every state change, so capturing a list-item reference before a toggle and asserting document.contains() after will fail. Fix the app to mutate existing nodes in place (toggle class, update checkbox.checked) instead of rebuilding the list. These scenarios require two new step definitions: 'the list item references are captured' and 'every captured list item reference is still attached to the document'."
++    },
++    {
++      "name": "existing-lifecycle-behaviour",
++      "targets": [
++        "features/todo-lifecycle.feature: Clicking the checkbox marks a todo as completed",
++        "features/todo-lifecycle.feature: Unchecking a completed todo makes it active again",
++        "features/todo-lifecycle.feature: Toggle-all checks all todos",
++        "features/todo-lifecycle.feature: Toggle-all unchecks when all are already complete"
++      ],
++      "notes": "Existing product scenarios that the external browser acceptance suite fails with 'element has detached from the DOM'. The in-harness suite passes because it re-queries between steps. The dom-identity-conformance fix (mutate nodes in place) resolves these failures as a side effect. No new step definitions needed for these targets."
++    }
++  ]
++}

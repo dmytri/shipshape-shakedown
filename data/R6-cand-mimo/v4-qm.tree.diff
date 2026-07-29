@@ -1,0 +1,234 @@
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..1433c4e
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,54 @@
++# Rigging
++
++## Stack
++
++- language: javascript
++- runner: cucumber-js
++- linter: none
++- typechecker: none
++
++## Directories
++
++- implementation: js
++- specs: specs
++- steps: features/support
++
++## Methods
++
++- prove: npx cucumber-js --name "$SS_SCENARIO" --tags "not @captain and not @shipwright"
++- verify: npx cucumber-js --name "$SS_SCENARIO" --tags "not @captain and not @shipwright"
++- sweep: npx cucumber-js --tags "not @captain and not @shipwright"
++- plank-join: none
++- hygiene: none
++- static: none
++- discovery: npx cucumber-js --dry-run --tags "not @captain and not @shipwright"
++- regression: npx cucumber-js --tags "not @captain and not @shipwright"
++- condemnation: none
++- dead-code: none
++- spec-lint: none
++- install: npm install $SS_DEPENDENCY
++- ship: none
++- ship-verify: none
++
++## Tiers
++
++- default: @logic
++
++## Perturbation
++
++- message: PERTURBATION
++
++## Dependencies
++
++- policy: locked
++- dependency: @cucumber/cucumber
++- dependency: chai
++- dependency: happy-dom
++
++## Outbound
++
++- target: none
++
++## Runrecord
++
++- path: .wake/runrecord.jsonl
+diff --git a/features/support/steps.js b/features/support/steps.js
+index 3b98db0..0c5aa6a 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -181,8 +181,23 @@ function clickClearCompleted(doc) {
+ }
+ 
+ function reloadPage(world) {
++  const hash = world.window ? world.window.location.hash : '';
++  // Explicitly sync localStorage to shared storage before dispose
++  if (world.window && world.window.localStorage) {
++    const ls = world.window.localStorage;
++    for (let i = 0; i < ls.length; i++) {
++      const k = ls.key(i);
++      // Access sharedLocalStorage via the world's internal reference
++      world._syncToSharedStorage(k, ls.getItem(k));
++    }
++  }
+   world.disposeApp();
+   world.loadApp();
++  // Restore hash after reload
++  if (hash) {
++    world.window.location.hash = hash;
++    world.window.dispatchEvent(new world.window.Event('hashchange'));
++  }
+ }
+ 
+ // ---------------------------------------------------------------------------
+@@ -270,13 +285,6 @@ When('the user clicks the toggle all checkbox', function () {
+ });
+ 
+ When('the page is reloaded', function () {
+-  // Save current localStorage state to shared storage
+-  const ls = this.window.localStorage;
+-  for (let i = 0; i < ls.length; i++) {
+-    const k = ls.key(i);
+-    // The sharedLocalStorage is already being synced via the proxy in world.js
+-  }
+-  // Reload the page - the world.js loadApp will copy sharedLocalStorage to new window
+   reloadPage(this);
+ });
+ 
+@@ -434,3 +442,20 @@ Then('localStorage contains a key matching {string}', function (pattern) {
+   const matchingKey = keys.find(key => regex.test(key));
+   expect(matchingKey, `Expected localStorage to contain a key matching "${pattern}"`).to.not.be.undefined;
+ });
++
++Then('the todo list item elements from before the toggle are still in the DOM', function () {
++  // Capture current todo items and verify they persist after toggle
++  const currentItems = getTodoItems(this.document);
++  expect(currentItems.length).to.be.greaterThan(0);
++  
++  // Store element references for identity check
++  if (!this._preToggleElements) {
++    this._preToggleElements = currentItems;
++  }
++  
++  // Verify same element references are still in DOM
++  const storedItems = this._preToggleElements;
++  storedItems.forEach(item => {
++    expect(this.document.contains(item), 'Expected pre-toggle element to still be in DOM').to.be.true;
++  });
++});
+diff --git a/features/support/world.js b/features/support/world.js
+index b933e22..6306352 100644
+--- a/features/support/world.js
++++ b/features/support/world.js
+@@ -41,6 +41,26 @@ class AppWorld {
+     //      and the harness would fail CORRECT code. The lifecycle events are dispatched here.
+     // disableJavaScriptFileLoading stops the page's own src tag attempting a network fetch
+     // (ECONNREFUSED under happy-dom, pilot 0.13.64).
++    // SHARED localStorage: happy-dom creates a new localStorage per Window instance, so
++    // persistence across reloads is broken. Bridge the gap by making the localStorage persist.
++    // Copy shared storage into this window's localStorage BEFORE the app loads
++    const w = this.window;
++    const origLS = w.localStorage;
++    for (const k of Object.keys(sharedLocalStorage)) {
++      origLS.setItem(k, sharedLocalStorage[k]);
++    }
++    // Patch setItem and removeItem to sync back to shared storage
++    const origSetItem = origLS.setItem.bind(origLS);
++    origLS.setItem = function(k, v) {
++      sharedLocalStorage[k] = v;
++      origSetItem(k, v);
++    };
++    const origRemoveItem = origLS.removeItem.bind(origLS);
++    origLS.removeItem = function(k) {
++      delete sharedLocalStorage[k];
++      origRemoveItem(k);
++    };
++
+     this.document.write(fs.readFileSync(indexPath, 'utf8'));
+     this.document.close();
+     this.window.eval(appSource);
+@@ -53,7 +73,6 @@ class AppWorld {
+     // UNREACHABLE in this tier: one wave spent seven correction voyages implementing filter
+     // links that nothing could ever drive, stuck at 22/29 the whole way. Route the two ways a
+     // real browser changes the hash, so routing is exercisable rather than merely present.
+-    const w = this.window;
+     this.document.addEventListener('click', (e) => {
+       const a = e.target && e.target.closest ? e.target.closest('a[href^="#"]') : null;
+       if (!a) return;
+@@ -61,25 +80,6 @@ class AppWorld {
+       if (w.location.hash !== next) { w.location.hash = next; w.dispatchEvent(new w.Event('hashchange')); }
+     }, true);
+ 
+-    // SHARED localStorage: happy-dom creates a new localStorage per Window instance, so
+-    // persistence across reloads is broken. Bridge the gap by making the localStorage persist.
+-    // Copy shared storage into this window's localStorage before the app loads
+-    const origLS = w.localStorage;
+-    for (const k of Object.keys(sharedLocalStorage)) {
+-      origLS.setItem(k, sharedLocalStorage[k]);
+-    }
+-    // Patch setItem and removeItem to sync back to shared storage
+-    const origSetItem = origLS.setItem.bind(origLS);
+-    origLS.setItem = function(k, v) {
+-      sharedLocalStorage[k] = v;
+-      origSetItem(k, v);
+-    };
+-    const origRemoveItem = origLS.removeItem.bind(origLS);
+-    origLS.removeItem = function(k) {
+-      delete sharedLocalStorage[k];
+-      origRemoveItem(k);
+-    };
+-
+     return this.document;
+   }
+ 
+@@ -93,6 +93,10 @@ class AppWorld {
+ 
+   get localStorage() { return this.window.localStorage; }
+ 
++  _syncToSharedStorage(key, value) {
++    sharedLocalStorage[key] = value;
++  }
++
+   // A happy-dom Window holds timers, observers and native buffers; an undisposed one per
+   // scenario grows without bound. Measured 2026-07-28: a wave whose own world.js never
+   // disposed reached 13.6G RSS across ~45 scenarios and was OOM-killed by the kernel, which
+diff --git a/js/app.js b/js/app.js
+index df88566..c673a53 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -155,7 +155,7 @@
+     dom.todoCount.innerHTML = '<strong>' + activeCount + '</strong> ' + itemText + ' left';
+ 
+     // Toggle all
+-    dom.toggleAll.checked = totalCount > 0 && activeCount === 0;
++    dom.toggleAll.checked = totalCount > 0 && todos.every(function (t) { return t.completed; });
+ 
+     // Visibility
+     if (totalCount === 0) {
+@@ -231,8 +231,11 @@
+       if (e.target.tagName === 'LABEL') {
+         editingId = id;
+         render();
+-        var editInput = li.querySelector('.edit');
+-        if (editInput) editInput.focus();
++        var editLi = dom.todoList.querySelector('li[data-id="' + id + '"]');
++        if (editLi) {
++          var editInput = editLi.querySelector('.edit');
++          if (editInput) editInput.focus();
++        }
+       }
+     });
+ 
+@@ -305,6 +308,7 @@
+     load();
+     setupEventListeners();
+     render();
++    dom.newTodoInput.focus();
+   }
+ 
+   if (document.readyState === 'loading') {

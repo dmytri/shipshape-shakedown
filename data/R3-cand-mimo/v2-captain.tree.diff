@@ -1,0 +1,50 @@
+diff --git a/specs/entry-point.feature b/specs/entry-point.feature
+new file mode 100644
+index 0000000..dc4c0f1
+--- /dev/null
++++ b/specs/entry-point.feature
+@@ -0,0 +1,26 @@
++Feature: Application entry point
++  As a user opening the todo app in a browser
++  I want an index.html at the project root that loads the app
++  So that the todo app renders and runs
++
++  Rule: Entry point exists and is valid
++
++    Scenario: The project root contains an index.html
++      Given a file exists at "index.html"
++      Then the file "index.html" contains the text "<!doctype html>"
++
++    Scenario: index.html loads the application script
++      Given a file exists at "index.html"
++      Then the file "index.html" contains the text "<script src=\"js/app.js\">"
++
++    Scenario: index.html contains the todo input element
++      Given a file exists at "index.html"
++      Then the file "index.html" contains the text "new-todo"
++
++    Scenario: index.html contains the main section
++      Given a file exists at "index.html"
++      Then the file "index.html" contains the text "class=\"main\""
++
++    Scenario: index.html contains the footer section
++      Given a file exists at "index.html"
++      Then the file "index.html" contains the text "class=\"footer\""
+diff --git a/watchbill.json b/watchbill.json
+index 599eda4..14371fc 100644
+--- a/watchbill.json
++++ b/watchbill.json
+@@ -1,4 +1,13 @@
+ {
++  "watch0": {
++    "scenarios": [
++      "specs/entry-point.feature:The project root contains an index.html",
++      "specs/entry-point.feature:index.html loads the application script",
++      "specs/entry-point.feature:index.html contains the todo input element",
++      "specs/entry-point.feature:index.html contains the main section",
++      "specs/entry-point.feature:index.html contains the footer section"
++    ]
++  },
+   "watch1": {
+     "scenarios": [
+       "specs/todo-app.feature:Main section and footer hidden when no todos exist",

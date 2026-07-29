@@ -1,0 +1,33 @@
+# banked: 2026-07-28T22:00:10Z
+# verdict: PENDING
+# leg: {  "name": "v3-captain",  "model": "xiaomi/mimo-v2.5",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/R6-ctrl-mimo/sim",  "timeout_s": 3600,  "max_tokens": 32768,  "skills": [    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills/shipshape",    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills/captain",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== v3-captain.session.jsonl ===
+  turns=22  wall=138.8s  in=50559  out=11562  cache_read=784576  cost=$0.0125
+  role reads: captain@t0 -> shipshape@t1
+  roles loaded: captain, shipshape
+  ~ repeated tool signature at turns [1, 2, 6, 12, 16] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    2255/85       512 $0.0003  read
+    t1    5408/83      2752 $0.0008  read
+    t2   10713/148     8128 $0.0016  read, bash
+    t3    8167/364    18816 $0.0013  read, read, read, bash, bash, bash
+    t4    1392/485    26944 $0.0004  read, read
+    t5    4710/1642   28288 $0.0012  read, bash
+    t6    1713/100    32960 $0.0004  read, read
+    t7    3267/64     34624 $0.0006  bash
+    t8      81/106    37888 $0.0001  read, bash
+    t9    1612/1550   37952 $0.0008  read
+    t10   3038/558    39552 $0.0007  read
+    t11   1042/1384   42560 $0.0007  write
+    t12   1451/700    43584 $0.0005  write
+    t13    791/888    44992 $0.0005  write
+    t14    956/800    45760 $0.0005  bash
+    t15   1096/714    46656 $0.0005  write
+    t16    770/204    47744 $0.0003  write
+    t17    318/94     48448 $0.0002  bash
+    t18    351/279    48704 $0.0003  write
+    t19    355/72     49024 $0.0002  bash
+    t20    184/659    49344 $0.0003  edit
+    t21    889/583    49344 $0.0004  -

@@ -1,0 +1,137 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 74e8031..4e22884 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -7,8 +7,18 @@ base. Vanilla JS, no preprocessors. Persist to localStorage. Route with hashchan
+ 
+ ## Dispatch plan
+ 
+-Voyage 1: Crew writes `js/app.js` implementing all scenarios. Boatswain handles commit custody
+-after QM green. No outbound — local only.
++Voyage 1 (completed): Crew wrote `js/app.js` implementing all scenarios. Boatswain committed.
++
++Voyage 2 (current): Browser acceptance suite reports DOM-detachment failures. Root cause:
++`renderList()` calls `todoList.innerHTML = ""` on every state change, destroying all `<li>`
++DOM nodes. Real browser Cypress holds element references that become detached. Fix: mutate
++existing `<li>` nodes in place (toggle class, checked) instead of rebuilding the list.
++
++New durable artifacts authored this voyage:
++- `features/dom-identity.feature` — @contract scenarios pinning DOM identity preservation
++- `features/conformance.feature` — @conformance source-level check for rebuild pattern
++- `watchbill.json` — ordered Watch 1 (contract identity), Watch 2 (existing behaviour),
++  Watch 3 (conformance)
+ 
+ ## Assets
+ 
+diff --git a/features/conformance.feature b/features/conformance.feature
+new file mode 100644
+index 0000000..edcfdf2
+--- /dev/null
++++ b/features/conformance.feature
+@@ -0,0 +1,10 @@
++Feature: Source-level conformance checks
++  As the Shipshape methodology
++  I want production code to follow project conventions
++  So that structural violations are caught at the cheapest tier
++
++  @conformance
++  Scenario: The todo list mutates existing nodes instead of rebuilding on state change
++    Given the application source at "js/app.js"
++    When I check for innerHTML assignment on the todo-list element
++    Then the todo list does not rebuild its items on any state-changing interaction
+\ No newline at end of file
+diff --git a/features/dom-identity.feature b/features/dom-identity.feature
+new file mode 100644
+index 0000000..0232192
+--- /dev/null
++++ b/features/dom-identity.feature
+@@ -0,0 +1,49 @@
++Feature: DOM identity preservation
++  As a browser acceptance suite
++  I want DOM nodes to stay attached across state changes
++  So that element references taken before an interaction remain valid
++
++  @contract
++  Scenario: Toggle checkbox preserves the li element identity
++    Given I have a todo "Buy milk"
++    When I capture the li element for "Buy milk"
++    And I click the toggle checkbox for "Buy milk"
++    Then the captured li element is still attached to the DOM
++
++  @contract
++  Scenario: Unmarking a completed todo preserves the li element identity
++    Given I have a completed todo "Buy milk"
++    When I capture the li element for "Buy milk"
++    And I click the toggle checkbox for "Buy milk"
++    Then the captured li element is still attached to the DOM
++
++  @contract
++  Scenario: Toggle-all preserves all li element identities
++    Given I have todos "Buy milk" and "Walk dog"
++    When I capture all li elements
++    And I click the toggle-all checkbox
++    Then every captured li element is still attached to the DOM
++
++  @contract
++  Scenario: Toggle-all clearing completed state preserves all li element identities
++    Given I have todos "Buy milk" and "Walk dog"
++    And all todos are marked completed
++    When I capture all li elements
++    And I click the toggle-all checkbox
++    Then every captured li element is still attached to the DOM
++
++  @contract
++  Scenario: Marking a todo while filtered does not detach its li element
++    Given I have a todo "Buy milk"
++    And the "Active" filter is selected
++    When I capture the li element for "Buy milk"
++    And I click the toggle checkbox for "Buy milk"
++    Then the captured li element is still attached to the DOM
++
++  @contract
++  Scenario: Clear completed preserves remaining li element identities
++    Given I have todos "Buy milk" and "Walk dog"
++    And "Walk dog" is completed
++    When I capture the li element for "Buy milk"
++    And I click "Clear completed"
++    Then the captured li element for "Buy milk" is still attached to the DOM
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..764efc3
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,32 @@
++{
++  "captain": "Shipshape Captain — /home/exedev/shipshape-shakedown/.eval-scratch/R4-mid-flash/sim",
++  "watchbill": [
++    {
++      "watch": 1,
++      "targets": [
++        "features/dom-identity.feature:Toggle checkbox preserves the li element identity",
++        "features/dom-identity.feature:Unmarking a completed todo preserves the li element identity",
++        "features/dom-identity.feature:Toggle-all preserves all li element identities",
++        "features/dom-identity.feature:Toggle-all clearing completed state preserves all li element identities",
++        "features/dom-identity.feature:Marking a todo while filtered does not detach its li element",
++        "features/dom-identity.feature:Clear completed preserves remaining li element identities"
++      ]
++    },
++    {
++      "watch": 2,
++      "targets": [
++        "features/todos.feature:Mark a todo as completed",
++        "features/todos.feature:Mark a completed todo as active",
++        "features/todos.feature:Mark all todos as complete",
++        "features/todos.feature:Clear the toggle-all state when clear completed is used",
++        "features/todos.feature:Toggle-all updates when individual todos are checked"
++      ]
++    },
++    {
++      "watch": 3,
++      "targets": [
++        "features/conformance.feature:The todo list mutates existing nodes instead of rebuilding on state change"
++      ]
++    }
++  ]
++}
+\ No newline at end of file

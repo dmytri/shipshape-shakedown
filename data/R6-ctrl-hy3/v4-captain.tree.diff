@@ -1,0 +1,91 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 819ea50..5328810 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -50,6 +50,29 @@ no commit, push, or dispatch happened.
+   watchbill; it reads the page artifact and reddens now, independent of the harness, so the
+   browser-only defect has an in-harness red target.
+ 
++## Shakedown findings — this leg (non-binding, binding intent lives in the specs)
++
++Two further browser-only acceptance defects, pinned as new scenarios on `watchbill.json`:
++
++- **List re-render detaches nodes (acceptance: Mark all as completed; Item mark/unmark
++  complete).** Every state change calls `render()`, which does `list.innerHTML = ''` and rebuilds
++  all `<li>` nodes. A real browser keeps the pre-click node reference, so Cypress's chain after
++  the click fails (`cy.eq`/`cy.find` on a detached node). The happy-dom harness re-queries fresh
++  each time, which is why the existing toggle scenarios passed; a node captured before the click
++  and re-checked for attachment after reproduces the detach. Pins:
++  - `features/todomvc.feature:Toggling a todo preserves its list item node`
++  - `features/todomvc.feature:Toggling all preserves every list item node`
++  Crew fix: mutate the existing `<li>`/checkbox in place (toggle `completed` class and
++  `checked`) instead of rebuilding the list. The scenarios redden on current code.
++- **Editing does not hide other controls (acceptance: Editing, hide other controls when
++  editing).** `index.html` links no stylesheet, so `node_modules/todomvc-app-css/index.css`
++  (which carries `.todo-list li.editing .view { display: none }`) never loads and `.toggle`
++  stays visible in edit mode. happy-dom cannot compute CSS visibility, so this is guarded at the
++  source level by a `@contract` page-reference pin:
++  - `features/todomvc.feature:The served page links the application stylesheet`
++  Crew fix: add the stylesheet `<link>` to `index.html` (CSS chain per build intent:
++  `todomvc-common/base.css`, `todomvc-app-css/index.css`, then `css/app.css`).
++
+ ## Next
+ 
+ QM consumes `watchbill.json`. Captain-to-QM requires clean context: this session still holds
+diff --git a/features/todomvc.feature b/features/todomvc.feature
+index e69d17e..38e22f5 100644
+--- a/features/todomvc.feature
++++ b/features/todomvc.feature
+@@ -28,6 +28,10 @@ Feature: TodoMVC app behaviour
+   Scenario: The served page loads the application script
+     Then the page at "index.html" references the application script "js/app.js"
+ 
++  @contract
++  Scenario: The served page links the application stylesheet
++    Then the page at "index.html" references the stylesheet "node_modules/todomvc-app-css/index.css"
++
+   Rule: Creating todos
+ 
+   Scenario: New-todo input is focused on load
+@@ -87,6 +91,26 @@ Feature: TodoMVC app behaviour
+     Then the todo "Taste JavaScript" has the "completed" class
+     And the todo "Taste JavaScript" is stored as completed
+ 
++  Rule: List item node identity is preserved across state changes
++
++  Scenario: Toggling a todo preserves its list item node
++    Given the todo "Taste JavaScript" is active
++    And the list item for "Taste JavaScript" is recorded
++    When the user clicks the checkbox of "Taste JavaScript"
++    Then the recorded list item for "Taste JavaScript" stays attached to the document
++    And the todo "Taste JavaScript" has the "completed" class
++
++  Scenario: Toggling all preserves every list item node
++    Given the todo "A" is active
++    And the todo "B" is active
++    And the list item for "A" is recorded
++    And the list item for "B" is recorded
++    When the user clicks the toggle-all checkbox
++    Then the recorded list item for "A" stays attached to the document
++    And the recorded list item for "B" stays attached to the document
++    And the todo "A" has the "completed" class
++    And the todo "B" has the "completed" class
++
+   Rule: Editing todos
+ 
+   Scenario: Double-clicking a label enters editing mode
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..7d49e93
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,9 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/todomvc.feature:Toggling a todo preserves its list item node",
++      "features/todomvc.feature:Toggling all preserves every list item node",
++      "features/todomvc.feature:The served page links the application stylesheet"
++    ]
++  }
++}

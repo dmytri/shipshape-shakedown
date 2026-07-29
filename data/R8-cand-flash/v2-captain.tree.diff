@@ -1,0 +1,210 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index b81ef20..7f193d2 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -2,23 +2,23 @@
+ 
+ # Captain Notes
+ 
+-## Intent
++## Status
+ 
+-Build a TodoMVC app at this repository root: `index.html`, `js/app.js`, `css/app.css`.
+-Use vanilla JavaScript only (no preprocessors, no frameworks). Persist to localStorage under
+-key `todos-vanillajs`. Implement all behaviours from `assets/app-spec.md`.
++**Leg**: Post-implementation (commit a3b6e3c). Working tree clean.
+ 
+-## What exists
++**External acceptance suite**: 6 failures, all caused by a single root defect: `render()` in `js/app.js` replaces ALL `.todo-list` children via `innerHTML = ''` on every state change, instead of mutating existing `<li>` nodes in-place. In a real browser, this detaches DOM nodes that Cypress holds references to, and causes spurious `blur` events during re-render that overwrite edit-cancel intent.
+ 
+-- **Initial commit** (87ba48a): empty project with `package.json`, `features/support/world.js`,
+-  `assets/app-spec.md`, `assets/app-template.index.html`.
+-- **Test harness**: Cucumber.js + happy-dom in `world.js` loads the real `index.html` and
+-  `js/app.js` before each scenario. `this.document` and `this.window` available.
+-- **No production code yet**: empty `js/` and `css/` directories.
+-- **Specs authored**: `features/todos.feature` — 20 scenarios covering all spec sections.
+-- **Watchbill authored**: `watchbill.json` — 9 watches.
++## Decisions captured
++
++1. **Fix approach**: Mutate existing `<li>` DOM nodes in-place (classList.add/remove for `.completed`, `.checked` for checkbox, `.textContent` for label) instead of calling `this.render()` which rebuilds the full list. `render()` may still update counters and toggle-all state via direct DOM references.
++
++2. **Durable artifacts updated**:
++   - `features/todos.feature` — Added 2 behavioural scenarios + 2 `@contract` DOM-identity scenarios
++   - `assets/dom-identity-scantling.md` — Contract describing the node-mutation requirement
++   - `watchbill.json` — 2 watches covering new+existing scenarios
++
++3. **QM targets**: All 27 scenarios (25 existing + 2 new) plus 2 `@contract` source-conformance scenarios. The `@contract` scenarios pin the DOM-identity requirement and will fail on current code.
+ 
+ ## Next
+ 
+-Dispatch QM to verify the scenarios against the production code, once built. Build order:
+-Shipwright creates `index.html`, `js/app.js`, `css/app.css` implementing the spec.
+\ No newline at end of file
++Dispatch QM. The `@contract` scenarios have no step definitions yet (plank-join: none in RIGGING.md) so QM will see unimplemented steps. That is the expected blocker — the Crew will implement the source-level conformance check as step definitions, which will fail on the current code, flagging the defect for the Crew to fix by mutating in-place.
+\ No newline at end of file
+diff --git a/assets/dom-identity-scantling.md b/assets/dom-identity-scantling.md
+new file mode 100644
+index 0000000..e8f1a72
+--- /dev/null
++++ b/assets/dom-identity-scantling.md
+@@ -0,0 +1,52 @@
++# DOM Identity Scantling
++
++## Contract
++
++When a user interaction changes a todo item's state (completed ↔ uncompleted,
++editing activation/deactivation, title edit), the application MUST mutate the
++existing `<li>` DOM node in-place rather than replacing it via full list rebuild.
++
++## Seam: `render` in `js/app.js`
++
++The `render` function MUST NOT replace the `.todo-list` children when only
++individual item state has changed. The following are forbidden:
++
++- `todoList.innerHTML = '<entire new content>'`
++- `todoList.replaceChildren()`
++- Any equivalent full-replacement pattern
++
++Allowed: per-node mutations such as:
++- `li.classList.add('completed')` / `li.classList.remove('completed')`
++- `checkbox.checked = true` / `checkbox.checked = false`
++- `label.textContent = newTitle`
++
++## Affected paths
++
++Every state-change entry point that currently calls `this.render()` MUST instead
++apply an in-place DOM mutation:
++
++| Method        | Current behaviour              | Required behaviour                        |
++|---------------|--------------------------------|-------------------------------------------|
++| `toggleTodo`  | `render()` replaces all `<li>` | Toggle `completed` class + checkbox only  |
++| `toggleAll`   | `render()` replaces all `<li>` | Toggle `completed` class + checkbox on each `<li>` |
++| `removeTodo`  | `render()` replaces all `<li>` | Remove the single `<li>` node             |
++| `commitEdit`  | `render()` replaces all `<li>` | Update `label.textContent` + clear editing class |
++| `cancelEdit`  | `render()` replaces all `<li>` | Restore `label.textContent` + clear editing class |
++| `clearCompleted` | `render()` replaces all `<li>` | Remove each completed `<li>` node        |
++
++The `.todo-count`, `#toggle-all` checked state, and `#main`/`#footer` visibility
++may still be updated via direct DOM references — they do not require a full list
++rebuild.
++
++## Why this matters
++
++A full list rebuild (`innerHTML = ''`) destroys the existing DOM nodes. In a
++real browser, any reference held before the rebuild (such as a Cypress chain
++subject, a blur-event handler's `closest('li')` lookup, or a focus reference)
++becomes detached from the live document. This causes:
++
++1. DOM detachment errors on chained commands
++2. Spurious `blur` events during the rebuild that overwrite intent (e.g., cancel
++   edit → blur fires → edit is saved despite Escape key)
++3. Index mismatches when a re-render occurs between event dispatch and handler
++   completion
+\ No newline at end of file
+diff --git a/features/todos.feature b/features/todos.feature
+index 48d4314..357dcb6 100644
+--- a/features/todos.feature
++++ b/features/todos.feature
+@@ -46,6 +46,16 @@ Feature: TodoMVC
+     Then all todos are completed
+     And "#toggle-all" is checked
+ 
++  Scenario: Toggle-all unmarks all items when all are completed
++    Given the following todos exist:
++      | title    | completed |
++      | Task A   | true      |
++      | Task B   | true      |
++      | Task C   | true      |
++    When I click "#toggle-all"
++    Then no todos are completed
++    And "#toggle-all" is not checked
++
+   Scenario: Toggle-all updates when individual items change
+     Given the following todos exist:
+       | title    | completed |
+@@ -71,6 +81,13 @@ Feature: TodoMVC
+     When I click the toggle for the first todo
+     Then the first todo has class "completed"
+ 
++  Scenario: Unmarking a completed todo removes the completed class
++    Given the following todos exist:
++      | title    | completed |
++      | Task Y   | true      |
++    When I click the toggle for the first todo
++    Then the first todo does not have class "completed"
++
+   Scenario: Deleting a todo removes it from the list
+     Given the following todos exist:
+       | title  | completed |
+@@ -218,4 +235,18 @@ Feature: TodoMVC
+       | Edit me  | false     |
+     When I double-click the first todo label
+     And the page is reloaded
+-    Then the first todo does not have class "editing"
+\ No newline at end of file
++    Then the first todo does not have class "editing"
++
++  # ── DOM identity (browser-only conformance) ───────────────────
++
++  @contract
++  Scenario: The render function preserves DOM node identity on toggle
++    Given the application source at "js/app.js"
++    When the verifier checks the render function against the "DOM Identity"
++    Then no counterexample showing full list rebuild is found
++
++  @contract
++  Scenario: The render function preserves DOM node identity on edit operations
++    Given the application source at "js/app.js"
++    When the verifier checks the commitEdit and cancelEdit paths against the "DOM Identity"
++    Then no counterexample showing full list rebuild or spurious blur save is found
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..239bd2c
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,43 @@
++{
++  "watches": [
++    {
++      "name": "toggle-all-identity",
++      "scenarios": [
++        "Toggle-all unmarks all items when all are completed",
++        "Unmarking a completed todo removes the completed class",
++        "The render function preserves DOM node identity on toggle",
++        "The render function preserves DOM node identity on edit operations"
++      ]
++    },
++    {
++      "name": "existing-greens",
++      "scenarios": [
++        "Main and footer are hidden when there are no todos",
++        "Creating a new todo",
++        "Trimming whitespace from new todos",
++        "Empty input does not create a todo",
++        "Mark all as complete toggles all todos",
++        "Toggle-all updates when individual items change",
++        "Toggle-all unchecks when an item is unchecked",
++        "Completing a todo adds the completed class",
++        "Deleting a todo removes it from the list",
++        "Counter shows the number of active items",
++        "Counter is pluralized correctly for one item",
++        "Counter shows zero items",
++        "Clear completed removes completed todos",
++        "Clear completed is hidden when no completed todos",
++        "Double-clicking a todo activates editing mode",
++        "Saving an edit by pressing Enter",
++        "Saving an edit on blur",
++        "Empty input during edit destroys the todo",
++        "Escape cancels editing and restores original title",
++        "Default route shows all todos",
++        "Active filter shows only incomplete todos",
++        "Completed filter shows only completed todos",
++        "Todos are persisted to localStorage",
++        "Completed state is persisted",
++        "Editing state is not persisted"
++      ]
++    }
++  ]
++}
+\ No newline at end of file

@@ -1,0 +1,302 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 34f2347..e3c6965 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -12,36 +12,46 @@ Build a vanilla-JavaScript TodoMVC per `assets/app-spec.md` using the base marku
+ ## State
+ 
+ - `index.html` rendered from template with comments removed, sample items removed.
+-- `features/todos.feature` covers all required behaviours:
+-  - empty-state visibility
+-  - todo creation with trim/empty guard
+-  - mark all / mark one complete
+-  - item editing (enter, blur, escape, empty-destroy)
+-  - destroy button
+-  - active-todo counter with pluralisation
+-  - clear completed button
+-  - localStorage persistence
+-  - routing (#/, #/active, #/completed) with filter toggle
+-- `watchbill.json` orders all scenarios.
++- `features/todos.feature` covers all required behaviours.
++- `watchbill.json` orders the current edit-empty-destroy fix voyage.
++- `features/conformance.feature` has 6 scenarios total (3 existing + 3 new for the edit flow).
+ 
+-## Next
++## Latest acceptance-suite failure
++
++Browser acceptance suite reports a `removeChild` crash on editing test
++"should remove the item if an empty text string was entered".
++Root cause: three interacting defects in the edit-destroy flow:
++
++1. `destroyTodo` calls `render()` internally — every caller also calls `render()`
++   afterwards, producing a double-render that removes the `<li>` from DOM twice.
++   The in-harness happy-dom does not reproduce the crash because its
++   `querySelectorAll` returns a fresh static node list on each call, so the
++   second call to `removeChild` on an already-removed `<li>` is simply a no-op
++   (the `<li>` is not in the list). A real browser keeps a live DOM reference.
+ 
+-Dispatch QM on the watchbill (watch1-watch7). Context MUST clear before QM.
++2. The edit keydown Enter handler calls `self.save()` and `self.render()` after
++   `destroyTodo` returns, even though `destroyTodo` already did both.
+ 
+-## DOM-identity defect
++3. The edit blur handler (capture-phase on `.todo-list`) calls `destroyTodo` for
++   empty input without guarding against the keydown handler having already
++   destroyed the todo. In a real browser, pressing Enter on the edit input
++   fires blur (because the `<li>` leaves the DOM, which moves focus). The blur
++   handler's `input.closest('li')` returns the detached `<li>`, and the
++   subsequent `destroyTodo` → `render` → `removeChild` fails because the node
++   is no longer in the DOM tree.
+ 
+-The `render()` function in `js/app.js` destroys and recreates all `<li>` elements on every state
+-toggle (`list.innerHTML = ''` followed by `createElement('li')` per todo). This causes Cypress
+-to lose references (detached-from-DOM errors) on 4 acceptance-suite scenarios:
+-- mark-all toggle/uncheck
+-- single-item complete/uncomplete
++## Fix required
+ 
+-The in-harness happy-dom tier does not reproduce this because it re-queries the DOM fresh after
+-each action. There are 2 pre-existing harness failures unrelated to this defect:
+-1. toggle-all checkbox checks when all become checked
+-2. first item not completed on reload
++Three conformance scenarios in `features/conformance.feature` pin the fix:
++- `destroyTodo` must not call `render` or `save` (callers own rendering)
++- The edit keydown Enter handler must not call `save` or `render` after `destroyTodo`
++- The edit blur handler must guard against model-absent todo before calling `destroyTodo`
++
++The product scenario `features/todos.feature:Saving an empty title deletes the todo`
++already describes the correct behaviour.
++
++## Next
+ 
+-`features/conformance.feature` (watch7) pins the required fix: the `toggleTodo` and toggle-all
+-handler MUST mutate existing DOM nodes in-place (classList.toggle, checkbox.checked) and MUST
+-NOT call `render()`. Crew will implement the product fix; these conformance scenarios will
+-then pass when QM runs the bespoke checker.
+\ No newline at end of file
++Dispatch QM on `watchbill.json` (fix-destroyTodo-calls-render,
++fix-edit-keydown-Enter-handler, fix-blur-handler-guard, verify-edit-empty-destroy).
++Context MUST clear before QM.
+\ No newline at end of file
+diff --git a/features/conformance.feature b/features/conformance.feature
+index 56334d3..16d4af8 100644
+--- a/features/conformance.feature
++++ b/features/conformance.feature
+@@ -22,4 +22,23 @@ Feature: Source conformance
+     Given the source at "js/app.js"
+     When the conformance checker inspects the render function
+     Then the render function must not reassign innerHTML on the todo-list element
+-    And the render function must not recreate li elements that already exist
+\ No newline at end of file
++    And the render function must not recreate li elements that already exist
++
++  @conformance
++  Scenario: The destroyTodo function does not call render
++    Given the source at "js/app.js"
++    When the conformance checker inspects the destroyTodo function
++    Then destroyTodo must not call render
++    And destroyTodo must not call save
++
++  @conformance
++  Scenario: The edit keydown Enter handler does not call save or render after destroyTodo
++    Given the source at "js/app.js"
++    When the conformance checker inspects the edit keydown Enter handler
++    Then the edit keydown Enter handler must not call save or render after destroyTodo
++
++  @conformance
++  Scenario: The edit blur handler guards against a model-absent todo
++    Given the source at "js/app.js"
++    When the conformance checker inspects the edit blur handler
++    Then the blur handler must guard against model-absent todo before calling destroyTodo
+\ No newline at end of file
+diff --git a/features/support/conformance-steps.js b/features/support/conformance-steps.js
+index e8e1503..83056c8 100644
+--- a/features/support/conformance-steps.js
++++ b/features/support/conformance-steps.js
+@@ -142,4 +142,145 @@ Then('the render function must not recreate li elements that already exist', fun
+   }
+   // Don't block createElement('li') - that's needed for genuinely new todos
+   // Instead verify the overall approach preserves existing nodes
++});
++
++// ---- destroyTodo conformance ----
++
++When('the conformance checker inspects the destroyTodo function', function () {
++  const fn = findTodoAppFunction(this.sourceCode, 'destroyTodo');
++  if (!fn) throw new Error('Could not find destroyTodo function in source');
++  this.currentFunction = fn;
++  this.currentFunctionName = 'destroyTodo';
++});
++
++Then('destroyTodo must not call render', function () {
++  const body = this.currentFunction.body;
++  if (/render\s*\(\s*\)/.test(body)) {
++    throw new Error('destroyTodo calls render');
++  }
++});
++
++Then('destroyTodo must not call save', function () {
++  const body = this.currentFunction.body;
++  if (/save\s*\(\s*\)/.test(body)) {
++    throw new Error('destroyTodo calls save');
++  }
++});
++
++// ---- Edit keydown Enter handler ----
++
++/**
++ * Find a named addEventListener handler inside bindEvents.
++ * Returns { body: string } for the handler function body.
++ */
++function findBindEventsHandler(source, eventType, captureFlag) {
++  const bindEventsFn = findTodoAppFunction(source, 'bindEvents');
++  if (!bindEventsFn) throw new Error('Could not find bindEvents function in source');
++  const body = bindEventsFn.body;
++
++  // Build pattern to find: .todo-list' ).addEventListener( '<eventType>' , function (e) { ...
++  // or with captureFlag true: , true )
++  var handlerRe;
++  if (captureFlag) {
++    handlerRe = new RegExp('querySelector\\s*\\(\\s*[\'"`]\\.todo-list[\'"`]\\s*\\)\\s*\\.\\s*addEventListener\\s*\\(\\s*[\'"`]' + eventType + '[\'"`]');
++  } else {
++    handlerRe = new RegExp('querySelector\\s*\\(\\s*[\'"`]\\.todo-list[\'"`]\\s*\\)\\s*\\.\\s*addEventListener\\s*\\(\\s*[\'"`]' + eventType + '[\'"`]\\s*,', 'g');
++  }
++  var match = handlerRe.exec(body);
++  if (!match) throw new Error('Could not find ' + eventType + ' handler registration for .todo-list');
++
++  var handlerDeclStart = match.index + match[0].length;
++  var braceStart = body.indexOf('{', handlerDeclStart);
++  if (braceStart === -1) throw new Error('Could not find opening brace of ' + eventType + ' handler');
++
++  // Count braces to find matching closing brace
++  var depth = 1;
++  var endIdx = -1;
++  for (var i = braceStart + 1; i < body.length; i++) {
++    if (body[i] === '{') depth++;
++    if (body[i] === '}') {
++      depth--;
++      if (depth === 0) { endIdx = i; break; }
++    }
++  }
++  if (endIdx === -1) throw new Error('Could not find end of ' + eventType + ' handler');
++
++  return { body: body.substring(braceStart, endIdx + 1) };
++}
++
++When('the conformance checker inspects the edit keydown Enter handler', function () {
++  // Find the full keydown handler on .todo-list
++  var handler = findBindEventsHandler(this.sourceCode, 'keydown', false);
++  var handlerBody = handler.body;
++
++  // Within the keydown handler, find the ENTER_KEY block
++  var enterBlockRe = /if\s*\(\s*e\.keyCode\s*===?\s*ENTER_KEY\s*\)/;
++  var match = enterBlockRe.exec(handlerBody);
++  if (!match) throw new Error('Could not find ENTER_KEY check in keydown handler');
++
++  var enterStart = match.index + match[0].length;
++  var braceStart = handlerBody.indexOf('{', enterStart);
++  if (braceStart === -1) throw new Error('Could not find opening brace of ENTER_KEY block');
++
++  var depth = 1;
++  var endIdx = -1;
++  for (var i = braceStart + 1; i < handlerBody.length; i++) {
++    if (handlerBody[i] === '{') depth++;
++    if (handlerBody[i] === '}') {
++      depth--;
++      if (depth === 0) { endIdx = i; break; }
++    }
++  }
++  if (endIdx === -1) throw new Error('Could not find end of ENTER_KEY block');
++
++  this.currentFunction = { body: handlerBody.substring(braceStart, endIdx + 1) };
++  this.currentFunctionName = 'editKeydownEnterHandler';
++});
++
++Then('the edit keydown Enter handler must not call save or render after destroyTodo', function () {
++  const body = this.currentFunction.body;
++  // Check that destroyTodo appears in the handler (required for empty-title case)
++  if (!body.includes('destroyTodo')) {
++    throw new Error('edit keydown Enter handler does not call destroyTodo');
++  }
++  // The destroyTodo index MUST be after any save/render call in the block
++  // i.e. save and render must NOT appear after destroyTodo
++  var destroyIdx = body.indexOf('destroyTodo');
++  var saveIdx = body.indexOf('save');
++  var renderIdx = body.indexOf('render');
++  if (destroyIdx === -1) throw new Error('Could not locate destroyTodo call in handler');
++  if (saveIdx !== -1 && saveIdx > destroyIdx) {
++    throw new Error('edit keydown Enter handler calls save after destroyTodo');
++  }
++  if (renderIdx !== -1 && renderIdx > destroyIdx) {
++    throw new Error('edit keydown Enter handler calls render after destroyTodo');
++  }
++});
++
++// ---- Edit blur handler ----
++
++When('the conformance checker inspects the edit blur handler', function () {
++  var handler = findBindEventsHandler(this.sourceCode, 'blur', true);
++  this.currentFunction = handler;
++  this.currentFunctionName = 'editBlurHandler';
++});
++
++Then('the blur handler must guard against model-absent todo before calling destroyTodo', function () {
++  const body = this.currentFunction.body;
++  // The handler MUST check that the todo still exists in the model before calling destroyTodo.
++  // Pattern: check if getTodo(id) returns non-null, or check if the todo is in this.todos.
++  if (!body.includes('destroyTodo')) {
++    throw new Error('Blur handler does not call destroyTodo');
++  }
++  // Find the position of destroyTodo
++  var destroyIdx = body.indexOf('destroyTodo');
++  // There must be a getTodo or this.todos.some/every/find check BEFORE the destroyTodo call
++  // that guards against an already-deleted todo
++  var guardBefore = body.substring(0, destroyIdx);
++  // Guard patterns: getTodo(id) or this.todos.some or this.todos.find
++  var hasGetTodoGuard = /getTodo\s*\(/.test(guardBefore);
++  var hasFindGuard = /\.todos\.(some|find|filter|indexOf)/.test(guardBefore);
++  if (!hasGetTodoGuard && !hasFindGuard) {
++    throw new Error('Blur handler calls destroyTodo without first checking whether the todo still exists in the model');
++  }
+ });
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..b162fa4
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,33 @@
++[
++  {
++    "ref": "fix-destroyTodo-calls-render",
++    "scenarios": [
++      "features/conformance.feature:The destroyTodo function does not call render"
++    ]
++  },
++  {
++    "ref": "fix-edit-keydown-Enter-handler",
++    "scenarios": [
++      "features/conformance.feature:The edit keydown Enter handler does not call save or render after destroyTodo"
++    ],
++    "dependsOn": ["fix-destroyTodo-calls-render"]
++  },
++  {
++    "ref": "fix-blur-handler-guard",
++    "scenarios": [
++      "features/conformance.feature:The edit blur handler guards against a model-absent todo"
++    ],
++    "dependsOn": ["fix-destroyTodo-calls-render"]
++  },
++  {
++    "ref": "verify-edit-empty-destroy",
++    "scenarios": [
++      "features/todos.feature:Saving an empty title deletes the todo"
++    ],
++    "dependsOn": [
++      "fix-destroyTodo-calls-render",
++      "fix-edit-keydown-Enter-handler",
++      "fix-blur-handler-guard"
++    ]
++  }
++]
+\ No newline at end of file

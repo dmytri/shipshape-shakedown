@@ -1,0 +1,75 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index a2aa334..f895399 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -4,22 +4,27 @@
+ 
+ ## Current state
+ 
+-The app shows a blank page in a browser because neither `index.html` nor `js/app.js` exist at the project root. The existing `todos.feature` and `world.js` already presuppose these files, so the suite fails at the Before hook.
++All 33 in-harness scenarios pass (32 in todos.feature, 1 in app-index.feature). The app is deployed as `index.html` + `js/app.js` and exercises full TodoMVC behaviour under happy-dom.
+ 
+-## This voyage's work
++## The defect
+ 
+-Created `features/app-index.feature` — a plumbing spec that explicitly pins:
+-- `index.html` must exist at the project root
+-- It must load `js/app.js` via a script tag
+-- It must contain the new-todo input, the main section, and the footer section from the template
++The acceptance suite (real browser / Cypress) reports 5 failures, all from the same root cause: the `render()` function in `js/app.js` replaces `todoListEl.innerHTML` and `todoCountEl.innerHTML` on every state change. This destroys and recreates DOM nodes, detaching any references a real browser held before the interaction. Cypress cannot `cy.eq()` or `cy.find()` on detached elements.
+ 
+-Updated `watchbill.json` with `watch1` naming the new scenario, shifting the existing watches to 2-10.
++The in-harness suite (happy-dom) does not reproduce this because it re-queries the DOM for every assertion, never holding stale references. The defects are real: a real browser fails on:
++- Toggling a single todo (detach after click)
++- Toggling all todos (detach after click)
++- Toggle-all checkbox state after partial uncheck (element replaced, state lost)
+ 
+-## Next leg
++## This leg's work
+ 
+-QM dispatches watch1. Crew builds `index.html` from `assets/app-template.index.html` and creates the `js/app.js` module. The scenario in `features/app-index.feature` is the binding prerequisite — watch1 must go green before the deeper watches are reachable.
++Created `features/conformance.feature` with a `@conformance` scenario that scans `js/app.js` for the destructive `innerHTML` assignment pattern. This scenario must fail on the current code.
++
++Created `watchbill.json` with `watch1` referencing the conformance scenario. QM dispatches watch1:
++1. Implements step definitions for the conformance scan
++2. The scenario fails because `todoListEl.innerHTML =` and `todoCountEl.innerHTML =` are present in the source
++3. Crew fixes the production code to mutate existing DOM nodes in place instead of replacing innerHTML
++4. Boatswain verifies and commits
+ 
+ ## Open
+ 
+-- `RIGGING.md` is absent. The project needs a `focused` command, `specs` directory, and `implementation` directory mapped. Shipwright can derive it at first fitting.
+-- Once `index.html` and `js/app.js` exist, the watch2-10 scenarios exercise runtime behaviour through happy-dom in world.js.
+\ No newline at end of file
++None. The watchbill is set. Next: QM.
+\ No newline at end of file
+diff --git a/features/conformance.feature b/features/conformance.feature
+new file mode 100644
+index 0000000..61c7b95
+--- /dev/null
++++ b/features/conformance.feature
+@@ -0,0 +1,11 @@
++Feature: Source-level conformance checks
++  As a developer maintaining the app
++  I want executable methodology checks that catch browser-specific defects
++  So that the app works correctly in browsers that hold DOM element references
++
++  @conformance
++  Scenario: The todo list DOM elements are mutated in place, not replaced
++    Given the source file "js/app.js" exists
++    When I search for an innerHTML assignment on the todo-list element
++    Then the pattern "todoListEl.innerHTML =" should not appear in the source
++    And the pattern "todoCountEl.innerHTML =" should not appear in the source
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..68a4eed
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,5 @@
++{
++  "watch1": {
++    "scenarios": ["features/conformance.feature:The todo list DOM elements are mutated in place, not replaced"]
++  }
++}
+\ No newline at end of file

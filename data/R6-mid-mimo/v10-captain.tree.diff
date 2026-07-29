@@ -1,0 +1,92 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 87ca423..00c372d 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -31,6 +31,10 @@ Both are real product defects visible only in a real browser.
+ 
+ - DOM-identity (toggle/destroy) — resolved by in-place DOM mutation in render()
+ 
++## Cycle 4 — Conformance check added
++
++Added `@contract` scenario "Render guards orphan removal against detached nodes" to `browser-acceptance-defects.feature:39`. This source-level check verifies the orphan-removal loop contains an explicit `if (... parentNode ...)` guard before calling `removeChild`. The scenario FAILS on current code (no guard exists), providing a falsifiable target for QM.
++
+ ## Acceptance test failure evidence
+ 
+ The external suite runs Cypress against the build. Two failures remain:
+diff --git a/features/browser-acceptance-defects.feature b/features/browser-acceptance-defects.feature
+index 27baa0f..eb12056 100644
+--- a/features/browser-acceptance-defects.feature
++++ b/features/browser-acceptance-defects.feature
+@@ -35,6 +35,11 @@ Feature: Browser acceptance defects
+       And the user clears the edit input and fires blur and Enter together
+       Then no todo is in editing mode
+ 
++  @contract
++  Scenario: Render guards orphan removal against detached nodes
++    Given the app source is loaded
++    Then the render function contains a parentNode guard in the orphan-removal loop
++
+   # ── Defect 2: Routing — back button after filter clicks ────────────────
+   # The filter click handler calls e.preventDefault() but never updates
+   # window.location.hash.  So clicking filter links does not push
+diff --git a/features/support/steps.js b/features/support/steps.js
+index 2442b72..8681542 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -433,3 +433,40 @@ When('the user clicks the {string} filter link', function (name) {
+ Then('the window hash is {string}', function (expectedHash) {
+   expect(this.window.location.hash).to.equal(expectedHash);
+ });
++
++// ── Source-level conformance checks ──────────────────────────────────────
++
++Given('the app source is loaded', function () {
++  const fs = require('node:fs');
++  const path = require('node:path');
++  const appPath = path.resolve(__dirname, '..', '..', 'js', 'app.js');
++  this._appSource = fs.readFileSync(appPath, 'utf8');
++});
++
++Then('the render function contains a parentNode guard in the orphan-removal loop', function () {
++  // The orphan-removal loop in render() must guard against detached nodes.
++  // In a real browser, re-entrant blur during removeChild causes the node
++  // to be detached before the loop reaches it. The guard checks parentNode
++  // before calling removeChild, preventing the NotFoundError.
++  const source = this._appSource;
++  // Find the orphan-removal loop: it iterates existingLis and calls removeChild
++  const hasOrphanLoop = /existingLis\[j\]/.test(source);
++  expect(hasOrphanLoop, 'Source must contain an orphan-removal loop over existingLis').to.be.true;
++  // Extract the orphan-removal loop block (from existingLis[j] to the closing brace)
++  const startIdx = source.indexOf('existingLis[j]');
++  const loopSection = source.substring(startIdx, startIdx + 500);
++  // The guard must CHECK parentNode in a conditional BEFORE removeChild.
++  // A bare `existingLis[j].parentNode.removeChild(...)` is NOT a guard.
++  // We need to find: if (... parentNode ...) { ... removeChild ... }
++  // Split the loop section into lines and check if there's an if-condition referencing parentNode
++  const lines = loopSection.split('\n');
++  let foundGuard = false;
++  for (const line of lines) {
++    // Match an if/while condition that mentions parentNode
++    if (/\bif\s*\(.*parentNode.*\)/.test(line) || /\bwhile\s*\(.*parentNode.*\)/.test(line)) {
++      foundGuard = true;
++      break;
++    }
++  }
++  expect(foundGuard, 'The orphan-removal loop must contain a conditional (if/while) that explicitly tests parentNode before calling removeChild — e.g. if (existingLis[j].parentNode) { existingLis[j].parentNode.removeChild(...) }. A bare parentNode.removeChild without a guard does not prevent NotFoundError during re-entrant blur').to.be.true;
++});
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..62140a5
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,10 @@
++{
++  "watches": [
++    {
++      "name": "BROWSER-1: re-entrant blur during edit-to-empty",
++      "targets": [
++        "features/browser-acceptance-defects.feature:39"
++      ]
++    }
++  ]
++}

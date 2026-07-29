@@ -1,0 +1,28 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index ca65bce..353b39e 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -39,5 +39,8 @@ removal-safety pin.
+   happy-dom and is listed alongside as a regression guard.
+ - `watchbill.json` `watch1` lists both scenarios as the QM target set for Crew's fix in `js/app.js`
+   (`commitEdit` / `removeTodo` / `render`): replace the `parentNode` truthiness test with a real
+-  connectivity guard so `removeChild` can never throw on an already-detached node.
++  connectivity guard so `removeChild` can never throw on an already-detached node. This leg
++  re-establishes `watchbill.json` `watch1`; the `c92479c` hardening commit had dropped the file,
++  which left the pin without a QM target. With the file restored the conformance scenario and the
++  behavioural regression guard are both live targets.
+ - Crew fix lives in `js/app.js`; no production code written here.
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..4f3df21
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,8 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/edit-removal-safety.feature:The empty-edit removal must not issue an unguarded removeChild",
++      "features/edit.feature:An empty edit destroys the todo"
++    ]
++  }
++}

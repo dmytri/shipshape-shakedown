@@ -1,0 +1,148 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index cf042e6..ca65bce 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -24,16 +24,20 @@ removal-safety pin.
+   edit keydown. The Cypress advice names a `blur` event handler as the mover.
+ - happy-dom cannot reproduce it: a single keydown path removes an attached node cleanly, and
+   happy-dom's own `removeChild` on a detached node throws the same way a real browser does, so no
+-  in-suite scenario reddens. Forcing an in-harness failure would be an impossible scenario, so the
+-  behaviour is pinned by a source-level `@conformance` check instead.
++  behavioural in-suite scenario reddens. Forcing an in-harness failure would be an impossible
++  scenario, so the behaviour is pinned by a source-level `@conformance` check instead.
+ - Root cause: `render` removes stale list items with `if (stale.parentNode) stale.parentNode.removeChild(stale)`.
+-  A `parentNode` truthiness test is not a connectivity test; in a real browser the edit `blur`
+-  handler re-enters `commitEdit`/`render`, so a stale node already detached or moved by the first
+-  render reaches a throwing `removeChild`.
+-- Pin: `features/edit-removal-safety.feature` carries a `@conformance` scenario that checks the
+-  source for an unguarded `removeChild` on a stale list item. It reddens on the current code and
+-  greens once the removal is guarded (a connectivity check such as `parentNode.contains(node)` or
+-  `node.isConnected`, or the node's own `remove()`).
+-- `watchbill.json` `watch1` lists the new scenario plus `edit.feature:An empty edit destroys the todo`
+-  as the QM target set for Crew's fix in `js/app.js` (`commitEdit` / `removeTodo` / `render`).
++  A `parentNode` truthiness test is NOT a connectivity test; in a real browser the edit `blur`
++  handler re-enters `commitEdit`/`render`, so a stale node whose `parentNode` is still truthy but
++  which is no longer that parent's child reaches a throwing `removeChild`.
++- Pin: `features/edit-removal-safety.feature` carries a `@conformance` scenario plus a matching
++  source-level conformance check in `features/support/steps.js`. The earlier pin was a FALSE GREEN:
++  it treated the `if (stale.parentNode)` truthiness test as a guard. The check now requires a REAL
++  connectivity guard (`node.isConnected`, `parent.contains(node)`, or `node.remove()`). With that
++  correction the scenario REDDENS on the current (broken) code and will green once the removal is
++  guarded. The behavioural pin `edit.feature:An empty edit destroys the todo` still passes in
++  happy-dom and is listed alongside as a regression guard.
++- `watchbill.json` `watch1` lists both scenarios as the QM target set for Crew's fix in `js/app.js`
++  (`commitEdit` / `removeTodo` / `render`): replace the `parentNode` truthiness test with a real
++  connectivity guard so `removeChild` can never throw on an already-detached node.
+ - Crew fix lives in `js/app.js`; no production code written here.
+diff --git a/features/edit-removal-safety.feature b/features/edit-removal-safety.feature
+index 0c764d8..5e04b4b 100644
+--- a/features/edit-removal-safety.feature
++++ b/features/edit-removal-safety.feature
+@@ -7,7 +7,12 @@ Feature: Editing removal safety
+     An empty edit commits its removal through the edit blur handler as well as the keydown
+     handler in a real browser, so render may run twice over the same change. A stale list item
+     that an earlier render already detached or moved must never reach a removeChild that throws
+-    NotFoundError, so render may only remove a stale item while it is still attached to its parent.
++    NotFoundError. A bare `parentNode` truthiness test is NOT a connectivity test: in the
++    re-entrant render the stale node's `parentNode` can still be truthy while the node is no
++    longer that parent's child, so `if (node.parentNode) parent.removeChild(node)` still throws.
++    render may therefore remove a stale item only behind a real connectivity guard —
++    `node.isConnected`, `parent.contains(node)`, or the node's own `node.remove()` — never behind
++    a `parentNode` truthiness check alone.
+ 
+   @conformance
+   Scenario: The empty-edit removal must not issue an unguarded removeChild
+diff --git a/features/support/steps.js b/features/support/steps.js
+index 8c4c98b..5261b60 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -336,10 +336,11 @@ function sourceAt(rel) {
+   return fs.readFileSync(p, 'utf8');
+ }
+ 
+-// Body ranges of every `if (cond)` whose condition references `needle`, so a call inside such a
+-// body is treated as guarded. Bodies may be braced `{...}` or a single following statement `;`.
+-function guardedRanges(src, needle) {
+-  const ranges = [];
++// Every `if (cond) { ... }` / `if (cond) stmt;` in the source, with the condition text and the
++// body range (so a call inside the body is "guarded" by that if). Bodies may be braced `{...}`
++// or a single following statement terminated by `;`.
++function ifBodies(src) {
++  const bodies = [];
+   const re = /(?:^|[^.\w])if\s*\(/g;
+   let m;
+   while ((m = re.exec(src)) !== null) {
+@@ -351,35 +352,49 @@ function guardedRanges(src, needle) {
+     }
+     if (condEnd === -1) continue;
+     const cond = src.slice(parenAt + 1, condEnd);
+-    if (cond.indexOf(needle) === -1) continue;
+     let j = condEnd + 1;
+     while (j < src.length && /\s/.test(src[j])) j++;
++    let bodyStart, bodyEnd;
+     if (src[j] === '{') {
+-      let bdepth = 0, bodyStart = j + 1;
++      let bdepth = 0;
++      bodyStart = j + 1;
+       for (let k = j; k < src.length; k++) {
+         if (src[k] === '{') bdepth++;
+-        else if (src[k] === '}') { bdepth--; if (bdepth === 0) { ranges.push([bodyStart, k]); break; } }
++        else if (src[k] === '}') { bdepth--; if (bdepth === 0) { bodyEnd = k; break; } }
+       }
+     } else {
+       let k = j;
+       while (k < src.length && src[k] !== ';') k++;
+-      ranges.push([j, k]);
++      bodyStart = j; bodyEnd = k;
+     }
++    bodies.push({ cond, bodyStart, bodyEnd });
+   }
+-  return ranges;
++  return bodies;
++}
++
++// A real connectivity guard tests that the node is actually still part of its parent: `isConnected`
++// or `parent.contains(node)`. A bare `parentNode` truthiness read is NOT a connectivity test — in a
++// re-entrant render the stale node's `parentNode` can stay truthy while the node is no longer that
++// parent's child, so `if (node.parentNode) parent.removeChild(node)` still throws NotFoundError.
++function isConnectivityGuard(cond) {
++  return /\bisConnected\b/.test(cond) || /\bcontains\s*\(/.test(cond);
+ }
+ 
+ // Find removeChild calls on a list item (the `X.parentNode.removeChild(...)` form) that are not
+-// inside a parentNode-guarded if body. Such a call would throw on an already-detached node.
++// behind a real connectivity guard. `node.remove()` is inherently safe (a no-op when detached), so
++// only the removeChild form is scrutinised here. Such a call would throw on an already-detached
++// node in a real browser when render runs twice over the same edit-commit change.
+ function unguardedRemovalCalls(src) {
+-  const guards = guardedRanges(src, 'parentNode');
++  const bodies = ifBodies(src);
+   const unguarded = [];
+-  const re = /\.parentNode\.removeChild\(/g;
++  const re = /\.removeChild\s*\(/g;
+   let m;
+   while ((m = re.exec(src)) !== null) {
+     const callAt = m.index;
+-    const inside = guards.some(([s, e]) => callAt >= s && callAt <= e);
+-    if (!inside) unguarded.push(callAt);
++    const guarded = bodies.some(
++      (b) => isConnectivityGuard(b.cond) && callAt >= b.bodyStart && callAt <= b.bodyEnd
++    );
++    if (!guarded) unguarded.push(callAt);
+   }
+   return unguarded;
+ }
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..4f3df21
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,8 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/edit-removal-safety.feature:The empty-edit removal must not issue an unguarded removeChild",
++      "features/edit.feature:An empty edit destroys the todo"
++    ]
++  }
++}

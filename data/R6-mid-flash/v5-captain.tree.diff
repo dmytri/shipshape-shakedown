@@ -1,0 +1,290 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index fe38096..67ddae4 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -17,6 +17,55 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ - Tier: happy-dom (default). The spec requires DOM rendering; happy-dom is the cheapest tier that observes it.
+ - Scantling for localStorage shape at `scantlings/todo-storage.json`.
+ 
++## Voyage 2 — DOM identity defect
++
++A real-browser Cypress acceptance suite found 10 failures caused by one root cause:
++`render()` destroys and recreates every `<li>` DOM node on every state change
++(`todoList.innerHTML = ''`), invalidating live element references.
++
++### What the acceptance suite catches
++
++1. **Toggle operations (tests 1-4)**: Clicking a checkbox calls `render()`, which rebuilds the
++   entire `<ul>`. The browser's element reference is now detached from the DOM.
++2. **Edit activation (tests 5-10)**: The dblclick handler sets `todo.editing = true` but calls
++   `render()` before saving to localStorage. `render()` reads `todos` from localStorage (where
++   `editing` was never persisted), so the new `<li>` lacks the `.editing` class. The `.edit`
++   input remains `display: none` per CSS, and `cy.clear()`/`cy.type()` fail.
++
++### Source-level conformance checks
++
++Eight `@source-conformance` scenarios in `features/dom-identity.feature` check the source
++code for forbidden patterns. They fail on the current `js/app.js` and must pass after the fix.
++
++### Required fix
++
++**Mutate existing `<li>` nodes in place** instead of rebuilding the list. Specifically:
++
++- `render()` must not assign to `todoList.innerHTML`. Use targeted DOM mutation (toggle
++  classes, update textContent, show/hide elements) on the existing `<li>` elements.
++- The toggle click handler must not call `render()`. Toggle `.completed` class and `.toggle.checked`
++  on the existing `<li>` directly, then call `setTodos()`.
++- The toggle-all handler must not call `render()`. Iterate existing `<li>` elements and toggle
++  each in place, then call `setTodos()`.
++- The dblclick handler must not call `render()`. Add `.editing` class to the existing `<li>`,
++  show `.edit` input, focus it, hide `.view`.
++- The commitEdit function must not call `render()`. Update the `<label>` textContent, remove
++  `.editing` class, hide `.edit`, show `.view`, then call `setTodos()`.
++- The escape handler must not call `render()`. Remove `.editing` class, restore original title,
++  hide `.edit`, show `.view`.
++- The destroy handler must not call `render()`. Remove the target `<li>` with
++  `li.parentNode.removeChild(li)`, then call `setTodos()`.
++- The clear-completed handler must not call `render()`. Remove completed `<li>` elements
++  in place, then call `setTodos()`.
++- The counter, footer visibility, toggle-all checkbox state, and filter link classes can be
++  updated via a lightweight `updateUI()` function that does not touch the todo list DOM.
++
++### Why happy-dom doesn't catch this
++
++happy-dom re-queries the DOM after every step, so detached element references are never
++observed. The `@source-conformance` tag guards the behaviour at the source level instead.
++
+ ## Next
+ 
+-Dispatch QM with `watchbill.json` targets when production code exists.
+\ No newline at end of file
++Dispatch QM with `watchbill.json` targets. The fix is a single cohesive refactor of `js/app.js`:
++replace the rebuild-everything `render()` approach with targeted in-place mutation.
+\ No newline at end of file
+diff --git a/features/dom-identity.feature b/features/dom-identity.feature
+new file mode 100644
+index 0000000..3270c09
+--- /dev/null
++++ b/features/dom-identity.feature
+@@ -0,0 +1,55 @@
++Feature: DOM identity across interactions
++  As a browser rendering the app
++  I want DOM nodes to preserve their identity across state changes
++  So that the browser's live element references are never invalidated
++
++  Background:
++    Given the app is loaded
++
++  Rule: Render must not rebuild the todo list
++
++  @source-conformance
++  Scenario: Render preserves DOM identity for the todo list
++    Given the source file "js/app.js" is read
++    Then the render function must not clear the todo list via innerHTML
++
++  Rule: Toggle operations mutate the specific <li> in place
++
++  @source-conformance
++  Scenario: Toggle checkbox mutates the <li> in place
++    Given the source file "js/app.js" is read
++    Then the toggle click handler must not call the render function
++
++  @source-conformance
++  Scenario: Toggle-all mutates each <li> in place
++    Given the source file "js/app.js" is read
++    Then the toggle-all handler must not call the render function
++
++  Rule: Edit operations mutate the specific <li> in place
++
++  @source-conformance
++  Scenario: Double-click label mutates the <li> in place
++    Given the source file "js/app.js" is read
++    Then the dblclick handler must not call the render function
++
++  @source-conformance
++  Scenario: Edit commit mutates the <li> in place
++    Given the source file "js/app.js" is read
++    Then the edit commit handler must not call the render function
++
++  @source-conformance
++  Scenario: Edit cancel (escape) mutates the <li> in place
++    Given the source file "js/app.js" is read
++    Then the escape handler must not call the render function
++
++  Rule: Destroy operations remove only the target <li>
++
++  @source-conformance
++  Scenario: Destroy button removes the target <li> without rebuilding the list
++    Given the source file "js/app.js" is read
++    Then the destroy click handler must not call the render function
++
++  @source-conformance
++  Scenario: Clear completed removes only completed <li> elements without rebuilding
++    Given the source file "js/app.js" is read
++    Then the clear-completed handler must not call the render function
+\ No newline at end of file
+diff --git a/features/support/steps.js b/features/support/steps.js
+index b669a8f..e5c566b 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -4,6 +4,32 @@ const Ajv = require('ajv');
+ const fs = require('node:fs');
+ const path = require('node:path');
+ 
++// ── Source-level conformance helpers ─────────────────────────────────
++
++var currentSource = null;
++
++function sourcePath(fn) {
++  return path.join(ROOT, fn);
++}
++
++function readSource(filename) {
++  var p = sourcePath(filename);
++  if (!fs.existsSync(p)) throw new Error('Source file not found: ' + p);
++  currentSource = fs.readFileSync(p, 'utf8');
++}
++
++function refutePattern(pattern, msg) {
++  if (pattern.test(currentSource)) {
++    throw new Error('Source conformance FAILED: ' + msg);
++  }
++}
++
++function assertPattern(pattern, msg) {
++  if (!pattern.test(currentSource)) {
++    throw new Error('Source conformance FAILED: ' + msg);
++  }
++}
++
+ const ROOT = path.resolve(__dirname, '..', '..');
+ 
+ // ── Background ──────────────────────────────────────────────────────────────
+@@ -12,6 +38,44 @@ Given('the app is loaded', function () {
+   // world.js Before hook already loaded it
+ });
+ 
++// ── Source-level conformance ────────────────────────────────────────────────
++
++Given('the source file {string} is read', function (filename) {
++  readSource(filename);
++});
++
++Then('the render function must not clear the todo list via innerHTML', function () {
++  refutePattern(/todoList\.innerHTML\s*=\s*['"]\s*['"]/, 'render must not assign to todoList.innerHTML — use in-place mutation');
++});
++
++Then('the toggle click handler must not call the render function', function () {
++  refutePattern(/\.toggle['"]?\)\.addEventListener\(['"]click['"][\s\S]*?render\(\)/, 'toggle click handler must not call render() — mutate the <li> in place');
++});
++
++Then('the toggle-all handler must not call the render function', function () {
++  refutePattern(/toggleAll\.addEventListener\(['"]click['"][\s\S]*?render\(\)/, 'toggleAll handler must not call render() — mutate each <li> in place');
++});
++
++Then('the dblclick handler must not call the render function', function () {
++  refutePattern(/addEventListener\(['"]dblclick['"][\s\S]*?render\(\)/, 'dblclick handler must not call render() — toggle .editing class in place');
++});
++
++Then('the edit commit handler must not call the render function', function () {
++  refutePattern(/commitEdit[\s\S]*?render\(\)/, 'commitEdit must not call render() — update the <li> in place');
++});
++
++Then('the escape handler must not call the render function', function () {
++  refutePattern(/keyCode\s*===\s*ESCAPE_KEY[\s\S]*?render\(\)/, 'escape handler must not call render() — restore title in place');
++});
++
++Then('the destroy click handler must not call the render function', function () {
++  refutePattern(/\.destroy['"]?\)\.addEventListener\(['"]click['"][\s\S]*?render\(\)/, 'destroy handler must not call render() — remove the <li> in place');
++});
++
++Then('the clear-completed handler must not call the render function', function () {
++  refutePattern(/clearCompleted\.addEventListener\(['"]click['"][\s\S]*?render\(\)/, 'clear-completed handler must not call render() — remove completed <li> elements in place');
++});
++
+ // ── Creating todos ──────────────────────────────────────────────────────────
+ 
+ When('I type {string} into the new-todo input', function (text) {
+@@ -248,6 +312,8 @@ Then('the edit input has focus', function () {
+   assert.strictEqual(this.document.activeElement, input);
+ });
+ 
++
++
+ When('I change the edit input to {string}', function (value) {
+   const input = this.document.querySelector('.todo-list li:first-child .edit');
+   input.value = value;
+diff --git a/features/todo-management.feature b/features/todo-management.feature
+index 6b8c127..fa92798 100644
+--- a/features/todo-management.feature
++++ b/features/todo-management.feature
+@@ -121,6 +121,8 @@ Feature: Todo management
+     Then the todo does not have class "editing"
+     And the todo list shows 1 item with title "Buy milk"
+ 
++
++
+   Rule: Destroying todos
+ 
+   Scenario: Delete a todo by clicking the destroy button
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..c3daca3
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,54 @@
++{
++  "title": "TodoMVC Vanilla JS - Voyage 2",
++  "description": "Second voyage: fix DOM identity defect — mutate <li> nodes in place instead of rebuilding the list on every state change. All 8 source-level conformance scenarios must pass.",
++  "watches": [
++    {
++      "name": "DOM identity — render must not rebuild the list",
++      "scenarios": [
++        "features/dom-identity.feature:12"
++      ]
++    },
++    {
++      "name": "DOM identity — toggle checkbox mutates in place",
++      "scenarios": [
++        "features/dom-identity.feature:19"
++      ]
++    },
++    {
++      "name": "DOM identity — toggle-all mutates in place",
++      "scenarios": [
++        "features/dom-identity.feature:24"
++      ]
++    },
++    {
++      "name": "DOM identity — dblclick mutates in place",
++      "scenarios": [
++        "features/dom-identity.feature:31"
++      ]
++    },
++    {
++      "name": "DOM identity — edit commit mutates in place",
++      "scenarios": [
++        "features/dom-identity.feature:36"
++      ]
++    },
++    {
++      "name": "DOM identity — escape cancel mutates in place",
++      "scenarios": [
++        "features/dom-identity.feature:41"
++      ]
++    },
++    {
++      "name": "DOM identity — destroy removes <li> in place",
++      "scenarios": [
++        "features/dom-identity.feature:48"
++      ]
++    },
++    {
++      "name": "DOM identity — clear-completed removes <li> elements in place",
++      "scenarios": [
++        "features/dom-identity.feature:53"
++      ]
++    }
++  ]
++}
+\ No newline at end of file

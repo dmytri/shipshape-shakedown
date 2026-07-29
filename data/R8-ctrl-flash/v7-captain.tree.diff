@@ -1,0 +1,68 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index cc597a8..5a16d4f 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -4,20 +4,22 @@
+ 
+ ## Current state
+ 
+-All 34 in-harness scenarios pass (32 in todos.feature, 1 in app-index.feature, 1 conformance scenario). The app deploys as `index.html` + `js/app.js` and runs under happy-dom.
++33 product scenarios pass (todos.feature + app-index.feature). 3 conformance scenarios pass, 1 is undefined (new, awaiting step definition).
+ 
+-## Defects
++## Remaining defect
+ 
+-Two browser-only product defects remain despite in-place DOM reconciliation:
++**Blur reentrancy crash on empty edit + Enter:** In a real browser, pressing Enter in edit input triggers:
++1. keydown handler: `e.preventDefault()` → `saveEdit()` → `render()` → `removeChild()` on `<li>`
++2. The `removeChild` causes the focused edit input to fire `blur` synchronously
++3. blur handler: `saveEdit()` → `render()` → `removeChild()` on detached node → crashes
+ 
+-**Defect A — toggle-all checkbox state not updated by render():** `render()` never sets `document.querySelector('.toggle-all').checked`. After marking all complete and then clearing/untoggling items, the checkbox stays checked.
+-
+-**Defect B — removeChild race on Enter + blur:** Enter keydown on empty edit calls `saveEdit` -> `render()`. Enter default action fires `blur` synchronously, re-entering `saveEdit` -> `render()`. Second render removes the stale `<li>`, then first render's `removeChild` fails because node already detached.
++The `preventDefault` fix from the previous leg is necessary but not sufficient — real browsers fire blur when the focused element's ancestor is removed from the DOM, even with `preventDefault`.
+ 
+ ## This leg's work
+ 
+-- Added 2 conformance scenarios to `features/conformance.feature`, both FAIL on current code (planted red)
+-- Created `watchbill.json` targeting both scenarios
++- Added `@conformance` scenario: `The blur event handler guards against saveEdit on a detached node` — FAIL (undefined/planted red) on current code
++- Created `watchbill.json` targeting the new scenario
++- The step definition checks that the blur handler guards `saveEdit` with a `document.contains(li)` check
+ 
+ ## Next role
+ 
+diff --git a/features/conformance.feature b/features/conformance.feature
+index bc83038..8114118 100644
+--- a/features/conformance.feature
++++ b/features/conformance.feature
+@@ -20,4 +20,10 @@ Feature: Source-level conformance checks
+   Scenario: The Enter keydown handler prevents default to avoid blur reentrancy
+     Given the source file "js/app.js" exists
+     When I read the source file
+-    Then the Enter keydown handler for edit input should call preventDefault before saveEdit
+\ No newline at end of file
++    Then the Enter keydown handler for edit input should call preventDefault before saveEdit
++
++  @conformance
++  Scenario: The blur event handler guards against saveEdit on a detached node
++    Given the source file "js/app.js" exists
++    When I read the source file
++    Then the blur event handler for edit input should guard against saveEdit when the list item is not in the document
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..be984f0
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,8 @@
++[
++  {
++    "watch": "1",
++    "targets": [
++      "features/conformance.feature:The blur event handler guards against saveEdit on a detached node"
++    ]
++  }
++]
+\ No newline at end of file

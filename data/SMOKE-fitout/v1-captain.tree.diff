@@ -1,0 +1,250 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..c1317ce
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,39 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
++
++## Voyage 1 — TodoMVC bootstrap
++
++**Intent:** Build a TodoMVC app per `assets/app-spec.md`, using `assets/app-template.index.html` as base. Vanilla JS, localStorage persistence, no preprocessors.
++
++**Spec sources:**
++- `assets/app-spec.md` — full functional spec (TodoMVC spec)
++- `assets/app-template.index.html` — HTML template to base markup on
++
++**Key constraints from spec:**
++- `index.html` at root, `js/app.js` as entry point, `css/app.css` for style overrides
++- Components: `js/controllers/` and `js/models/` per recommended structure
++- localStorage key: `todos-[framework]` → `todos-javascript`
++- Routing: `#/` (all), `#/active`, `#/completed` via hashchange
++- `@logic` tier tag for all product scenarios (per RIGGING.md: `default: @logic`)
++
++**Implementation files to be created (by Crew/Shipwright):**
++- `index.html` — template based on `assets/app-template.index.html`
++- `js/app.js` — app entry, controller, router, model, view all in one file (vanilla JS)
++- `css/app.css` — minimal style overrides
++- `package.json` — dependencies per spec
++
++**Watchbill:** 13 scenarios across 13 watch objects (one per scenario), all `@logic` tagged.
++
++**Rigging considerations:**
++- `happy-dom` is the verification tier (no real browser needed — all behaviours observable in DOM)
++- `navigate(hash)` helper in world.js drives routing via hashchange
++- `localStorage` available via `this.window.localStorage`
++- `loadApp()` auto-loads index.html + evals js/app.js
++
++**Decisions:**
++- No external dependencies beyond `todomvc-common` and `todomvc-app-css` (per spec)
++- Vanilla JS router using hashchange event (per spec: "use vanilla localStorage" + hash routing)
++- Single `js/app.js` for Voyage 1, refactor into `js/controllers/` and `js/models/` later if needed
+\ No newline at end of file
+diff --git a/features/todomvc.feature b/features/todomvc.feature
+new file mode 100644
+index 0000000..075f92e
+--- /dev/null
++++ b/features/todomvc.feature
+@@ -0,0 +1,123 @@
++Feature: TodoMVC Application
++  As a user
++  I want to manage a todo list
++  So that I can track tasks I need to complete
++
++  Background:
++    Given the app is loaded
++
++  @logic
++  Scenario: App hides main and footer when there are no todos
++    Then the "#main" element should not be visible
++    And the "#footer" element should not be visible
++
++  @logic
++  Scenario: User creates a new todo by pressing Enter
++    When the user types "Buy milk" into the ".new-todo" input
++    And presses Enter
++    Then a todo item with the title "Buy milk" appears in the ".todo-list"
++    And the ".new-todo" input is cleared
++
++  @logic
++  Scenario: App ignores empty and whitespace-only input
++    When the user types "   " into the ".new-todo" input
++    And presses Enter
++    Then no new todo item is added
++
++  @logic
++  Scenario: User marks a todo as completed
++    Given a todo item with the title "Buy milk" exists
++    When the user clicks the todo's toggle checkbox
++    Then the todo's "<li>" has the class "completed"
++    And the todo's toggle checkbox is checked
++
++  @logic
++  Scenario: Mark-all-as-complete toggles all todos
++    Given todo items with the titles "Buy milk" and "Write code" exist
++    When the user clicks the "#toggle-all" checkbox
++    Then all todo items have the class "completed"
++
++  @logic
++  Scenario: Mark-all-as-complete reflects individual toggles
++    Given todo items with the titles "Buy milk" and "Write code" exist
++    When the user marks the first todo as completed
++    And the user marks the second todo as completed
++    Then the "#toggle-all" checkbox is checked
++
++  @logic
++  Scenario: User clears completed todos
++    Given completed todo items exist
++    When the user clicks the ".clear-completed" button
++    Then no todo items have the class "completed"
++
++  @logic
++  Scenario: Clear completed button is hidden when no completed todos
++    Given a todo item exists that is not completed
++    Then the ".clear-completed" button should not be visible
++
++  @logic
++  Scenario: User edits a todo title on double-click
++    Given a todo item with the title "Buy milk" exists
++    When the user double-clicks the todo's label
++    Then the todo's "<li>" has the class "editing"
++    When the user sets the edit input value to "Buy oat milk" and presses Enter
++    Then the todo item has the title "Buy oat milk"
++    And the todo's "<li>" does not have the class "editing"
++
++  @logic
++  Scenario: Editing and pressing Escape discards changes
++    Given a todo item with the title "Buy milk" exists
++    When the user double-clicks the todo's label
++    And the user presses Escape during editing
++    Then the todo item has the title "Buy milk"
++    And the todo's "<li>" does not have the class "editing"
++
++  @logic
++  Scenario: Editing an empty title destroys the todo
++    Given a todo item with the title "Buy milk" exists
++    When the user double-clicks the todo's label
++    And the user clears the edit input and presses Enter
++    Then the todo item with the title "Buy milk" does not exist
++
++  @logic
++  Scenario: Counter displays the number of active todos
++    Given todo items exist with 2 active and 1 completed
++    Then the ".todo-count" element contains "<strong>2</strong> items left"
++
++  @logic
++  Scenario: Routing filters the todo list by route
++    Given todo items exist with 1 active and 1 completed
++    When the user navigates to "#/active"
++    Then only the active todo items are visible in the ".todo-list"
++    When the user navigates to "#/completed"
++    Then only the completed todo items are visible in the ".todo-list"
++    When the user navigates to "#/"
++    Then all todo items are visible in the ".todo-list"
++
++  @logic
++  Scenario: Active filter link has the selected class
++    Given the app is loaded
++    When the user navigates to "#/active"
++    Then the filter link for "Active" has the class "selected"
++    And the other filter links do not have the class "selected"
++    When the user navigates to "#/completed"
++    Then the filter link for "Completed" has the class "selected"
++    And the other filter links do not have the class "selected"
++
++  @logic
++  Scenario: Active filter persists on reload
++    Given the user navigates to "#/active"
++    When the app is reloaded
++    Then the filter link for "Active" has the class "selected"
++
++  @logic
++  Scenario: Todos persist across reloads via localStorage
++    Given a todo item with the title "Buy milk" exists
++    When the app is reloaded
++    Then a todo item with the title "Buy milk" appears in the ".todo-list"
++
++  @logic
++  Scenario: Editing state is not persisted
++    Given the user double-clicks a todo's label to enter editing mode
++    When the app is reloaded
++    Then no todo item has the class "editing"
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..b2accb5
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,67 @@
++{
++  "meta": {
++    "generated": "Shipshape Captain bootstrap",
++    "spec": "assets/app-spec.md"
++  },
++  "watches": [
++    {
++      "group": "app-shell",
++      "description": "App shell visibility and empty state",
++      "scenarios": [
++        "App hides main and footer when there are no todos",
++        "Clear completed button is hidden when no completed todos"
++      ]
++    },
++    {
++      "group": "creating-todos",
++      "description": "Creating new todos",
++      "scenarios": [
++        "User creates a new todo by pressing Enter",
++        "App ignores empty and whitespace-only input"
++      ]
++    },
++    {
++      "group": "completing-todos",
++      "description": "Completing and clearing todos",
++      "scenarios": [
++        "User marks a todo as completed",
++        "Mark-all-as-complete toggles all todos",
++        "Mark-all-as-complete reflects individual toggles",
++        "User clears completed todos"
++      ]
++    },
++    {
++      "group": "editing-todos",
++      "description": "Editing existing todos",
++      "scenarios": [
++        "User edits a todo title on double-click",
++        "Editing and pressing Escape discards changes",
++        "Editing an empty title destroys the todo"
++      ]
++    },
++    {
++      "group": "counter",
++      "description": "Active todo counter",
++      "scenarios": [
++        "Counter displays the number of active todos"
++      ]
++    },
++    {
++      "group": "routing",
++      "description": "Filter routing",
++      "scenarios": [
++        "Routing filters the todo list by route",
++        "Active filter link has the selected class",
++        "Active filter persists on reload"
++      ]
++    },
++    {
++      "group": "persistence",
++      "description": "localStorage persistence",
++      "scenarios": [
++        "Todos persist across reloads via localStorage",
++        "Editing state is not persisted"
++      ]
++    }
++  ]
++}
+\ No newline at end of file

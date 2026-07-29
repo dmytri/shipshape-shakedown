@@ -1,0 +1,133 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..a2aa334
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,25 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++## Current state
++
++The app shows a blank page in a browser because neither `index.html` nor `js/app.js` exist at the project root. The existing `todos.feature` and `world.js` already presuppose these files, so the suite fails at the Before hook.
++
++## This voyage's work
++
++Created `features/app-index.feature` — a plumbing spec that explicitly pins:
++- `index.html` must exist at the project root
++- It must load `js/app.js` via a script tag
++- It must contain the new-todo input, the main section, and the footer section from the template
++
++Updated `watchbill.json` with `watch1` naming the new scenario, shifting the existing watches to 2-10.
++
++## Next leg
++
++QM dispatches watch1. Crew builds `index.html` from `assets/app-template.index.html` and creates the `js/app.js` module. The scenario in `features/app-index.feature` is the binding prerequisite — watch1 must go green before the deeper watches are reachable.
++
++## Open
++
++- `RIGGING.md` is absent. The project needs a `focused` command, `specs` directory, and `implementation` directory mapped. Shipwright can derive it at first fitting.
++- Once `index.html` and `js/app.js` exist, the watch2-10 scenarios exercise runtime behaviour through happy-dom in world.js.
+\ No newline at end of file
+diff --git a/features/app-index.feature b/features/app-index.feature
+new file mode 100644
+index 0000000..66a95f4
+--- /dev/null
++++ b/features/app-index.feature
+@@ -0,0 +1,15 @@
++Feature: Application serves from project root index.html
++  As a user opening the app in a web browser
++  I want the app to serve from a real index.html at the project root
++  So that the app renders and runs in a browser
++
++  Rule: index.html must exist as a real file at the project root
++
++  Scenario: index.html exists at the project root and loads the app script
++    Given the project root
++    When I list the project root files
++    Then the file "index.html" exists at the project root
++    And "index.html" contains a script element with src "js/app.js"
++    And "index.html" contains the new-todo input element
++    And "index.html" contains a section with class "main"
++    And "index.html" contains a footer with class "footer"
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+index 83b3aa3..65beaaf 100644
+--- a/watchbill.json
++++ b/watchbill.json
+@@ -1,5 +1,10 @@
+ {
+   "watch1": {
++    "scenarios": [
++      "features/app-index.feature:index.html exists at the project root and loads the app script"
++    ]
++  },
++  "watch2": {
+     "scenarios": [
+       "features/todos.feature:App initialises with no todos",
+       "features/todos.feature:Create a new todo",
+@@ -8,26 +13,26 @@
+       "features/todos.feature:Empty todo is not created"
+     ]
+   },
+-  "watch2": {
++  "watch3": {
+     "scenarios": [
+       "features/todos.feature:Toggle a todo as completed",
+       "features/todos.feature:Toggle a completed todo back to active"
+     ]
+   },
+-  "watch3": {
++  "watch4": {
+     "scenarios": [
+       "features/todos.feature:Mark all as complete checks all todos",
+       "features/todos.feature:Mark all as complete unchecks when any todo is unchecked",
+       "features/todos.feature:Clear completed button unchecks all after clearing"
+     ]
+   },
+-  "watch4": {
++  "watch5": {
+     "scenarios": [
+       "features/todos.feature:A todo shows the destroy button on hover",
+       "features/todos.feature:Delete a todo with the destroy button"
+     ]
+   },
+-  "watch5": {
++  "watch6": {
+     "scenarios": [
+       "features/todos.feature:Double-click a todo to edit",
+       "features/todos.feature:Save edit on Enter",
+@@ -37,20 +42,20 @@
+       "features/todos.feature:Escape discards edit changes"
+     ]
+   },
+-  "watch6": {
++  "watch7": {
+     "scenarios": [
+       "features/todos.feature:Counter pluralizes correctly",
+       "features/todos.feature:Counter wraps count in a strong tag"
+     ]
+   },
+-  "watch7": {
++  "watch8": {
+     "scenarios": [
+       "features/todos.feature:Clear completed removes all completed items",
+       "features/todos.feature:Clear completed button is hidden when no completed todos",
+       "features/todos.feature:Clear completed button is visible when there are completed todos"
+     ]
+   },
+-  "watch8": {
++  "watch9": {
+     "scenarios": [
+       "features/todos.feature:Todos are persisted to localStorage",
+       "features/todos.feature:Completed state is persisted to localStorage",
+@@ -58,7 +63,7 @@
+       "features/todos.feature:Editing state is not persisted"
+     ]
+   },
+-  "watch9": {
++  "watch10": {
+     "scenarios": [
+       "features/todos.feature:Default route shows all todos",
+       "features/todos.feature:Active route shows only active todos",

@@ -1,0 +1,306 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..fc54f0f
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,19 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
++
++## Greenfield bootstrap state
++- No `RIGGING.md` and no production code yet (`index.html`, `js/app.js`, `css/app.css` absent). This is a greenfield build per the Shipshape routing: stay on deck, author specs and watchbill, then stop.
++- The harness is already present: `package.json` and `node_modules` provide `@cucumber/cucumber` and `happy-dom`. `README.md` states `features/support/world.js` loads the real `index.html` + `js/app.js` into a happy-dom window before each scenario.
++- Before QM can run the watchbill, Shipwright must fit out `RIGGING.md` (language, directories, methods, perturbation, tiers) and `AGENTS.md`. Captain does not write those files.
++
++## Decisions carried into the build
++- Stack: vanilla JavaScript, no preprocessors. DOM-level Cucumber scenarios live in `features/`; step definitions belong in `features/support/`.
++- localStorage key: `todos-vanilla` (framework slug = "vanilla"), storing `{id, title, completed}` items. Editing state is not persisted.
++- Base markup: `assets/app-template.index.html` becomes `index.html`; strip comments and update relative asset paths. New-todo input keeps the `autofocus` attribute.
++
++## Open questions for the user
++- Confirm the framework slug for the localStorage key (`todos-vanilla` assumed).
++- Confirm whether `todomvc-common` / `todomvc-app-css` (referenced by the template's `<link>` tags) should be vendored as real dependencies or replaced by a local `css/app.css`.
+diff --git a/features/todo-counter.feature b/features/todo-counter.feature
+new file mode 100644
+index 0000000..86b3d79
+--- /dev/null
++++ b/features/todo-counter.feature
+@@ -0,0 +1,32 @@
++Feature: Active todo counter and clearing completed
++  As a user of the todo list
++  I want to see how many todos remain active
++  So that I can gauge my remaining work
++
++  Scenario: The counter shows 0 items left when empty
++    Given the todo list is empty
++    Then the todo count reads "0 items left"
++
++  Scenario: The counter shows 1 item left for one active todo
++    Given the todo list has todos "A"
++    Then the todo count reads "1 item left"
++
++  Scenario: The counter shows 2 items left for two active todos
++    Given the todo list has todos "A" and "B"
++    Then the todo count reads "2 items left"
++
++  Scenario: The counter counts only active todos
++    Given the todo list has todos "A" and "B"
++    And the user checks the todo "A"
++    Then the todo count reads "1 item left"
++
++  Scenario: The clear-completed button is hidden when nothing is completed
++    Given the todo list has todos "A" and "B"
++    Then the clear-completed button is hidden
++
++  Scenario: The clear-completed button removes completed todos
++    Given the todo list has todos "A" and "B"
++    And the user checks the todo "A"
++    When the user clicks "Clear completed"
++    Then the todo list shows one todo with the title "B"
++    And the clear-completed button is hidden
+diff --git a/features/todo-creation.feature b/features/todo-creation.feature
+new file mode 100644
+index 0000000..72d8b71
+--- /dev/null
++++ b/features/todo-creation.feature
+@@ -0,0 +1,32 @@
++Feature: Todo creation
++  As a user of the todo list
++  I want to add new todos
++  So that I can track the work I need to do
++
++  Background:
++    Given the todo list is empty
++
++  Scenario: A new todo is added on Enter
++    When the user types "Buy milk" into the new-todo input and presses Enter
++    Then the todo list shows one todo with the title "Buy milk"
++    And the new-todo input is empty
++
++  Scenario: Whitespace-only input is ignored
++    When the user types "   " into the new-todo input and presses Enter
++    Then the todo list is empty
++
++  Scenario: Leading and trailing whitespace is trimmed from the title
++    When the user types "  Walk the dog  " into the new-todo input and presses Enter
++    Then the todo list shows one todo with the title "Walk the dog"
++
++  Scenario: The new-todo input is focused on load
++    Then the new-todo input is focused
++
++  Scenario: The main and footer sections are hidden when there are no todos
++    Then the main section is hidden
++    And the footer is hidden
++
++  Scenario: The main and footer sections are shown once a todo exists
++    When the user adds a todo titled "First"
++    Then the main section is visible
++    And the footer is visible
+diff --git a/features/todo-editing.feature b/features/todo-editing.feature
+new file mode 100644
+index 0000000..87d6e64
+--- /dev/null
++++ b/features/todo-editing.feature
+@@ -0,0 +1,46 @@
++Feature: Todo editing
++  As a user of the todo list
++  I want to edit a todo's title
++  So that I can correct mistakes
++
++  Scenario: Double-clicking a label enters editing mode
++    Given the todo list has todos "Buy milk"
++    When the user double-clicks the label of "Buy milk"
++    Then the todo "Buy milk" has the class "editing"
++
++  Scenario: Editing saves on Enter and exits editing mode
++    Given the todo list has todos "Buy milk"
++    And the todo "Buy milk" is in editing mode
++    When the user types "Buy soy milk" into the edit input and presses Enter
++    Then the todo list shows one todo with the title "Buy soy milk"
++    And the todo "Buy soy milk" does not have the class "editing"
++
++  Scenario: Editing saves on blur and exits editing mode
++    Given the todo list has todos "Buy milk"
++    And the todo "Buy milk" is in editing mode
++    When the user types "Buy oat milk" into the edit input and blurs the field
++    Then the todo list shows one todo with the title "Buy oat milk"
++
++  Scenario: Editing to empty destroys the todo
++    Given the todo list has todos "Buy milk"
++    And the todo "Buy milk" is in editing mode
++    When the user clears the edit input and presses Enter
++    Then the todo list is empty
++
++  Scenario: Escape discards the edit
++    Given the todo list has todos "Buy milk"
++    And the todo "Buy milk" is in editing mode
++    When the user types "Buy almond milk" into the edit input and presses Escape
++    Then the todo list shows one todo with the title "Buy milk"
++    And the todo "Buy milk" does not have the class "editing"
++
++  Scenario: Editing trims the saved title
++    Given the todo list has todos "Buy milk"
++    And the todo "Buy milk" is in editing mode
++    When the user types "  Buy rice milk  " into the edit input and presses Enter
++    Then the todo list shows one todo with the title "Buy rice milk"
++
++  Scenario: The destroy button removes a todo
++    Given the todo list has todos "Buy milk" and "B"
++    When the user clicks the destroy button on "Buy milk"
++    Then the todo list shows one todo with the title "B"
+diff --git a/features/todo-routing.feature b/features/todo-routing.feature
+new file mode 100644
+index 0000000..c92a078
+--- /dev/null
++++ b/features/todo-routing.feature
+@@ -0,0 +1,49 @@
++Feature: Persistence and routing
++  As a user of the todo list
++  I want my todos and active filter to persist
++  So that I can return to my list later
++
++  Scenario: Todos persist to localStorage across reload
++    Given the todo list has todos "A" and "B"
++    When the todo list is reloaded
++    Then the todo list shows two todos titled "A" and "B"
++
++  Scenario: Completed state persists across reload
++    Given the todo list has todos "A"
++    And the user checks the todo "A"
++    When the todo list is reloaded
++    Then the todo "A" has the class "completed"
++
++  Scenario: Editing mode is not persisted
++    Given the todo list has todos "A"
++    And the todo "A" is in editing mode
++    When the todo list is reloaded
++    Then the todo "A" does not have the class "editing"
++
++  Scenario: The active filter persists across reload
++    Given the todo list has todos "A" and "B"
++    And the user checks the todo "A"
++    When the user opens the "Completed" filter
++    And the todo list is reloaded
++    Then the "Completed" filter link is selected
++    And the todo list shows one todo with the title "A"
++
++  Scenario: The active filter hides non-matching todos
++    Given the todo list has todos "A" and "B"
++    And the user checks the todo "A"
++    When the user opens the "Active" filter
++    Then the todo list shows one todo with the title "B"
++    And the "Active" filter link is selected
++
++  Scenario: Completing a todo hides it under the Active filter
++    Given the todo list has todos "A" and "B"
++    And the user opens the "Active" filter
++    When the user checks the todo "A"
++    Then the todo list shows one todo with the title "B"
++
++  Scenario: The default route shows all todos
++    Given the todo list has todos "A" and "B"
++    And the user opens the "Completed" filter
++    When the user opens the "All" filter
++    Then the todo list shows two todos titled "A" and "B"
++    And the "All" filter link is selected
+diff --git a/features/todo-toggling.feature b/features/todo-toggling.feature
+new file mode 100644
+index 0000000..36f0f59
+--- /dev/null
++++ b/features/todo-toggling.feature
+@@ -0,0 +1,33 @@
++Feature: Todo completion toggling
++  As a user of the todo list
++  I want to mark todos complete or active
++  So that I can track what is done
++
++  Background:
++    Given the todo list has todos "A" and "B"
++
++  Scenario: Checking a single todo marks it completed
++    When the user checks the todo "A"
++    Then the todo "A" has the class "completed"
++    And the todo "B" does not have the class "completed"
++
++  Scenario: The toggle-all checkbox is unchecked until all todos complete
++    When the user checks the todo "A"
++    Then the toggle-all checkbox is unchecked
++
++  Scenario: The toggle-all checkbox reflects full completion
++    When the user checks the todo "A"
++    And the user checks the todo "B"
++    Then the toggle-all checkbox is checked
++    And the todo "A" has the class "completed"
++    And the todo "B" has the class "completed"
++
++  Scenario: Mark all as complete toggles every todo
++    When the user checks the toggle-all checkbox
++    Then the todo "A" has the class "completed"
++    And the todo "B" has the class "completed"
++
++  Scenario: Mark all as complete is cleared after clear-completed
++    And the user checks the toggle-all checkbox
++    When the user clicks "Clear completed"
++    Then the toggle-all checkbox is unchecked
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..6cf9a23
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,53 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/todo-creation.feature:A new todo is added on Enter",
++      "features/todo-creation.feature:Whitespace-only input is ignored",
++      "features/todo-creation.feature:Leading and trailing whitespace is trimmed from the title",
++      "features/todo-creation.feature:The new-todo input is focused on load",
++      "features/todo-creation.feature:The main and footer sections are hidden when there are no todos",
++      "features/todo-creation.feature:The main and footer sections are shown once a todo exists"
++    ]
++  },
++  "watch2": {
++    "scenarios": [
++      "features/todo-toggling.feature:Checking a single todo marks it completed",
++      "features/todo-toggling.feature:The toggle-all checkbox is unchecked until all todos complete",
++      "features/todo-toggling.feature:The toggle-all checkbox reflects full completion",
++      "features/todo-toggling.feature:Mark all as complete toggles every todo",
++      "features/todo-toggling.feature:Mark all as complete is cleared after clear-completed"
++    ]
++  },
++  "watch3": {
++    "scenarios": [
++      "features/todo-editing.feature:Double-clicking a label enters editing mode",
++      "features/todo-editing.feature:Editing saves on Enter and exits editing mode",
++      "features/todo-editing.feature:Editing saves on blur and exits editing mode",
++      "features/todo-editing.feature:Editing to empty destroys the todo",
++      "features/todo-editing.feature:Escape discards the edit",
++      "features/todo-editing.feature:Editing trims the saved title",
++      "features/todo-editing.feature:The destroy button removes a todo"
++    ]
++  },
++  "watch4": {
++    "scenarios": [
++      "features/todo-counter.feature:The counter shows 0 items left when empty",
++      "features/todo-counter.feature:The counter shows 1 item left for one active todo",
++      "features/todo-counter.feature:The counter shows 2 items left for two active todos",
++      "features/todo-counter.feature:The counter counts only active todos",
++      "features/todo-counter.feature:The clear-completed button is hidden when nothing is completed",
++      "features/todo-counter.feature:The clear-completed button removes completed todos"
++    ]
++  },
++  "watch5": {
++    "scenarios": [
++      "features/todo-routing.feature:Todos persist to localStorage across reload",
++      "features/todo-routing.feature:Completed state persists across reload",
++      "features/todo-routing.feature:Editing mode is not persisted",
++      "features/todo-routing.feature:The active filter persists across reload",
++      "features/todo-routing.feature:The active filter hides non-matching todos",
++      "features/todo-routing.feature:Completing a todo hides it under the Active filter",
++      "features/todo-routing.feature:The default route shows all todos"
++    ]
++  }
++}

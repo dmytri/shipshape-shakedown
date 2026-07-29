@@ -1,0 +1,1909 @@
+diff --git a/cucumber.js b/cucumber.js
+new file mode 100644
+index 0000000..b692573
+--- /dev/null
++++ b/cucumber.js
+@@ -0,0 +1,7 @@
++module.exports = {
++  default: {
++    paths: ['specs/**/*.feature'],
++    require: ['features/support/**/*.js'],
++    format: ['progress'],
++  },
++};
+diff --git a/features/support/steps.js b/features/support/steps.js
+new file mode 100644
+index 0000000..3b98db0
+--- /dev/null
++++ b/features/support/steps.js
+@@ -0,0 +1,436 @@
++const { Given, When, Then } = require('@cucumber/cucumber');
++const { expect } = require('chai');
++
++// ---------------------------------------------------------------------------
++// Helpers
++// ---------------------------------------------------------------------------
++
++function getNewTodoInput(doc) {
++  return doc.querySelector('.new-todo');
++}
++
++function getTodoItems(doc) {
++  return Array.from(doc.querySelectorAll('.todo-list li'));
++}
++
++function getTodoByTitle(doc, title) {
++  return getTodoItems(doc).find(li => {
++    const label = li.querySelector('label');
++    return label && label.textContent.trim() === title;
++  });
++}
++
++function getToggleAllCheckbox(doc) {
++  return doc.querySelector('.toggle-all');
++}
++
++function getClearCompletedButton(doc) {
++  return doc.querySelector('.clear-completed');
++}
++
++function getEditInput(doc) {
++  return doc.querySelector('.todo-list li.editing .edit');
++}
++
++function getFilterLink(doc, filter) {
++  const links = doc.querySelectorAll('.filters a');
++  return Array.from(links).find(a => a.textContent.trim() === filter);
++}
++
++function getCounterElement(doc) {
++  return doc.querySelector('.todo-count');
++}
++
++function getMainSection(doc) {
++  return doc.querySelector('.main');
++}
++
++function getFooter(doc) {
++  return doc.querySelector('.footer');
++}
++
++function createTodo(doc, title) {
++  const input = getNewTodoInput(doc);
++  input.value = title;
++  const event = new doc.defaultView.KeyboardEvent('keydown', {
++    key: 'Enter',
++    code: 'Enter',
++    keyCode: 13,
++    which: 13,
++    bubbles: true
++  });
++  input.dispatchEvent(event);
++}
++
++function createCompletedTodo(doc, title) {
++  createTodo(doc, title);
++  const todo = getTodoByTitle(doc, title);
++  if (todo) {
++    const checkbox = todo.querySelector('.toggle');
++    checkbox.checked = true;
++    checkbox.dispatchEvent(new doc.defaultView.Event('change', { bubbles: true }));
++  }
++}
++
++function toggleTodo(doc, title) {
++  const todo = getTodoByTitle(doc, title);
++  if (todo) {
++    const checkbox = todo.querySelector('.toggle');
++    checkbox.checked = !checkbox.checked;
++    checkbox.dispatchEvent(new doc.defaultView.Event('change', { bubbles: true }));
++  }
++}
++
++function doubleClickTodoLabel(doc, title) {
++  const todo = getTodoByTitle(doc, title);
++  if (todo) {
++    const label = todo.querySelector('label');
++    label.dispatchEvent(new doc.defaultView.Event('dblclick', { bubbles: true }));
++  }
++}
++
++function typeInEditInput(doc, text) {
++  const input = getEditInput(doc);
++  if (input) {
++    input.value = text;
++    input.dispatchEvent(new doc.defaultView.Event('input', { bubbles: true }));
++  }
++}
++
++function pressEnterOnEditInput(doc) {
++  const input = getEditInput(doc);
++  if (input) {
++    input.dispatchEvent(new doc.defaultView.KeyboardEvent('keydown', {
++      key: 'Enter',
++      code: 'Enter',
++      keyCode: 13,
++      which: 13,
++      bubbles: true
++    }));
++  }
++}
++
++function pressEscapeOnEditInput(doc) {
++  const input = getEditInput(doc);
++  if (input) {
++    input.dispatchEvent(new doc.defaultView.KeyboardEvent('keydown', {
++      key: 'Escape',
++      code: 'Escape',
++      keyCode: 27,
++      which: 27,
++      bubbles: true
++    }));
++  }
++}
++
++function blurEditInput(doc) {
++  const input = getEditInput(doc);
++  if (input) {
++    input.dispatchEvent(new doc.defaultView.Event('blur', { bubbles: true }));
++  }
++}
++
++function clearEditInputAndPressEnter(doc) {
++  const input = getEditInput(doc);
++  if (input) {
++    input.value = '';
++    input.dispatchEvent(new doc.defaultView.Event('input', { bubbles: true }));
++    input.dispatchEvent(new doc.defaultView.KeyboardEvent('keydown', {
++      key: 'Enter',
++      code: 'Enter',
++      keyCode: 13,
++      which: 13,
++      bubbles: true
++    }));
++  }
++}
++
++function clearEditInputAndPressEnterOnTodo(doc, title) {
++  const todo = getTodoByTitle(doc, title);
++  if (todo) {
++    const label = todo.querySelector('label');
++    label.dispatchEvent(new doc.defaultView.Event('dblclick', { bubbles: true }));
++    const input = getEditInput(doc);
++    if (input) {
++      input.value = '';
++      input.dispatchEvent(new doc.defaultView.Event('input', { bubbles: true }));
++      input.dispatchEvent(new doc.defaultView.KeyboardEvent('keydown', {
++        key: 'Enter',
++        code: 'Enter',
++        keyCode: 13,
++        which: 13,
++        bubbles: true
++      }));
++    }
++  }
++}
++
++function clickToggleAll(doc) {
++  const toggleAll = getToggleAllCheckbox(doc);
++  if (toggleAll) {
++    toggleAll.checked = !toggleAll.checked;
++    toggleAll.dispatchEvent(new doc.defaultView.Event('change', { bubbles: true }));
++  }
++}
++
++function clickClearCompleted(doc) {
++  const button = getClearCompletedButton(doc);
++  if (button) {
++    button.click();
++  }
++}
++
++function reloadPage(world) {
++  world.disposeApp();
++  world.loadApp();
++}
++
++// ---------------------------------------------------------------------------
++// Given steps
++// ---------------------------------------------------------------------------
++
++Given('the app is loaded with no todos', function () {
++  // App is already loaded by the Before hook; no todos exist by default
++});
++
++Given('the app has a todo {string}', function (title) {
++  createTodo(this.document, title);
++});
++
++Given('the app has a completed todo {string}', function (title) {
++  createCompletedTodo(this.document, title);
++});
++
++Given('the app has todos {string} and {string}', function (title1, title2) {
++  createTodo(this.document, title1);
++  createTodo(this.document, title2);
++});
++
++Given('the app has completed todos {string} and {string}', function (title1, title2) {
++  createCompletedTodo(this.document, title1);
++  createCompletedTodo(this.document, title2);
++});
++
++Given('the app has a todo {string} and a completed todo {string}', function (activeTitle, completedTitle) {
++  createTodo(this.document, activeTitle);
++  createCompletedTodo(this.document, completedTitle);
++});
++
++Given('the user navigates to {string}', function (hash) {
++  this.navigate(hash);
++  // Manually trigger render after navigation
++  this.window.eval('window.dispatchEvent(new Event("hashchange"))');
++});
++
++// ---------------------------------------------------------------------------
++// When steps
++// ---------------------------------------------------------------------------
++
++When('the user types {string} in the new todo input and presses Enter', function (text) {
++  createTodo(this.document, text);
++});
++
++When('the user toggles the {string} todo checkbox', function (title) {
++  toggleTodo(this.document, title);
++});
++
++When('the user double-clicks the {string} todo label', function (title) {
++  doubleClickTodoLabel(this.document, title);
++});
++
++When('the user types {string} in the edit input and presses Enter', function (text) {
++  typeInEditInput(this.document, text);
++  pressEnterOnEditInput(this.document);
++});
++
++When('the user types {string} in the edit input and blurs', function (text) {
++  typeInEditInput(this.document, text);
++  blurEditInput(this.document);
++});
++
++When('the user types {string} in the edit input and presses Escape', function (text) {
++  typeInEditInput(this.document, text);
++  pressEscapeOnEditInput(this.document);
++});
++
++When('the user clears the edit input and presses Enter', function () {
++  clearEditInputAndPressEnter(this.document);
++});
++
++When('the user clears the edit input and presses Enter on the {string} todo', function (title) {
++  clearEditInputAndPressEnterOnTodo(this.document, title);
++});
++
++When('the user clicks the clear completed button', function () {
++  clickClearCompleted(this.document);
++});
++
++When('the user clicks the toggle all checkbox', function () {
++  clickToggleAll(this.document);
++});
++
++When('the page is reloaded', function () {
++  // Save current localStorage state to shared storage
++  const ls = this.window.localStorage;
++  for (let i = 0; i < ls.length; i++) {
++    const k = ls.key(i);
++    // The sharedLocalStorage is already being synced via the proxy in world.js
++  }
++  // Reload the page - the world.js loadApp will copy sharedLocalStorage to new window
++  reloadPage(this);
++});
++
++// ---------------------------------------------------------------------------
++// Then steps
++// ---------------------------------------------------------------------------
++
++Then('a todo with title {string} appears in the todo list', function (title) {
++  const todo = getTodoByTitle(this.document, title);
++  expect(todo, `Expected todo with title "${title}" to exist`).to.not.be.undefined;
++});
++
++Then('the new todo input is empty', function () {
++  const input = getNewTodoInput(this.document);
++  expect(input.value).to.equal('');
++});
++
++Then('the todo count shows {string}', function (expected) {
++  const counter = getCounterElement(this.document);
++  expect(counter.textContent.trim()).to.equal(expected);
++});
++
++Then('the todo list is empty', function () {
++  const items = getTodoItems(this.document);
++  expect(items).to.have.length(0);
++});
++
++Then('the new todo input has focus', function () {
++  const input = getNewTodoInput(this.document);
++  expect(input === this.document.activeElement).to.be.true;
++});
++
++Then('the todo list shows {int} todos', function (count) {
++  const items = getTodoItems(this.document);
++  expect(items).to.have.length(count);
++});
++
++Then('the {string} todo has class {string}', function (title, className) {
++  const todo = getTodoByTitle(this.document, title);
++  expect(todo, `Expected todo "${title}" to exist`).to.not.be.undefined;
++  expect(todo.classList.contains(className)).to.be.true;
++});
++
++Then('the {string} todo does not have class {string}', function (title, className) {
++  const todo = getTodoByTitle(this.document, title);
++  expect(todo, `Expected todo "${title}" to exist`).to.not.be.undefined;
++  expect(todo.classList.contains(className)).to.be.false;
++});
++
++Then('the {string} todo does not exist', function (title) {
++  const todo = getTodoByTitle(this.document, title);
++  expect(todo).to.be.undefined;
++});
++
++Then('the todo {string} does not exist', function (title) {
++  const todo = getTodoByTitle(this.document, title);
++  expect(todo).to.be.undefined;
++});
++
++Then('the todo {string} is visible', function (title) {
++  const todo = getTodoByTitle(this.document, title);
++  expect(todo, `Expected todo "${title}" to exist`).to.not.be.undefined;
++  const style = this.window.getComputedStyle(todo);
++  expect(style.display).to.not.equal('none');
++});
++
++Then('the todo {string} is not visible', function (title) {
++  const todo = getTodoByTitle(this.document, title);
++  if (todo) {
++    const style = this.window.getComputedStyle(todo);
++    expect(style.display).to.equal('none');
++  }
++});
++
++Then('the clear completed button is hidden', function () {
++  const button = getClearCompletedButton(this.document);
++  const style = this.window.getComputedStyle(button);
++  expect(style.display).to.equal('none');
++});
++
++Then('the clear completed button is visible', function () {
++  const button = getClearCompletedButton(this.document);
++  const style = this.window.getComputedStyle(button);
++  expect(style.display).to.not.equal('none');
++});
++
++Then('the toggle all checkbox is checked', function () {
++  const toggleAll = getToggleAllCheckbox(this.document);
++  expect(toggleAll.checked).to.be.true;
++});
++
++Then('the toggle all checkbox is unchecked', function () {
++  const toggleAll = getToggleAllCheckbox(this.document);
++  expect(toggleAll.checked).to.be.false;
++});
++
++Then('the main section is hidden', function () {
++  const main = getMainSection(this.document);
++  const style = this.window.getComputedStyle(main);
++  expect(style.display).to.equal('none');
++});
++
++Then('the main section is visible', function () {
++  const main = getMainSection(this.document);
++  const style = this.window.getComputedStyle(main);
++  expect(style.display).to.not.equal('none');
++});
++
++Then('the footer is hidden', function () {
++  const footer = getFooter(this.document);
++  const style = this.window.getComputedStyle(footer);
++  expect(style.display).to.equal('none');
++});
++
++Then('the footer is visible', function () {
++  const footer = getFooter(this.document);
++  const style = this.window.getComputedStyle(footer);
++  expect(style.display).to.not.equal('none');
++});
++
++Then('the edit input contains {string}', function (expected) {
++  const input = getEditInput(this.document);
++  expect(input.value).to.equal(expected);
++});
++
++Then('the edit input has focus', function () {
++  const input = getEditInput(this.document);
++  expect(input === this.document.activeElement).to.be.true;
++});
++
++Then('the {string} filter link is selected', function (filter) {
++  const link = getFilterLink(this.document, filter);
++  expect(link, `Expected filter link "${filter}" to exist`).to.not.be.undefined;
++  expect(link.classList.contains('selected')).to.be.true;
++});
++
++Then('all todos have class {string}', function (className) {
++  const items = getTodoItems(this.document);
++  expect(items.length).to.be.greaterThan(0);
++  items.forEach(todo => {
++    expect(todo.classList.contains(className)).to.be.true;
++  });
++});
++
++Then('no todos have class {string}', function (className) {
++  const items = getTodoItems(this.document);
++  items.forEach(todo => {
++    expect(todo.classList.contains(className)).to.be.false;
++  });
++});
++
++Then('localStorage contains a key matching {string}', function (pattern) {
++  const regex = new RegExp(pattern);
++  const keys = Object.keys(this.localStorage);
++  const matchingKey = keys.find(key => regex.test(key));
++  expect(matchingKey, `Expected localStorage to contain a key matching "${pattern}"`).to.not.be.undefined;
++});
+diff --git a/features/support/world.js b/features/support/world.js
+index 08b1fb1..b933e22 100644
+--- a/features/support/world.js
++++ b/features/support/world.js
+@@ -5,6 +5,9 @@ const { Window } = require('happy-dom');
+ 
+ const ROOT = path.resolve(__dirname, '..', '..');
+ 
++// Shared localStorage that persists across Window instances
++const sharedLocalStorage = {};
++
+ class AppWorld {
+   // Load the REAL page and the REAL app. A missing artifact is a loud failure here, not a
+   // silently-green suite: the executable tier must exercise the production artifact.
+@@ -57,6 +60,26 @@ class AppWorld {
+       const next = a.getAttribute('href');
+       if (w.location.hash !== next) { w.location.hash = next; w.dispatchEvent(new w.Event('hashchange')); }
+     }, true);
++
++    // SHARED localStorage: happy-dom creates a new localStorage per Window instance, so
++    // persistence across reloads is broken. Bridge the gap by making the localStorage persist.
++    // Copy shared storage into this window's localStorage before the app loads
++    const origLS = w.localStorage;
++    for (const k of Object.keys(sharedLocalStorage)) {
++      origLS.setItem(k, sharedLocalStorage[k]);
++    }
++    // Patch setItem and removeItem to sync back to shared storage
++    const origSetItem = origLS.setItem.bind(origLS);
++    origLS.setItem = function(k, v) {
++      sharedLocalStorage[k] = v;
++      origSetItem(k, v);
++    };
++    const origRemoveItem = origLS.removeItem.bind(origLS);
++    origLS.removeItem = function(k) {
++      delete sharedLocalStorage[k];
++      origRemoveItem(k);
++    };
++
+     return this.document;
+   }
+ 
+@@ -90,6 +113,22 @@ class AppWorld {
+ setWorldConstructor(AppWorld);
+ 
+ // Every scenario gets the real app. No scenario can pass without one.
+-Before(function () { this.loadApp(); });
+-// ...and every scenario gives it back.
+-After(async function () { await this.disposeApp(); });
++Before(function () {
++  // Clear shared storage for clean scenario isolation
++  for (const k of Object.keys(sharedLocalStorage)) {
++    delete sharedLocalStorage[k];
++  }
++  this.loadApp();
++});
++
++// Sync localStorage back to shared storage after each scenario, then dispose
++After(async function () {
++  if (this.window && this.window.localStorage) {
++    const ls = this.window.localStorage;
++    for (let i = 0; i < ls.length; i++) {
++      const k = ls.key(i);
++      sharedLocalStorage[k] = ls.getItem(k);
++    }
++  }
++  await this.disposeApp();
++});
+diff --git a/index.html b/index.html
+new file mode 100644
+index 0000000..bc2ea3a
+--- /dev/null
++++ b/index.html
+@@ -0,0 +1,55 @@
++<!doctype html>
++<html lang="en">
++<head>
++  <meta charset="utf-8">
++  <meta name="viewport" content="width=device-width, initial-scale=1">
++  <title>TodoMVC</title>
++  <style>
++    .todoapp { font-family: sans-serif; max-width: 550px; margin: 0 auto; }
++    .header h1 { font-size: 60px; text-align: center; }
++    .new-todo { width: 100%; font-size: 24px; padding: 10px; box-sizing: border-box; }
++    .main { display: block; }
++    .main.hidden { display: none; }
++    .footer { display: block; padding: 10px; text-align: center; }
++    .footer.hidden { display: none; }
++    .todo-list { list-style: none; padding: 0; }
++    .todo-list li { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #ddd; }
++    .todo-list li.completed label { text-decoration: line-through; }
++    .todo-list li.editing .view { display: none; }
++    .todo-list li.editing .edit { display: block; }
++    .todo-list li .edit { display: none; width: 100%; font-size: 24px; padding: 5px; box-sizing: border-box; }
++    .todo-list li .view { display: flex; align-items: center; width: 100%; }
++    .todo-list li .toggle { margin-right: 10px; }
++    .todo-list li label { flex: 1; }
++    .todo-list li .destroy { background: none; border: none; font-size: 20px; cursor: pointer; }
++    .filters { list-style: none; padding: 0; display: flex; gap: 10px; justify-content: center; }
++    .filters a.selected { border: 1px solid #ce4646; }
++    .clear-completed { margin-top: 10px; }
++    .toggle-all { margin-right: 10px; }
++    .todo-count { font-weight: bold; }
++  </style>
++</head>
++<body>
++  <section class="todoapp">
++    <header class="header">
++      <h1>todos</h1>
++      <input class="new-todo" placeholder="What needs to be done?" autofocus>
++    </header>
++    <section class="main">
++      <input id="toggle-all" class="toggle-all" type="checkbox">
++      <label for="toggle-all">Mark all as complete</label>
++      <ul class="todo-list"></ul>
++    </section>
++    <footer class="footer">
++      <span class="todo-count"><strong>0</strong> item left</span>
++      <ul class="filters">
++        <li><a class="selected" href="#/">All</a></li>
++        <li><a href="#/active">Active</a></li>
++        <li><a href="#/completed">Completed</a></li>
++      </ul>
++      <button class="clear-completed">Clear completed</button>
++    </footer>
++  </section>
++  <script src="js/app.js"></script>
++</body>
++</html>
+diff --git a/js/app.js b/js/app.js
+new file mode 100644
+index 0000000..df88566
+--- /dev/null
++++ b/js/app.js
+@@ -0,0 +1,315 @@
++(function () {
++  'use strict';
++
++  var STORAGE_KEY = 'todos-vanillajs';
++  var ENTER_KEY = 13;
++  var ESCAPE_KEY = 27;
++
++  var todos = [];
++  var editingId = null;
++
++  var dom = {
++    newTodoInput: null,
++    todoList: null,
++    toggleAll: null,
++    clearCompleted: null,
++    todoCount: null,
++    main: null,
++    footer: null
++  };
++
++  // ---------------------------------------------------------------------------
++  // Storage
++  // ---------------------------------------------------------------------------
++
++  // Storage wrapper that works with both real localStorage and test environments
++  var _storage = {
++    getItem: function(k) {
++      try {
++        return localStorage.getItem(k);
++      } catch(e) {
++        return null;
++      }
++    },
++    setItem: function(k, v) {
++      try {
++        localStorage.setItem(k, v);
++      } catch(e) {
++        // Silently fail in test environments
++      }
++    }
++  };
++
++  function save() {
++    _storage.setItem(STORAGE_KEY, JSON.stringify(todos));
++  }
++
++  function load() {
++    var raw = _storage.getItem(STORAGE_KEY);
++    todos = raw ? JSON.parse(raw) : [];
++  }
++
++  // ---------------------------------------------------------------------------
++  // Todo operations
++  // ---------------------------------------------------------------------------
++
++  /** @planks("the user types {string} in the new todo input and presses Enter") */
++  function addTodo(title) {
++    var trimmed = title.trim();
++    if (!trimmed) return;
++    todos.push({
++      id: Date.now(),
++      title: trimmed,
++      completed: false
++    });
++    save();
++  }
++
++  /** @planks("the user toggles the {string} todo checkbox") */
++  function toggleTodo(id) {
++    for (var i = 0; i < todos.length; i++) {
++      if (todos[i].id === id) {
++        todos[i].completed = !todos[i].completed;
++        break;
++      }
++    }
++    save();
++  }
++
++  /** @planks("the user clicks the toggle all checkbox") */
++  function toggleAll() {
++    var allCompleted = todos.every(function (t) { return t.completed; });
++    todos.forEach(function (t) { t.completed = !allCompleted; });
++    save();
++  }
++
++  /** @planks("the user clears the edit input and presses Enter") */
++  function destroyTodo(id) {
++    todos = todos.filter(function (t) { return t.id !== id; });
++    save();
++  }
++
++  /** @planks("the user types {string} in the edit input and presses Enter") */
++  function editTodo(id, newTitle) {
++    var trimmed = newTitle.trim();
++    if (!trimmed) {
++      destroyTodo(id);
++      return;
++    }
++    for (var i = 0; i < todos.length; i++) {
++      if (todos[i].id === id) {
++        todos[i].title = trimmed;
++        break;
++      }
++    }
++    save();
++  }
++
++  /** @planks("the user clicks the clear completed button") */
++  function clearCompleted() {
++    todos = todos.filter(function (t) { return !t.completed; });
++    save();
++  }
++
++  // ---------------------------------------------------------------------------
++  // Rendering
++  // ---------------------------------------------------------------------------
++
++  function getVisibleTodos() {
++    var hash = window.location.hash || '#/';
++    if (hash === '#/active') {
++      return todos.filter(function (t) { return !t.completed; });
++    } else if (hash === '#/completed') {
++      return todos.filter(function (t) { return t.completed; });
++    }
++    return todos;
++  }
++
++  function render() {
++    var visible = getVisibleTodos();
++    var activeCount = todos.filter(function (t) { return !t.completed; }).length;
++    var completedCount = todos.filter(function (t) { return t.completed; }).length;
++    var totalCount = todos.length;
++
++    // Render todo list
++    dom.todoList.innerHTML = '';
++    visible.forEach(function (todo) {
++      var li = document.createElement('li');
++      li.dataset.id = todo.id;
++      if (todo.completed) li.classList.add('completed');
++      if (editingId === todo.id) li.classList.add('editing');
++
++      li.innerHTML =
++        '<div class="view">' +
++          '<input class="toggle" type="checkbox"' + (todo.completed ? ' checked' : '') + '>' +
++          '<label>' + escapeHtml(todo.title) + '</label>' +
++          '<button class="destroy"></button>' +
++        '</div>' +
++        '<input class="edit" value="' + escapeHtml(todo.title) + '">';
++
++      dom.todoList.appendChild(li);
++    });
++
++    // Counter
++    var itemText = activeCount === 1 ? 'item' : 'items';
++    dom.todoCount.innerHTML = '<strong>' + activeCount + '</strong> ' + itemText + ' left';
++
++    // Toggle all
++    dom.toggleAll.checked = totalCount > 0 && activeCount === 0;
++
++    // Visibility
++    if (totalCount === 0) {
++      dom.main.classList.add('hidden');
++      dom.footer.classList.add('hidden');
++    } else {
++      dom.main.classList.remove('hidden');
++      dom.footer.classList.remove('hidden');
++    }
++
++    // Filter links
++    var hash = window.location.hash || '#/';
++    var links = document.querySelectorAll('.filters a');
++    links.forEach(function (link) {
++      link.classList.remove('selected');
++      if (link.getAttribute('href') === hash) {
++        link.classList.add('selected');
++      }
++    });
++
++    // Clear completed visibility
++    dom.clearCompleted.style.display = completedCount > 0 ? 'block' : 'none';
++  }
++
++  function escapeHtml(str) {
++    var div = document.createElement('div');
++    div.textContent = str;
++    return div.innerHTML;
++  }
++
++  // ---------------------------------------------------------------------------
++  // Event handlers
++  // ---------------------------------------------------------------------------
++
++  function setupEventListeners() {
++    // New todo input
++    dom.newTodoInput.addEventListener('keydown', function (e) {
++      if (e.keyCode === ENTER_KEY) {
++        addTodo(dom.newTodoInput.value);
++        dom.newTodoInput.value = '';
++        render();
++      }
++    });
++
++    // Todo list delegation
++    dom.todoList.addEventListener('change', function (e) {
++      var li = e.target.closest('li');
++      if (!li) return;
++      var id = parseInt(li.dataset.id, 10);
++
++      if (e.target.classList.contains('toggle')) {
++        toggleTodo(id);
++        render();
++      }
++    });
++
++    dom.todoList.addEventListener('click', function (e) {
++      var li = e.target.closest('li');
++      if (!li) return;
++      var id = parseInt(li.dataset.id, 10);
++
++      if (e.target.classList.contains('destroy')) {
++        destroyTodo(id);
++        render();
++      }
++    });
++
++    dom.todoList.addEventListener('dblclick', function (e) {
++      var li = e.target.closest('li');
++      if (!li) return;
++      var id = parseInt(li.dataset.id, 10);
++
++      if (e.target.tagName === 'LABEL') {
++        editingId = id;
++        render();
++        var editInput = li.querySelector('.edit');
++        if (editInput) editInput.focus();
++      }
++    });
++
++    dom.todoList.addEventListener('keydown', function (e) {
++      var li = e.target.closest('li');
++      if (!li) return;
++      var id = parseInt(li.dataset.id, 10);
++
++      if (e.target.classList.contains('edit')) {
++        if (e.keyCode === ENTER_KEY) {
++          editTodo(id, e.target.value);
++          editingId = null;
++          render();
++        } else if (e.keyCode === ESCAPE_KEY) {
++          editingId = null;
++          render();
++        }
++      }
++    });
++
++    dom.todoList.addEventListener('blur', function (e) {
++      if (e.target.classList.contains('edit')) {
++        var li = e.target.closest('li');
++        if (!li) return;
++        var id = parseInt(li.dataset.id, 10);
++        editTodo(id, e.target.value);
++        editingId = null;
++        render();
++      }
++    }, true);
++
++    // Toggle all
++    dom.toggleAll.addEventListener('change', function () {
++      toggleAll();
++      render();
++    });
++
++    // Clear completed
++    dom.clearCompleted.addEventListener('click', function () {
++      clearCompleted();
++      render();
++    });
++
++    // Filter links
++    document.querySelector('.filters').addEventListener('click', function (e) {
++      if (e.target.tagName === 'A') {
++        window.location.hash = e.target.getAttribute('href');
++      }
++    });
++
++    // Hash change
++    window.addEventListener('hashchange', function () {
++      render();
++    });
++  }
++
++  // ---------------------------------------------------------------------------
++  // Init
++  // ---------------------------------------------------------------------------
++
++  function init() {
++    dom.newTodoInput = document.querySelector('.new-todo');
++    dom.todoList = document.querySelector('.todo-list');
++    dom.toggleAll = document.querySelector('.toggle-all');
++    dom.clearCompleted = document.querySelector('.clear-completed');
++    dom.todoCount = document.querySelector('.todo-count');
++    dom.main = document.querySelector('.main');
++    dom.footer = document.querySelector('.footer');
++
++    load();
++    setupEventListeners();
++    render();
++  }
++
++  if (document.readyState === 'loading') {
++    document.addEventListener('DOMContentLoaded', init);
++  } else {
++    init();
++  }
++})();
+diff --git a/package-lock.json b/package-lock.json
+new file mode 100644
+index 0000000..f5b11ec
+--- /dev/null
++++ b/package-lock.json
+@@ -0,0 +1,980 @@
++{
++  "name": "todomvc-shakedown",
++  "version": "0.1.0",
++  "lockfileVersion": 3,
++  "requires": true,
++  "packages": {
++    "": {
++      "name": "todomvc-shakedown",
++      "version": "0.1.0",
++      "devDependencies": {
++        "@cucumber/cucumber": "*",
++        "chai": "^6.2.2",
++        "happy-dom": "*"
++      }
++    },
++    "node_modules/@babel/code-frame": {
++      "version": "7.29.7",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@babel/helper-validator-identifier": "^7.29.7",
++        "js-tokens": "^4.0.0",
++        "picocolors": "^1.1.1"
++      },
++      "engines": {
++        "node": ">=6.9.0"
++      }
++    },
++    "node_modules/@babel/helper-validator-identifier": {
++      "version": "7.29.7",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=6.9.0"
++      }
++    },
++    "node_modules/@colors/colors": {
++      "version": "1.5.0",
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "engines": {
++        "node": ">=0.1.90"
++      }
++    },
++    "node_modules/@cucumber/ci-environment": {
++      "version": "14.0.0",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/@cucumber/cucumber": {
++      "version": "13.2.0",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@cucumber/ci-environment": "14.0.0",
++        "@cucumber/cucumber-expressions": "20.0.0",
++        "@cucumber/gherkin": "41.0.0",
++        "@cucumber/gherkin-streams": "7.0.1",
++        "@cucumber/gherkin-utils": "12.0.1",
++        "@cucumber/html-formatter": "24.0.0",
++        "@cucumber/junit-xml-formatter": "0.14.0",
++        "@cucumber/message-streams": "5.0.1",
++        "@cucumber/messages": "34.0.1",
++        "@cucumber/pretty-formatter": "4.0.0",
++        "@cucumber/tag-expressions": "10.0.0",
++        "assertion-error-formatter": "^3.0.0",
++        "cli-table3": "0.6.5",
++        "commander": "^15.0.0",
++        "debug": "^4.3.4",
++        "error-stack-parser": "^2.1.4",
++        "figures": "^6.0.0",
++        "has-ansi": "^6.0.0",
++        "indent-string": "^5.0.0",
++        "is-installed-globally": "^1.0.0",
++        "knuth-shuffle-seeded": "^1.0.6",
++        "lodash.merge": "^4.6.2",
++        "lodash.mergewith": "^4.6.2",
++        "luxon": "3.7.2",
++        "read-package-up": "^12.0.0",
++        "semver": "7.8.5",
++        "string-argv": "0.3.2",
++        "supports-color": "^10.0.0",
++        "type-fest": "^5.0.0",
++        "util-arity": "^1.1.0",
++        "yaml": "^2.2.2",
++        "yup": "1.7.1"
++      },
++      "bin": {
++        "cucumber-js": "bin/cucumber.js"
++      },
++      "engines": {
++        "node": "22 || 24 || >=26"
++      },
++      "funding": {
++        "url": "https://opencollective.com/cucumber"
++      }
++    },
++    "node_modules/@cucumber/cucumber-expressions": {
++      "version": "20.0.0",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "regexp-match-indices": "1.0.2"
++      }
++    },
++    "node_modules/@cucumber/gherkin": {
++      "version": "41.0.0",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@cucumber/messages": ">=31.0.0 <34"
++      }
++    },
++    "node_modules/@cucumber/gherkin-streams": {
++      "version": "7.0.1",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "commander": "15.0.0",
++        "source-map-support": "0.5.21"
++      },
++      "bin": {
++        "gherkin-javascript": "bin/gherkin"
++      },
++      "peerDependencies": {
++        "@cucumber/gherkin": ">=22.0.0",
++        "@cucumber/message-streams": ">=4.0.0",
++        "@cucumber/messages": ">=17.1.1"
++      }
++    },
++    "node_modules/@cucumber/gherkin-utils": {
++      "version": "12.0.1",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@cucumber/gherkin": "^41.0.0",
++        "@cucumber/messages": "^33.0.0",
++        "@teppeis/multimaps": "3.0.0",
++        "commander": "15.0.0",
++        "source-map-support": "^0.5.21"
++      },
++      "bin": {
++        "gherkin-utils": "bin/gherkin-utils"
++      }
++    },
++    "node_modules/@cucumber/gherkin-utils/node_modules/@cucumber/messages": {
++      "version": "33.0.4",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/@cucumber/gherkin/node_modules/@cucumber/messages": {
++      "version": "33.0.4",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/@cucumber/html-formatter": {
++      "version": "24.0.0",
++      "dev": true,
++      "license": "MIT",
++      "peerDependencies": {
++        "@cucumber/messages": ">=18"
++      }
++    },
++    "node_modules/@cucumber/junit-xml-formatter": {
++      "version": "0.14.0",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@cucumber/query": "^16.0.0",
++        "@teppeis/multimaps": "^3.0.0",
++        "luxon": "^3.5.0",
++        "xmlbuilder": "^15.1.1"
++      },
++      "peerDependencies": {
++        "@cucumber/messages": "*"
++      }
++    },
++    "node_modules/@cucumber/message-streams": {
++      "version": "5.0.1",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "mime": "^4.0.0"
++      },
++      "peerDependencies": {
++        "@cucumber/messages": ">=17.1.1"
++      }
++    },
++    "node_modules/@cucumber/messages": {
++      "version": "34.0.1",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/@cucumber/pretty-formatter": {
++      "version": "4.0.0",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@cucumber/query": "16.0.0",
++        "luxon": "^3.7.2"
++      },
++      "peerDependencies": {
++        "@cucumber/messages": "*"
++      }
++    },
++    "node_modules/@cucumber/pretty-formatter/node_modules/@cucumber/query": {
++      "version": "16.0.0",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@teppeis/multimaps": "3.0.0",
++        "lodash.sortby": "^4.7.0"
++      },
++      "peerDependencies": {
++        "@cucumber/messages": "*"
++      }
++    },
++    "node_modules/@cucumber/query": {
++      "version": "16.0.1",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@teppeis/multimaps": "3.0.0",
++        "lodash.sortby": "^4.7.0"
++      },
++      "peerDependencies": {
++        "@cucumber/messages": "*"
++      }
++    },
++    "node_modules/@cucumber/tag-expressions": {
++      "version": "10.0.0",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/@teppeis/multimaps": {
++      "version": "3.0.0",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=14"
++      }
++    },
++    "node_modules/@types/node": {
++      "version": "26.1.1",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "undici-types": "~8.3.0"
++      }
++    },
++    "node_modules/@types/normalize-package-data": {
++      "version": "2.4.4",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/@types/whatwg-mimetype": {
++      "version": "3.0.2",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/@types/ws": {
++      "version": "8.18.1",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@types/node": "*"
++      }
++    },
++    "node_modules/ansi-regex": {
++      "version": "6.2.2",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=12"
++      },
++      "funding": {
++        "url": "https://github.com/chalk/ansi-regex?sponsor=1"
++      }
++    },
++    "node_modules/assertion-error-formatter": {
++      "version": "3.0.0",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "diff": "^4.0.1",
++        "pad-right": "^0.2.2",
++        "repeat-string": "^1.6.1"
++      }
++    },
++    "node_modules/buffer-from": {
++      "version": "1.1.2",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/buffer-image-size": {
++      "version": "0.6.4",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@types/node": "*"
++      },
++      "engines": {
++        "node": ">=4.0"
++      }
++    },
++    "node_modules/chai": {
++      "version": "6.2.2",
++      "resolved": "https://registry.npmjs.org/chai/-/chai-6.2.2.tgz",
++      "integrity": "sha512-NUPRluOfOiTKBKvWPtSD4PhFvWCqOi0BGStNWs57X9js7XGTprSmFoz5F0tWhR4WPjNeR9jXqdC7/UpSJTnlRg==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/cli-table3": {
++      "version": "0.6.5",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "string-width": "^4.2.0"
++      },
++      "engines": {
++        "node": "10.* || >= 12.*"
++      },
++      "optionalDependencies": {
++        "@colors/colors": "1.5.0"
++      }
++    },
++    "node_modules/commander": {
++      "version": "15.0.0",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=22.12.0"
++      }
++    },
++    "node_modules/debug": {
++      "version": "4.4.3",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "ms": "^2.1.3"
++      },
++      "engines": {
++        "node": ">=6.0"
++      },
++      "peerDependenciesMeta": {
++        "supports-color": {
++          "optional": true
++        }
++      }
++    },
++    "node_modules/diff": {
++      "version": "4.0.4",
++      "dev": true,
++      "license": "BSD-3-Clause",
++      "engines": {
++        "node": ">=0.3.1"
++      }
++    },
++    "node_modules/emoji-regex": {
++      "version": "8.0.0",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/error-stack-parser": {
++      "version": "2.1.4",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "stackframe": "^1.3.4"
++      }
++    },
++    "node_modules/figures": {
++      "version": "6.1.0",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "is-unicode-supported": "^2.0.0"
++      },
++      "engines": {
++        "node": ">=18"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/find-up-simple": {
++      "version": "1.0.1",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=18"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/global-directory": {
++      "version": "4.0.1",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "ini": "4.1.1"
++      },
++      "engines": {
++        "node": ">=18"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/happy-dom": {
++      "version": "20.11.1",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@types/node": ">=20.0.0",
++        "@types/whatwg-mimetype": "^3.0.2",
++        "@types/ws": "^8.18.1",
++        "buffer-image-size": "^0.6.4",
++        "entities": "^7.0.1",
++        "whatwg-mimetype": "^3.0.0",
++        "ws": "^8.21.0"
++      },
++      "engines": {
++        "node": ">=20.0.0"
++      }
++    },
++    "node_modules/happy-dom/node_modules/entities": {
++      "version": "7.0.1",
++      "dev": true,
++      "license": "BSD-2-Clause",
++      "engines": {
++        "node": ">=0.12"
++      },
++      "funding": {
++        "url": "https://github.com/fb55/entities?sponsor=1"
++      }
++    },
++    "node_modules/has-ansi": {
++      "version": "6.0.2",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "ansi-regex": "^6.0.1"
++      },
++      "engines": {
++        "node": ">=18"
++      },
++      "funding": {
++        "url": "https://github.com/chalk/has-ansi?sponsor=1"
++      }
++    },
++    "node_modules/hosted-git-info": {
++      "version": "9.0.3",
++      "dev": true,
++      "license": "ISC",
++      "dependencies": {
++        "lru-cache": "^11.1.0"
++      },
++      "engines": {
++        "node": "^20.17.0 || >=22.9.0"
++      }
++    },
++    "node_modules/indent-string": {
++      "version": "5.0.0",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=12"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/index-to-position": {
++      "version": "1.2.0",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=18"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/ini": {
++      "version": "4.1.1",
++      "dev": true,
++      "license": "ISC",
++      "engines": {
++        "node": "^14.17.0 || ^16.13.0 || >=18.0.0"
++      }
++    },
++    "node_modules/is-fullwidth-code-point": {
++      "version": "3.0.0",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=8"
++      }
++    },
++    "node_modules/is-installed-globally": {
++      "version": "1.0.0",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "global-directory": "^4.0.1",
++        "is-path-inside": "^4.0.0"
++      },
++      "engines": {
++        "node": ">=18"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/is-path-inside": {
++      "version": "4.0.0",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=12"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/is-unicode-supported": {
++      "version": "2.1.0",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=18"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/js-tokens": {
++      "version": "4.0.0",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/knuth-shuffle-seeded": {
++      "version": "1.0.6",
++      "dev": true,
++      "license": "Apache-2.0",
++      "dependencies": {
++        "seed-random": "~2.2.0"
++      }
++    },
++    "node_modules/lodash.merge": {
++      "version": "4.6.2",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/lodash.mergewith": {
++      "version": "4.6.2",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/lodash.sortby": {
++      "version": "4.7.0",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/lru-cache": {
++      "version": "11.5.2",
++      "dev": true,
++      "license": "BlueOak-1.0.0",
++      "engines": {
++        "node": "20 || >=22"
++      }
++    },
++    "node_modules/luxon": {
++      "version": "3.7.2",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=12"
++      }
++    },
++    "node_modules/mime": {
++      "version": "4.1.0",
++      "dev": true,
++      "funding": [
++        "https://github.com/sponsors/broofa"
++      ],
++      "license": "MIT",
++      "bin": {
++        "mime": "bin/cli.js"
++      },
++      "engines": {
++        "node": ">=16"
++      }
++    },
++    "node_modules/ms": {
++      "version": "2.1.3",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/normalize-package-data": {
++      "version": "8.0.0",
++      "dev": true,
++      "license": "BSD-2-Clause",
++      "dependencies": {
++        "hosted-git-info": "^9.0.0",
++        "semver": "^7.3.5",
++        "validate-npm-package-license": "^3.0.4"
++      },
++      "engines": {
++        "node": "^20.17.0 || >=22.9.0"
++      }
++    },
++    "node_modules/pad-right": {
++      "version": "0.2.2",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "repeat-string": "^1.5.2"
++      },
++      "engines": {
++        "node": ">=0.10.0"
++      }
++    },
++    "node_modules/parse-json": {
++      "version": "8.3.0",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@babel/code-frame": "^7.26.2",
++        "index-to-position": "^1.1.0",
++        "type-fest": "^4.39.1"
++      },
++      "engines": {
++        "node": ">=18"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/parse-json/node_modules/type-fest": {
++      "version": "4.41.0",
++      "dev": true,
++      "license": "(MIT OR CC0-1.0)",
++      "engines": {
++        "node": ">=16"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/picocolors": {
++      "version": "1.1.1",
++      "dev": true,
++      "license": "ISC"
++    },
++    "node_modules/property-expr": {
++      "version": "2.0.6",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/read-package-up": {
++      "version": "12.0.0",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "find-up-simple": "^1.0.1",
++        "read-pkg": "^10.0.0",
++        "type-fest": "^5.2.0"
++      },
++      "engines": {
++        "node": ">=20"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/read-pkg": {
++      "version": "10.1.0",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@types/normalize-package-data": "^2.4.4",
++        "normalize-package-data": "^8.0.0",
++        "parse-json": "^8.3.0",
++        "type-fest": "^5.4.4",
++        "unicorn-magic": "^0.4.0"
++      },
++      "engines": {
++        "node": ">=20"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/regexp-match-indices": {
++      "version": "1.0.2",
++      "dev": true,
++      "license": "Apache-2.0",
++      "dependencies": {
++        "regexp-tree": "^0.1.11"
++      }
++    },
++    "node_modules/regexp-tree": {
++      "version": "0.1.27",
++      "dev": true,
++      "license": "MIT",
++      "bin": {
++        "regexp-tree": "bin/regexp-tree"
++      }
++    },
++    "node_modules/repeat-string": {
++      "version": "1.6.1",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=0.10"
++      }
++    },
++    "node_modules/seed-random": {
++      "version": "2.2.0",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/semver": {
++      "version": "7.8.5",
++      "dev": true,
++      "license": "ISC",
++      "bin": {
++        "semver": "bin/semver.js"
++      },
++      "engines": {
++        "node": ">=10"
++      }
++    },
++    "node_modules/source-map": {
++      "version": "0.6.1",
++      "dev": true,
++      "license": "BSD-3-Clause",
++      "engines": {
++        "node": ">=0.10.0"
++      }
++    },
++    "node_modules/source-map-support": {
++      "version": "0.5.21",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "buffer-from": "^1.0.0",
++        "source-map": "^0.6.0"
++      }
++    },
++    "node_modules/spdx-correct": {
++      "version": "3.2.0",
++      "dev": true,
++      "license": "Apache-2.0",
++      "dependencies": {
++        "spdx-expression-parse": "^3.0.0",
++        "spdx-license-ids": "^3.0.0"
++      }
++    },
++    "node_modules/spdx-exceptions": {
++      "version": "2.5.0",
++      "dev": true,
++      "license": "CC-BY-3.0"
++    },
++    "node_modules/spdx-expression-parse": {
++      "version": "3.0.1",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "spdx-exceptions": "^2.1.0",
++        "spdx-license-ids": "^3.0.0"
++      }
++    },
++    "node_modules/spdx-license-ids": {
++      "version": "3.0.23",
++      "dev": true,
++      "license": "CC0-1.0"
++    },
++    "node_modules/stackframe": {
++      "version": "1.3.4",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/string-argv": {
++      "version": "0.3.2",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=0.6.19"
++      }
++    },
++    "node_modules/string-width": {
++      "version": "4.2.3",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "emoji-regex": "^8.0.0",
++        "is-fullwidth-code-point": "^3.0.0",
++        "strip-ansi": "^6.0.1"
++      },
++      "engines": {
++        "node": ">=8"
++      }
++    },
++    "node_modules/strip-ansi": {
++      "version": "6.0.1",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "ansi-regex": "^5.0.1"
++      },
++      "engines": {
++        "node": ">=8"
++      }
++    },
++    "node_modules/strip-ansi/node_modules/ansi-regex": {
++      "version": "5.0.1",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=8"
++      }
++    },
++    "node_modules/supports-color": {
++      "version": "10.2.2",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=18"
++      },
++      "funding": {
++        "url": "https://github.com/chalk/supports-color?sponsor=1"
++      }
++    },
++    "node_modules/tagged-tag": {
++      "version": "1.0.0",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=20"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/tiny-case": {
++      "version": "1.0.3",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/toposort": {
++      "version": "2.0.2",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/type-fest": {
++      "version": "5.8.0",
++      "dev": true,
++      "license": "(MIT OR CC0-1.0)",
++      "dependencies": {
++        "tagged-tag": "^1.0.0"
++      },
++      "engines": {
++        "node": ">=20"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/undici-types": {
++      "version": "8.3.0",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/unicorn-magic": {
++      "version": "0.4.0",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=20"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    },
++    "node_modules/util-arity": {
++      "version": "1.1.0",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/validate-npm-package-license": {
++      "version": "3.0.4",
++      "dev": true,
++      "license": "Apache-2.0",
++      "dependencies": {
++        "spdx-correct": "^3.0.0",
++        "spdx-expression-parse": "^3.0.0"
++      }
++    },
++    "node_modules/whatwg-mimetype": {
++      "version": "3.0.0",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=12"
++      }
++    },
++    "node_modules/ws": {
++      "version": "8.21.1",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=10.0.0"
++      },
++      "peerDependencies": {
++        "bufferutil": "^4.0.1",
++        "utf-8-validate": ">=5.0.2"
++      },
++      "peerDependenciesMeta": {
++        "bufferutil": {
++          "optional": true
++        },
++        "utf-8-validate": {
++          "optional": true
++        }
++      }
++    },
++    "node_modules/xmlbuilder": {
++      "version": "15.1.1",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=8.0"
++      }
++    },
++    "node_modules/yaml": {
++      "version": "2.9.0",
++      "dev": true,
++      "license": "ISC",
++      "bin": {
++        "yaml": "bin.mjs"
++      },
++      "engines": {
++        "node": ">= 14.6"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/eemeli"
++      }
++    },
++    "node_modules/yup": {
++      "version": "1.7.1",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "property-expr": "^2.0.5",
++        "tiny-case": "^1.0.3",
++        "toposort": "^2.0.2",
++        "type-fest": "^2.19.0"
++      }
++    },
++    "node_modules/yup/node_modules/type-fest": {
++      "version": "2.19.0",
++      "dev": true,
++      "license": "(MIT OR CC0-1.0)",
++      "engines": {
++        "node": ">=12.20"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/sindresorhus"
++      }
++    }
++  }
++}
+diff --git a/package.json b/package.json
+index 25b5f68..4f423ad 100644
+--- a/package.json
++++ b/package.json
+@@ -2,6 +2,12 @@
+   "name": "todomvc-shakedown",
+   "version": "0.1.0",
+   "private": true,
+-  "scripts": { "test": "cucumber-js" },
+-  "devDependencies": { "@cucumber/cucumber": "*", "happy-dom": "*" }
++  "scripts": {
++    "test": "cucumber-js"
++  },
++  "devDependencies": {
++    "@cucumber/cucumber": "*",
++    "chai": "^6.2.2",
++    "happy-dom": "*"
++  }
+ }

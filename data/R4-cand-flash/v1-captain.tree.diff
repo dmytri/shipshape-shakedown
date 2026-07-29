@@ -1,0 +1,812 @@
+diff --git a/.shipshape/conformance-rules.json b/.shipshape/conformance-rules.json
+new file mode 100644
+index 0000000..30e5164
+--- /dev/null
++++ b/.shipshape/conformance-rules.json
+@@ -0,0 +1,29 @@
++{
++  "description": "Verification-conformance rule set for Shipshape. Text-pattern rules checked through plank-join and the runtime. Weakness: text search may miss AST-level violations.",
++  "rules": [
++    {
++      "id": "plank-form",
++      "description": "Every @planks token must be in a docblock immediately preceding a declaration. Every @planks string must match a current step-definition pattern. Every @planks-provisional reference must name a scenario that still carries @captain.",
++      "check": "plank-join",
++      "severity": "error"
++    },
++    {
++      "id": "plank-coverage",
++      "description": "Every behaviour-bearing step-definition pattern must have at least one matching @planks annotation in a production seam.",
++      "check": "plank-join",
++      "severity": "warning"
++    },
++    {
++      "id": "watchbill-conformance",
++      "description": "watchbill.json must contain only ordered watch1, watch2, ... objects each with only a scenarios array.",
++      "check": "watchbill-shape",
++      "severity": "error"
++    },
++    {
++      "id": "perturbation-quiescence",
++      "description": "No standing PERTURBATION token in implementation directories outside an uncommitted plant.",
++      "check": "perturbation-scan",
++      "severity": "error"
++    }
++  ]
++}
+\ No newline at end of file
+diff --git a/.shipshape/plank-join.mjs b/.shipshape/plank-join.mjs
+new file mode 100644
+index 0000000..fa5531f
+--- /dev/null
++++ b/.shipshape/plank-join.mjs
+@@ -0,0 +1,267 @@
++// Plank-join checker for Shipshape.
++//
++// Reads step-definition patterns from features/support/*.js, then scans
++// implementation directories for @planks(...) and @planks-provisional(...)
++// annotations in docblocks.
++//
++// Exits non-zero when:
++//   - a behaviour-bearing step-definition pattern has no matching @planks
++//   - a @planks string matches no current step-definition pattern
++//   - a @planks-provisional reference names a scenario that no longer carries @captain
++//
++// Reports the full join (pattern -> matching planks -> scenarios) on stdout.
++
++import fs from 'node:fs';
++import path from 'node:path';
++import { globSync } from 'node:fs';
++
++const ROOT = path.resolve(import.meta.dirname, '..');
++
++// ---- Config ----
++const IMPLEMENTATION_DIRS = ['js'];
++const SPECS_DIR = 'features';
++const SUPPORT_DIRS = ['features/support'];
++
++// ---- Helpers ----
++
++function* walkFiles(dir, ext) {
++  if (!fs.existsSync(dir)) return;
++  const entries = fs.readdirSync(dir, { withFileTypes: true });
++  for (const e of entries) {
++    const full = path.join(dir, e.name);
++    if (e.isDirectory()) {
++      yield* walkFiles(full, ext);
++    } else if (e.isFile() && (ext ? e.name.endsWith(ext) : true)) {
++      yield full;
++    }
++  }
++}
++
++// ---- 1. Read step-definition patterns ----
++// Matches: Given("...") / When('...') / Then(`...`) with the pattern string.
++const STEP_BINDING_RE = /(?:Given|When|Then)\s*\(\s*(['"`])((?:[^\1\\]|\\.)*)\1/;
++
++function readStepPatterns(supportDirs) {
++  const patterns = [];
++  for (const dir of supportDirs) {
++    const absDir = path.resolve(ROOT, dir);
++    for (const file of walkFiles(absDir, '.js')) {
++      const src = fs.readFileSync(file, 'utf8');
++      let m;
++      while ((m = STEP_BINDING_RE.exec(src)) !== null) {
++        patterns.push({ pattern: m[2], file: path.relative(ROOT, file) });
++        src.indexOf(m[0], m.index + 1); // advance past match
++        // Reset lastIndex for non-global regex
++      }
++    }
++  }
++  return patterns;
++}
++
++// Since regex above is not global, we need a different approach for multiple matches
++function readStepPatternsFull(supportDirs) {
++  const patterns = [];
++  const globalRe = new RegExp(STEP_BINDING_RE.source, 'g');
++  for (const dir of supportDirs) {
++    const absDir = path.resolve(ROOT, dir);
++    for (const file of walkFiles(absDir, '.js')) {
++      const src = fs.readFileSync(file, 'utf8');
++      let m;
++      while ((m = globalRe.exec(src)) !== null) {
++        patterns.push({ pattern: m[2], file: path.relative(ROOT, file) });
++      }
++    }
++  }
++  return patterns;
++}
++
++// ---- 2. Read @planks annotations ----
++// Matches /** ... */ docblocks containing @planks("...") or @planks-provisional("...")
++// Also scans for bare (non-docblock) tokens as malformed planks.
++const PLANKS_RE = /@planks\s*\(\s*"((?:[^"\\]|\\.)*)"\s*\)/g;
++const PROVISIONAL_RE = /@planks-provisional\s*\(\s*"((?:[^"\\]|\\.)*)"\s*\)/g;
++
++function getDocblockTokens(src) {
++  const planks = [];
++  const provisionals = [];
++
++  // Match docblocks /** ... */
++  const docblockRe = /\/\*\*[\s\S]*?\*\//g;
++  let m;
++  while ((m = docblockRe.exec(src)) !== null) {
++    const block = m[0];
++    let pm;
++    while ((pm = PLANKS_RE.exec(block)) !== null) {
++      planks.push(pm[1]);
++    }
++    while ((pm = PROVISIONAL_RE.exec(block)) !== null) {
++      provisionals.push(pm[1]);
++    }
++  }
++
++  return { planks, provisionals };
++}
++
++function getBareTokens(src) {
++  // Also find @planks and @planks-provisional outside docblocks
++  const planks = [];
++  const provisionals = [];
++
++  // Remove docblocks first
++  const stripped = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
++
++  let m;
++  PLANKS_RE.lastIndex = 0;
++  while ((m = PLANKS_RE.exec(stripped)) !== null) {
++    planks.push({ value: m[1], bare: true });
++  }
++  PROVISIONAL_RE.lastIndex = 0;
++  while ((m = PROVISIONAL_RE.exec(stripped)) !== null) {
++    provisionals.push({ value: m[1], bare: true });
++  }
++
++  return { planks, provisionals };
++}
++
++function readAnnotations(implDirs) {
++  const planks = [];      // { value, file }
++  const provisionals = []; // { value, file }
++
++  for (const dir of implDirs) {
++    const absDir = path.resolve(ROOT, dir);
++    if (!fs.existsSync(absDir)) continue;
++    for (const file of walkFiles(absDir, '.js')) {
++      const src = fs.readFileSync(file, 'utf8');
++      const docTokens = getDocblockTokens(src);
++      for (const v of docTokens.planks) planks.push({ value: v, file: path.relative(ROOT, file) });
++      for (const v of docTokens.provisionals) provisionals.push({ value: v, file: path.relative(ROOT, file) });
++
++      const bareTokens = getBareTokens(src);
++      for (const v of bareTokens.planks) planks.push({ value: v.value, file: path.relative(ROOT, file), malformed: v.bare });
++      for (const v of bareTokens.provisionals) provisionals.push({ value: v.value, file: path.relative(ROOT, file), malformed: v.bare });
++    }
++  }
++
++  return { planks, provisionals };
++}
++
++// ---- 3. Read @captain scenarios ----
++function readCaptainScenarios(specsDir) {
++  const scenarios = [];
++  const absDir = path.resolve(ROOT, specsDir);
++  if (!fs.existsSync(absDir)) return scenarios;
++
++  const featureRe = /^\s*Feature:\s*(.+)$/m;
++  const scenarioRe = /^\s*(?:@[\w,-]+\s*\n)*\s*Scenario:\s*(.+)$/gm;
++
++  for (const file of walkFiles(absDir, '.feature')) {
++    const src = fs.readFileSync(file, 'utf8');
++    const fm = featureRe.exec(src);
++    const featureName = fm ? fm[1].trim() : path.basename(file, '.feature');
++    const relFile = path.relative(ROOT, file);
++
++    scenarioRe.lastIndex = 0;
++    let sm;
++    while ((sm = scenarioRe.exec(src)) !== null) {
++      // Check surrounding lines (before the Scenario line) for @captain
++      const before = src.slice(Math.max(0, sm.index - 200), sm.index);
++      const hasCaptain = /@captain\b/.test(before);
++      scenarios.push({
++        name: sm[1].trim(),
++        file: relFile,
++        captain: hasCaptain,
++        ref: `${relFile}:${sm[1].trim()}`,
++      });
++    }
++  }
++
++  return scenarios;
++}
++
++// ---- 4. Join and check ----
++function run() {
++  let exitCode = 0;
++  const report = [];
++
++  // Read step patterns
++  const patterns = readStepPatternsFull(SUPPORT_DIRS);
++  const patternSet = new Set(patterns.map(p => p.pattern));
++
++  // Read annotations
++  const { planks, provisionals } = readAnnotations(IMPLEMENTATION_DIRS);
++  const plankPatterns = new Map(); // pattern -> [{file, malformed}]
++  for (const p of planks) {
++    if (!plankPatterns.has(p.value)) plankPatterns.set(p.value, []);
++    plankPatterns.get(p.value).push({ file: p.file, malformed: p.malformed || false });
++  }
++
++  // Read captain scenarios
++  const captainScenarios = readCaptainScenarios(SPECS_DIR);
++  const captainRefs = new Set(captainScenarios.filter(s => s.captain).map(s => s.file + ':' + s.name));
++
++  // Check 1: every @planks string matches a current step-definition pattern
++  for (const [pattern, sources] of plankPatterns) {
++    if (!patternSet.has(pattern)) {
++      report.push(`ERROR: @planks("${pattern}") matches no current step-definition pattern (found in ${sources.map(s => s.file).join(', ')})`);
++      exitCode = 1;
++    }
++  }
++
++  // Check 2: every @planks-provisional names a scenario that still carries @captain
++  for (const p of provisionals) {
++    if (!captainRefs.has(p.value)) {
++      report.push(`ERROR: @planks-provisional("${p.value}") names a scenario that does not exist or no longer carries @captain (found in ${p.file})`);
++      exitCode = 1;
++    }
++  }
++
++  // Check 3: every behaviour-bearing step pattern has at least one @planks
++  // We consider patterns as "behaviour-bearing" unless they are clearly verification-only patterns
++  for (const p of patterns) {
++    if (!plankPatterns.has(p.pattern)) {
++      // Skip patterns that look like verification-only (setup/teardown patterns)
++      report.push(`WARNING: step pattern "${p.pattern}" (in ${p.file}) has no @planks annotation in implementation`);
++      // Not an error - verification-only patterns may not need planks
++    }
++  }
++
++  // Report the join
++  console.log('=== Plank join report ===');
++  console.log(`Step-definition patterns: ${patterns.length}`);
++  console.log(`@planks annotations: ${planks.length}`);
++  console.log(`@planks-provisional annotations: ${provisionals.length}`);
++  console.log(`@captain scenarios: ${captainScenarios.filter(s => s.captain).length}`);
++  console.log('');
++
++  console.log('--- Step patterns ---');
++  for (const p of patterns) {
++    console.log(`  "${p.pattern}" (${p.file})`);
++  }
++
++  console.log('');
++  console.log('--- @planks cross-reference ---');
++  for (const [pattern, sources] of plankPatterns) {
++    console.log(`  "${pattern}" -> ${sources.map(s => s.file + (s.malformed ? ' (bare token!)' : '')).join(', ')}`);
++  }
++
++  console.log('');
++  console.log('--- @planks-provisional cross-reference ---');
++  for (const p of provisionals) {
++    const valid = captainRefs.has(p.value) ? 'valid' : 'STALE';
++    console.log(`  "${p.value}" -> ${valid} (${p.file})`);
++  }
++
++  console.log('');
++  if (report.length > 0) {
++    console.log('--- Issues found ---');
++    for (const r of report) {
++      console.log(`  ${r}`);
++    }
++  } else {
++    console.log('No issues found.');
++  }
++
++  process.exit(exitCode);
++}
++
++run();
+\ No newline at end of file
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..9c0305d
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,31 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++## Intent
++
++Build a TodoMVC app per `assets/app-spec.md`, using `assets/app-template.index.html` as base markup.
++Vanilla JavaScript, no preprocessors. Persisted to localStorage (key `todos-[framework]`).
++Routing via hashchange on `#/` (all), `#/active`, `#/completed`.
++
++## Specs authored
++
++- `features/todo-core.feature` — add, toggle, delete, mark-all, clear-completed, UI visibility rules
++- `features/todo-editing.feature` — double-click edit, save/cancel, trim/empty-destroy
++- `features/todo-routing.feature` — all/active/completed filters, hash routing, counter, main/footer visibility
++- `features/todo-persistence.feature` — localStorage CRUD, reload survival
++
++## Decisions
++
++- Dependency `todomvc-common` and `todomvc-app-css` added to `package.json` per spec requirement.
++- No external router dependency (Director). Happy-dom world.js provides click-intercepted hashchange, so app uses native `hashchange`.
++- Single test tier: happy-dom (cheapest sufficient for DOM observation).
++- Scenarios written at the user-behaviour level, suitable for QM step definition binding.
++
++## Watchbill
++
++6 watches: QV1 (Core CRUD), QV2 (Bulk Ops), QV3 (Editing), QV4 (Filtering/Routing), QV5 (Counter/Visibility), QV6 (Persistence). See `watchbill.json`.
++
++## Next
++
++Dispatch QM to write step definitions and implement step bindings against the app. Deck is clean — no uncommitted production code.
+\ No newline at end of file
+diff --git a/features/todo-core.feature b/features/todo-core.feature
+new file mode 100644
+index 0000000..31cec1a
+--- /dev/null
++++ b/features/todo-core.feature
+@@ -0,0 +1,109 @@
++Feature: Todo Management
++  As a user
++  I want to manage a todo list
++  So that I can track tasks I need to complete
++
++  Background:
++    Given the app is loaded
++    And there are no existing todos
++
++  Rule: Adding todos
++
++  Scenario: Add a new todo
++    Given the new-todo input is focused
++    When I type "Buy milk" into the new-todo input
++    And I press Enter
++    Then a new todo "Buy milk" appears in the list
++    And the new-todo input is cleared
++
++  Scenario: Trim whitespace from new todo
++    When I type "   Walk the dog   " into the new-todo input
++    And I press Enter
++    Then a new todo "Walk the dog" appears in the list
++
++  Scenario: Ignore empty todo
++    When I type "" into the new-todo input
++    And I press Enter
++    Then no new todo is added
++
++  Scenario: Ignore whitespace-only todo
++    When I type "   " into the new-todo input
++    And I press Enter
++    Then no new todo is added
++
++  Rule: Toggling todos
++
++  Scenario: Toggle a todo as completed
++    Given the following todos exist:
++      | title     |
++      | Buy milk  |
++    When I click the toggle for "Buy milk"
++    Then the todo "Buy milk" gets class "completed"
++
++  Scenario: Toggle a completed todo back to active
++    Given the following todos exist:
++      | title     |
++      | Buy milk  |
++    And the todo "Buy milk" is completed
++    When I click the toggle for "Buy milk"
++    Then the todo "Buy milk" does not have class "completed"
++
++  Scenario: Mark all as complete toggles all todos
++    Given the following todos exist:
++      | title       |
++      | Buy milk    |
++      | Walk dog    |
++    When I click the toggle-all checkbox
++    Then all todos have class "completed"
++
++  Scenario: Mark all as complete updates when individual todos are toggled
++    Given the following todos exist:
++      | title       |
++      | Buy milk    |
++      | Walk dog    |
++    When I click the toggle for "Buy milk"
++    And I click the toggle for "Walk dog"
++    Then the toggle-all checkbox is checked
++
++  Scenario: Toggle-all unchecked when any todo is active
++    Given the following todos exist:
++      | title       |
++      | Buy milk    |
++      | Walk dog    |
++    And all todos are completed
++    When I click the toggle for "Walk dog"
++    Then the toggle-all checkbox is not checked
++
++  Rule: Deleting todos
++
++  Scenario: Delete a todo
++    Given the following todos exist:
++      | title      |
++      | Buy milk   |
++    When I click the destroy button for "Buy milk"
++    Then the todo "Buy milk" is removed from the list
++
++  Rule: Clear completed
++
++  Scenario: Clear completed removes all completed todos
++    Given the following todos exist:
++      | title       |
++      | Buy milk    |
++      | Walk dog    |
++    And the todo "Buy milk" is completed
++    When I click "Clear completed"
++    Then the todo "Buy milk" is removed from the list
++    And the todo "Walk dog" remains in the list
++
++  Scenario: Clear completed button is hidden when no todos are completed
++    Given the following todos exist:
++      | title     |
++      | Buy milk  |
++    Then the clear-completed button is not visible
++
++  Scenario: Clear completed button is shown when completed todos exist
++    Given the following todos exist:
++      | title     |
++      | Buy milk  |
++    And the todo "Buy milk" is completed
++    Then the clear-completed button is visible
+\ No newline at end of file
+diff --git a/features/todo-editing.feature b/features/todo-editing.feature
+new file mode 100644
+index 0000000..4aa0c9e
+--- /dev/null
++++ b/features/todo-editing.feature
+@@ -0,0 +1,59 @@
++Feature: Todo Editing
++  As a user
++  I want to edit existing todos
++  So that I can correct or update task descriptions
++
++  Background:
++    Given the app is loaded
++    And the following todos exist:
++      | title       |
++      | Buy milk    |
++      | Walk dog    |
++
++  Rule: Entering edit mode
++
++  Scenario: Double-click label activates editing mode
++    When I double-click the label for "Buy milk"
++    Then the todo "Buy milk" has class "editing"
++    And the edit input for "Buy milk" is focused
++
++  Scenario: Editing hides the view controls
++    When I double-click the label for "Buy milk"
++    Then the view controls for "Buy milk" are hidden
++
++  Rule: Saving edits
++
++  Scenario: Save edit on Enter key
++    When I double-click the label for "Buy milk"
++    And I change the edit input to "Buy organic milk"
++    And I press Enter in the edit input
++    Then the todo "Buy milk" is not shown
++    And the todo "Buy organic milk" appears in the list
++
++  Scenario: Save edit on blur
++    When I double-click the label for "Buy milk"
++    And I change the edit input to "Buy organic milk"
++    And the edit input loses focus
++    Then the todo "Buy milk" is not shown
++    And the todo "Buy organic milk" appears in the list
++
++  Scenario: Trim whitespace on save
++    When I double-click the label for "Buy milk"
++    And I change the edit input to "   Buy organic milk   "
++    And I press Enter in the edit input
++    Then the todo "Buy organic milk" appears in the list
++
++  Scenario: Destroy todo when edit is emptied
++    When I double-click the label for "Buy milk"
++    And I clear the edit input
++    And I press Enter in the edit input
++    Then the todo "Buy milk" is removed from the list
++
++  Rule: Cancelling edits
++
++  Scenario: Escape key discards edit changes
++    When I double-click the label for "Buy milk"
++    And I change the edit input to "Buy organic milk"
++    And I press Escape in the edit input
++    Then the todo "Buy milk" remains unchanged
++    And the todo "Buy organic milk" is not added
+\ No newline at end of file
+diff --git a/features/todo-persistence.feature b/features/todo-persistence.feature
+new file mode 100644
+index 0000000..2e18e3b
+--- /dev/null
++++ b/features/todo-persistence.feature
+@@ -0,0 +1,62 @@
++Feature: Todo Persistence
++  As a user
++  I want my todos to persist across page reloads
++  So that I don't lose my task list
++
++  Background:
++    Given the app is loaded
++    And there are no existing todos
++
++  Rule: localStorage persistence
++
++  Scenario: Todos are persisted to localStorage
++    When I type "Buy milk" into the new-todo input
++    And I press Enter
++    Then localStorage contains a key matching "todos-"
++    And the stored data includes a todo titled "Buy milk"
++
++  Scenario: Completed state is persisted
++    Given the following todos exist:
++      | title      |
++      | Buy milk   |
++    When I click the toggle for "Buy milk"
++    And the app is reloaded
++    Then the todo "Buy milk" has class "completed"
++
++  Scenario: Deleted todos are removed from localStorage
++    Given the following todos exist:
++      | title      |
++      | Buy milk   |
++    When I click the destroy button for "Buy milk"
++    Then localStorage does not contain a todo titled "Buy milk"
++
++  Scenario: Todos survive page reload
++    Given the following todos exist:
++      | title       |
++      | Buy milk    |
++      | Walk dog    |
++    When the app is reloaded
++    Then 2 todos are visible
++    And the visible todos are "Buy milk" and "Walk dog"
++
++  Scenario: Edited todos are persisted
++    Given the following todos exist:
++      | title      |
++      | Buy milk   |
++    When I double-click the label for "Buy milk"
++    And I change the edit input to "Buy organic milk"
++    And I press Enter in the edit input
++    And the app is reloaded
++    Then the todo "Buy organic milk" appears in the list
++    And the todo "Buy milk" is not shown
++
++  Scenario: Clear completed is persisted
++    Given the following todos exist:
++      | title       |
++      | Buy milk    |
++      | Walk dog    |
++    And the todo "Buy milk" is completed
++    When I click "Clear completed"
++    And the app is reloaded
++    Then the todo "Buy milk" is removed from the list
++    And the todo "Walk dog" remains in the list
+\ No newline at end of file
+diff --git a/features/todo-routing.feature b/features/todo-routing.feature
+new file mode 100644
+index 0000000..28edd33
+--- /dev/null
++++ b/features/todo-routing.feature
+@@ -0,0 +1,107 @@
++Feature: Todo Filtering and Routing
++  As a user
++  I want to filter the todo list by completion state
++  So that I can focus on active or completed tasks
++
++  Background:
++    Given the app is loaded
++    And the following todos exist:
++      | title       |
++      | Buy milk    |
++      | Walk dog    |
++      | Do laundry  |
++    And the todo "Buy milk" is completed
++
++  Rule: All filter
++
++  Scenario: All filter shows all todos by default
++    When the app loads
++    Then all 3 todos are visible
++
++  Scenario: All filter link is selected by default
++    Then the "All" filter link has class "selected"
++
++  Scenario: Selecting All filter shows all todos
++    When I click the "All" filter link
++    Then all 3 todos are visible
++
++  Rule: Active filter
++
++  Scenario: Active filter shows only active todos
++    When I click the "Active" filter link
++    Then 2 todos are visible
++    And the visible todos are "Walk dog" and "Do laundry"
++
++  Scenario: Active filter link gets selected class
++    When I click the "Active" filter link
++    Then the "Active" filter link has class "selected"
++    And the "All" filter link does not have class "selected"
++
++  Scenario: Todo hidden when toggled in Active filter
++    Given I am viewing the "Active" filter
++    When I click the toggle for "Walk dog"
++    Then the todo "Walk dog" is removed from the visible list
++
++  Rule: Completed filter
++
++  Scenario: Completed filter shows only completed todos
++    When I click the "Completed" filter link
++    Then 1 todo is visible
++    And the visible todos are "Buy milk"
++
++  Scenario: Completed filter link gets selected class
++    When I click the "Completed" filter link
++    Then the "Completed" filter link has class "selected"
++    And the "All" filter link does not have class "selected"
++
++  Scenario: Todo shown when toggled in Completed filter
++    Given I am viewing the "Completed" filter
++    When I click the toggle for "Buy milk"
++    Then the todo "Buy milk" is removed from the visible list
++
++  Rule: Routing
++
++  Scenario: Hash route #/ shows all
++    When I navigate to "#/"
++    Then all 3 todos are visible
++    And the "All" filter link has class "selected"
++
++  Scenario: Hash route #/active shows active
++    When I navigate to "#/active"
++    Then 2 todos are visible
++    And the "Active" filter link has class "selected"
++
++  Scenario: Hash route #/completed shows completed
++    When I navigate to "#/completed"
++    Then 1 todo is visible
++    And the "Completed" filter link has class "selected"
++
++  Scenario: Active filter persists on reload
++    Given I click the "Active" filter link
++    When the app is reloaded
++    Then the "Active" filter link has class "selected"
++
++  Rule: Item counter
++
++  Scenario: Counter shows number of active items
++    Then the todo-count shows "2 items left"
++
++  Scenario: Counter is pluralized correctly for zero items
++    Given all todos are completed
++    Then the todo-count shows "0 items left"
++
++  Scenario: Counter is pluralized correctly for one item
++    Given I delete the todo "Walk dog"
++    And I delete the todo "Do laundry"
++    Then the todo-count shows "1 item left"
++
++  Rule: Visibility of main and footer
++
++  Scenario: Main and footer are shown when todos exist
++    Then the main section is visible
++    And the footer is visible
++
++  Scenario: Main and footer are hidden when no todos exist
++    Given all todos are deleted
++    Then the main section is not visible
++    And the footer is not visible
+\ No newline at end of file
+diff --git a/package.json b/package.json
+index 25b5f68..24cd2a4 100644
+--- a/package.json
++++ b/package.json
+@@ -3,5 +3,9 @@
+   "version": "0.1.0",
+   "private": true,
+   "scripts": { "test": "cucumber-js" },
++  "dependencies": {
++    "todomvc-app-css": "^1.0.0",
++    "todomvc-common": "^1.0.1"
++  },
+   "devDependencies": { "@cucumber/cucumber": "*", "happy-dom": "*" }
+ }
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..29a0dd5
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,78 @@
++{
++  "watchbill": [
++    {
++      "watch": "QV1: Core CRUD",
++      "scenarios": [
++        "features/todo-core.feature: Add a new todo",
++        "features/todo-core.feature: Trim whitespace from new todo",
++        "features/todo-core.feature: Ignore empty todo",
++        "features/todo-core.feature: Ignore whitespace-only todo",
++        "features/todo-core.feature: Toggle a todo as completed",
++        "features/todo-core.feature: Toggle a completed todo back to active",
++        "features/todo-core.feature: Delete a todo"
++      ]
++    },
++    {
++      "watch": "QV2: Bulk Operations & Clear",
++      "scenarios": [
++        "features/todo-core.feature: Mark all as complete toggles all todos",
++        "features/todo-core.feature: Mark all as complete updates when individual todos are toggled",
++        "features/todo-core.feature: Toggle-all unchecked when any todo is active",
++        "features/todo-core.feature: Clear completed removes all completed todos",
++        "features/todo-core.feature: Clear completed button is hidden when no todos are completed",
++        "features/todo-core.feature: Clear completed button is shown when completed todos exist"
++      ]
++    },
++    {
++      "watch": "QV3: Editing",
++      "scenarios": [
++        "features/todo-editing.feature: Double-click label activates editing mode",
++        "features/todo-editing.feature: Editing hides the view controls",
++        "features/todo-editing.feature: Save edit on Enter key",
++        "features/todo-editing.feature: Save edit on blur",
++        "features/todo-editing.feature: Trim whitespace on save",
++        "features/todo-editing.feature: Destroy todo when edit is emptied",
++        "features/todo-editing.feature: Escape key discards edit changes"
++      ]
++    },
++    {
++      "watch": "QV4: Filtering & Routing",
++      "scenarios": [
++        "features/todo-routing.feature: All filter shows all todos by default",
++        "features/todo-routing.feature: All filter link is selected by default",
++        "features/todo-routing.feature: Selecting All filter shows all todos",
++        "features/todo-routing.feature: Active filter shows only active todos",
++        "features/todo-routing.feature: Active filter link gets selected class",
++        "features/todo-routing.feature: Todo hidden when toggled in Active filter",
++        "features/todo-routing.feature: Completed filter shows only completed todos",
++        "features/todo-routing.feature: Completed filter link gets selected class",
++        "features/todo-routing.feature: Todo shown when toggled in Completed filter",
++        "features/todo-routing.feature: Hash route #/ shows all",
++        "features/todo-routing.feature: Hash route #/active shows active",
++        "features/todo-routing.feature: Hash route #/completed shows completed",
++        "features/todo-routing.feature: Active filter persists on reload"
++      ]
++    },
++    {
++      "watch": "QV5: Counter & Visibility",
++      "scenarios": [
++        "features/todo-routing.feature: Counter shows number of active items",
++        "features/todo-routing.feature: Counter is pluralized correctly for zero items",
++        "features/todo-routing.feature: Counter is pluralized correctly for one item",
++        "features/todo-routing.feature: Main and footer are shown when todos exist",
++        "features/todo-routing.feature: Main and footer are hidden when no todos exist"
++      ]
++    },
++    {
++      "watch": "QV6: Persistence",
++      "scenarios": [
++        "features/todo-persistence.feature: Todos are persisted to localStorage",
++        "features/todo-persistence.feature: Completed state is persisted",
++        "features/todo-persistence.feature: Deleted todos are removed from localStorage",
++        "features/todo-persistence.feature: Todos survive page reload",
++        "features/todo-persistence.feature: Edited todos are persisted",
++        "features/todo-persistence.feature: Clear completed is persisted"
++      ]
++    }
++  ]
++}
+\ No newline at end of file

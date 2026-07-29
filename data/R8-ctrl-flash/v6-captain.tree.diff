@@ -1,0 +1,209 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index cdb0a73..cc597a8 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -4,50 +4,21 @@
+ 
+ ## Current state
+ 
+-All 33 in-harness scenarios pass (32 in todos.feature, 1 in app-index.feature). The app is deployed as `index.html` + `js/app.js` and exercises full TodoMVC behaviour under happy-dom.
++All 34 in-harness scenarios pass (32 in todos.feature, 1 in app-index.feature, 1 conformance scenario). The app deploys as `index.html` + `js/app.js` and runs under happy-dom.
+ 
+-## The defect
++## Defects
+ 
+-The acceptance suite (real browser / Cypress) reports 8 failures:
++Two browser-only product defects remain despite in-place DOM reconciliation:
+ 
+-**Failures 1-5 (detached DOM):** The `render()` function in `js/app.js` destroys ALL children of `todoListEl` via `while (todoListEl.firstChild) { removeChild(...) }` and recreates them on every state change. This destroys DOM node identity. A real browser holds element references from before the click, which are invalidated when the list is rebuilt. In-harness (happy-dom) does not reproduce because it re-queries for every assertion.
++**Defect A — toggle-all checkbox state not updated by render():** `render()` never sets `document.querySelector('.toggle-all').checked`. After marking all complete and then clearing/untoggling items, the checkbox stays checked.
+ 
+-Failures:
+-1. "Mark all as completed" — `cy.eq()` on detached list item
+-2. "Clear complete state of all items" — `cy.eq()` on detached list item  
+-3. "Toggle-all checkbox update state" — checkbox element recreated, `.checked` state lost
+-4-5. "Mark items as complete/un-mark items as complete" — `cy.find()` on detached list item
++**Defect B — removeChild race on Enter + blur:** Enter keydown on empty edit calls `saveEdit` -> `render()`. Enter default action fires `blur` synchronously, re-entering `saveEdit` -> `render()`. Second render removes the stale `<li>`, then first render's `removeChild` fails because node already detached.
+ 
+-**Failures 6-8 (removeChild during editing):** `saveEdit()` calls `render()` which removes and recreates the editing `<li>` while the blur event handler is still in flight. The blur handler's `removeChild` then fails because the node was already removed from the DOM.
++## This leg's work
+ 
+-Failures:
+-6. "Edit an item" — removeChild on detached node during blur
+-7. "Trim entered text" — same  
+-8. "Remove item if empty text string was entered" — same
++- Added 2 conformance scenarios to `features/conformance.feature`, both FAIL on current code (planted red)
++- Created `watchbill.json` targeting both scenarios
+ 
+-## Previous leg's work
++## Next role
+ 
+-Initial conformance scenario checked for `innerHTML` assignment patterns. These were already replaced with DOM methods (`removeChild`/`appendChild`), but the destructive rebuild-before-you-touch approach remained. The scenario passed green despite the acceptance suite still failing.
+-
+-## This leg's work (v5 captain)
+-
+-Updated `features/conformance.feature` to check for the REAL destructive pattern: `while (todoListEl.firstChild)` and `while (todoCountEl.firstChild)` loops that remove all children and recreate them.
+-
+-Created `watchbill.json` with `watch1` referencing the conformance scenario.
+-
+-The conformance scenario now FAILS on current code (planted-red).
+-
+-### What the fix must do
+-
+-The `render()` function must mutate existing DOM nodes in place instead of removing and recreating them. Specifically:
+-- For toggle operations: find the target `<li>` and toggle its `.completed` class and `.toggle` checkbox `.checked` property — do not rebuild the list
+-- For adding items: append a single new `<li>` without touching existing ones
+-- For removing items: remove the specific `<li>` without touching others
+-- For the todo-count: update `<strong>` textContent and the text node in place
+-- For toggle-all checkbox: update its `.checked` property, do not recreate it
+-
+-This preserves DOM element identity across interactions, so a real browser's held references remain valid.
+-
+-## Open
+-
+-None. The watchbill is set. Next: QM.
+\ No newline at end of file
++QM: run watchbill, dispatch Crew per failing target. Context MUST clear before QM.
+\ No newline at end of file
+diff --git a/features/conformance.feature b/features/conformance.feature
+index 6e65c56..bc83038 100644
+--- a/features/conformance.feature
++++ b/features/conformance.feature
+@@ -8,4 +8,16 @@ Feature: Source-level conformance checks
+     Given the source file "js/app.js" exists
+     When I search for destructive element-rebuilding patterns
+     Then the pattern "while (todoListEl.firstChild)" should not appear in the source
+-    And the pattern "while (todoCountEl.firstChild)" should not appear in the source
+\ No newline at end of file
++    And the pattern "while (todoCountEl.firstChild)" should not appear in the source
++
++  @conformance
++  Scenario: The toggle-all checkbox checked state is updated by render
++    Given the source file "js/app.js" exists
++    When I read the source file
++    Then the source should contain a line setting "toggle-all.checked" inside the render function
++
++  @conformance
++  Scenario: The Enter keydown handler prevents default to avoid blur reentrancy
++    Given the source file "js/app.js" exists
++    When I read the source file
++    Then the Enter keydown handler for edit input should call preventDefault before saveEdit
+\ No newline at end of file
+diff --git a/features/support/conformance-steps.js b/features/support/conformance-steps.js
+index 390030f..bdb04fb 100644
+--- a/features/support/conformance-steps.js
++++ b/features/support/conformance-steps.js
+@@ -33,4 +33,96 @@ Then('the pattern {string} should not appear in the source', function (pattern)
+       assert.fail(`Pattern "${pattern}" found at line ${i + 1}: ${lines[i].trim()}`);
+     }
+   }
++});
++
++When('I read the source file', function () {
++  const content = fs.readFileSync(this.sourceFile, 'utf8');
++  this.sourceContent = content;
++  this.sourceLines = content.split('\n');
++});
++
++Then('the source should contain a line setting {string} inside the render function', function (pattern) {
++  const lines = this.sourceLines;
++  // Find the render function body
++  let inRender = false;
++  let braceDepth = 0;
++  let found = false;
++  for (let i = 0; i < lines.length; i++) {
++    const line = lines[i];
++    if (line.trim().startsWith('function render()') || line.trim().startsWith('function render (')) {
++      inRender = true;
++      braceDepth = 0;
++    }
++    if (inRender) {
++      for (let j = 0; j < line.length; j++) {
++        if (line[j] === '{') braceDepth++;
++        if (line[j] === '}') braceDepth--;
++      }
++      if (line.includes(pattern)) {
++        found = true;
++        break;
++      }
++      if (braceDepth <= 0 && line.includes('function ')) {
++        // Exited render for another function declaration at same level
++        inRender = false;
++      }
++    }
++  }
++  assert.ok(found, `Pattern "${pattern}" not found inside render function`);
++});
++
++Then('the Enter keydown handler for edit input should call preventDefault before saveEdit', function () {
++  const lines = this.sourceLines;
++  // Find the keydown handler for edit input that handles ENTER_KEY
++  // Look for a keydown event listener on todoListEl that has ENTER_KEY check
++  let inEnterBranch = false;
++  let inKeydownHandler = false;
++  let braceDepth = 0;
++  let hasPreventDefaultBeforeSaveEdit = false;
++  let saveEditLine = -1;
++  let preventDefaultLine = -1;
++
++  for (let i = 0; i < lines.length; i++) {
++    const line = lines[i];
++    // Detect the keydown handler registration: addEventListener('keydown',
++    if (line.includes("addEventListener('keydown'") && line.includes('function')) {
++      inKeydownHandler = true;
++      braceDepth = 0;
++    }
++    if (!inKeydownHandler) continue;
++
++    for (let j = 0; j < line.length; j++) {
++      if (line[j] === '{') braceDepth++;
++      if (line[j] === '}') braceDepth--;
++    }
++
++    if (line.includes('ENTER_KEY')) {
++      inEnterBranch = true;
++    }
++
++    if (inEnterBranch && line.includes('preventDefault')) {
++      preventDefaultLine = i;
++    }
++
++    if (inEnterBranch && line.includes('saveEdit')) {
++      saveEditLine = i;
++    }
++
++    if (braceDepth <= 0 && (line.includes('addEventListener') || line.includes('};'))) {
++      // Check before exiting
++      if (inEnterBranch && preventDefaultLine >= 0 && saveEditLine >= 0 && preventDefaultLine < saveEditLine) {
++        hasPreventDefaultBeforeSaveEdit = true;
++      }
++      inKeydownHandler = false;
++      inEnterBranch = false;
++    }
++  }
++
++  // Also check the last handler if still open at end of file
++  if (inEnterBranch && preventDefaultLine >= 0 && saveEditLine >= 0 && preventDefaultLine < saveEditLine) {
++    hasPreventDefaultBeforeSaveEdit = true;
++  }
++
++  assert.ok(hasPreventDefaultBeforeSaveEdit,
++    'Expected the ENTER_KEY branch of the keydown handler to call e.preventDefault() before saveEdit()');
+ });
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..ebfe83d
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,9 @@
++[
++  {
++    "watch": "1",
++    "targets": [
++      "features/conformance.feature:The toggle-all checkbox checked state is updated by render",
++      "features/conformance.feature:The Enter keydown handler prevents default to avoid blur reentrancy"
++    ]
++  }
++]
+\ No newline at end of file

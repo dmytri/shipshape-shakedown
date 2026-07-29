@@ -1,0 +1,209 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 406eb14..7753903 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -17,9 +17,34 @@ Verification tier: happy-dom (already rigged — world.js exists, tier default @
+ - `features/routing.feature` — #/, #/active, #/completed routes, selected class, live filter on state change
+ - `features/persistence.feature` — localStorage save/restore, completion persistence, no editing state persisted
+ 
++### Conformance specs (DOM identity preservation)
++
++`features/conformance/dom-identity.feature` — 3 scenarios pinning that the render function MUST
++mutate existing DOM nodes in place rather than rebuilding the list from scratch. These are
++source-level conformance checks that detect the specific anti-patterns causing Cypress
++"element detached from DOM" errors in real browsers:
++
++1. **No innerHTML rebuild** — the render function must not assign `innerHTML` on the todo-list
++   container. The current code passes this check (it uses removeChild/createElement instead).
++
++2. **No unconditional removeChild** — the render function must not remove ALL existing <li>
++   children from the DOM. The current code FAILS: it iterates all list items and calls
++   `removeChild` on each without checking whether the item is still in the filtered todo set.
++
++3. **Tracking map must not be emptied** — the render function must not `delete` all entries
++   from the existing-items map before the reuse loop. The current code FAILS: it deletes every
++   entry, making `existingItems[t.id]` always return undefined, so the reuse/update branch is
++   dead code and `createElement('li')` is always called for every item.
++
++The fix (for QM/Crew to implement on next leg): in the stale-removal loop, only remove and
++`delete` items whose `data-id` is NOT in the current filtered todo set. Keep the rest in the
++map so they can be mutated in place (toggle class, update .checked, change textContent).
++
+ ### watchbill.json
+ 
+-24 scenario targets across 5 watches. Ordered: display -> completion -> editing -> routing -> persistence.
++29 scenario targets across 6 watches. Ordered: display -> completion -> editing -> routing ->
++persistence -> conformance. The 5 conformance scenarios run under the `--profile conformance`
++tag filter (`@captain and @conformance`). 2 scenarios fail on current code.
+ 
+ ### Next
+ 
+diff --git a/features/conformance/dom-identity.feature b/features/conformance/dom-identity.feature
+index 8c3e743..515f145 100644
+--- a/features/conformance/dom-identity.feature
++++ b/features/conformance/dom-identity.feature
+@@ -3,21 +3,29 @@ Feature: DOM identity preservation
+   When the todo list state changes (toggle, add, remove, edit) the render
+   function MUST mutate existing DOM nodes in place — toggle classes, set
+   .checked, update textContent — rather than rebuilding the list from
+-  scratch via innerHTML. Rebuilding destroys every existing <li> node,
+-  which detaches any browser-held reference and causes Cypress
+-  acceptance tests to fail with "element detached from DOM".
++  scratch. Rebuilding (whether via innerHTML or removeChild/createElement)
++  destroys every existing <li> node, which detaches any browser-held
++  reference and causes Cypress acceptance tests to fail with
++  "element detached from DOM".
+ 
+-  The fix: replace `todoList.innerHTML = html` with a diff loop that
+-  reuses existing <li> elements.
++  The fix: diff the existing <li> set against the new model state;
++  remove only nodes whose data-id is no longer in the list; reuse the
++  rest, mutating their class/checked/textContent in place.
+ 
+-  @logic @conformance
++  @captain @conformance
+   Scenario: Render function does not rebuild the todo list via innerHTML
+     Given the project has a render function that writes to the todo list
+     When I check whether the render function assigns innerHTML on the todo-list container
+     Then the render function does not use innerHTML reassignment on the todo list
+ 
+-  @logic @conformance
+-  Scenario: Render function mutates existing nodes in place for completion toggles
+-    Given the project has a render function that handles completion state
+-    When I check whether a completion toggle triggers a full innerHTML rebuild
+-    Then a completion toggle does not rebuild the list via innerHTML
+\ No newline at end of file
++  @captain @conformance
++  Scenario: Render function does not unconditionally remove all list-item children
++    Given the project has a render function that writes to the todo list
++    When I check whether the render function removes all existing list-item children unconditionally
++    Then the render function does not remove existing list-item children unless they are stale
++
++  @captain @conformance
++  Scenario: Render function reuses existing list-item elements instead of always creating new ones
++    Given the project has a render function that writes to the todo list
++    When I check whether the render function creates new list-item elements for items that already exist
++    Then the render function reuses existing list-item elements for items that are already in the DOM
+\ No newline at end of file
+diff --git a/features/support/conformance-steps.js b/features/support/conformance-steps.js
+index 7b4919b..15b95ca 100644
+--- a/features/support/conformance-steps.js
++++ b/features/support/conformance-steps.js
+@@ -150,4 +150,78 @@ Then('a completion toggle does not rebuild the list via innerHTML', function ()
+     'FIX: When toggling completion, mutate the existing <li> node in place: ' +
+     'add/remove the "completed" class on the parent <li>, toggle the checkbox .checked property, ' +
+     'rather than calling render() which rebuilds the entire list.');
++});
++
++// ---------------------------------------------------------------------------
++// Conformance: Unconditional removeChild anti-pattern
++// ---------------------------------------------------------------------------
++
++When('I check whether the render function removes all existing list-item children unconditionally', function () {
++  const source = this.appSource;
++  // Detect the anti-pattern where ALL existing <li> children are removed from the DOM
++  // in a loop that has NO conditional guard (no if-statement before removeChild).
++  //
++  // The bug: for (var id in existingItems) {
++  //           existingItems[id].parentNode.removeChild(existingItems[id]);
++  //           delete existingItems[id];
++  //         }
++  //
++  // This removes EVERY child node unconditionally, even ones that should be kept.
++  //
++  // Look for a loop body that calls removeChild without a preceding if.
++  // We match:  for (...) {  ... removeChild( ...
++  // where there is NO 'if' keyword between '{' and 'removeChild'.
++  const unconditionaRemovePattern = /for\s*\([^{]*\)\s*\{[^{}]*removeChild\s*\(/s;
++  this.hasUnconditionalRemoveAll = unconditionaRemovePattern.test(source);
++});
++
++Then('the render function does not remove existing list-item children unless they are stale', function () {
++  assert.ok(!this.hasUnconditionalRemoveAll,
++    'FAIL: The render function removes ALL existing <li> children unconditionally. ' +
++    'This detaches every existing DOM node, causing Cypress "element detached from DOM" errors. ' +
++    'The code iterates over all existing list items and calls removeChild on each ' +
++    'without checking whether the item is still in the filtered todo list. ' +
++    'FIX: Only remove child nodes whose data-id is NOT in the current filtered set; ' +
++    'keep and mutate the rest in place (toggle class, update .checked, change textContent).');
++});
++
++// ---------------------------------------------------------------------------
++// Conformance: Always-creates-new-li anti-pattern
++// ---------------------------------------------------------------------------
++
++When('I check whether the render function creates new list-item elements for items that already exist', function () {
++  const source = this.appSource;
++  // Detect the anti-pattern where the render function deletes ALL items from the
++  // existing-items tracking map (using `delete existingItems[id]` in a loop) BEFORE
++  // the reuse loop runs. This means the `existingItems[t.id]` lookup always returns
++  // undefined, and createElement('li') is ALWAYS called — the reuse branch is dead code.
++  //
++  // The buggy pattern:
++  //   for (var id in existingItems) {
++  //     existingItems[id].parentNode.removeChild(existingItems[id]);
++  //     delete existingItems[id];   // map emptied
++  //   }
++  //   for (var i = ...) {
++  //     var li = existingItems[t.id]; // always undefined
++  //     if (li) { ... reuse ... }     // dead code
++  //     else { createElement('li') ... } // always runs
++  //   }
++  //
++  // We detect: a loop that calls `delete` on existingItems entries, destroying the
++  // tracking map, combined with createElement('li') later on.
++  const hasDeleteFromMap = /delete\s+existingItems\[/.test(source);
++  const hasCreateLi = /createElement\s*\(\s*['"]li['"]\s*\)/.test(source);
++  // Fail if the map is cleared by delete AND new li elements are created
++  // (meaning the reuse lookup can never succeed).
++  this.alwaysCreatesNewLis = hasDeleteFromMap && hasCreateLi;
++});
++
++Then('the render function reuses existing list-item elements for items that are already in the DOM', function () {
++  assert.ok(!this.alwaysCreatesNewLis,
++    'FAIL: The render function deletes all items from the existing-items tracking map ' +
++    'before the reuse loop, so existingItems[t.id] always returns undefined. ' +
++    'createElement("li") is always called — the reuse/update branch is dead code. ' +
++    'FIX: In the stale-removal loop, only `delete` items that are NOT in the filtered ' +
++    'todo set. Keep items that should be preserved in the map so they can be reused ' +
++    'and mutated in place instead of being recreated.');
+ });
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..cac2427
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,31 @@
++[
++  { "scenario": "Todo management — No todos hides main and footer sections" },
++  { "scenario": "Todo management — Create a new todo by pressing Enter" },
++  { "scenario": "Todo management — Trimming whitespace from new todo title" },
++  { "scenario": "Todo management — Empty todo is not created" },
++  { "scenario": "Todo management — Show the active todo count" },
++  { "scenario": "Todo management — Pluralize item count correctly" },
++  { "scenario": "Todo completion — Toggle a single todo as complete" },
++  { "scenario": "Todo completion — Mark all todos as complete" },
++  { "scenario": "Todo completion — Clear completed button is hidden when no completed todos" },
++  { "scenario": "Todo completion — Clear completed button removes completed todos" },
++  { "scenario": "Todo completion — Toggle-all reflects individual completion state" },
++  { "scenario": "Todo editing — Double-clicking a todo label activates editing mode" },
++  { "scenario": "Todo editing — Save edit by pressing Enter" },
++  { "scenario": "Todo editing — Save edit by blurring the input" },
++  { "scenario": "Todo editing — Cancel edit by pressing Escape" },
++  { "scenario": "Todo editing — Empty title destroys the todo on save" },
++  { "scenario": "Routing — Default route shows all todos" },
++  { "scenario": "Routing — Active route shows only active todos" },
++  { "scenario": "Routing — Completed route shows only completed todos" },
++  { "scenario": "Routing — Selected filter class toggles with route change" },
++  { "scenario": "Routing — Completing a todo in a filtered view hides it" },
++  { "scenario": "Persistence — Todos are persisted to localStorage" },
++  { "scenario": "Persistence — Todos are restored from localStorage on load" },
++  { "scenario": "Persistence — Completion state is persisted" },
++  { "scenario": "DOM identity — Render function does not rebuild the todo list via innerHTML" },
++  { "scenario": "DOM identity — Render function does not unconditionally remove all list-item children" },
++  { "scenario": "DOM identity — Render function reuses existing list-item elements instead of always creating new ones" },
++  { "scenario": "Perturbation — No active perturbation in implementation code" },
++  { "scenario": "Watchbill — Watchbill shape conformance" }
++]
+\ No newline at end of file

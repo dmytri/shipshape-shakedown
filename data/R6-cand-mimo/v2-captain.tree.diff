@@ -1,0 +1,84 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 9de8922..9e5a73c 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -20,3 +20,21 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ - Routing via `hashchange` event on `window`, filtering at model level
+ - No external dependencies beyond todomvc-common and todomvc-app-css (devDependencies already installed: @cucumber/cucumber, happy-dom)
+ - The test harness (`features/support/world.js`) loads `index.html` and `js/app.js`, executes via happy-dom `window.eval`, and fires DOMContentLoaded/load events
++
++## Voyage 2 — Browser acceptance defect fix
++
++**Base commit:** v1-qm (10da9e8).
++
++**Two product defects identified** from fixed external browser acceptance suite:
++
++### Defect A: List re-render destroys DOM identity (failures 1-4)
++`render()` does `dom.todoList.innerHTML = ''` and rebuilds all `<li>` elements from scratch on every toggle action. In a real browser, Cypress holds live DOM references to `<li>` elements; replacing them causes "element detached from DOM" errors. The app MUST mutate existing `<li>` nodes in place when toggling completion state (update class and checkbox attribute), not rebuild the list.
++
++### Defect B: Escape key does not cancel edit (failure 5)
++The blur handler uses capture phase (`addEventListener('blur', ..., true)`), so it fires before the keydown handler completes. When Escape is pressed: blur fires first, calling `editTodo(id, e.target.value)` which overwrites the todo title with the edited text; then the keydown handler sets `editingId = null` and calls `render()`, but the model data is already corrupted. Fix: track an `editCancelled` flag; set it in the Escape keydown handler; clear it at end of keydown handler; check it in the blur handler to skip saving when true.
++
++**New specs written:**
++- `specs/dom-identity.feature` — 2 scenarios pinning DOM node preservation on toggle
++- `specs/edit-cancel.feature` — 1 scenario pinning Escape restores original title
++
++**Updated watchbill:** 3 new scenarios added to watch1.
+diff --git a/specs/dom-identity.feature b/specs/dom-identity.feature
+new file mode 100644
+index 0000000..9803ade
+--- /dev/null
++++ b/specs/dom-identity.feature
+@@ -0,0 +1,19 @@
++Feature: DOM identity preservation
++  As a user
++  I want the todo list to update smoothly when I change item state
++  So that my browser can track interactive elements without interruption
++
++  Background:
++    Given the app has todos "Buy groceries" and "Clean house"
++
++  Scenario: Toggling a single todo preserves its DOM element
++    When the user toggles the "Buy groceries" todo checkbox
++    Then the "Buy groceries" todo element is the same DOM node as before the toggle
++    And the "Buy groceries" todo has class "completed"
++    And the "Clean house" todo element is the same DOM node as before the toggle
++
++  Scenario: Toggling all todos preserves DOM elements
++    When the user clicks the toggle all checkbox
++    Then the "Buy groceries" todo element is the same DOM node as before the toggle
++    And the "Clean house" todo element is the same DOM node as before the toggle
++    And all todos have class "completed"
+diff --git a/specs/edit-cancel.feature b/specs/edit-cancel.feature
+new file mode 100644
+index 0000000..7469ebf
+--- /dev/null
++++ b/specs/edit-cancel.feature
+@@ -0,0 +1,11 @@
++Feature: Cancel edit with Escape key
++  As a user
++  I want to discard my changes by pressing Escape while editing a todo
++  So that I can revert to the original title without saving unintended edits
++
++  Scenario: Pressing Escape restores the original title
++    Given the app has a todo "Buy groceries"
++    When the user double-clicks the "Buy groceries" todo label
++    And the user types "Buy milk" in the edit input and presses Escape
++    Then a todo with title "Buy groceries" appears in the todo list
++    And the todo "Buy milk" does not exist
+diff --git a/watchbill.json b/watchbill.json
+index 42389ad..1cd420d 100644
+--- a/watchbill.json
++++ b/watchbill.json
+@@ -35,7 +35,10 @@
+       "specs/persistence.feature:localStorage key format",
+       "specs/visibility.feature:Main and footer hidden when no todos",
+       "specs/visibility.feature:Main and footer shown when todos exist",
+-      "specs/visibility.feature:Removing the last todo hides sections"
++      "specs/visibility.feature:Removing the last todo hides sections",
++      "specs/dom-identity.feature:Toggling a single todo preserves its DOM element",
++      "specs/dom-identity.feature:Toggling all todos preserves DOM elements",
++      "specs/edit-cancel.feature:Pressing Escape restores the original title"
+     ]
+   }
+ }

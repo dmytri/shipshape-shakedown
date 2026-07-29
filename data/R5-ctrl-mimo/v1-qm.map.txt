@@ -1,0 +1,82 @@
+# banked: 2026-07-28T19:07:31Z
+# verdict: PENDING
+# leg: {  "name": "v1-qm",  "model": "xiaomi/mimo-v2.5",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/R5-ctrl-mimo/sim",  "timeout_s": 3600,  "max_tokens": 32768,  "skills": [    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills/shipshape",    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills/qm",    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills/crew",    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills/boatswain",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== v1-qm.session.jsonl ===
+  turns=71  wall=665.9s  in=92953  out=96981  cache_read=3802432  cost=$0.0508
+  role reads: qm@t0
+  roles loaded: qm
+  ~ repeated tool signature at turns [33, 38, 39, 50] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    1858/72       512 $0.0003  read
+    t1    3431/86      2304 $0.0005  bash
+    t2     156/68      5696 $0.0001  bash
+    t3     615/148     5824 $0.0001  bash, bash, bash
+    t4     511/468     6400 $0.0002  bash, read, read, read, read, read, read, read
+    t5    5466/186     6848 $0.0008  bash, bash, read
+    t6     715/179    12288 $0.0002  bash, bash
+    t7    1250/967    12992 $0.0005  bash
+    t8    1017/82     14208 $0.0002  bash
+    t9     169/2306   15168 $0.0007  write
+    t10   2398/67     15296 $0.0004  bash
+    t11   1985/2752   17664 $0.0011  write
+    t12   2867/52     19584 $0.0005  bash
+    t13    650/7707   22400 $0.0023  read
+    t14   8939/538    23040 $0.0015  edit
+    t15    627/427    31936 $0.0003  edit
+    t16    527/48     32512 $0.0002  bash
+    t17    504/4373   33024 $0.0014  read
+    t18   5737/1199   33472 $0.0012  edit
+    t19   1287/48     39168 $0.0003  bash
+    t20    367/2597   40448 $0.0009  edit
+    t21   2692/48     40768 $0.0005  bash
+    t22    364/4642   43456 $0.0015  edit
+    t23   4735/66     43776 $0.0008  bash
+    t24    327/366    48448 $0.0003  edit
+    t25    422/60     48768 $0.0002  bash
+    t26    336/5733   49152 $0.0018  edit
+    t27   5796/62     49472 $0.0010  bash
+    t28    336/1106   55232 $0.0005  edit
+    t29   1170/54     55552 $0.0003  bash
+    t30    324/1118   56704 $0.0005  edit
+    t31   1171/54     57024 $0.0003  bash
+    t32    311/726    58176 $0.0004  edit
+    t33    829/1430   58432 $0.0007  edit
+    t34   1540/127    59200 $0.0004  bash
+    t35    369/1235   60736 $0.0006  edit
+    t36   1333/57     61056 $0.0004  bash
+    t37    303/624    62336 $0.0004  edit
+    t38    720/510    62592 $0.0004  edit
+    t39    575/493    63296 $0.0004  edit
+    t40    605/61     63808 $0.0003  bash
+    t41    344/1221   64384 $0.0006  edit
+    t42   1294/54     64704 $0.0004  bash
+    t43    317/1484   65984 $0.0006  edit
+    t44   1593/693    66240 $0.0006  bash
+    t45    999/667    67776 $0.0005  edit
+    t46    755/53     68736 $0.0003  bash
+    t47    353/1279   69440 $0.0006  edit
+    t48   1360/60     69760 $0.0004  bash
+    t49    300/1044   71104 $0.0005  edit
+    t50   1137/732    71360 $0.0006  edit
+    t51    830/54     72448 $0.0003  bash
+    t52    357/1068   73216 $0.0006  edit
+    t53   1154/908    73536 $0.0006  bash
+    t54   1215/3032   74624 $0.0012  edit
+    t55   3143/58     75776 $0.0007  bash
+    t56    259/1000   78912 $0.0005  edit
+    t57   1052/53     79168 $0.0004  bash
+    t58    283/1278   80192 $0.0006  edit
+    t59   1354/53     80448 $0.0004  bash
+    t60    351/1013   81792 $0.0006  edit
+    t61   1093/53     82112 $0.0004  bash
+    t62    310/1615   83200 $0.0007  edit
+    t63   1718/53     83456 $0.0005  bash
+    t64    304/967    85120 $0.0006  read
+    t65   2339/633    85376 $0.0007  edit
+    t66    714/59     87680 $0.0004  bash
+    t67    266/1246   88384 $0.0006  edit
+    t68   1302/54     88640 $0.0004  bash
+    t69    273/787    89920 $0.0005  edit
+    t70    850/32768  90176 $0.0095  -

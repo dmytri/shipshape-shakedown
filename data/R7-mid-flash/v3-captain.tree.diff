@@ -1,0 +1,115 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 226cfe9..adfefca 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -7,42 +7,37 @@ These notes carry only what the next cycle needs.
+ 
+ ## State
+ 
+-Greenfield bootstrap complete. Durable specs written. Watchbill targets the conformance
+-scenario that pins the DOM-identity defect.
++The DOM-identity defect (v3) was fixed. A NEW acceptance failure reported:
+ 
+-## Defect — DOM element identity destroyed by re-render
++- The Cypress acceptance suite fails at "Editing / should hide other controls when
++  editing": `expected '<input.toggle>' not to be 'visible'` — the toggle IS visible
++  when it should be hidden.
++- Root cause: `index.html` has NO CSS stylesheets linked. The standard TodoMVC CSS
++  rule `li.editing .view { display: none; }` (from `todomvc-app-css`) never applies.
++  In-harness happy-dom cannot reproduce this because it does not render CSS.
++- Fix scope: add CSS that hides `.view` when `.editing` is on the `<li>`. This
++  could be a `<link>` to `todomvc-app-css` + that dependency in `package.json`, or
++  an inline `<style>` block in `index.html`. The conformance scenario checks for
++  the presence of this CSS rule at source level.
+ 
+-The acceptance suite (Cypress, real browser) reports 5 failures, root cause in all 5:
++## What was written this leg
+ 
+-- `render()` replaces `todoList.innerHTML` with `.map(...).join('')` on every state change.
+-- This destroys ALL DOM nodes inside `.todo-list` and creates new ones.
+-- Cypress holds references across command chains; after the replace, those references are
+-  detached from the DOM and the assertion fails.
+-- The in-harness suite (happy-dom) cannot reproduce this because every step re-queries the
+-  DOM fresh via `this.document.querySelector(...)`.
++- Product scenario: "Other controls are hidden when editing" — specifies the
++  functional behaviour.
++- `@conformance` scenario: "The page includes CSS to hide the editing controls" —
++  source-level guard, the only check that can redden in happy-dom since CSS
++  visibility is not rendered.
++- `watchbill.json` — one watch targeting both scenarios.
+ 
+-The app-spec.md already describes the correct behaviour: "toggling the class `completed` on
+-its parent `<li>`" — implying mutation, not replacement. The implementation uses
+-innerHTML instead.
++## Watchbill targets
+ 
+-## What was written
+-
+-- Added `@conformance` scenario: "The render function preserves DOM element identity" to
+-  `features/todo-management.feature`. This scenario checks the source for innerHTML
+-  replacement on the todo list. It is currently UNDEFINED (no step definitions exist yet).
+-  When QM writes the verification, it will FAIL on the current code because the render
+-  function does `todoList.innerHTML = ...`.
+-
+-## Decisions
+-
+-- No product scenarios were added for element identity. The existing product scenarios
+-  already cover the functional behaviour (class toggling, checked state). The DOM-identity
+-  requirement is a method/quality concern, pinned by the `@conformance` scenario.
+-- The fix is to rewrite `render()` to mutate existing DOM nodes (toggle classList, update
+-  checkbox.checked) instead of replacing innerHTML. This preserves element identity across
+-  interactions.
++- `features/todo-management.feature:Other controls are hidden when editing`
++- `features/todo-management.feature:The page includes CSS to hide the editing controls`
+ 
+ ## Next
+ 
+-QM dispatches. Watchbill target: the `@conformance` scenario. QM writes the step
+-definitions, proves the scenario fails, dispatches Crew.
+\ No newline at end of file
++Dispatch QM on the watchbill. QM writes step definitions, proves the conformance
++scenario fails (the page has no CSS), dispatches Crew to add the CSS. After the
++fix, the prod scenario still won't redden in happy-dom (expected — browser-only),
++but the conformance scenario will pass. Watchbill is spent when both scenarios
++pass.
+\ No newline at end of file
+diff --git a/features/todo-management.feature b/features/todo-management.feature
+index 909aeb9..d96745c 100644
+--- a/features/todo-management.feature
++++ b/features/todo-management.feature
+@@ -105,6 +105,17 @@ Feature: Todo Management
+     And presses Enter
+     Then the todo list displays no items
+ 
++  Scenario: Other controls are hidden when editing
++    Given the user has a todo titled "Buy milk"
++    When the user starts editing the todo
++    Then the toggle checkbox is not visible
++
++  @conformance
++  Scenario: The page includes CSS to hide the editing controls
++    Given the page source at "index.html"
++    When I inspect the page for a CSS rule that hides ".view" when the parent "li" has the "editing" class
++    Then the page includes a CSS mechanism to hide editing controls
++
+   Scenario: Counter shows the number of active todos
+     Given the user creates a todo titled "Buy milk"
+     And the user creates a todo titled "Walk dog"
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..794a668
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,11 @@
++{
++  "watches": [
++    {
++      "name": "Editing controls visibility",
++      "targets": [
++        "features/todo-management.feature:Other controls are hidden when editing",
++        "features/todo-management.feature:The page includes CSS to hide the editing controls"
++      ]
++    }
++  ]
++}
+\ No newline at end of file

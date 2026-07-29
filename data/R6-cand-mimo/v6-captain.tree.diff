@@ -1,0 +1,74 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 9de8922..aea5a45 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -20,3 +20,13 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ - Routing via `hashchange` event on `window`, filtering at model level
+ - No external dependencies beyond todomvc-common and todomvc-app-css (devDependencies already installed: @cucumber/cucumber, happy-dom)
+ - The test harness (`features/support/world.js`) loads `index.html` and `js/app.js`, executes via happy-dom `window.eval`, and fires DOMContentLoaded/load events
++
++## Voyage 2 — DOM identity defect (browser-only)
++
++**Blocker resolved:** External browser acceptance suite reports 5 failures: toggle-all mark/unmark (tests 1-2), individual toggle mark/unmark (tests 3-4), and escape-edit (test 5). All share one root cause: `render()` in `js/app.js` does `dom.todoList.innerHTML = ''` then recreates every `<li>` from scratch. This destroys and rebuilds all DOM nodes on every interaction. In a real browser, Cypress holds live element references that become stale after `render()` runs, causing `element-has-detached-from-dom` errors.
++
++**Defect:** The product re-renders the full todo list instead of mutating existing DOM nodes in place. The fix is to update existing `<li>` elements (toggle `.completed` class, set checkbox `checked`) and only add/remove elements when the list size changes, preserving element identity across state transitions.
++
++**Specs authored:** `specs/dom-identity.feature` — 4 scenarios pinning DOM element identity through toggle, toggle-all, and edit-cancel interactions.
++
++**Watchbill updated:** 4 new scenarios added to `watch1`.
+diff --git a/specs/dom-identity.feature b/specs/dom-identity.feature
+new file mode 100644
+index 0000000..31d4495
+--- /dev/null
++++ b/specs/dom-identity.feature
+@@ -0,0 +1,33 @@
++Feature: Preserve todo list DOM identity across state changes
++  As a user
++  I want the todo list to update in place when I interact with it
++  So that the interface remains stable and responsive
++
++  Scenario: Toggling a todo preserves its list item element identity
++    Given the app has todos "Buy groceries" and "Clean house"
++    And the "Buy groceries" todo has a list item element reference
++    When the user toggles the "Buy groceries" todo checkbox
++    Then the same list item element is still attached to the DOM
++    And the "Buy groceries" todo has class "completed"
++
++  Scenario: Toggling all preserves list item element identity
++    Given the app has todos "Buy groceries" and "Clean house"
++    And the "Clean house" todo has a list item element reference
++    When the user clicks the toggle all checkbox
++    Then the same list item element is still attached to the DOM
++    And all todos have class "completed"
++
++  Scenario: Unmarking all preserves list item element identity
++    Given the app has completed todos "Buy groceries" and "Clean house"
++    And the "Clean house" todo has a list item element reference
++    When the user clicks the toggle all checkbox
++    Then the same list item element is still attached to the DOM
++    And no todos have class "completed"
++
++  Scenario: Cancelling an edit preserves the original list item element identity
++    Given the app has a todo "Buy groceries"
++    And the "Buy groceries" todo has a list item element reference
++    When the user double-clicks the "Buy groceries" todo label
++    And the user types "Feed the cat" in the edit input and presses Escape
++    Then the same list item element is still attached to the DOM
++    And a todo with title "Buy groceries" appears in the todo list
+diff --git a/watchbill.json b/watchbill.json
+index 42389ad..155ba1b 100644
+--- a/watchbill.json
++++ b/watchbill.json
+@@ -35,7 +35,11 @@
+       "specs/persistence.feature:localStorage key format",
+       "specs/visibility.feature:Main and footer hidden when no todos",
+       "specs/visibility.feature:Main and footer shown when todos exist",
+-      "specs/visibility.feature:Removing the last todo hides sections"
++      "specs/visibility.feature:Removing the last todo hides sections",
++      "specs/dom-identity.feature:Toggling a todo preserves its list item element identity",
++      "specs/dom-identity.feature:Toggling all preserves list item element identity",
++      "specs/dom-identity.feature:Unmarking all preserves list item element identity",
++      "specs/dom-identity.feature:Cancelling an edit preserves the original list item element identity"
+     ]
+   }
+ }

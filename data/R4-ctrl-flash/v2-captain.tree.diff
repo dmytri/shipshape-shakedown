@@ -1,0 +1,118 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 88fe8d1..d6d89c1 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -11,5 +11,19 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ - Vanilla JS only — no preprocessors, no frameworks.
+ - localStorage persistence key: `todos-vanillajs`.
+ - No external routing library — implement hashchange routing natively.
+-- No production code exists yet; Crew will write it from these specs.
+-- `world.js` loads the real `index.html` and `js/app.js` into happy-dom before each scenario.
+\ No newline at end of file
++- `world.js` loads the real `index.html` and `js/app.js` into happy-dom before each scenario.
++
++## DOM-identity defect (active)
++
++R4 blockage: `render()` at js/app.js calls `todoList.innerHTML = ''` and rebuilds all <li>
++from scratch. Real-browser acceptance suite fails with "element is no longer attached to the
++DOM" on every toggle interaction. In-harness suite passes because happy-dom re-queries the
++DOM between steps, hiding the detachment.
++
++Fix planted:
++- `features/dom-identity.feature` — 4 scenarios pinning the in-place-mutation contract
++- `watchbill.json` — single watch with dom-identity scenarios plus required existing scenarios
++- Perturbation at the seam in `render()` before `todoList.innerHTML = ''`
++
++The fix: assign `data-id` to each <li>; reconcile on render (mutate existing, create new,
++remove absent). Then remove the perturbation guard.
+\ No newline at end of file
+diff --git a/features/dom-identity.feature b/features/dom-identity.feature
+new file mode 100644
+index 0000000..de8d624
+--- /dev/null
++++ b/features/dom-identity.feature
+@@ -0,0 +1,38 @@
++Feature: DOM element identity
++  As a user interacting through automated tools
++  I want todo DOM elements to stay attached when their completion state toggles
++  So that external assertions on the same element reference do not fail
++
++  Background:
++    Given the app is loaded
++    And there are no todos
++
++  Rule: Toggling a todo's completion must mutate the existing li element in place, not replace it
++
++  Scenario: Completing a single todo preserves its li element
++    Given I have a todo "Buy milk"
++    When I capture the rendered todo list items
++    And I click the toggle checkbox for that todo
++    Then each captured item is still attached to the rendered list
++
++  Scenario: Un-completing a single todo preserves its li element
++    Given I have a todo "Buy milk"
++    And "Buy milk" is completed
++    When I capture the rendered todo list items
++    And I un-complete "Buy milk"
++    Then each captured item is still attached to the rendered list
++
++  Rule: The toggle-all checkbox must mutate existing li elements in place
++
++  Scenario: Marking all as completed preserves all li elements
++    Given I have todos "Buy milk", "Walk dog", "Read book"
++    When I capture the rendered todo list items
++    And I click the toggle-all checkbox
++    Then each captured item is still attached to the rendered list
++
++  Scenario: Clearing the completed state preserves all li elements
++    Given I have todos "Buy milk", "Walk dog", "Read book"
++    And "Buy milk" is completed
++    When I capture the rendered todo list items
++    And I click the toggle-all checkbox again
++    Then each captured item is still attached to the rendered list
+\ No newline at end of file
+diff --git a/js/app.js b/js/app.js
+index 453c70e..18b0a92 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -150,6 +150,12 @@
+     footer.style.display = hasTodos ? 'block' : 'none';
+ 
+     // Render list
++    // PERTURBATION: render() destroys all <li> nodes and recreates them, detaching existing
++    // element references. The fix must mutate existing nodes in-place (toggle class/checkbox)
++    // instead of replacing them. When fixed, remove this perturbation.
++    if (todoList.children.length > 0) {
++      throw new Error("PERTURBATION: consider current durable context; remove when fixed");
++    }
+     todoList.innerHTML = '';
+     filtered.forEach(function (todo) {
+       var li = document.createElement('li');
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..319accb
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,21 @@
++{
++  "description": "Watchbill for DOM-identity defect. The render() function destroys and recreates <li> nodes on every state change, detaching existing DOM references. Acceptance suite fails with 'element is no longer attached to the DOM'. Fix: mutate existing nodes in-place (toggle class/checkbox) instead of rebuilding the list via innerHTML = ''.",
++  "watches": [
++    {
++      "id": "watch-1-in-place-mutation",
++      "label": "In-place DOM mutation for toggling completion",
++      "scenarios": [
++        "features/dom-identity.feature:Completing a single todo preserves its li element",
++        "features/dom-identity.feature:Un-completing a single todo preserves its li element",
++        "features/dom-identity.feature:Marking all as completed preserves all li elements",
++        "features/dom-identity.feature:Clearing the completed state preserves all li elements"
++      ],
++      "required": [
++        "features/todos.feature:Completing a todo marks it as completed",
++        "features/todos.feature:Completing all todos checks the mark-all checkbox",
++        "features/todos.feature:The mark-all checkbox toggles all todos"
++      ],
++      "notes": "Crew: rewrite render() to assign data-id to each <li>, then reconcile: for existing items update .completed class + .toggle.checked in place; only create/remove <li> for new/deleted items. Remove the PERTURBATION guard when done."
++    }
++  ]
++}
+\ No newline at end of file

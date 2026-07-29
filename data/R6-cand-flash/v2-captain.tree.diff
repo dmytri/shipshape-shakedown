@@ -1,0 +1,117 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index eb61e34..5efae0d 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -4,17 +4,13 @@
+ 
+ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
+ 
+-## Voyage 1 — TodoMVC greenfield
++## Voyage 2 — DOM identity defect
+ 
+-- **Stack:** Vanilla JS, no preprocessors, localStorage persistence.
+-- **Tier:** happy-dom (DOM rendered by the library, no real browser needed for this behaviour set).
+-- **Spec:** `assets/app-spec.md` — full TodoMVC spec.
+-- **Template:** `assets/app-template.index.html` — base markup.
+-- **Harness:** Already fitted — cucumber-js + happy-dom in package.json, world.js loads real `index.html` / `js/app.js`.
+-- **Dependencies confirmed:** `todomvc-common`, `todomvc-app-css` present in node_modules.
+-- **Production seam:** `index.html`, `js/app.js`, `css/app.css` to be written by Shipwright.
+-- **Watchbill:** 4 feature files, 12 scenarios, shipwright + qm + boatswain voyage.
+-
+-## Open questions
+-
+-- None. Spec is comprehensive and the user bypassed confirmation.
+\ No newline at end of file
++- **Defect:** Cypress acceptance test failures due to `render()` rebuilding all `<li>` via `innerHTML = ''` on every toggle interaction, detaching DOM nodes that the browser test held references to.
++- **Scantling:** `assets/toggle-identity-scantling.json` — defines the DOM-element-identity contract for the toggle-to-do seam.
++- **Contract scenario:** `features/dom-identity.feature:3` — `@contract` scenario that must pass before the perturbation is resolved.
++- **Perturbations planted:** 3 `// PERTURBATION` markers in `js/app.js` at the toggle single item, toggle-all, and clear-completed handler seams.
++- **Watchbill:** Created `watchbill.json` with the dom-identity contract watch.
++- **Fix approach (for QM/Crew):** Mutate existing `<li>` nodes in-place instead of calling `render()` which does `innerHTML = ''`. Toggle `li.classList` and the child `.toggle` checkbox property on the existing element. Retain `render()` only for structural changes (new-todo, destroy, clear-completed where elements are removed).
++- **Next role:** QM — verify the contract scenario passes against the current code (it likely won't since the fix isn't applied yet — it's a design-phase contract that will be proven when Crew implements), then dispatch Crew to implement the fix, then QM again to confirm all scenarios pass.
++- **Working tree:** Clean, no pending commits.
+\ No newline at end of file
+diff --git a/assets/toggle-identity-scantling.json b/assets/toggle-identity-scantling.json
+new file mode 100644
+index 0000000..eea0f94
+--- /dev/null
++++ b/assets/toggle-identity-scantling.json
+@@ -0,0 +1,15 @@
++{
++  "seam": "toggle-todo",
++  "path": "js/app.js",
++  "contract": "When toggling a todo item's completion state (single toggle, toggle-all, or clear-completed), every <li> element in .todo-list MUST retain its DOM node identity. The implementation MUST NOT replace <li> elements via innerHTML assignment, removeChild/appendChild cycles, or any other operation that causes an existing element to lose its connection to the DOM tree. Instead, the implementation MUST mutate each existing <li> element's classList and its child .toggle input's checked property in place.",
++  "counterexample": "Query .todo-list li before the toggle interaction using document.querySelectorAll. Store a Set of the returned element references keyed by their data-id attribute. Perform the toggle interaction. After the interaction, query .todo-list li again. For every previous element that had a given data-id, the same element reference MUST appear in the post-interaction query at the same index position. A mismatch — the pre-interaction element is not found in the post-interaction list, or its data-id changed — is a counterexample and a violation of this contract.",
++  "affected-seams": [
++    "The 'change' event listener on .toggle checkbox (single todo toggle) — calls store.toggle(id) then render()",
++    "The 'change' event listener on #toggle-all (mark all) — calls store.toggleAll(completed) then render()",
++    "The 'click' event listener on .clear-completed — calls store.clearCompleted() then render()",
++    "The destroy button 'click' handler — calls store.remove(id) then render()",
++    "The new-todo 'keyup' handler — calls store.add(title) then render()",
++    "The finishEdit() function — calls store.remove(id) or store.update(id, title) then render()",
++    "The todo-list filter render triggered by hashchange and initial route() — always calls render()"
++  ]
++}
+\ No newline at end of file
+diff --git a/features/dom-identity.feature b/features/dom-identity.feature
+new file mode 100644
+index 0000000..93606ec
+--- /dev/null
++++ b/features/dom-identity.feature
+@@ -0,0 +1,10 @@
++Feature: DOM element identity preservation on toggle
++  As a developer
++  I want DOM elements to retain their identity when todo state changes
++  So that browser-based tests and event handlers have stable references
++
++  @contract
++  Scenario: The toggle-todo seam preserves element identity
++    Given the toggle-todo source at "js/app.js"
++    When the verifier checks the toggle-todo seam against the scantling at "assets/toggle-identity-scantling.json"
++    Then no counterexample is found
+\ No newline at end of file
+diff --git a/js/app.js b/js/app.js
+index 82fd3ae..41e04cb 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -241,6 +241,7 @@
+   });
+ 
+   // Toggle single todo
++  // PERTURBATION
+   todoList.addEventListener('change', function (e) {
+     if (!e.target.classList.contains('toggle')) return;
+     var li = e.target.closest('li');
+@@ -311,6 +312,7 @@
+   }
+ 
+   // Toggle all
++  // PERTURBATION
+   toggleAll.addEventListener('change', function () {
+     var completed = this.checked;
+     store.toggleAll(completed);
+@@ -318,6 +320,7 @@
+   });
+ 
+   // Clear completed
++  // PERTURBATION
+   clearCompleted.addEventListener('click', function () {
+     store.clearCompleted();
+     render();
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..cc4a115
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,10 @@
++{
++  "watches": [
++    {
++      "name": "Dom-identity contract",
++      "scenarios": [
++        "features/dom-identity.feature:3"
++      ]
++    }
++  ]
++}
+\ No newline at end of file

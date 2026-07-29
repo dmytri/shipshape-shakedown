@@ -1,0 +1,36 @@
+# banked: 2026-07-28T23:00:32Z
+# verdict: PENDING
+# leg: {  "name": "v11-qm",  "model": "xiaomi/mimo-v2.5",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/R6-mid-mimo/sim",  "timeout_s": 3600,  "max_tokens": 32768,  "skills": [    "/home/exedev/shipshape-shakedown/experiments/methods-midway/skills/shipshape",    "/home/exedev/shipshape-shakedown/experiments/methods-midway/skills/qm",    "/home/exedev/shipshape-shakedown/experiments/methods-midway/skills/crew",    "/home/exedev/shipshape-shakedown/experiments/methods-midway/skills/boatswain",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== v11-qm.session.jsonl ===
+  turns=25  wall=101.8s  in=51287  out=7318  cache_read=835904  cost=$0.0116
+  role reads: qm@t0 -> shipshape@t1 -> crew@t11 -> boatswain@t19
+  roles loaded: boatswain, crew, qm, shipshape
+  ~ repeated tool signature at turns [1, 2] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    1940/91       512 $0.0003  read
+    t1    3404/91      2432 $0.0005  read
+    t2   10702/84      5824 $0.0015  read
+    t3    9313/99     16512 $0.0014  bash
+    t4     479/441    25792 $0.0003  read
+    t5    1465/94     26240 $0.0003  bash
+    t6     639/75     27648 $0.0002  bash
+    t7     743/149    27648 $0.0002  read, read, read
+    t8    7843/782    28352 $0.0014  bash
+    t9     903/401    36160 $0.0003  bash
+    t10    459/128    37056 $0.0002  bash
+    t11    418/409    37504 $0.0003  read
+    t12   2071/474    37888 $0.0005  edit
+    t13    541/87     39936 $0.0002  bash
+    t14    395/425    40448 $0.0003  bash
+    t15    478/51     40832 $0.0002  bash
+    t16    134/699    41280 $0.0003  edit
+    t17    880/316    41280 $0.0003  bash
+    t18    476/89     42112 $0.0002  bash
+    t19    213/99     42560 $0.0002  read
+    t20   3971/167    42752 $0.0007  bash
+    t21   1688/1576   46720 $0.0008  bash
+    t22   1655/40     48384 $0.0004  bash
+    t23    109/264    49984 $0.0002  bash
+    t24    368/187    50048 $0.0002  -

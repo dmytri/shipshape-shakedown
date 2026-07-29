@@ -1,0 +1,115 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index f895399..cdb0a73 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -8,22 +8,45 @@ All 33 in-harness scenarios pass (32 in todos.feature, 1 in app-index.feature).
+ 
+ ## The defect
+ 
+-The acceptance suite (real browser / Cypress) reports 5 failures, all from the same root cause: the `render()` function in `js/app.js` replaces `todoListEl.innerHTML` and `todoCountEl.innerHTML` on every state change. This destroys and recreates DOM nodes, detaching any references a real browser held before the interaction. Cypress cannot `cy.eq()` or `cy.find()` on detached elements.
++The acceptance suite (real browser / Cypress) reports 8 failures:
+ 
+-The in-harness suite (happy-dom) does not reproduce this because it re-queries the DOM for every assertion, never holding stale references. The defects are real: a real browser fails on:
+-- Toggling a single todo (detach after click)
+-- Toggling all todos (detach after click)
+-- Toggle-all checkbox state after partial uncheck (element replaced, state lost)
++**Failures 1-5 (detached DOM):** The `render()` function in `js/app.js` destroys ALL children of `todoListEl` via `while (todoListEl.firstChild) { removeChild(...) }` and recreates them on every state change. This destroys DOM node identity. A real browser holds element references from before the click, which are invalidated when the list is rebuilt. In-harness (happy-dom) does not reproduce because it re-queries for every assertion.
+ 
+-## This leg's work
++Failures:
++1. "Mark all as completed" — `cy.eq()` on detached list item
++2. "Clear complete state of all items" — `cy.eq()` on detached list item  
++3. "Toggle-all checkbox update state" — checkbox element recreated, `.checked` state lost
++4-5. "Mark items as complete/un-mark items as complete" — `cy.find()` on detached list item
+ 
+-Created `features/conformance.feature` with a `@conformance` scenario that scans `js/app.js` for the destructive `innerHTML` assignment pattern. This scenario must fail on the current code.
++**Failures 6-8 (removeChild during editing):** `saveEdit()` calls `render()` which removes and recreates the editing `<li>` while the blur event handler is still in flight. The blur handler's `removeChild` then fails because the node was already removed from the DOM.
+ 
+-Created `watchbill.json` with `watch1` referencing the conformance scenario. QM dispatches watch1:
+-1. Implements step definitions for the conformance scan
+-2. The scenario fails because `todoListEl.innerHTML =` and `todoCountEl.innerHTML =` are present in the source
+-3. Crew fixes the production code to mutate existing DOM nodes in place instead of replacing innerHTML
+-4. Boatswain verifies and commits
++Failures:
++6. "Edit an item" — removeChild on detached node during blur
++7. "Trim entered text" — same  
++8. "Remove item if empty text string was entered" — same
++
++## Previous leg's work
++
++Initial conformance scenario checked for `innerHTML` assignment patterns. These were already replaced with DOM methods (`removeChild`/`appendChild`), but the destructive rebuild-before-you-touch approach remained. The scenario passed green despite the acceptance suite still failing.
++
++## This leg's work (v5 captain)
++
++Updated `features/conformance.feature` to check for the REAL destructive pattern: `while (todoListEl.firstChild)` and `while (todoCountEl.firstChild)` loops that remove all children and recreate them.
++
++Created `watchbill.json` with `watch1` referencing the conformance scenario.
++
++The conformance scenario now FAILS on current code (planted-red).
++
++### What the fix must do
++
++The `render()` function must mutate existing DOM nodes in place instead of removing and recreating them. Specifically:
++- For toggle operations: find the target `<li>` and toggle its `.completed` class and `.toggle` checkbox `.checked` property — do not rebuild the list
++- For adding items: append a single new `<li>` without touching existing ones
++- For removing items: remove the specific `<li>` without touching others
++- For the todo-count: update `<strong>` textContent and the text node in place
++- For toggle-all checkbox: update its `.checked` property, do not recreate it
++
++This preserves DOM element identity across interactions, so a real browser's held references remain valid.
+ 
+ ## Open
+ 
+diff --git a/features/conformance.feature b/features/conformance.feature
+index 61c7b95..6e65c56 100644
+--- a/features/conformance.feature
++++ b/features/conformance.feature
+@@ -6,6 +6,6 @@ Feature: Source-level conformance checks
+   @conformance
+   Scenario: The todo list DOM elements are mutated in place, not replaced
+     Given the source file "js/app.js" exists
+-    When I search for an innerHTML assignment on the todo-list element
+-    Then the pattern "todoListEl.innerHTML =" should not appear in the source
+-    And the pattern "todoCountEl.innerHTML =" should not appear in the source
+\ No newline at end of file
++    When I search for destructive element-rebuilding patterns
++    Then the pattern "while (todoListEl.firstChild)" should not appear in the source
++    And the pattern "while (todoCountEl.firstChild)" should not appear in the source
+\ No newline at end of file
+diff --git a/features/support/conformance-steps.js b/features/support/conformance-steps.js
+index fadbfe6..390030f 100644
+--- a/features/support/conformance-steps.js
++++ b/features/support/conformance-steps.js
+@@ -11,15 +11,15 @@ Given('the source file {string} exists', function (filePath) {
+   this.sourceFile = fullPath;
+ });
+ 
+-When('I search for an innerHTML assignment on the todo-list element', function () {
++When('I search for destructive element-rebuilding patterns', function () {
+   const content = fs.readFileSync(this.sourceFile, 'utf8');
+   this.foundPatterns = [];
+ 
+-  // Search for innerHTML assignments on todoListEl and todoCountEl
++  // Search for while-loop patterns that destroy and rebuild entire element trees
+   const lines = content.split('\n');
+   for (let i = 0; i < lines.length; i++) {
+     const line = lines[i];
+-    if (line.includes('todoListEl.innerHTML =') || line.includes('todoCountEl.innerHTML =')) {
++    if (line.includes('while (todoListEl.firstChild)') || line.includes('while (todoCountEl.firstChild)')) {
+       this.foundPatterns.push(line.trim());
+     }
+   }
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..5b23cfe
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,7 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/conformance.feature:The todo list DOM elements are mutated in place, not replaced"
++    ]
++  }
++}
+\ No newline at end of file

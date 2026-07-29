@@ -1,0 +1,122 @@
+diff --git a/specs/edit-todo.feature b/specs/edit-todo.feature
+index dd4de99..44754bb 100644
+--- a/specs/edit-todo.feature
++++ b/specs/edit-todo.feature
+@@ -31,6 +31,13 @@ Feature: Edit todo title
+     Then a todo with title "Buy groceries" appears in the todo list
+     And the todo "Buy milk" does not exist
+ 
++  Scenario: Escape key discards edit even when blur fires first
++    Given the app has a todo "feed the cat"
++    When the user double-clicks the "feed the cat" todo label
++    And the user types "walk the dog" in the edit input and presses Escape
++    Then a todo with title "feed the cat" appears in the todo list
++    And the todo "walk the dog" does not exist
++
+   Scenario: Destroying a todo with an empty edit
+     Given the app has a todo "Buy groceries"
+     When the user double-clicks the "Buy groceries" todo label
+diff --git a/specs/toggle-all.feature b/specs/toggle-all.feature
+index 64ff29e..90c8417 100644
+--- a/specs/toggle-all.feature
++++ b/specs/toggle-all.feature
+@@ -3,19 +3,27 @@ Feature: Mark all as complete
+   I want to toggle all todos to complete or active with one checkbox
+   So that I can efficiently manage bulk state changes
+ 
+-  Scenario: Marking all todos as complete
+-    Given the app has todos "Buy groceries" and "Clean house"
+-    When the user clicks the toggle all checkbox
+-    Then all todos have class "completed"
+-    And the todo count shows "0 items left"
+-    And the toggle all checkbox is checked
++  Rule: Toggle all must not destroy and recreate todo list item elements
+ 
+-  Scenario: Unmarking all todos
+-    Given the app has completed todos "Buy groceries" and "Clean house"
+-    When the user clicks the toggle all checkbox
+-    Then no todos have class "completed"
+-    And the todo count shows "2 items left"
+-    And the toggle all checkbox is unchecked
++    Scenario: Marking all todos as complete
++      Given the app has todos "Buy groceries" and "Clean house"
++      When the user clicks the toggle all checkbox
++      Then all todos have class "completed"
++      And the todo count shows "0 items left"
++      And the toggle all checkbox is checked
++
++    Scenario: Unmarking all todos
++      Given the app has completed todos "Buy groceries" and "Clean house"
++      When the user clicks the toggle all checkbox
++      Then no todos have class "completed"
++      And the todo count shows "2 items left"
++      And the toggle all checkbox is unchecked
++
++    Scenario: Toggle all preserves list item identity across the interaction
++      Given the app has a todo "Buy groceries"
++      And the app has a todo "Clean house"
++      When the user clicks the toggle all checkbox
++      Then the todo list item elements from before the toggle are still in the DOM
+ 
+   Scenario: Toggle all reflects individual todo state
+     Given the app has a todo "Buy groceries"
+diff --git a/specs/toggle-todo.feature b/specs/toggle-todo.feature
+index f9fea3f..233b4bb 100644
+--- a/specs/toggle-todo.feature
++++ b/specs/toggle-todo.feature
+@@ -3,14 +3,24 @@ Feature: Toggle todo completion
+   I want to mark todos as complete or active by clicking their checkbox
+   So that I can track my progress
+ 
+-  Scenario: Marking a todo as complete
+-    Given the app has a todo "Buy groceries"
+-    When the user toggles the "Buy groceries" todo checkbox
+-    Then the "Buy groceries" todo has class "completed"
+-    And the todo count shows "0 items left"
++  Rule: Toggling a todo must not destroy and recreate its DOM node
+ 
+-  Scenario: Unmarking a completed todo
+-    Given the app has a completed todo "Buy groceries"
+-    When the user toggles the "Buy groceries" todo checkbox
+-    Then the "Buy groceries" todo does not have class "completed"
+-    And the todo count shows "1 item left"
++    Scenario: Marking a todo as complete
++      Given the app has a todo "Buy groceries"
++      When the user toggles the "Buy groceries" todo checkbox
++      Then the "Buy groceries" todo has class "completed"
++      And the todo count shows "0 items left"
++
++    Scenario: Unmarking a completed todo
++      Given the app has a completed todo "Buy groceries"
++      When the user toggles the "Buy groceries" todo checkbox
++      Then the "Buy groceries" todo does not have class "completed"
++      And the todo count shows "1 item left"
++
++  Rule: Toggling preserves list item identity across the interaction
++
++    Scenario: Toggle does not replace the todo list item element
++      Given the app has a todo "Buy groceries"
++      And the app has a todo "Clean house"
++      When the user toggles the "Buy groceries" todo checkbox
++      Then the todo list item elements from before the toggle are still in the DOM
+diff --git a/watchbill.json b/watchbill.json
+index 42389ad..e897fef 100644
+--- a/watchbill.json
++++ b/watchbill.json
+@@ -8,13 +8,16 @@
+       "specs/new-todo.feature:Creating multiple todos",
+       "specs/toggle-todo.feature:Marking a todo as complete",
+       "specs/toggle-todo.feature:Unmarking a completed todo",
++      "specs/toggle-todo.feature:Toggle does not replace the todo list item element",
+       "specs/toggle-all.feature:Marking all todos as complete",
+       "specs/toggle-all.feature:Unmarking all todos",
++      "specs/toggle-all.feature:Toggle all preserves list item identity across the interaction",
+       "specs/toggle-all.feature:Toggle all reflects individual todo state",
+       "specs/edit-todo.feature:Activating edit mode on double-click",
+       "specs/edit-todo.feature:Saving an edit on Enter",
+       "specs/edit-todo.feature:Saving an edit on blur",
+       "specs/edit-todo.feature:Discarding an edit on Escape",
++      "specs/edit-todo.feature:Escape key discards edit even when blur fires first",
+       "specs/edit-todo.feature:Destroying a todo with an empty edit",
+       "specs/edit-todo.feature:Trimming whitespace from edited titles",
+       "specs/counter.feature:Counter shows zero when no todos exist",

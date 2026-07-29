@@ -1,0 +1,63 @@
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..eb8e84b
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,41 @@
++# Rigging
++
++## Stack
++
++- language: JavaScript
++
++## Directories
++
++- implementation: js
++- specs: specs
++- verification: features/support
++
++## Methods
++
++- verify: `` npx cucumber-js --tags "not @captain and not @shipwright" $(echo "$SS_SCENARIO" | sed 's/^[^:]*://' | sed 's/^/--name "/' | sed 's/$/"/' | tr '\n' ' ') --require features/support/world.js --require features/support/steps.js ``
++- prove: `` npx cucumber-js --tags "not @captain and not @shipwright" $(echo "$SS_SCENARIO" | sed 's/^[^:]*://' | sed 's/^/--name "/' | sed 's/$/"/' | tr '\n' ' ') --require features/support/world.js --require features/support/steps.js ``
++- sweep: `` npx cucumber-js --tags "not @captain and not @shipwright" --require features/support/world.js --require features/support/steps.js ``
++- plank-join: `` grep -r '@planks' js/ | sed 's/.*@planks("//' | sed 's/").*//' | sort -u ``
++- hygiene: `` echo "No hygiene method configured" ``
++- static: `` echo "No static method configured" ``
++- discovery: `` npx cucumber-js --dry-run --tags "not @captain and not @shipwright" --require features/support/world.js --require features/support/steps.js ``
++- regression: `` npx cucumber-js --tags "not @captain and not @shipwright" --require features/support/world.js --require features/support/steps.js ``
++- condemnation: `` echo "No condemnation method configured" ``
++- dead-code: `` echo "No dead-code method configured" ``
++- spec-lint: `` echo "No spec-lint method configured" ``
++- install: `` echo "No install method configured" ``
++- ship: `` echo "No ship method configured" ``
++- ship-verify: `` echo "No ship-verify method configured" ``
++
++## Tiers
++
++- logic: `` npx cucumber-js --tags "not @captain and not @shipwright and not @sandbox" --require features/support/world.js --require features/support/steps.js ``
++- sandbox: `` npx cucumber-js --tags "not @captain and not @shipwright and @sandbox" --require features/support/world.js --require features/support/steps.js ``
++
++## Perturbation
++
++- message: PERTURBATION: This seam has been marked for reimplementation. The scenarios below pin the behaviour that must survive.
++
++## Dependencies
++
++- dependency: none
+diff --git a/features/support/steps.js b/features/support/steps.js
+index 3b98db0..eae8b49 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -314,6 +314,11 @@ Then('the todo list shows {int} todos', function (count) {
+   expect(items).to.have.length(count);
+ });
+ 
++Then('the todo list contains {int} items', function (count) {
++  const items = getTodoItems(this.document);
++  expect(items).to.have.length(count);
++});
++
+ Then('the {string} todo has class {string}', function (title, className) {
+   const todo = getTodoByTitle(this.document, title);
+   expect(todo, `Expected todo "${title}" to exist`).to.not.be.undefined;

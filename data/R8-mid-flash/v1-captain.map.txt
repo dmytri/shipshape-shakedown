@@ -1,0 +1,38 @@
+# banked: 2026-07-29T16:05:29Z
+# verdict: PENDING
+# leg: {  "name": "v1-captain",  "model": "deepseek/deepseek-v4-flash",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/R8-mid-flash/sim",  "timeout_s": 3600,  "max_tokens": 32768,  "skills": [    "/home/exedev/shipshape-shakedown/experiments/methods-midway/skills/shipshape",    "/home/exedev/shipshape-shakedown/experiments/methods-midway/skills/captain",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== v1-captain.session.jsonl ===
+  turns=27  wall=173.5s  in=137350  out=14273  cache_read=935936  cost=$0.0331
+  role reads: captain@t0 -> shipshape@t0
+  roles loaded: captain, shipshape
+  ~ repeated tool signature at turns [1, 14] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    2063/344        0 $0.0003  read, read, read, read
+    t1   20725/334        0 $0.0020  bash, bash, read
+    t2   30722/419        0 $0.0030  bash, read, bash, read, read
+    t3    2983/163    28672 $0.0008  read, bash
+    t4   12655/2256   20480 $0.0020  bash, bash
+    t5    2689/171    32768 $0.0009  bash
+    t6    7054/1121   28672 $0.0014  bash
+    t7    4092/845    32768 $0.0012  write
+    t8    4983/1224   32768 $0.0013  write
+    t9    6255/735    32768 $0.0013  write
+    t10   2176/1427   37632 $0.0012  write, write
+    t11   4466/1327   36864 $0.0014  write
+    t12   5838/467    36864 $0.0013  write
+    t13   1999/139    41216 $0.0010  bash
+    t14   2486/156    40960 $0.0010  bash
+    t15   2866/171    40960 $0.0011  write
+    t16    267/88     43776 $0.0009  bash
+    t17   3270/144    40960 $0.0011  bash
+    t18   3745/121    40960 $0.0011  bash
+    t19    379/156    44544 $0.0009  bash
+    t20    608/154    44800 $0.0009  bash
+    t21   4822/142    40960 $0.0012  bash
+    t22    455/164    45568 $0.0009  write
+    t23   1178/88     45056 $0.0010  bash
+    t24    287/166    46080 $0.0009  bash
+    t25   7256/734    46336 $0.0017  bash, bash, bash
+    t26   1031/1017   53504 $0.0013  -

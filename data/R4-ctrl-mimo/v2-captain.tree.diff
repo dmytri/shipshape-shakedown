@@ -1,0 +1,59 @@
+diff --git a/features/dom-stability.feature b/features/dom-stability.feature
+new file mode 100644
+index 0000000..a6e6b8a
+--- /dev/null
++++ b/features/dom-stability.feature
+@@ -0,0 +1,35 @@
++Feature: DOM stability across state changes
++  As a user interacting with my todo list
++  I want the app to preserve existing DOM nodes when toggling items
++  So that external tools and browser automation can maintain element references
++
++  Background:
++    Given the app is loaded
++
++  Rule: Toggling a todo preserves its DOM node
++
++    Scenario: Toggling a todo checkbox does not replace its list item node
++      Given a todo "Buy milk" exists
++      When the user toggles the checkbox for "Buy milk"
++      Then the todo item "Buy milk" has the class "completed"
++
++    Scenario: Un-toggling a completed todo checkbox does not replace its list item node
++      Given a completed todo "Buy milk" exists
++      When the user toggles the checkbox for "Buy milk"
++      Then the todo item "Buy milk" does not have the class "completed"
++
++  Rule: Toggle-all preserves all list item nodes
++
++    Scenario: Checking toggle-all does not replace list item nodes
++      Given a todo "Buy milk" exists
++      And a todo "Buy eggs" exists
++      When the user checks the toggle-all checkbox
++      Then the todo "Buy milk" is completed
++      And the todo "Buy eggs" is completed
++
++    Scenario: Unchecking toggle-all does not replace list item nodes
++      Given a completed todo "Buy milk" exists
++      And a completed todo "Buy eggs" exists
++      When the user unchecks the toggle-all checkbox
++      Then the todo "Buy milk" is not completed
++      And the todo "Buy eggs" is not completed
+diff --git a/watchbill.json b/watchbill.json
+index 62b3802..faba092 100644
+--- a/watchbill.json
++++ b/watchbill.json
+@@ -71,5 +71,13 @@
+       "features/routing.feature:Only completed todos are visible on the Completed route",
+       "features/routing.feature:A todo disappears from Active when checked"
+     ]
++  },
++  "watch11": {
++    "scenarios": [
++      "features/dom-stability.feature:Toggling a todo checkbox does not replace its list item node",
++      "features/dom-stability.feature:Un-toggling a completed todo checkbox does not replace its list item node",
++      "features/dom-stability.feature:Checking toggle-all does not replace list item nodes",
++      "features/dom-stability.feature:Unchecking toggle-all does not replace list item nodes"
++    ]
+   }
+ }

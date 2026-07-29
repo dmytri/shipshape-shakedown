@@ -1,0 +1,296 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index db8d9ae..a8a2af9 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -25,4 +25,37 @@
+ 
+ - localStorage key: `todos-vanilla` per `todos-[framework]` convention.
+ - Vanilla JS (no framework), no preprocessors, no routing library — native hashchange.
+-- No routing library needed: world.js already handles hashchange dispatch.
+\ No newline at end of file
++- No routing library needed: world.js already handles hashchange dispatch.
++
++## R5 Mid-Flash — DOM identity fix
++
++### Defect (verified 2026-07-28)
++
++Cypress acceptance suite reports 4 detached-DOM failures on toggle/toggle-all/clear-completed.
++Root cause: `render()` in `js/app.js` calls `todoListEl.innerHTML = ''` and rebuilds every
++`<li>` element, destroying DOM node identity. In-harness (happy-dom) re-queries the DOM and
++passes; a real browser holds a detached reference and fails.
++
++### Spec work done
++
++- `assets/dom-identity-scantling.md` — mechanical shape specifying element preservation
++- `assets/scantling-register.json` — registration
++- `toggle-todos.feature` — 4 new `@contract @planks(render seam)` scenarios referencing the scantling
++- `watchbill.json` — 6 watches (replaced previous 8), including conformance checker + fix
++- `RIGGING.md` — added `assets` and `scantlings` directories, `conformance` command
++
++### Watchbill dispatch order
++
++1-4: Existing feature scenarios (pass on current code)
++5: Bespoke conformance checker implementation (step definitions for contract scenarios)
++6: Production fix (mutate in place, remove `innerHTML = ''` on todoListEl)
++
++### Verdict for QM
++
++Watch 5 scenarios fail on current code because no step definitions exist. After Crew
++implements the checker in watch 5, scenarios fail because the current source violates the
++scantling (uses `innerHTML = ''`). After watch 6 fix, all scenarios pass.
++
++### Outbound
++
++Not offered — this is spec work only, no production changes made.
+\ No newline at end of file
+diff --git a/RIGGING.md b/RIGGING.md
+index 46223b4..1dc24c2 100644
+--- a/RIGGING.md
++++ b/RIGGING.md
+@@ -6,6 +6,8 @@
+ ## Directories
+ - implementation: js
+ - specs: features
++- assets: assets
++- scantlings: assets
+ - runrecord: none
+ 
+ ## Dependencies
+@@ -29,7 +31,7 @@ npx @dk/yoink --max-bytes 100000 --run "echo '${SS_SCENARIO}'" --label "Verify t
+ npx @dk/yoink --max-bytes 200000 --run 'npx cucumber-js --require features/support --require features/step_definitions --tags "not @captain and not @shipwright" 2>&1' --label "Logic sweep" --timeout 120
+ 
+ ### plank-inventory
+-npx @dk/yoink --max-bytes 50000 --run 'grep -rn "@planks\|@planks-provisional" js/ features/support/ 2>/dev/null || echo "no planks found"' --label "Plank inventory" --timeout 10
++npx @dk/yoink --max-bytes 50000 --run 'grep -rn "@planks\|@planks-provisional" js/ features/ 2>/dev/null || echo "no planks found"' --label "Plank inventory" --timeout 10
+ 
+ ### step-usage
+ npx @dk/yoink --max-bytes 50000 --run 'grep -rn "^\s*\\(Given\\|When\\|Then\\|And\\|But\\)" features/step_definitions/ 2>/dev/null || echo "no step definitions found"' --label "Step usage" --timeout 10
+@@ -55,6 +57,9 @@ npx @dk/yoink --max-bytes 50000 --run 'echo "Dead code check not configured"' --
+ ### spec-lint
+ npx @dk/yoink --max-bytes 50000 --run 'echo "Spec lint not configured"' --label "Spec lint" --timeout 5
+ 
++### conformance
++npx @dk/yoink --max-bytes 50000 --run 'echo "Conformance: implement bespoke checker per assets/dom-identity-scantling.md"' --label "Conformance" --timeout 5
++
+ ### install
+ npx @dk/yoink --max-bytes 50000 --run 'npm install "${SS_DEPENDENCY}" 2>&1' --label "Install" --timeout 120
+ 
+diff --git a/assets/dom-identity-scantling.md b/assets/dom-identity-scantling.md
+new file mode 100644
+index 0000000..076031e
+--- /dev/null
++++ b/assets/dom-identity-scantling.md
+@@ -0,0 +1,47 @@
++# DOM Element Identity Scantling
++
++## Purpose
++
++The `render()` function in `js/app.js` MUST preserve existing `<li>` elements in the
++`.todo-list` when a todo's completed state changes.  A real browser holds references
++to DOM nodes across interaction chains; replacing a node destroys the reference and
++causes detached-DOM failures in acceptance suites.
++
++This scantling specifies the mechanical constraint on the `render` seam.
++
++## Definition
++
++**DOM element identity** — when the application mutates a todo's `completed` field in
++the model and calls `render()`, every `<li>` element representing a todo that still
++exists in the filtered set MUST be the same `Element` object as it was before the
++call.  The element MAY have its CSS class, checkbox state, or text content modified,
++but the element node itself MUST NOT be removed and replaced.
++
++## Invariants
++
++| Context | Invariant |
++|---|---|
++| Individual toggle | After `toggleTodo(title)` → `render()`, the `<li>` whose `label.textContent` matches `title` is the same `Element` object as before the call. |
++| Toggle all (mark) | After `toggleAll(true)` → `render()`, every `<li>` present before the call is the same `Element` object after the call, and all have class `completed`. |
++| Toggle all (clear) | After `toggleAll(false)` → `render()`, every `<li>` present before the call is the same `Element` object after the call, and none have class `completed`. |
++| Clear completed | After `clearCompleted()` → `render()`, every `<li>` for a non-completed todo that existed before the call is the same `Element` object after the call.  Completed-todo `<li>` elements MAY be removed. |
++
++## Prohibited patterns
++
++The `render()` function MUST NOT contain any of:
++
++- `innerHTML = ''` or `innerHTML =` assignment on `todoListEl` or any ancestor of
++  a `<li>` element whose content is the todo list
++- `replaceChildren()` on `todoListEl`
++- `removeChild()` in a loop that removes and re-appends all children
++- Any operation that detaches all children of `todoListEl` and recreates them
++
++Allowed: `classList.add/remove/toggle`, `setAttribute`, `.checked =`, `.textContent =`,
++`.style.* =` on individual `<li>` elements or their descendants.
++
++## Enforcement
++
++A source-level conformance checker (bespoke, Crew-implemented) scans `js/app.js` for
++the prohibited patterns within the `render()` function and reports a counterexample
++if any is found.  The `@contract` scenarios in `toggle-todos.feature` rely on this
++checker; they are tagged `@planks(render seam)` so the plank inventory can track them.
+\ No newline at end of file
+diff --git a/assets/scantling-register.json b/assets/scantling-register.json
+new file mode 100644
+index 0000000..d96c004
+--- /dev/null
++++ b/assets/scantling-register.json
+@@ -0,0 +1,11 @@
++{
++  "scantlings": [
++    {
++      "id": "dom-identity",
++      "title": "DOM Element Identity constraint on render seam",
++      "path": "assets/dom-identity-scantling.md",
++      "reference": "toggle-todos.feature: @contract scenarios",
++      "status": "active"
++    }
++  ]
++}
+\ No newline at end of file
+diff --git a/features/toggle-todos.feature b/features/toggle-todos.feature
+index 2d7683f..dfebb34 100644
+--- a/features/toggle-todos.feature
++++ b/features/toggle-todos.feature
+@@ -66,4 +66,38 @@ Feature: Toggle Todos
+   Scenario: Toggle-all checked state clears after clear completed
+     Given all todos are completed
+     When I click the clear-completed button
+-    Then the toggle-all checkbox is not checked
+\ No newline at end of file
++    Then the toggle-all checkbox is not checked
++
++  @contract @planks(render-seam)
++  Scenario: The render seam preserves element identity on individual toggle
++    Given the app is loaded
++    And the todo list contains "Buy groceries"
++    And the todo list contains "Walk the dog"
++    When the conformance checker checks the "render" seam in "js/app.js"
++    Then no counterexample is found for invariant "Individual toggle"
++
++  @contract @planks(render-seam)
++  Scenario: The render seam preserves element identity on toggle all (mark)
++    Given the app is loaded
++    And the todo list contains "Buy groceries"
++    And the todo list contains "Walk the dog"
++    And the todo list contains "Pay bills"
++    When the conformance checker checks the "render" seam in "js/app.js"
++    Then no counterexample is found for invariant "Toggle all (mark)"
++
++  @contract @planks(render-seam)
++  Scenario: The render seam preserves element identity on toggle all (clear)
++    Given the app is loaded
++    And the todo list contains "Buy groceries"
++    And the todo list contains "Walk the dog"
++    When the conformance checker checks the "render" seam in "js/app.js"
++    Then no counterexample is found for invariant "Toggle all (clear)"
++
++  @contract @planks(render-seam)
++  Scenario: The render seam preserves element identity on clear completed
++    Given the app is loaded
++    And the todo list contains "Buy groceries"
++    And the todo list contains "Walk the dog"
++    And the todo list contains "Pay bills"
++    When the conformance checker checks the "render" seam in "js/app.js"
++    Then no counterexample is found for invariant "Clear completed"
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..be249f1
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,94 @@
++[
++  {
++    "watch": 1,
++    "title": "Todo creation, editing, deletion, counter",
++    "target": "features/manage-todos.feature",
++    "scenarios": [
++      "Create a new todo by pressing Enter",
++      "Do not create empty todos",
++      "Trim whitespace from new todo title",
++      "Hide main and footer when no todos exist",
++      "Delete a todo by clicking the destroy button",
++      "Double-click a todo label to enter editing mode",
++      "Save edit on Enter",
++      "Save edit on blur",
++      "Destroy todo when edit is emptied",
++      "Trim whitespace from edited title",
++      "Discard edit on Escape",
++      "Show remaining count",
++      "Pluralize item count",
++      "Show zero items left"
++    ]
++  },
++  {
++    "watch": 2,
++    "title": "Toggle individual, toggle all, clear completed",
++    "target": "features/toggle-todos.feature",
++    "scenarios": [
++      "Mark a todo as completed",
++      "Unmark a completed todo",
++      "Mark all todos as complete",
++      "Toggle-all state updates when individual todos change",
++      "Toggle-all unchecks when one todo is unchecked",
++      "Toggle-all clears when all are unchecked",
++      "Clear completed removes completed todos",
++      "Clear completed button is hidden when no completed todos",
++      "Clear completed button is visible when completed todos exist",
++      "Toggle-all checked state clears after clear completed"
++    ]
++  },
++  {
++    "watch": 3,
++    "title": "Filter routing and route persistence",
++    "target": "features/routing.feature",
++    "scenarios": [
++      "Show all todos by default",
++      "All filter link is selected by default",
++      "Filter active todos",
++      "Filter completed todos",
++      "Persist active filter across reloads",
++      "Completed item hidden when in active filter",
++      "Active item hidden when in completed filter"
++    ]
++  },
++  {
++    "watch": 4,
++    "title": "localStorage save and load persistence",
++    "target": "features/persistence.feature",
++    "scenarios": [
++      "Save new todo to localStorage",
++      "Todo items stored with id, title, and completed properties",
++      "Marking complete updates localStorage",
++      "Editing title updates localStorage",
++      "Deleting todo removes from localStorage",
++      "Clear completed updates localStorage",
++      "Load persisted todos on page load",
++      "Load completed state from localStorage",
++      "Editing mode is not persisted"
++    ]
++  },
++  {
++    "watch": 5,
++    "title": "Conformance: DOM element identity bespoke checker",
++    "target": "assets/dom-identity-scantling.md",
++    "scenarios": [
++      "The render seam preserves element identity on individual toggle",
++      "The render seam preserves element identity on toggle all (mark)",
++      "The render seam preserves element identity on toggle all (clear)",
++      "The render seam preserves element identity on clear completed"
++    ],
++    "note": "Implement the conformance checker (bespoke step definitions) per assets/dom-identity-scantling.md. These scenarios fail on current code because render() replaces all <li> nodes."
++  },
++  {
++    "watch": 6,
++    "title": "Fix render seam to preserve DOM element identity",
++    "target": "js/app.js",
++    "scenarios": [
++      "The render seam preserves element identity on individual toggle",
++      "The render seam preserves element identity on toggle all (mark)",
++      "The render seam preserves element identity on toggle all (clear)",
++      "The render seam preserves element identity on clear completed"
++    ],
++    "note": "Mutate existing <li> nodes in place (toggle class/checkbox) instead of innerHTML = '' rebuild. All existing scenarios in watches 1-4 must still pass."
++  }
++]
+\ No newline at end of file

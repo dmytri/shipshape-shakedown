@@ -1,0 +1,100 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..5aec25e
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,13 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
++
++## Defect under sail
++
++The external browser acceptance suite fails on five TodoMVC behaviours: mark all complete, clear all complete, mark a todo complete, un-mark a todo complete, and edit a todo to empty text. The cause is one root defect: the list `render()` wipes and rebuilds every `<li>` on each item state change, so an element reference the browser holds across the click detaches from the document. The in-harness suite passed only because its steps re-query the DOM; the defect is hidden until a reference is held across the interaction.
++
++The fix is product intent, not a hint: item updates mutate the existing element in place (toggle class and checkbox state on the node that already exists) instead of rebuilding the list, and removing an item removes only that one node. `features/dom-identity.feature` pins this. The step definitions that record and re-assert element identity are verification support for QM to author.
++
++The in-harness happy-dom environment was confirmed to reproduce the node-identity loss with held references (the held `<li>` reports `isConnected: false` after the change), so each scenario in the watchbill reddens on the current code without needing a real browser.
+diff --git a/features/dom-identity.feature b/features/dom-identity.feature
+new file mode 100644
+index 0000000..7e5da6d
+--- /dev/null
++++ b/features/dom-identity.feature
+@@ -0,0 +1,58 @@
++Feature: Todo item DOM identity
++  As a person driving the app through a real browser
++  I want an item update to mutate that item's existing element in place
++  So that an element reference the browser holds across the interaction stays attached to the document
++
++  Background:
++    Given the app is loaded
++
++  Scenario: Toggling a todo on preserves its list element
++    Given the app has the following todos:
++      | title | completed |
++      | A     | false     |
++    When the user records the current todo-list item elements
++    And the user clicks the toggle of the first todo item
++    Then the recorded todo-list item elements are still attached to the document
++    And the first recorded todo-list item element has class "completed"
++
++  Scenario: Toggling a todo off preserves its list element
++    Given the app has the following todos:
++      | title | completed |
++      | A     | true      |
++    When the user records the current todo-list item elements
++    And the user clicks the toggle of the first todo item
++    Then the recorded todo-list item elements are still attached to the document
++    And the first recorded todo-list item element does not have class "completed"
++
++  Scenario: Marking all complete preserves every list element
++    Given the app has the following todos:
++      | title | completed |
++      | A     | false     |
++      | B     | false     |
++    When the user records the current todo-list item elements
++    And the user clicks "#toggle-all"
++    Then the recorded todo-list item elements are still attached to the document
++    And every recorded todo-list item element has class "completed"
++
++  Scenario: Clearing all complete preserves every list element
++    Given the app has the following todos:
++      | title | completed |
++      | A     | true      |
++      | B     | true      |
++    When the user records the current todo-list item elements
++    And the user clicks "#toggle-all"
++    Then the recorded todo-list item elements are still attached to the document
++    And no recorded todo-list item element has class "completed"
++
++  Scenario: Editing a todo to empty removes only that item and keeps its siblings
++    Given the app has the following todos:
++      | title     | completed |
++      | Remove me | false     |
++      | Keep me   | false     |
++    When the user records the current todo-list item elements
++    And the user double-clicks the label of the first todo item
++    And the user sets the edit input of the first todo item to "   "
++    And the user presses Enter in the edit input of the first todo item
++    Then ".todo-list" contains exactly 1 todo item
++    And the recorded todo-list item element at index 2 is still attached to the document
++    And the remaining todo item's label reads "Keep me"
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..240d339
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,11 @@
++{
++  "watch1": {
++    "scenarios": [
++      "features/dom-identity.feature:Toggling a todo on preserves its list element",
++      "features/dom-identity.feature:Toggling a todo off preserves its list element",
++      "features/dom-identity.feature:Marking all complete preserves every list element",
++      "features/dom-identity.feature:Clearing all complete preserves every list element",
++      "features/dom-identity.feature:Editing a todo to empty removes only that item and keeps its siblings"
++    ]
++  }
++}

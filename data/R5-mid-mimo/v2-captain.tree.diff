@@ -1,0 +1,144 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+index 1611de6..d540e67 100644
+--- a/CAPTAIN.md
++++ b/CAPTAIN.md
+@@ -18,3 +18,16 @@ Binding behaviour lives in `.feature` specs and referenced `assets/**`. History
+ - `index.html` at project root, copied from the template with sample items removed and `js/app.js` wired in.
+ 
+ **Assets:** `assets/app-spec.md` (TodoMVC spec), `assets/app-template.index.html` (base markup). These are human-owned product material under Captain custody.
++
++## Voyage 2: Browser-acceptance defect fix
++
++**Defect 1 -- DOM Identity:** The `render()` function does `todoList.innerHTML = ''` and recreates every `<li>` from scratch on every state change. A real browser (Cypress) holds a reference to a node, clicks the checkbox, and the node is destroyed mid-chain. The harness re-queries, so it never notices. Fix: mutate existing nodes in place (toggle classes, update checked state) instead of rebuilding the list.
++
++**Defect 2 -- Missing CSS:** `index.html` links only `css/app.css` (empty directory). The TodoMVC editing visibility rules live in `node_modules/todomvc-app-css/index.css` (`.todo-list li.editing .view { display: none; }`) and are never loaded. Fix: add `<link rel="stylesheet" href="node_modules/todomvc-app-css/index.css">` to `index.html`.
++
++**New specs added:**
++- `features/dom-stability.feature` (2 scenarios) -- pins DOM node identity across toggle interactions.
++- `features/edit-todo.feature` scenario "Editing mode hides the toggle and view controls" -- pins the CSS visibility requirement.
++- `features/step_definitions/app.js` -- new step definitions for identity checking and visibility assertion.
++
++**Planted red:** All 3 new scenarios fail against current code, confirming the defects are real. The 37 pre-existing scenarios remain green.
+diff --git a/features/dom-stability.feature b/features/dom-stability.feature
+new file mode 100644
+index 0000000..23276ae
+--- /dev/null
++++ b/features/dom-stability.feature
+@@ -0,0 +1,25 @@
++Feature: DOM node stability during state changes
++  As a user
++  I want my todo list to remain stable when I interact with it
++  So that the interface stays responsive and predictable
++
++  Background:
++    Given the app is loaded
++
++  Scenario: Toggling a todo preserves existing todo nodes in the DOM
++    Given a todo "Buy milk" exists
++    And a todo "Walk the dog" exists
++    And the todo nodes are saved for identity check
++    When the user toggles the checkbox on todo "Buy milk"
++    Then todo "Buy milk" has the completed class
++    And todo "Walk the dog" does not have the completed class
++    And all todo nodes remain the same DOM objects
++
++  Scenario: Toggling all preserves existing todo nodes in the DOM
++    Given a todo "Buy milk" exists
++    And a todo "Walk the dog" exists
++    And the todo nodes are saved for identity check
++    When the user clicks the toggle-all checkbox
++    Then todo "Buy milk" has the completed class
++    And todo "Walk the dog" has the completed class
++    And all todo nodes remain the same DOM objects
+diff --git a/features/edit-todo.feature b/features/edit-todo.feature
+index 5449c83..962e9a9 100644
+--- a/features/edit-todo.feature
++++ b/features/edit-todo.feature
+@@ -43,3 +43,9 @@ Feature: Edit a todo
+     When the user double-clicks the label of todo "Buy milk"
+     And the user types "Changed" in the edit input and presses Escape
+     Then the todo at position 1 has title "Buy milk"
++
++  Scenario: Editing mode hides the toggle and view controls
++    Given a todo "Buy milk" exists
++    When the user double-clicks the label of todo "Buy milk"
++    Then todo "Buy milk" has the editing class
++    And the toggle control for todo "Buy milk" is not visible
+diff --git a/features/step_definitions/app.js b/features/step_definitions/app.js
+index bee4d54..5305764 100644
+--- a/features/step_definitions/app.js
++++ b/features/step_definitions/app.js
+@@ -101,6 +101,10 @@ Given('a todo {string} exists', function (title) {
+   addTodoToModel.call(this, title);
+ });
+ 
++Given('the todo nodes are saved for identity check', function () {
++  this._savedNodeRefs = todoItems.call(this).slice();
++});
++
+ Given('a completed todo {string} exists', function (title) {
+   addTodoToModel.call(this, title);
+   completeTodoInModel.call(this, title);
+@@ -336,6 +340,39 @@ Then(
+   }
+ );
+ 
++Then(
++  'the toggle control for todo {string} is not visible',
++  function (title) {
++    const li = todoWithTitle.call(this, title);
++    if (!li) throw new Error(`No todo found with title "${title}"`);
++    const viewDiv = li.querySelector('.view');
++    if (!viewDiv) throw new Error(`No .view div found for todo "${title}"`);
++    const style = this.window.getComputedStyle(viewDiv);
++    if (style.display !== 'none') {
++      throw new Error(
++        `Expected .view for todo "${title}" to be hidden (display: none) but found display: ${style.display}`
++      );
++    }
++  }
++);
++
++Then('all todo nodes remain the same DOM objects', function () {
++  if (!this._savedNodeRefs) throw new Error('No saved nodes to compare');
++  var currentNodes = todoItems.call(this);
++  if (this._savedNodeRefs.length !== currentNodes.length) {
++    throw new Error(
++      `Expected ${this._savedNodeRefs.length} nodes but found ${currentNodes.length}`
++    );
++  }
++  for (var i = 0; i < this._savedNodeRefs.length; i++) {
++    if (this._savedNodeRefs[i] !== currentNodes[i]) {
++      throw new Error(
++        `Node at position ${i} was destroyed and recreated (DOM identity changed)`
++      );
++    }
++  }
++});
++
+ Then('todo {string} exists', function (title) {
+   const li = todoWithTitle.call(this, title);
+   if (!li) throw new Error(`No todo found with title "${title}"`);
+diff --git a/watchbill.json b/watchbill.json
+index da48b11..e931f5b 100644
+--- a/watchbill.json
++++ b/watchbill.json
+@@ -17,6 +17,7 @@
+       "features/edit-todo.feature:Trimming whitespace on save",
+       "features/edit-todo.feature:Saving an empty edit removes the todo",
+       "features/edit-todo.feature:Pressing Escape discards the edit",
++      "features/edit-todo.feature:Editing mode hides the toggle and view controls",
+       "features/remove-todo.feature:Clicking destroy removes a todo",
+       "features/counter.feature:Counter shows zero when no todos exist",
+       "features/counter.feature:Counter shows the number of active todos",
+@@ -37,7 +38,9 @@
+       "features/routing.feature:Completed filter shows only completed todos",
+       "features/routing.feature:Completing a todo hides it from the Active filter",
+       "features/routing.feature:Uncompleting a todo hides it from the Completed filter",
+-      "features/routing.feature:Active filter persists across reload"
++      "features/routing.feature:Active filter persists across reload",
++      "features/dom-stability.feature:Toggling a todo preserves existing todo nodes in the DOM",
++      "features/dom-stability.feature:Toggling all preserves existing todo nodes in the DOM"
+     ]
+   }
+ }
