@@ -209,12 +209,24 @@ if command -v bwrap >/dev/null 2>&1; then
   # are NOT exposed; only the operator-authored copy (staged under $OUT/skillsrc) is.
   BW+=(--bind "$WORKSPACE" "$WORKSPACE" --bind "$OUT" "$OUT" --bind "$FAKEHOME" "$FAKEHOME"
        --bind "$INSTR" "$INSTR")
-  # Isolated node_modules via overlay: the shared toolkit ($EVAL_SHARED_NM, from
-  # eval-batch) as a READ-ONLY base + a per-leg tmpfs writable upper. The leg installs
-  # anything it wants into the upper; the shared store never mutates and nothing persists
-  # to disk (bwrap 0.11.2). scaffold.sh leaves an empty node_modules dir as the mountpoint.
+  # node_modules: the ONE shared toolkit ($EVAL_SHARED_NM) as a READ-ONLY lower, plus a
+  # PERSISTENT per-wave upper that survives the leg.
+  #
+  # It used to be --tmp-overlay: an invisible tmpfs upper, discarded when the leg ended. So a
+  # dependency a role installed vanished with its own leg, and the project could no longer run
+  # its own suite. Twice measured, both times the role did everything right:
+  #   chai (2026-07-27) — a suite went 19/21 GREEN over an EMPTY js/ because the harness died
+  #   ajv  (2026-07-28) — R6-mid-flash DECLARED "ajv": "^8.20.0" in package.json, and its suite
+  #                       then failed 'Cannot find module ajv' for TWELVE consecutive voyages.
+  #                       QM never had a red target and the cell sat at 18/29 doing nothing.
+  # Shipping the missing package each time is whack-a-mole; the defect is that installs do not
+  # persist. bwrap 0.11.2 supports `--overlay RWSRC WORKDIR DEST`, so the upper can live on disk
+  # next to the wave. The shared toolkit still never mutates — one fixture, unchanged — and each
+  # wave keeps whatever it installs, exactly as a real project would.
   if [ -n "${EVAL_SHARED_NM:-}" ] && [ -d "$EVAL_SHARED_NM/@cucumber" ]; then
-    BW+=(--overlay-src "$EVAL_SHARED_NM" --tmp-overlay "$WORKSPACE/node_modules")
+    NM_UPPER="$(dirname "$WORKSPACE")/.nm-upper"; NM_WORK="$(dirname "$WORKSPACE")/.nm-work"
+    mkdir -p "$NM_UPPER" "$NM_WORK"
+    BW+=(--overlay-src "$EVAL_SHARED_NM" --overlay "$NM_UPPER" "$NM_WORK" "$WORKSPACE/node_modules")
   fi
   BW+=(--share-net --chdir "$WORKSPACE" --clearenv)
   for kv in "${ENVV[@]}"; do BW+=(--setenv "${kv%%=*}" "${kv#*=}"); done
