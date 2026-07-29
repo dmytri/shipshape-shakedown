@@ -43,7 +43,7 @@ say(){ echo "[$(date -u +%FT%TZ)] $*" | tee -a "$LOG"; }
 SHARED_NM="${DRIVER_SHARED_NM:-$SCRATCH/.shared-nm}"
 if [ ! -e "$SHARED_NM/node_modules/@cucumber" ] || [ ! -e "$SHARED_NM/node_modules/happy-dom" ] || [ ! -e "$SHARED_NM/node_modules/.bin/skills" ]; then
   ( cd "$SHARED_NM" && [ -f package.json ] || npm init -y >/dev/null 2>&1
-    npm install --no-fund --no-audit --save-dev @cucumber/cucumber @dk/yoink happy-dom skills c8 jsdoc knip @biomejs/biome chai sinon >/dev/null 2>&1 \
+    npm install --no-fund --no-audit --save-dev @cucumber/cucumber @dk/yoink happy-dom skills c8 jsdoc knip @biomejs/biome chai sinon ajv ajv-formats jsdom expect todomvc-app-css todomvc-common gplint @ast-grep/cli >/dev/null 2>&1 \
     || npm install --no-fund --no-audit @cucumber/cucumber "$HOME/yoink" happy-dom skills c8 jsdoc knip @biomejs/biome >/dev/null 2>&1 )
 fi
 export EVAL_SHARED_NM="$SHARED_NM/node_modules"
@@ -232,8 +232,8 @@ for f in glob.glob(os.path.join(sim,"features","**","*.feature"),recursive=True)
 print(f"planks={len(planks)} on-seam={onseam} hoisted={hoisted} | @captain={cap} @conformance={con}")
 PY
 }
-run_shipwright(){ # $1=label
-  local label="$1"
+run_shipwright(){ # $1=label  [$2=--no-revert]
+  local label="$1" norevert="${2:-}"
   disk_ok || { say "SHIPWRIGHT[$label] SKIPPED — disk guard"; return; }
   local out="$BASE/sw-$label.out" t0 t1 committed=no prehead
   prehead="$(git -C "$SIM" rev-parse HEAD 2>/dev/null)"
@@ -253,7 +253,22 @@ run_shipwright(){ # $1=label
   rm -f "$SIM/node_modules"; mkdir -p "$SIM/node_modules"
   # A suite that cannot RUN is red (2026-07-27): only "failed" was checked, so a harbour pass
   # leaving an unrunnable suite (missing test dep) was kept and reported "self-suite:?".
-  if [ -z "$ss" ]; then
+  # VOYAGE 0 IS EXEMPT (2026-07-29). The fit-out pass is where RIGGING.md is born, and a
+  # greenfield fit-out NECESSARILY leaves scenarios red or undefined: Shipwright writes skeletons
+  # for features that do not exist yet. Reverting it therefore destroys the rigging the whole
+  # pilot depends on, and whether that happens is a coin flip on whether those skeletons report
+  # "failed" (reverted) or "undefined" (kept).
+  # Measured across R6/R7/R8: EVERY fit-out pass was reverted. Waves that scored at all only
+  # recovered because a later leg re-authored RIGGING.md; the ones that did not produced
+  # R8-ctrl-flash 0/29 (its QM died on `cat: RIGGING.md: No such file or directory`, 11 turns,
+  # zero writes), R6-ctrl-hy3 0/29, and R6-mid-flash 18/29 — which I wrongly blamed on the
+  # midway build for hours.
+  # Voyage 1's build already carries --no-revert on exactly this reasoning: a partial build is
+  # progress, not a regression. A partial fit-out is progress too.
+  if [ "$norevert" = "--no-revert" ]; then
+    [ -z "$ss" ] && committed="$committed (self-suite DID NOT RUN — kept, voyage 0 exempt)"
+    echo "$ss" | grep -qE 'failed' && committed="$committed (self-suite red — kept, voyage 0 exempt)"
+  elif [ -z "$ss" ]; then
     echo "$ssraw" | sed -n '1,6p' >&2
     git -C "$SIM" reset --hard "$prehead" >/dev/null 2>&1 || true; committed="reverted(self-suite DID NOT RUN)"
   elif echo "$ss" | grep -qE 'failed'; then git -C "$SIM" reset --hard "$prehead" >/dev/null 2>&1 || true; committed="reverted(self-suite red)"; fi
@@ -271,7 +286,7 @@ run_shipwright(){ # $1=label
 # the deadlock. The doctrine contradiction itself is routed to dk, NOT worked around in the text.
 if [ "$RESUME_FROM" -eq 0 ]; then
   say "VOYAGE 0 (fit out: Shipwright harbour pass BEFORE the build)"
-  run_shipwright fitout
+  run_shipwright fitout --no-revert
   say "VOYAGE 1 (build)"
   w=$(run_voyage 1 "$HERE/tasks/pilot/captain-todomvc.task.md" "--no-revert")
   if grep -q 'PROVIDER ERROR' "$BASE/v1.log" 2>/dev/null; then say "PROVIDER ERROR on build — STOP"; echo PILOT-DONE; exit 5; fi
