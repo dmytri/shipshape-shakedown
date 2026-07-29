@@ -56,20 +56,10 @@ run_leg() {
   "$HERE/bin/eval-leg.sh" --model "$MODEL" --workspace "$SIM" --out "$out" \
        "${skill_args[@]}" --task-file "$task" --name "$name" --timeout-s "$TIMEOUT_S" \
        >"$BASE/$name.leg.log" 2>&1 || legrc=$?
-  # CUSTODY FIRST (2026-07-28). A leg's work must become a commit before anything that can kill
-  # this script runs. It used to be committed at the end of the voyage, AFTER the provider-error
-  # guard — and that guard was OOM-killing the script, so P6-ctrl-cmimo's V2 work was never
-  # committed. The oracle then graded the WORKING TREE (the grader copies $BUILD as-is) at
-  # 26/29 — a real improvement — and the next voyage's revert guard, which resets to the last
-  # COMMIT, deleted it: 26 -> 23, twice, logged as a model regression. It was ours.
-  # Grade-on-dirty-tree and revert-to-commit must not disagree; committing here makes them agree
-  # and makes a killed script cost time rather than work.
-  if [ -n "$(git -C "$SIM" status --porcelain 2>/dev/null)" ]; then
-    git -C "$SIM" add -A >/dev/null 2>&1 || true
-    git -C "$SIM" -c user.name="Sim Operator" -c user.email="sim@example.test" \
-      commit -qm "$V $name (operator custody, post-leg)" >/dev/null 2>&1 \
-      && echo "eval-voyage[$WAVE/$V]: leg $name work committed (custody-first)"
-  fi
+  # The harness does not commit for the roles (dk, 2026-07-29). Taking custody is Boatswain's
+  # job; a harness that commits when the roles did not HIDES that outcome, and the oracle
+  # grades the working tree regardless. With reverts gone there is nothing to protect work
+  # from, so nothing needs preserving.
   if [ "$legrc" = 0 ]; then
     "$HERE/bin/eval-bank.sh" --wave "$WAVE" --name "$name" --out "$out" --workspace "$SIM" --verdict PENDING >/dev/null 2>&1 || true
     echo "eval-voyage[$WAVE/$V]: leg $name banked (exit $(cat "$out/exit" 2>/dev/null))"
@@ -116,10 +106,8 @@ PY
 # --- Captain (operator-directed intent) ---
 sed "s#PROJECT_ROOT_PLACEHOLDER#$SIM#g" "$CAP_TASK" > "$BASE/$V-captain.task"
 run_leg "$V-captain" "$BASE/$V-captain.task" "$SKILLS_DIR/shipshape" "$SKILLS_DIR/captain" "${YEXTRA[@]}"
-git -C "$SIM" add -A >/dev/null 2>&1 || true
-if [ -n "$(git -C "$SIM" status --porcelain)" ]; then
-  git -C "$SIM" -c user.name="Sim Operator" -c user.email="sim@example.test" commit -qm "$V captain: specs + watchbill" || true
-fi
+# The dispatch contract needs a base commit to name; it is whatever the roles have left at HEAD.
+# The harness does not create one on their behalf.
 BASE_COMMIT="$(git -C "$SIM" rev-parse HEAD)"
 echo "eval-voyage[$WAVE/$V]: captain base $(git -C "$SIM" rev-parse --short HEAD)"
 
@@ -127,13 +115,15 @@ echo "eval-voyage[$WAVE/$V]: captain base $(git -C "$SIM" rev-parse --short HEAD
 sed -e "s#PROJECT_ROOT_PLACEHOLDER#$SIM#g" -e "s#BASE_COMMIT_PLACEHOLDER#$BASE_COMMIT#g" "$QM_TASK" > "$BASE/$V-qm.task"
 run_leg "$V-qm" "$BASE/$V-qm.task" "$SKILLS_DIR/shipshape" "$SKILLS_DIR/qm" "$SKILLS_DIR/crew" "$SKILLS_DIR/boatswain" "${YEXTRA[@]}"
 
-# --- operator custody: preserve the post-QM build verbatim ---
-git -C "$SIM" add -A >/dev/null 2>&1 || true
-if [ -n "$(git -C "$SIM" status --porcelain)" ]; then
-  git -C "$SIM" -c user.name="Sim Operator" -c user.email="sim@example.test" commit -qm "$V build (operator custody)" || true
-  echo "eval-voyage[$WAVE/$V]: operator-committed build $(git -C "$SIM" rev-parse --short HEAD)"
+# --- custody is the ROLES' business, and whether they took it is a RESULT ---
+# The harness used to commit the post-QM tree "to preserve it verbatim". That hid a doctrine
+# outcome: Boatswain either takes custody or it does not, and a harness commit makes those two
+# look identical in the record. The oracle grades the working tree either way, and with reverts
+# gone nothing can destroy uncommitted work. So: observe, never write.
+if [ -n "$(git -C "$SIM" status --porcelain 2>/dev/null)" ]; then
+  echo "eval-voyage[$WAVE/$V]: ROLES LEFT WORK UNCOMMITTED (custody not taken) — recorded, not committed"
 else
-  echo "eval-voyage[$WAVE/$V]: build already committed by roles $(git -C "$SIM" rev-parse --short HEAD)"
+  echo "eval-voyage[$WAVE/$V]: roles committed their own work $(git -C "$SIM" rev-parse --short HEAD)"
 fi
 
 # --- roles' own self-suite ---
@@ -169,15 +159,23 @@ restore_nm
 # on --no-revert (voyage 1: a still-incomplete build is progress, not a regression to wipe).
 # A suite that does not RUN is red too (2026-07-27): the guard only matched "N failed", so a
 # voyage whose suite died on a missing module logged VOYAGE-COMPLETE and rode into the base.
-if [ "$NO_REVERT" = "0" ] && ! grep -qE '[0-9]+ scenarios' "$BASE/$V-selfsuite.txt"; then
-  echo "eval-voyage[$WAVE/$V]: SELF-SUITE DID NOT RUN (no scenario line) — treating as RED"
+# THE HARNESS NEVER UNDOES ROLE WORK (dk, 2026-07-29). This used to `git reset --hard` a voyage
+# whose self-suite came back red. That is the harness editing the experiment it is supposed to
+# measure, and it cost more than it ever saved:
+#   - it destroyed RIGGING.md at voyage 0 (fit-out skeletons are red by nature), which produced
+#     0/29 cells all session and one 18/29 I misattributed to a doctrine build for hours
+#   - it deleted a MEASURED 26/29 improvement whose custody commit an OOM had prevented, and the
+#     log then reported that loss as a model regression (26 -> 23, twice)
+# A voyage that leaves the suite red is DATA: the next correction voyage sees it, and the
+# trajectory shows it. We are testing doctrine, not protecting a base from it.
+# The harness still PRESERVES work (custody commits) — it just never takes any back.
+if ! grep -qE '[0-9]+ scenarios' "$BASE/$V-selfsuite.txt"; then
+  echo "eval-voyage[$WAVE/$V]: SELF-SUITE DID NOT RUN (no scenario line) — recorded, NOT reverted"
   sed -n '1,6p' "$BASE/$V-selfsuite.txt"
-  git -C "$SIM" reset --hard "$PREHEAD" >/dev/null 2>&1 || true
-  echo "eval-voyage[$WAVE/$V]: VOYAGE-REGRESSED"
-elif [ "$NO_REVERT" = "0" ] && grep -qE '[1-9][0-9]* failed' "$BASE/$V-selfsuite.txt"; then
-  echo "eval-voyage[$WAVE/$V]: SELF-SUITE RED — reverting voyage to $PREHEAD (base not poisoned)"
-  git -C "$SIM" reset --hard "$PREHEAD" >/dev/null 2>&1 || true
-  echo "eval-voyage[$WAVE/$V]: VOYAGE-REGRESSED"
+  echo "eval-voyage[$WAVE/$V]: VOYAGE-COMPLETE (suite unrunnable)"
+elif grep -qE '[1-9][0-9]* failed' "$BASE/$V-selfsuite.txt"; then
+  echo "eval-voyage[$WAVE/$V]: SELF-SUITE RED — recorded, NOT reverted (the next voyage sees it)"
+  echo "eval-voyage[$WAVE/$V]: VOYAGE-COMPLETE (suite red)"
 else
   echo "eval-voyage[$WAVE/$V]: VOYAGE-COMPLETE"
 fi

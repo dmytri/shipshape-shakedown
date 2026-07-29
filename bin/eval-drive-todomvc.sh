@@ -80,13 +80,24 @@ else
   [ -d "$SIM/.git" ] || { say "RESUME: sim missing at $SIM"; echo PILOT-DONE; exit 4; }
 fi
 
-grade(){ # -> writes $BASE/vN-oracle.txt ; echoes "passing tests"
+grade(){ # -> writes $BASE/vN-oracle.txt ; echoes "passing tests", or "ERR ERR" if UNMEASURED
+  # A FAILED MEASUREMENT IS NOT A ZERO (2026-07-29). This used to echo "0 29" when the disk guard
+  # tripped, and `${p:-0} ${t:-29}` turned ANY grader failure — a crash, a refusal (exit 6), a
+  # missing file — into a real-looking 0/29 in the trajectory, indistinguishable from a build
+  # that genuinely scored nothing. The driver then picked a `page` intent and burned voyages
+  # correcting a product that was never measured. Every mysterious "0 0 23..." opening this
+  # session came through here.
+  # Unmeasured now returns ERR and the caller STOPS, the same way a provider error does.
   local v="$1"
-  disk_ok || { echo "0 29"; return; }   # never grade on a full disk — the number would be a lie
+  disk_ok || { echo "ERR ERR"; return; }
   "$HERE/bin/oracle-grade.sh" --build "$SIM" --out "$BASE/$v-oracle.txt" --clone "$CLONE" --port "$PORT" >"$BASE/$v-oraclerun.log" 2>&1 || true
+  grep -q '^GRADE:' "$BASE/$v-oracle.txt" 2>/dev/null || { echo "ERR ERR"; return; }
   local p t; p=$(grep -oE 'passing=[0-9]+' "$BASE/$v-oracle.txt" 2>/dev/null | head -1 | cut -d= -f2)
   t=$(grep -oE 'tests=[0-9]+' "$BASE/$v-oracle.txt" 2>/dev/null | head -1 | cut -d= -f2)
-  echo "${p:-0} ${t:-29}"
+  # a GRADE line with unparseable counts is also unmeasured, not zero
+  case "${p:-}${t:-}" in "" ) echo "ERR ERR"; return;; esac
+  [ -n "${p:-}" ] && [ -n "${t:-}" ] || { echo "ERR ERR"; return; }
+  echo "$p $t"
 }
 titles(){ sed -n '/## failing tests/,/## /p' "$BASE/$1-oracle.txt" 2>/dev/null | grep '^  - ' | sed 's/^  - //'; }
 
@@ -243,10 +254,12 @@ run_shipwright(){ # $1=label  [$2=--no-revert]
     --skill "$SKILLS_DIR/shipshape" --skill "$SKILLS_DIR/shipwright" "${YSK[@]}" \
     --task-file "$BASE/sw-$label.task" --name "sw-$label" --timeout-s "$TIMEOUT_S" >"$BASE/sw-$label.leg.log" 2>&1 || true
   t1=$(date +%s)
-  git -C "$SIM" add -A >/dev/null 2>&1 || true
-  [ -n "$(git -C "$SIM" status --porcelain)" ] && { git -C "$SIM" -c user.name="Sim Operator" -c user.email="sim@example.test" commit -qm "shipwright harbour ($label)" >/dev/null 2>&1 && committed=yes; }
+  # Observe whether Shipwright left work; never commit it for them (dk, 2026-07-29). Custody is
+  # a role's act, and a harness commit makes "Shipwright committed" and "Shipwright did not"
+  # indistinguishable in the record.
+  [ -n "$(git -C "$SIM" status --porcelain 2>/dev/null)" ] && committed="uncommitted-by-roles" || committed="committed-by-roles"
   local audit; audit="$(audit_planks)"
-  # keep the sim GREEN — a harbour pass that breaks the self-suite is reverted (measured, not merged)
+  # measure the suite; never revert on it
   rm -rf "$SIM/node_modules"; ln -s "$EVAL_SHARED_NM" "$SIM/node_modules"
   local ssraw; ssraw=$( cd "$SIM" && NODE_OPTIONS="--max-old-space-size=2048" npx cucumber-js 2>&1 )
   local ss; ss=$( echo "$ssraw" | grep -oE '[0-9]+ scenarios( \([^)]*\))?' | head -1 )
@@ -265,13 +278,10 @@ run_shipwright(){ # $1=label  [$2=--no-revert]
   # midway build for hours.
   # Voyage 1's build already carries --no-revert on exactly this reasoning: a partial build is
   # progress, not a regression. A partial fit-out is progress too.
-  if [ "$norevert" = "--no-revert" ]; then
-    [ -z "$ss" ] && committed="$committed (self-suite DID NOT RUN — kept, voyage 0 exempt)"
-    echo "$ss" | grep -qE 'failed' && committed="$committed (self-suite red — kept, voyage 0 exempt)"
-  elif [ -z "$ss" ]; then
-    echo "$ssraw" | sed -n '1,6p' >&2
-    git -C "$SIM" reset --hard "$prehead" >/dev/null 2>&1 || true; committed="reverted(self-suite DID NOT RUN)"
-  elif echo "$ss" | grep -qE 'failed'; then git -C "$SIM" reset --hard "$prehead" >/dev/null 2>&1 || true; committed="reverted(self-suite red)"; fi
+  # Never reverted, for any label — see the note in eval-voyage.sh. A harbour pass that leaves
+  # the suite red is recorded and left standing; the next voyage works from what the roles did.
+  [ -z "$ss" ] && committed="$committed (self-suite DID NOT RUN — kept)"
+  echo "$ss" | grep -qE 'failed' && committed="$committed (self-suite red — kept)"
   say "SHIPWRIGHT[$label] $((t1-t0))s | committed=$committed | self-suite:${ss:-?} | $audit"
 }
 
@@ -293,12 +303,16 @@ if [ "$RESUME_FROM" -eq 0 ]; then
   ss=$(grep -oE '[0-9]+ scenarios( \([^)]*\))?' "$BASE/v1-selfsuite.txt" 2>/dev/null | head -1)
   say "V1 build ${w}s | self-suite: ${ss:-?}"
   read -r p t <<<"$(grade v1)"
+  if [ "$p" = ERR ]; then say "GRADE FAILED (unmeasured) after the build — STOP, nothing is scored"; echo PILOT-DONE; exit 7; fi
   say "V1 (post-shipwright) | oracle ${p}/${t} | failing:"; titles v1 | sed 's/^/    /' | tee -a "$LOG" >/dev/null
   START=2
 else
-  # discard any dirty tree left by an interrupted voyage — grade only the last committed state
-  git -C "$SIM" reset --hard HEAD >/dev/null 2>&1 || true
-  git -C "$SIM" clean -fd >/dev/null 2>&1 || true
+  # An interrupted voyage may leave a dirty tree. PRESERVE it as operator custody rather than
+  # discarding it: this was the last place the harness could still destroy role work, and a
+  # discarded dirty tree is exactly how a measured 26/29 was lost earlier today.
+  # A dirty tree left by an interrupted voyage is left exactly as it is: not discarded, and not
+  # committed either. The harness reads this repo; it does not write it.
+  [ -n "$(git -C "$SIM" status --porcelain 2>/dev/null)" ] && say "RESUME: dirty tree left by an interrupted voyage — left untouched"
   say "RESUME: Shipwright harbour pass #1 (before oracle), then grade baseline (voyage $((RESUME_FROM-1)))"
   run_shipwright prebuild
   read -r p t <<<"$(grade v$((RESUME_FROM-1)))"
@@ -352,6 +366,7 @@ for v in $(seq "$START" "$MAXV"); do
   outcome=$(grep -oE 'VOYAGE-(COMPLETE|REGRESSED)' "$BASE/v$v.log" | tail -1)
   ss=$(grep -oE '[0-9]+ scenarios( \([^)]*\))?' "$BASE/v$v-selfsuite.txt" 2>/dev/null | head -1)
   read -r p t <<<"$(grade v$v)"
+  if [ "$p" = ERR ]; then say "GRADE FAILED (unmeasured) at voyage $v — STOP rather than record a number"; break; fi
   cur_titles=$(titles v$v)
   say "V$v $intent ${w}s | $outcome | self-suite: ${ss:-?} | oracle ${p}/${t} | failing:"; echo "$cur_titles" | sed 's/^/    /' | tee -a "$LOG" >/dev/null
   LAST_INTENT="$intent"

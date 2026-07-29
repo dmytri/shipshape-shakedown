@@ -50,13 +50,4 @@ if [ "$ARM" = midway ]; then
 fi
 
 exec env DRIVER_SHARED_NM="$HERE/.eval-scratch/.shared-nm" \
-  "$HERE/bin/eval-drive-todomvc.sh" \
-    --wave "$WAVE" \
-    --model "$MODEL" \
-    --skills-dir "$SKILLS" \
-    --yoink-skill "$HOME/yoink/skills/yoink" \
-    --clone "$HERE/.eval-scratch/oracle-clone" \
-    --port "$PORT" \
-    --max-voyages 12 \
-    --oracle-correct \
-    --timeout-s 3600
+  "$HERE/bin/pilot-run.sh" "$WAVE" "$MODEL" "$SKILLS" "$PORT"
