@@ -27,7 +27,8 @@ alias_of() { case "$1" in
 esac; }
 
 launch() {
-  local st="$1" m="$2" w="M-$TAG-$st-$m" to=1800
+  local st="$1" m="$2"
+  local w="M-$TAG-$st-$m" to=1800
   [ "$m" = "hy3" ] && to=2700
   [ "$st" = "rs" ] && to=$((to + 900))
   [ "$st" = "go" ] && to=$((to + 300))

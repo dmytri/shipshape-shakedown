@@ -66,6 +66,28 @@ grep -q 'never a gate' "$R" && ok "self-suite observed, never used to revert" ||
 grep -qE 'features specs|for r in features specs' "$R" && ok "self-suite finds specs/ or features/" || no "self-suite spec-path handling missing"
 grep -q 'NM_UPPER' "$HERE/bin/eval-leg.sh" && ok "node_modules persists per wave (a role's install survives)" || no "persistent node_modules missing"
 grep -q 'modelOverrides' "$HERE/bin/eval-leg.sh" && ok "output budget applied via models.json (the mechanism pi honours)" || no "budget override missing"
+# defect 14 (2026-07-29): `local a=$1 b=$a` aborts under set -u, which killed every voyage 2.
+# Check the CLASS across every harness script, not just the one line that bit us.
+python3 - "$HERE"/bin/*.sh <<'PY' && ok "no local self-reference (the defect-14 class)" || no "a local assignment reads a variable it assigns on the same line"
+import re, sys
+bad = []
+for f in sys.argv[1:]:
+    for n, line in enumerate(open(f, errors="ignore"), 1):
+        m = re.match(r"\s*local\s+(.*)", line)
+        if not m: continue
+        # only the `local` command itself: a read after `;` is a separate command and is safe
+        rest = m.group(1).split(";")[0]
+        for part in re.finditer(r"(\w+)=", rest):
+            v = part.group(1)
+            if re.search(r"\$\{?%s\b" % re.escape(v), rest[part.end():]):
+                bad.append(f"{f}:{n}: `local {v}=` is read later in the SAME local — unset under set -u")
+for b in bad: print(b, file=sys.stderr)
+sys.exit(1 if bad else 0)
+PY
+# dk, 2026-07-29: gplint config is part of fit-out grading — measured, never seeded.
+grep -q 'FIT-OUT' "$R" && ok "fit-out grade recorded (gplintrc, rigging lint, gplint run)" || no "fit-out is not graded"
+grep -qE '(python3|bin/)[^#]*rigging-conform' "$R" && no "fit-out grade keys on ## Methods — penalises the control arm" || ok "fit-out grade is vocabulary-neutral across arms"
+[ -e "$HERE/.eval-scratch/.shared-nm/node_modules/.bin/gplint" ] && ok "gplint resolves from the shared toolkit (no registry round-trip)" || no "gplint missing from shared toolkit"
 
 echo "=== arms ==="
 for arm in control candidate midway; do

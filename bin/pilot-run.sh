@@ -60,6 +60,40 @@ selfsuite(){ # the roles' own suite, observed only — never a gate
   grep -oE '[0-9]+ scenarios( \([^)]*\))?' "$BASE/$v-selfsuite.txt" | head -1
 }
 
+fitout(){ # what the fit-out produced for spec linting — OBSERVED and recorded, never a gate
+  # dk, 2026-07-29: gplint config belongs in fit-out grading. The harness does NOT seed .gplintrc
+  # (that is role-authored fit-out output — arranging it would answer the question we are asking);
+  # it measures what the wave produced. Deliberately VOCABULARY-NEUTRAL: rigging-conform.py keys on
+  # `## Methods`, which is the candidate arm's word, so using it here would score every control
+  # cell "no Methods section" and manufacture an arm difference out of naming. These three facts
+  # read the same in both arms.
+  local v="$1"
+  local rc lintval="absent" cfg="no" gp="not-run" out="$BASE/$v-fitout.txt"
+  [ -f "$SIM/.gplintrc" ] && cfg="yes"
+  if [ -f "$SIM/RIGGING.md" ]; then
+    lintval="$(grep -iE '^[[:space:]]*[-*]?[[:space:]]*(spec-)?lint[[:space:]]*:' "$SIM/RIGGING.md" \
+      | head -1 | sed 's/^[^:]*:[[:space:]]*//' | tr -d '`' | cut -c1-60)"
+    [ -n "$lintval" ] || lintval="absent"
+  fi
+  # Run the linter the way the project would: shared toolkit mounted, spec surface only. Globs stay
+  # QUOTED so gplint expands them (bash without globstar drops features/*.feature from `**`).
+  if [ "$cfg" = no ]; then
+    # gplint with no .gplintrc REFUSES TO START ("Could not find config file"). That is a different
+    # fact from a clean spec surface, and scoring it as red(0 problems) would read as the opposite
+    # of what happened. Name it for what it is.
+    gp="no-config"
+    echo "gplint not run: no .gplintrc in the tree" >"$out"
+  else
+    rm -rf "$SIM/node_modules"; ln -s "$EVAL_SHARED_NM" "$SIM/node_modules"
+    ( cd "$SIM" && npx gplint 'features/**/*.feature' 'specs/**/*.feature' ) >"$out" 2>&1
+    rc=$?
+    rm -f "$SIM/node_modules"; mkdir -p "$SIM/node_modules"
+    if [ "$rc" -eq 0 ]; then gp="green"
+    else gp="red($(grep -cE '^ *[0-9]+ +[0-9]+ +(error|warn)' "$out" 2>/dev/null || echo '?') problems)"; fi
+  fi
+  echo ".gplintrc: $cfg | rigging lint: $lintval | gplint: $gp"
+}
+
 grade(){ # echoes "passing total", or "ERR ERR" when UNMEASURED — never a fake zero
   local v="$1"
   "$HERE/bin/oracle-grade.sh" --build "$SIM" --out "$BASE/$v-oracle.txt" --clone "$CLONE" \
@@ -76,7 +110,12 @@ titles(){ sed -n '/## failing tests/,/## /p' "$BASE/$1-oracle.txt" 2>/dev/null |
 
 # the oracle-response prompt: the exact browser failure, verbatim, no rephrase
 correction(){ # correction <prev-voyage-tag> -> writes a task file, echoes its path
-  local vg="$1" cyp="$BASE/$vg-oracle.cypress.log" task="$BASE/correct-after-$vg.task" block=""
+  # `local a=$1 b=$a` does NOT work: local expands ALL its assignment words before assigning any
+  # of them, so $vg is still unset here and `set -u` aborts the whole command substitution. That
+  # left $task empty, `cp ''` failed, and every voyage 2 died with no session (defect 14,
+  # 2026-07-29 — the reason pilot-run.sh had never completed a full wave). Keep these separate.
+  local vg="$1"
+  local cyp="$BASE/$vg-oracle.cypress.log" task="$BASE/correct-after-$vg.task" block=""
   [ -f "$cyp" ] && block="$(awk '/^  [0-9]+\)/{f=1} f{print} /^\s*[0-9]+ passing|\(Results\)/{if(f)exit}' "$cyp")"
   [ -n "$block" ] || block="$(titles "$vg" | sed 's/^/  - /')"
   { sed "s#PROJECT_ROOT_PLACEHOLDER#$SIM#g" "$HERE/tasks/pilot/correction-header.md" 2>/dev/null \
@@ -104,6 +143,7 @@ read -r p t <<<"$(grade v1)"
 [ "$p" = ERR ] && { say "GRADE UNMEASURED after the initial prompt — STOP, nothing is scored"; exit 7; }
 [ -n "$(git -C "$SIM" status --porcelain 2>/dev/null)" ] && custody="roles left work UNCOMMITTED" || custody="roles committed"
 say "V1 | self-suite: ${ss:-none} | $custody | oracle ${p}/${t}"
+say "V1 FIT-OUT | $(fitout v1)"
 titles v1 | sed 's/^/    /' | tee -a "$LOG" >/dev/null
 
 # --- oracle-response prompts -> grading, until the ceiling or the cap ---
@@ -121,6 +161,7 @@ for v in $(seq 2 "$MAXV"); do
   [ "$p" = ERR ] && { say "GRADE UNMEASURED at voyage $v — STOP rather than record a number"; break; }
   [ -n "$(git -C "$SIM" status --porcelain 2>/dev/null)" ] && custody="roles left work UNCOMMITTED" || custody="roles committed"
   say "V$v | self-suite: ${ss:-none} | $custody | oracle ${p}/${t}"
+  say "V$v FIT-OUT | $(fitout "v$v")"
   titles "v$v" | sed 's/^/    /' | tee -a "$LOG" >/dev/null
 done
 
