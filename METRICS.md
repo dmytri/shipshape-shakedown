@@ -1,5 +1,30 @@
 # Metrics: how to read a shakedown
 
+## 2026-07-30 — the instrument works: 28/29 in two voyages
+
+| wave | driver shape | voyages | trajectory | final | wall |
+|---|---|---|---|---|---|
+| SMOKE2-control-flash | 2 sessions/voyage + git handoff | 12 (cap) | 24 26 26 26 25 25 25 26 26 26 25 25 | 25/29 | 95 min |
+| SMOKE3-control-flash | 2 sessions, handoff fixed | 1, STOPPED | — | unmeasured (QM blocked, B1) | 6 min |
+| **SMOKE4-control-flash** | **1 session/voyage** | **2** | **24 28** | **28/29 REACHED** | **34 min** |
+
+Same fixture, same model, same oracle, same doctrine text in all three. **The only variable is
+the driver shape.** Splitting a voyage across two pi sessions with a git handoff between them
+cost ten voyages and an unreachable ceiling; one session reaches it on the first correction.
+
+**Read the SMOKE2 numbers as a measurement of the harness, never of flash or of doctrine.** Its
+self-suite froze at 37/37 for twelve voyages because QM never received a watchbill it could act
+on — the handoff stashed it. SMOKE4's self-suite is 27/27 and the wave finished before growth
+mattered.
+
+**Custody is now a real observation.** SMOKE4: `roles committed` at both voyages, with zero
+harness git writes. The sim's own log shows the roles' three commits, including the fix that
+mattered: "preserve DOM element references across render()".
+
+**Latency shape changed and that is expected.** One session per voyage: V1 29 min, V2 5 min.
+Two sessions per voyage averaged ~8 min TOTAL while accomplishing less, because much of each leg
+went on re-establishing context and adjudicating a custody foul the harness manufactured.
+
 ## 2026-07-29 (later) — the 3x3 is still unspent. Defects 14 and 15.
 
 **No matrix, no doctrine, no new baseline.** Two smokes, one aborted by defect 14 and one run

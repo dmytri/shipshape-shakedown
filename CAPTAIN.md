@@ -1,6 +1,51 @@
 # Captain notes - shipshape-shakedown workstream
 
 <!-- ============================================================================= -->
+## >>> 2026-07-30: 28/29 IN TWO VOYAGES. The leg split was the whole problem. <<<
+
+**SMOKE4-control-flash: V1 24/29 -> V2 28/29, REACHED, 34 minutes.** Against SMOKE2's twelve
+voyages and 95 minutes oscillating at 25-26 on the same fixture, model, oracle and doctrine.
+
+**dk, 2026-07-30, and this is the design:** "basic fixture, agent runs in bwrap with the todomvc
+specs, runs autonomously until oracle, then the playbook gives the clean exact error back until
+28/29." The driver was not doing that. It ran TWO pi sessions per voyage — `v-captain` then
+`v-qm` — with a git handoff contract between them. **Every defect of 07-29/30 lived on that one
+seam, and none of them were the model, the oracle or the doctrine:**
+
+- **14** `correction()` read `$vg` inside the same `local` that assigned it; `set -u` aborted the
+  command substitution, `$task` came back empty, and voyage 2 produced no session. ALWAYS. That
+  is why pilot-run.sh had never completed a wave.
+- **16** `BASE_COMMIT` was read AFTER the Captain leg but the prompt forbade Captain to commit, so
+  the base never contained the Captain's work. The old `eval-voyage.sh` committed FOR the roles
+  and only then read the hash; `a8c4118` deleted that commit and left the prohibition standing.
+- **15** so QM opened on a dirty tree carrying a watchbill absent from its own base, called the
+  foul and stashed it. Stash ops in 6 of 7 QM legs; a real repair destroyed at v3. No targets for
+  ten voyages, self-suite frozen at 37/37, Captain hand-patching `js/app.js` every voyage.
+- **B1** and when the handoff was finally clean, a cold QM blocked on a `RIGGING.md` it never saw.
+
+**One session per voyage deletes the class.** Every role skill is loaded and the agent assumes
+each role in place — which is what the skills already say to do with no spawn tool, and exactly
+what the old QM leg already did for Crew and Boatswain. Gone: `BASE_COMMIT`, the handoff reporter,
+the qm dispatch task, "do not commit". There is no inter-leg, so no inter-leg state to get wrong.
+`bin/selftest.sh` (33 checks) now FAILS if the split, the `BASE_COMMIT` contract, or the
+commit prohibition returns.
+
+**The bug the roles were actually chasing.** SMOKE4's fix commit: "preserve DOM element references
+across render()". The oracle aliases the first `<li>`, creates a second todo, and a full `render()`
+destroys the aliased node — the toggle handler was never at fault. SMOKE2 spent ten voyages
+mutating that handler (preventDefault added, removed, change/click split, dual listeners) because
+the verbatim Cypress error names `cy.find()` and the toggle, and its own happy-dom tier cannot
+reproduce alias detachment at all. A single agent holding the build context found it in one voyage.
+
+**bwrap containment was never breached.** `ESCAPED` in `eval-leg.sh` is a misnamed transcript grep
+for cockpit-looking path STRINGS in tool arguments. Verified directly: inside the jail
+`/home/exedev/shipshape-shakedown` holds only the empty parent chain of the bind; CAPTAIN.md and
+AGENTS.md are `No such file or directory`. It flags a wasted turn, not a breach. **Rename it.**
+
+**R9 is now unblocked** — a wave that reaches the ceiling in two voyages is an instrument worth
+spending nine on.
+
+<!-- ============================================================================= -->
 ## >>> 2026-07-29 (later): the 3x3 did NOT run. Two more instrument defects first. <<<
 
 **R9 was not spent, deliberately.** The smoke found defect 14 and the smoke's own results
