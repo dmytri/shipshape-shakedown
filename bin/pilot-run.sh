@@ -60,6 +60,26 @@ selfsuite(){ # the roles' own suite, observed only — never a gate
   grep -oE '[0-9]+ scenarios( \([^)]*\))?' "$BASE/$v-selfsuite.txt" | head -1
 }
 
+handoff(){ # Captain -> QM handoff integrity. OBSERVED and reported, never repaired.
+  # THE REGRESSION THAT COST SMOKE2 (2026-07-29, defect 16). The old eval-voyage.sh committed the
+  # Captain's work FOR it and only then read BASE_COMMIT, so QM opened on a clean deck whose HEAD
+  # contained the specs and watchbill. a8c4118 deleted that operator commit — rightly, the harness
+  # must not write git — but left "Do not commit" in the Captain prompt, so NOBODY committed. QM
+  # was then handed a dirty tree carrying a watchbill absent from its own base commit, called the
+  # foul, and stashed it. Ten voyages with no targets, self-suite frozen at 37/37, ceiling
+  # unreachable. The prompts now ask Captain to take its own custody; this line makes a failure of
+  # that VISIBLE in the log instead of inferable only from QM transcripts twelve voyages later.
+  local v="$1"
+  local dirty n
+  dirty="$(git -C "$SIM" status --porcelain 2>/dev/null)"
+  n=$(printf '%s' "$dirty" | grep -c . || true)
+  if [ -z "$dirty" ]; then
+    say "$v HANDOFF | captain took custody | QM opens clean on $(git -C "$SIM" rev-parse --short HEAD)"
+  else
+    say "$v HANDOFF | WARN captain left $n path(s) uncommitted — QM's base excludes them: $(printf '%s' "$dirty" | awk '{print $2}' | tr '\n' ' ')"
+  fi
+}
+
 fitout(){ # what the fit-out produced for spec linting — OBSERVED and recorded, never a gate
   # dk, 2026-07-29: gplint config belongs in fit-out grading. The harness does NOT seed .gplintrc
   # (that is role-authored fit-out output — arranging it would answer the question we are asking);
@@ -121,7 +141,7 @@ correction(){ # correction <prev-voyage-tag> -> writes a task file, echoes its p
   { sed "s#PROJECT_ROOT_PLACEHOLDER#$SIM#g" "$HERE/tasks/pilot/correction-header.md" 2>/dev/null \
       || printf 'You are the Shipshape Captain. Project root: %s.\n\nAn external browser acceptance suite runs against the build. It is FIXED and CORRECT — you\ncannot and must not change it. Your own verification suite passes, yet the acceptance suite\nstill reports the failures below, because a real browser exercises behaviour your in-harness\nDOM does not. These are real PRODUCT defects; fix the product so a real browser passes.\n\nVerbatim acceptance-suite failure output:\n----------------------------------------------------------------------\n' "$SIM"
     printf '%s\n' "$block"
-    printf -- '----------------------------------------------------------------------\n\nProceed now without waiting for confirmation: author or correct the durable specs and\nwatchbill your role calls for, then stop. Do not commit, push, or dispatch.\n'
+    printf -- '----------------------------------------------------------------------\n\nProceed now without waiting for confirmation: author or correct the durable specs and\nwatchbill your role calls for, take local commit custody of them, then stop. Do not\npush or dispatch.\n'
   } > "$task"
   echo "$task"
 }
@@ -135,6 +155,7 @@ say "PILOT START wave=$WAVE model=$MODEL skills=$SKILLS port=$PORT"
 say "VOYAGE 1 (initial prompt)"
 sed "s#PROJECT_ROOT_PLACEHOLDER#$SIM#g" "$HERE/tasks/pilot/captain-todomvc.task.md" > "$BASE/v1-captain.task"
 leg v1-captain "$BASE/v1-captain.task" "$SKILLS/shipshape" "$SKILLS/captain" "$HOME/yoink/skills/yoink" || { say "STOP: captain leg failed"; exit 5; }
+handoff v1
 BASE_COMMIT="$(git -C "$SIM" rev-parse HEAD)"
 sed -e "s#PROJECT_ROOT_PLACEHOLDER#$SIM#g" -e "s#BASE_COMMIT_PLACEHOLDER#$BASE_COMMIT#g" "$HERE/tasks/pilot/qm.task.md" > "$BASE/v1-qm.task"
 leg v1-qm "$BASE/v1-qm.task" "$SKILLS/shipshape" "$SKILLS/qm" "$SKILLS/crew" "$SKILLS/boatswain" "$HOME/yoink/skills/yoink" || { say "STOP: qm leg failed"; exit 5; }
@@ -153,6 +174,7 @@ for v in $(seq 2 "$MAXV"); do
   say "VOYAGE $v (oracle response: exact failure, verbatim)"
   cp "$task" "$BASE/v$v-captain.task"
   leg "v$v-captain" "$BASE/v$v-captain.task" "$SKILLS/shipshape" "$SKILLS/captain" "$HOME/yoink/skills/yoink" || { say "STOP: captain leg failed at v$v"; break; }
+  handoff "v$v"
   BASE_COMMIT="$(git -C "$SIM" rev-parse HEAD)"
   sed -e "s#PROJECT_ROOT_PLACEHOLDER#$SIM#g" -e "s#BASE_COMMIT_PLACEHOLDER#$BASE_COMMIT#g" "$HERE/tasks/pilot/qm.task.md" > "$BASE/v$v-qm.task"
   leg "v$v-qm" "$BASE/v$v-qm.task" "$SKILLS/shipshape" "$SKILLS/qm" "$SKILLS/crew" "$SKILLS/boatswain" "$HOME/yoink/skills/yoink" || { say "STOP: qm leg failed at v$v"; break; }

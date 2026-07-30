@@ -5,4 +5,4 @@ at `assets/app-template.index.html`. Vanilla JavaScript, no preprocessors, persi
 localStorage.
 
 Proceed now without waiting for confirmation: author the specs and watchbill your role
-calls for, then stop. Do not commit, push, or dispatch.
+calls for, take local commit custody of them, then stop. Do not push or dispatch.
