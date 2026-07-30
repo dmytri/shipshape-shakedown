@@ -4,5 +4,6 @@ Build a TodoMVC app following the spec at `assets/app-spec.md`, using the base m
 at `assets/app-template.index.html`. Vanilla JavaScript, no preprocessors, persists to
 localStorage.
 
-Proceed now without waiting for confirmation: author the specs and watchbill your role
-calls for, take local commit custody of them, then stop. Do not push or dispatch.
+Carry this voyage to completion without waiting for confirmation. You have no subagent
+spawn tool: where your role would dispatch another role, assume that role in place by
+reading its skill and following it. Do not push.

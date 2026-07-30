@@ -18,6 +18,20 @@
 #                                 pastes the exact oracle failure; picking a canned intent instead
 #                                 was operator craft dressed as playbook.
 #   resume / infra-retry paths    state to get wrong, for a run that should just be rerun.
+#   the captain/qm leg SPLIT      2026-07-30, dk: "basic fixture, agent runs in bwrap with the
+#                                 todomvc specs, runs autonomously until oracle, then the playbook
+#                                 gives the clean exact error back until 28/29." Splitting each
+#                                 voyage into two pi sessions with a git handoff between them was
+#                                 an operator invention doctrine never asked for, and EVERY defect
+#                                 of 2026-07-29/30 lived on that seam: the harness read BASE_COMMIT
+#                                 before the Captain's work existed (16), so QM opened on a foul and
+#                                 stashed the watchbill (15), so QM had no targets for ten voyages,
+#                                 so the self-suite froze at 37/37 and the ceiling was unreachable;
+#                                 and a fresh QM opening cold on a tree it never built blocked on a
+#                                 missing RIGGING.md (B1). ONE session per voyage carries the whole
+#                                 voyage — which is what the skills already do when no spawn tool
+#                                 exists ("assume that role in place"), exactly as the old QM leg
+#                                 already ran Crew and Boatswain inside itself.
 #
 # The harness now READS this repo and never writes it. Custody, rigging and specs are the roles'
 # business; whether they happen is a RESULT, not something to arrange.
@@ -58,26 +72,6 @@ selfsuite(){ # the roles' own suite, observed only — never a gate
   ( cd "$SIM" && NODE_OPTIONS="--max-old-space-size=2048" npx cucumber-js $paths 2>&1 ) > "$BASE/$v-selfsuite.txt" 2>&1
   rm -f "$SIM/node_modules"; mkdir -p "$SIM/node_modules"
   grep -oE '[0-9]+ scenarios( \([^)]*\))?' "$BASE/$v-selfsuite.txt" | head -1
-}
-
-handoff(){ # Captain -> QM handoff integrity. OBSERVED and reported, never repaired.
-  # THE REGRESSION THAT COST SMOKE2 (2026-07-29, defect 16). The old eval-voyage.sh committed the
-  # Captain's work FOR it and only then read BASE_COMMIT, so QM opened on a clean deck whose HEAD
-  # contained the specs and watchbill. a8c4118 deleted that operator commit — rightly, the harness
-  # must not write git — but left "Do not commit" in the Captain prompt, so NOBODY committed. QM
-  # was then handed a dirty tree carrying a watchbill absent from its own base commit, called the
-  # foul, and stashed it. Ten voyages with no targets, self-suite frozen at 37/37, ceiling
-  # unreachable. The prompts now ask Captain to take its own custody; this line makes a failure of
-  # that VISIBLE in the log instead of inferable only from QM transcripts twelve voyages later.
-  local v="$1"
-  local dirty n
-  dirty="$(git -C "$SIM" status --porcelain 2>/dev/null)"
-  n=$(printf '%s' "$dirty" | grep -c . || true)
-  if [ -z "$dirty" ]; then
-    say "$v HANDOFF | captain took custody | QM opens clean on $(git -C "$SIM" rev-parse --short HEAD)"
-  else
-    say "$v HANDOFF | WARN captain left $n path(s) uncommitted — QM's base excludes them: $(printf '%s' "$dirty" | awk '{print $2}' | tr '\n' ' ')"
-  fi
 }
 
 fitout(){ # what the fit-out produced for spec linting — OBSERVED and recorded, never a gate
@@ -141,7 +135,7 @@ correction(){ # correction <prev-voyage-tag> -> writes a task file, echoes its p
   { sed "s#PROJECT_ROOT_PLACEHOLDER#$SIM#g" "$HERE/tasks/pilot/correction-header.md" 2>/dev/null \
       || printf 'You are the Shipshape Captain. Project root: %s.\n\nAn external browser acceptance suite runs against the build. It is FIXED and CORRECT — you\ncannot and must not change it. Your own verification suite passes, yet the acceptance suite\nstill reports the failures below, because a real browser exercises behaviour your in-harness\nDOM does not. These are real PRODUCT defects; fix the product so a real browser passes.\n\nVerbatim acceptance-suite failure output:\n----------------------------------------------------------------------\n' "$SIM"
     printf '%s\n' "$block"
-    printf -- '----------------------------------------------------------------------\n\nProceed now without waiting for confirmation: author or correct the durable specs and\nwatchbill your role calls for, take local commit custody of them, then stop. Do not\npush or dispatch.\n'
+    printf -- '----------------------------------------------------------------------\n\nCarry this voyage to completion without waiting for confirmation. You have no subagent\nspawn tool: where your role would dispatch another role, assume that role in place by\nreading its skill and following it. Do not push.\n'
   } > "$task"
   echo "$task"
 }
@@ -152,13 +146,13 @@ say "PILOT START wave=$WAVE model=$MODEL skills=$SKILLS port=$PORT"
 "$HERE/bin/scaffold-todomvc.sh" "$SIM" >"$BASE/scaffold.log" 2>&1 || { say "SCAFFOLD FAILED"; exit 4; }
 
 # --- initial prompt ---
+# ONE session carries the whole voyage. Every role skill is loaded; the agent assumes each role in
+# place as its own doctrine tells it to when no spawn tool exists. No inter-leg git handoff exists
+# to get wrong, because there is no inter-leg.
 say "VOYAGE 1 (initial prompt)"
-sed "s#PROJECT_ROOT_PLACEHOLDER#$SIM#g" "$HERE/tasks/pilot/captain-todomvc.task.md" > "$BASE/v1-captain.task"
-leg v1-captain "$BASE/v1-captain.task" "$SKILLS/shipshape" "$SKILLS/captain" "$HOME/yoink/skills/yoink" || { say "STOP: captain leg failed"; exit 5; }
-handoff v1
-BASE_COMMIT="$(git -C "$SIM" rev-parse HEAD)"
-sed -e "s#PROJECT_ROOT_PLACEHOLDER#$SIM#g" -e "s#BASE_COMMIT_PLACEHOLDER#$BASE_COMMIT#g" "$HERE/tasks/pilot/qm.task.md" > "$BASE/v1-qm.task"
-leg v1-qm "$BASE/v1-qm.task" "$SKILLS/shipshape" "$SKILLS/qm" "$SKILLS/crew" "$SKILLS/boatswain" "$HOME/yoink/skills/yoink" || { say "STOP: qm leg failed"; exit 5; }
+sed "s#PROJECT_ROOT_PLACEHOLDER#$SIM#g" "$HERE/tasks/pilot/captain-todomvc.task.md" > "$BASE/v1.task"
+leg v1 "$BASE/v1.task" "$SKILLS/shipshape" "$SKILLS/captain" "$SKILLS/qm" "$SKILLS/crew" \
+  "$SKILLS/boatswain" "$HOME/yoink/skills/yoink" || { say "STOP: voyage leg failed"; exit 5; }
 ss=$(selfsuite v1)
 read -r p t <<<"$(grade v1)"
 [ "$p" = ERR ] && { say "GRADE UNMEASURED after the initial prompt — STOP, nothing is scored"; exit 7; }
@@ -172,12 +166,9 @@ for v in $(seq 2 "$MAXV"); do
   [ "${p:-0}" -ge 28 ] && { say "REACHED ${p}/${t}"; break; }
   task="$(correction "v$((v-1))")"
   say "VOYAGE $v (oracle response: exact failure, verbatim)"
-  cp "$task" "$BASE/v$v-captain.task"
-  leg "v$v-captain" "$BASE/v$v-captain.task" "$SKILLS/shipshape" "$SKILLS/captain" "$HOME/yoink/skills/yoink" || { say "STOP: captain leg failed at v$v"; break; }
-  handoff "v$v"
-  BASE_COMMIT="$(git -C "$SIM" rev-parse HEAD)"
-  sed -e "s#PROJECT_ROOT_PLACEHOLDER#$SIM#g" -e "s#BASE_COMMIT_PLACEHOLDER#$BASE_COMMIT#g" "$HERE/tasks/pilot/qm.task.md" > "$BASE/v$v-qm.task"
-  leg "v$v-qm" "$BASE/v$v-qm.task" "$SKILLS/shipshape" "$SKILLS/qm" "$SKILLS/crew" "$SKILLS/boatswain" "$HOME/yoink/skills/yoink" || { say "STOP: qm leg failed at v$v"; break; }
+  cp "$task" "$BASE/v$v.task"
+  leg "v$v" "$BASE/v$v.task" "$SKILLS/shipshape" "$SKILLS/captain" "$SKILLS/qm" "$SKILLS/crew" \
+    "$SKILLS/boatswain" "$HOME/yoink/skills/yoink" || { say "STOP: voyage leg failed at v$v"; break; }
   ss=$(selfsuite "v$v")
   read -r p t <<<"$(grade "v$v")"
   [ "$p" = ERR ] && { say "GRADE UNMEASURED at voyage $v — STOP rather than record a number"; break; }

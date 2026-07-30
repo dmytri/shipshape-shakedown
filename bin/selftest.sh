@@ -86,10 +86,12 @@ sys.exit(1 if bad else 0)
 PY
 # dk, 2026-07-29: gplint config is part of fit-out grading — measured, never seeded.
 grep -q 'FIT-OUT' "$R" && ok "fit-out grade recorded (gplintrc, rigging lint, gplint run)" || no "fit-out is not graded"
-# defect 16: BASE_COMMIT must be able to CONTAIN the Captain's work, or QM opens on a foul.
-# The old driver committed for the roles; the prompts must now ask Captain for its own custody.
-grep -qE 'Do not commit, push' "$R" "$HERE/tasks/pilot/captain-todomvc.task.md" && no "a pilot prompt still forbids Captain to commit — QM's base will exclude the watchbill" || ok "Captain takes its own commit custody (BASE_COMMIT can contain the watchbill)"
-grep -q 'handoff ' "$R" && ok "Captain->QM handoff integrity is logged per voyage" || no "a broken handoff would be silent"
+# dk, 2026-07-30: ONE session per voyage. The captain/qm leg split was an operator invention and
+# every defect of 07-29/30 lived on its git handoff seam (14, 15, 16, and the greenfield block).
+[ "$(grep -cE '^\s*leg "?v' "$R")" = 2 ] && ok "one session per voyage (no inter-leg git handoff to get wrong)" || no "the voyage is still split across legs"
+grep -qE '^[^#]*BASE_COMMIT' "$R" && no "BASE_COMMIT handoff contract is back — that seam caused defects 15 and 16" || ok "no BASE_COMMIT contract between legs"
+grep -qE 'Do not commit, push' "$R" "$HERE/tasks/pilot/captain-todomvc.task.md" && no "a pilot prompt still forbids the roles to commit" || ok "custody is the roles' business, not forbidden by the prompt"
+grep -q 'assume that role in place' "$R" "$HERE/tasks/pilot/captain-todomvc.task.md" >/dev/null && ok "the voyage prompt carries the no-spawn-tool fallback" || no "the agent is not told to assume roles in place"
 grep -qE '(python3|bin/)[^#]*rigging-conform' "$R" && no "fit-out grade keys on ## Methods — penalises the control arm" || ok "fit-out grade is vocabulary-neutral across arms"
 [ -e "$HERE/.eval-scratch/.shared-nm/node_modules/.bin/gplint" ] && ok "gplint resolves from the shared toolkit (no registry round-trip)" || no "gplint missing from shared toolkit"
 
