@@ -1,0 +1,25 @@
+# banked: 2026-07-31T14:04:28Z
+# verdict: PENDING
+# leg: {  "name": "v2",  "model": "tencent/hy3",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/R9-control-hy3/sim",  "timeout_s": 3600,  "max_tokens": 32768,  "skills": [    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills/shipshape",    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills/captain",    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills/qm",    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills/crew",    "/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills/boatswain",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== v2.session.jsonl ===
+  turns=15  wall=150.0s  in=44607  out=7096  cache_read=385301  cost=$0.0238
+  role reads: captain@t0
+  roles loaded: captain
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    7925/227        0 $0.0012  read, bash
+    t1   16657/109        0 $0.0024  bash
+    t2     998/97     16655 $0.0008  bash
+    t3    4061/462    17651 $0.0015  bash
+    t4    1862/242    21710 $0.0012  read, read
+    t5    6576/1574   23570 $0.0027  edit, edit
+    t6    1758/350    30144 $0.0015  write
+    t7     414/450    31900 $0.0014  edit
+    t8     518/1294   32312 $0.0020  edit
+    t9    1715/652    32828 $0.0018  bash
+    t10    878/350    34541 $0.0015  bash
+    t11    453/281    35417 $0.0015  bash
+    t12    324/258    35868 $0.0015  edit
+    t13    327/128    36190 $0.0014  bash
+    t14    141/622    36515 $0.0017  -

@@ -1,0 +1,75 @@
+diff --git a/js/app.js b/js/app.js
+index 8b1af49..254901a 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -149,7 +149,19 @@
+       });
+ 
+       Utils.store(STORAGE_KEY, this.todos);
+-      this.render();
++
++      // Update the li in place to avoid detaching elements from the DOM
++      var todo = this.todos.find(function (t) { return t.id === id; });
++      if (todo.completed) {
++        li.classList.add('completed');
++      } else {
++        li.classList.remove('completed');
++      }
++      e.target.checked = todo.completed;
++
++      this._updateCounts();
++      var self = this;
++      setTimeout(function () { self.filter(); }, 0);
+     },
+     toggleAll: function (e) {
+       var checked = e.target.checked;
+@@ -159,7 +171,48 @@
+       });
+ 
+       Utils.store(STORAGE_KEY, this.todos);
+-      this.render();
++
++      // Update all li elements in place to avoid detaching elements from the DOM
++      var todoList = document.querySelector('.todo-list');
++      var lis = todoList.querySelectorAll('li');
++      lis.forEach(function (li) {
++        var dataId = li.getAttribute('data-id');
++        var todo = this.todos.find(function (t) { return t.id === dataId; });
++        if (todo) {
++          if (todo.completed) {
++            li.classList.add('completed');
++          } else {
++            li.classList.remove('completed');
++          }
++          var checkbox = li.querySelector('.toggle');
++          checkbox.checked = todo.completed;
++        }
++      }.bind(this));
++
++      this._updateCounts();
++      var self = this;
++      setTimeout(function () { self.filter(); }, 0);
++    },
++    _updateCounts: function () {
++      var completed = 0;
++      var active = 0;
++
++      this.todos.forEach(function (todo) {
++        if (todo.completed) {
++          completed++;
++        } else {
++          active++;
++        }
++      });
++
++      var toggleAll = document.querySelector('#toggle-all');
++      toggleAll.checked = completed === this.todos.length && this.todos.length > 0;
++
++      var count = document.querySelector('.todo-count');
++      count.innerHTML = '<strong>' + active + '</strong> ' + (active === 1 ? 'item' : 'items') + ' left';
++
++      var clearBtn = document.querySelector('.clear-completed');
++      clearBtn.style.display = completed > 0 ? '' : 'none';
+     },
+     edit: function (e) {
+       if (e.target.tagName !== 'LABEL') {

@@ -130,10 +130,13 @@ correction(){ # correction <prev-voyage-tag> -> writes a task file, echoes its p
   # 2026-07-29 — the reason pilot-run.sh had never completed a full wave). Keep these separate.
   local vg="$1"
   local cyp="$BASE/$vg-oracle.cypress.log" task="$BASE/correct-after-$vg.task" block=""
-  [ -f "$cyp" ] && block="$(awk '/^  [0-9]+\)/{f=1} f{print} /^\s*[0-9]+ passing|\(Results\)/{if(f)exit}' "$cyp")"
+  [ -f "$cyp" ] && block="$(awk '/^  [0-9]+\)/{f=1} f{print} /^\s*[0-9]+ passing|\(Results\)/{if(f)exit}' "$cyp" | python3 "$HERE/bin/sanitise-failure.py")"
   [ -n "$block" ] || block="$(titles "$vg" | sed 's/^/  - /')"
+  # dk, 2026-07-31: the playbook never mentions the oracle and never an unseen spec. A PERSON
+  # tested the build and reported what happened. "FIXED and CORRECT" then means what it says --
+  # you cannot change what the user did or what they saw, you fix the product.
   { sed "s#PROJECT_ROOT_PLACEHOLDER#$SIM#g" "$HERE/tasks/pilot/correction-header.md" 2>/dev/null \
-      || printf 'You are the Shipshape Captain. Project root: %s.\n\nAn external browser acceptance suite runs against the build. It is FIXED and CORRECT — you\ncannot and must not change it. Your own verification suite passes, yet the acceptance suite\nstill reports the failures below, because a real browser exercises behaviour your in-harness\nDOM does not. These are real PRODUCT defects; fix the product so a real browser passes.\n\nVerbatim acceptance-suite failure output:\n----------------------------------------------------------------------\n' "$SIM"
+      || printf 'You are the Shipshape Captain. Project root: %s.\n\nA user is manually testing the build in a real browser. Their testing is FIXED and CORRECT —\nyou cannot and must not change it. Your own verification suite passes, yet the user still hits\nthe problems below, because a real browser exercises behaviour your in-harness DOM does not.\nThese are real PRODUCT defects; fix the product so a real browser works.\n\nWhat the user did, and what they saw:\n----------------------------------------------------------------------\n' "$SIM"
     printf '%s\n' "$block"
     printf -- '----------------------------------------------------------------------\n\nCarry this voyage to completion without waiting for confirmation. You have no subagent\nspawn tool: where your role would dispatch another role, assume that role in place by\nreading its skill and following it. Do not push.\n'
   } > "$task"

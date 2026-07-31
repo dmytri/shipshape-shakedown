@@ -91,6 +91,14 @@ grep -q 'FIT-OUT' "$R" && ok "fit-out grade recorded (gplintrc, rigging lint, gp
 [ "$(grep -cE '^\s*leg "?v' "$R")" = 2 ] && ok "one session per voyage (no inter-leg git handoff to get wrong)" || no "the voyage is still split across legs"
 grep -qE '^[^#]*BASE_COMMIT' "$R" && no "BASE_COMMIT handoff contract is back — that seam caused defects 15 and 16" || ok "no BASE_COMMIT contract between legs"
 grep -qE 'Do not commit, push' "$R" "$HERE/tasks/pilot/captain-todomvc.task.md" && no "a pilot prompt still forbids the roles to commit" || ok "custody is the roles' business, not forbidden by the prompt"
+# dk, 2026-07-31: the playbook never names the runner and never an unseen spec. R9 pasted
+# "From Your Spec Code: at ... spec.cy.js:737" and both capped mimo cells hunted that file
+# until their budget ran out, making zero edits across ten flat voyages.
+grep -q 'sanitise-failure.py' "$R" && ok "failure text is rendered as a user's report" || no "raw runner output still reaches the agent"
+LEAKCHK="$(printf '  1) S\n   B:\n   CypressError: `cy.find()` broke, Cypress says so.\nCommon situations why this happens:\n  - bullet\n      at Context.eval (webpack://x/./cypress/e2e/spec.cy.js:737:29)\n  From Your Spec Code:\n  2 passing\n' | python3 "$HERE/bin/sanitise-failure.py" 2>/dev/null)"
+printf '%s' "$LEAKCHK" | grep -qiE 'cypress|cy\.|spec\.cy|webpack|Spec Code|localhost|https?://|passing' \
+  && no "the failure renderer leaks the runner, a spec path, a URL or a pass tally" \
+  || ok "renderer leaks no runner name, spec path, URL or tally"
 grep -q 'assume that role in place' "$R" "$HERE/tasks/pilot/captain-todomvc.task.md" >/dev/null && ok "the voyage prompt carries the no-spawn-tool fallback" || no "the agent is not told to assume roles in place"
 grep -qE '(python3|bin/)[^#]*rigging-conform' "$R" && no "fit-out grade keys on ## Methods — penalises the control arm" || ok "fit-out grade is vocabulary-neutral across arms"
 [ -e "$HERE/.eval-scratch/.shared-nm/node_modules/.bin/gplint" ] && ok "gplint resolves from the shared toolkit (no registry round-trip)" || no "gplint missing from shared toolkit"

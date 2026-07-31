@@ -1,0 +1,32 @@
+# banked: 2026-07-31T13:26:29Z
+# verdict: PENDING
+# leg: {  "name": "v11",  "model": "xiaomi/mimo-v2.5",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/R9-candidate-mimo/sim",  "timeout_s": 3600,  "max_tokens": 32768,  "skills": [    "/home/exedev/shipshape-shakedown/experiments/methods-candidate/skills/shipshape",    "/home/exedev/shipshape-shakedown/experiments/methods-candidate/skills/captain",    "/home/exedev/shipshape-shakedown/experiments/methods-candidate/skills/qm",    "/home/exedev/shipshape-shakedown/experiments/methods-candidate/skills/crew",    "/home/exedev/shipshape-shakedown/experiments/methods-candidate/skills/boatswain",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== v11.session.jsonl ===
+  turns=21  wall=423.4s  in=93234  out=68150  cache_read=362432  cost=$0.0331
+  role reads: (no role SKILL.md read)
+  roles loaded: NONE
+  ~ repeated tool signature at turns [12, 13] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    3765/258      512 $0.0006  read, bash
+    t1    2563/1079    4224 $0.0007  bash, bash
+    t2    1103/125     6784 $0.0002  bash, bash
+    t3     637/124     7872 $0.0001  bash, bash
+    t4     206/89      8448 $0.0001  bash, bash
+    t5     356/111     8640 $0.0001  bash, bash
+    t6     226/145     8960 $0.0001  bash, bash
+    t7    3008/130     9152 $0.0005  read, bash
+    t8    1116/5948   12096 $0.0019  bash, bash, bash
+    t9    6004/132    13184 $0.0009  bash, bash
+    t10    205/133    19136 $0.0001  read, read
+    t11    906/130    19328 $0.0002  read, bash
+    t12    391/123    20224 $0.0001  read, bash
+    t13    163/1308   20608 $0.0004  read, read
+    t14   3791/3343   20736 $0.0015  bash, bash
+    t15   3388/11896  24512 $0.0039  bash, bash
+    t16  11975/139    27840 $0.0018  bash, bash
+    t17    234/3367   39808 $0.0011  bash
+    t18   3419/6450   40000 $0.0024  bash, bash
+    t19  49378/352      512 $0.0070  bash
+    t20    400/32768  49856 $0.0094  -
