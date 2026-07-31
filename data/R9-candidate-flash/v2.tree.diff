@@ -1,0 +1,256 @@
+diff --git a/js/app.js b/js/app.js
+index 9e9f75b..0d4dd9b 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -136,6 +136,9 @@
+ 			if (!editInput) return;
+ 			var li = editInput.closest('li');
+ 			if (!li) return;
++			// Don't commit if editing was cancelled (e.g., by pressing Escape).
++			// cancelEdit removes the 'editing' class before blur can fire.
++			if (!li.classList.contains('editing')) return;
+ 			self.commitEdit(li, editInput.value);
+ 		}, true);
+ 
+@@ -184,14 +187,23 @@
+ 	App.prototype.addTodo = function () {
+ 		var title = this.newTodo.value.trim();
+ 		if (title === '') return;
+-		this.todos.push({
++		var todo = {
+ 			id: Date.now() + Math.random(),
+ 			title: title,
+ 			completed: false
+-		});
++		};
++		this.todos.push(todo);
+ 		this.store.save(this.todos);
+ 		this.newTodo.value = '';
+-		this.render();
++
++		// Surgical DOM update: append just the new li (if it passes the filter)
++		if (this.filter !== 'completed') {
++			var temp = document.createElement('div');
++			temp.innerHTML = this.todoHtml(todo);
++			this.todoList.appendChild(temp.firstChild);
++		}
++
++		this.updateUI();
+ 	};
+ 
+ 	/**
+@@ -205,7 +217,26 @@
+ 			}
+ 		}
+ 		this.store.save(this.todos);
+-		this.render();
++
++		// Surgical DOM update: toggle just this item's class and checkbox
++		// instead of replacing the entire list (which detaches DOM nodes).
++		var li = this.todoList.querySelector('li[data-id="' + id + '"]');
++		if (li) {
++			var todo = this.todos.filter(function (t) { return t.id == id; })[0];
++			if (todo) {
++				// If the item is hidden by the current filter, remove it from the DOM
++				if ((this.filter === 'active' && todo.completed) ||
++					(this.filter === 'completed' && !todo.completed)) {
++					li.parentNode.removeChild(li);
++				} else {
++					li.classList.toggle('completed', todo.completed);
++					var checkbox = li.querySelector('.toggle');
++					if (checkbox) checkbox.checked = todo.completed;
++				}
++			}
++		}
++
++		this.updateUI();
+ 	};
+ 
+ 	/**
+@@ -216,7 +247,14 @@
+ 	App.prototype.destroyTodo = function (id) {
+ 		this.todos = this.todos.filter(function (t) { return t.id != id; });
+ 		this.store.save(this.todos);
+-		this.render();
++
++		// Surgical DOM update: remove just this item's li
++		var li = this.todoList.querySelector('li[data-id="' + id + '"]');
++		if (li) {
++			li.parentNode.removeChild(li);
++		}
++
++		this.updateUI();
+ 	};
+ 
+ 	/**
+@@ -227,7 +265,27 @@
+ 			this.todos[i].completed = checked;
+ 		}
+ 		this.store.save(this.todos);
+-		this.render();
++
++		// Surgical DOM update: toggle every visible li instead of full re-render.
++		// For filtered views, items that no longer match the filter are removed.
++		var lis = this.todoList.querySelectorAll('li');
++		for (var j = 0; j < lis.length; j++) {
++			var li = lis[j];
++			var todo = this.todos.filter(function (t) { return t.id == li.dataset.id; })[0];
++			if (!todo) continue;
++
++			if ((this.filter === 'active' && todo.completed) ||
++				(this.filter === 'completed' && !todo.completed)) {
++				li.parentNode.removeChild(li);
++				j--; // adjust index after removal
++			} else {
++				li.classList.toggle('completed', todo.completed);
++				var checkbox = li.querySelector('.toggle');
++				if (checkbox) checkbox.checked = todo.completed;
++			}
++		}
++
++		this.updateUI();
+ 	};
+ 
+ 	/**
+@@ -236,7 +294,15 @@
+ 	App.prototype.clearCompletedTodos = function () {
+ 		this.todos = this.todos.filter(function (t) { return !t.completed; });
+ 		this.store.save(this.todos);
+-		this.render();
++
++		// Surgical DOM update: remove completed li elements
++		var lis = this.todoList.querySelectorAll('li.completed');
++		for (var i = 0; i < lis.length; i++) {
++			lis[i].parentNode.removeChild(lis[i]);
++			i--;
++		}
++
++		this.updateUI();
+ 	};
+ 
+ 	/**
+@@ -272,7 +338,14 @@
+ 		}
+ 		this.store.save(this.todos);
+ 		li.classList.remove('editing');
+-		this.render();
++
++		// Surgical DOM update: update just the label text and edit input value
++		var label = li.querySelector('label');
++		if (label) label.textContent = title;
++		var editInput = li.querySelector('.edit');
++		if (editInput) editInput.value = title;
++
++		this.updateUI();
+ 	};
+ 
+ 	/**
+@@ -287,44 +360,12 @@
+ 	// -----------------------------------------------------------------------
+ 
+ 	/**
+-	 * @planks("I should see {string} in the todo list")
+-	 * @planks("I should not see {string} in the todo list")
+-	 * @planks("the todo list should be empty")
+-	 * @planks("the {string} todo should have the completed class")
+-	 * @planks("the {string} todo should not have the completed class")
+-	 * @planks("the todo should be in editing mode")
+-	 * @planks("all todos should be completed")
+-	 * @planks("no todos should be completed")
+-	 * @planks("the toggle-all checkbox should be checked")
+-	 * @planks("the clear-completed button should be hidden")
+-	 * @planks("the todo-count should show {string}")
+-	 * @planks("the main section should be hidden")
+-	 * @planks("the footer section should be hidden")
+-	 * @planks("the main section should be visible")
+-	 * @planks("the footer section should be visible")
+-	 * @planks("the {string} filter link should have the selected class")
+-	 * @planks("the {string} todo should not be in editing mode")
++	 * Update all UI state except the todo list (count, visibility, filters,
++	 * toggle-all, clear-completed). Extracted so individual mutations can
++	 * surgically update the list without a full innerHTML replacement, which
++	 * detaches DOM nodes and breaks browser-based test chains (Cypress).
+ 	 */
+-	App.prototype.render = function () {
+-		var filtered = this.getFilteredTodos();
+-		var html = '';
+-
+-		for (var i = 0; i < filtered.length; i++) {
+-			var todo = filtered[i];
+-			var completedClass = todo.completed ? ' class="completed"' : '';
+-			var checked = todo.completed ? ' checked' : '';
+-			html += '<li' + completedClass + ' data-id="' + todo.id + '">';
+-			html += '<div class="view">';
+-			html += '<input class="toggle" type="checkbox"' + checked + '>';
+-			html += '<label>' + this.escapeHtml(todo.title) + '</label>';
+-			html += '<button class="destroy"></button>';
+-			html += '</div>';
+-			html += '<input class="edit" value="' + this.escapeHtml(todo.title) + '">';
+-			html += '</li>';
+-		}
+-
+-		this.todoList.innerHTML = html;
+-
++	App.prototype.updateUI = function () {
+ 		// Main and footer visibility
+ 		var hasTodos = this.todos.length > 0;
+ 		this.main.style.display = hasTodos ? 'block' : 'none';
+@@ -357,6 +398,58 @@
+ 		}
+ 	};
+ 
++	/**
++	 * Build the HTML string for a single todo <li>.
++	 */
++	App.prototype.todoHtml = function (todo) {
++		var completedClass = todo.completed ? ' class="completed"' : '';
++		var checked = todo.completed ? ' checked' : '';
++		var html = '<li' + completedClass + ' data-id="' + todo.id + '">';
++		html += '<div class="view">';
++		html += '<input class="toggle" type="checkbox"' + checked + '>';
++		html += '<label>' + this.escapeHtml(todo.title) + '</label>';
++		html += '<button class="destroy"></button>';
++		html += '</div>';
++		html += '<input class="edit" value="' + this.escapeHtml(todo.title) + '">';
++		html += '</li>';
++		return html;
++	};
++
++	/**
++	 * Full render: replaces the entire todo-list innerHTML. Used for initial
++	 * load, reload, and route changes. Individual mutations (toggle, destroy,
++	 * add, clear-completed, commitEdit) use surgical DOM updates instead.
++	 *
++	 * @planks("I should see {string} in the todo list")
++	 * @planks("I should not see {string} in the todo list")
++	 * @planks("the todo list should be empty")
++	 * @planks("the {string} todo should have the completed class")
++	 * @planks("the {string} todo should not have the completed class")
++	 * @planks("the todo should be in editing mode")
++	 * @planks("all todos should be completed")
++	 * @planks("no todos should be completed")
++	 * @planks("the toggle-all checkbox should be checked")
++	 * @planks("the clear-completed button should be hidden")
++	 * @planks("the todo-count should show {string}")
++	 * @planks("the main section should be hidden")
++	 * @planks("the footer section should be hidden")
++	 * @planks("the main section should be visible")
++	 * @planks("the footer section should be visible")
++	 * @planks("the {string} filter link should have the selected class")
++	 * @planks("the {string} todo should not be in editing mode")
++	 */
++	App.prototype.render = function () {
++		var filtered = this.getFilteredTodos();
++		var html = '';
++
++		for (var i = 0; i < filtered.length; i++) {
++			html += this.todoHtml(filtered[i]);
++		}
++
++		this.todoList.innerHTML = html;
++		this.updateUI();
++	};
++
+ 	App.prototype.escapeHtml = function (str) {
+ 		var div = document.createElement('div');
+ 		div.appendChild(document.createTextNode(str));
