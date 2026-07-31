@@ -1,0 +1,52 @@
+# oracle grade: framework=shakedown  runner_exit=1
+tests=29 passing=24 failing=4 pending=1
+all_specs_passed=False
+GRADE: 24/29
+
+## failing tests
+  - TodoMVC - shakedown -- Mark all as completed -- should allow me to mark all items as completed
+  - TodoMVC - shakedown -- Mark all as completed -- should allow me to clear the complete state of all items
+  - TodoMVC - shakedown -- Item -- should allow me to mark items as complete
+  - TodoMVC - shakedown -- Item -- should allow me to un-mark items as complete
+
+## cypress summary tail
+  │ Passing:      24                                                                               │
+  │ Failing:      4                                                                                │
+  │ Pending:      1                                                                                │
+  │ Skipped:      0                                                                                │
+  │ Screenshots:  0                                                                                │
+  │ Video:        false                                                                            │
+  │ Duration:     46 seconds                                                                       │
+  │ Spec Ran:     spec.cy.js                                                                       │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+================================================================================
+
+  (Run Finished)
+
+
+       Spec                                              Tests  Passing  Failing  Pending  Skipped  
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ ✖  spec.cy.js                               00:46       29       24        4        1        - │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+    ✖  1 of 1 failed (100%)                     00:46       29       24        4        1        -  
+
+xvfb-run: error: problem while cleaning up temporary directory
+Error: Command failed with exit code 5: xvfb-run -a npx cypress run --env framework=shakedown --spec cypress/e2e/spec.cy.js --config baseUrl=http://localhost:8975/examples/,screenshotOnRunFailure=false,video=false
+    at makeError (/home/exedev/shipshape-shakedown/.eval-scratch/oracle-clone/node_modules/start-server-and-test/node_modules/execa/lib/error.js:60:11)
+    at handlePromise (/home/exedev/shipshape-shakedown/.eval-scratch/oracle-clone/node_modules/start-server-and-test/node_modules/execa/index.js:118:26)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  shortMessage: 'Command failed with exit code 5: xvfb-run -a npx cypress run --env framework=shakedown --spec cypress/e2e/spec.cy.js --config baseUrl=http://localhost:8975/examples/,screenshotOnRunFailure=false,video=false',
+  command: 'xvfb-run -a npx cypress run --env framework=shakedown --spec cypress/e2e/spec.cy.js --config baseUrl=http://localhost:8975/examples/,screenshotOnRunFailure=false,video=false',
+  escapedCommand: '"xvfb-run -a npx cypress run --env framework=shakedown --spec cypress/e2e/spec.cy.js --config baseUrl=http://localhost:8975/examples/,screenshotOnRunFailure=false,video=false"',
+  exitCode: 5,
+  signal: undefined,
+  signalDescription: undefined,
+  stdout: undefined,
+  stderr: undefined,
+  failed: true,
+  timedOut: false,
+  isCanceled: false,
+  killed: false
+}

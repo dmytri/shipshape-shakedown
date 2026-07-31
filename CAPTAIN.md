@@ -1,6 +1,50 @@
 # Captain notes - shipshape-shakedown workstream
 
 <!-- ============================================================================= -->
+## >>> 2026-07-31: R9 is a 9/9 ceiling. The two caps were the PLAYBOOK, not the model. <<<
+
+**The matrix (one draw per cell). Seven cells cleared on the first run; the two that capped
+cleared on a re-run after two sentences of header changed.**
+
+| arm | flash | mimo | hy3 |
+|---|---|---|---|
+| control | 28/29 (2) | 26/29 (12 cap) -> **28/29 (2)** | 28/29 (2) |
+| candidate | 28/29 (3) | 26/29 (12 cap) -> **28/29 (2)** | 28/29 (2) |
+| midway | 28/29 (2) | 28/29 (2) | 28/29 (2) |
+
+**What the two capped cells actually suffered (dk called it: bad prompting, telling the agent
+about a test it cannot see).** The correction prompt pasted the runner's raw output, which
+contains `From Your Spec Code:` followed by `cypress/e2e/spec.cy.js:737` — so the playbook told
+the agent the failing test was ITS OWN spec and named the file and line, for the one file the
+quarantine exists to hide. Both cells hunted it: "lines 737 and 752" appears 35 times across
+their transcripts, searching outward until `ls` of the cockpit returned `total 0`. Five of
+eleven candidate voyages and four of twelve control voyages ended `stopReason: length` —
+budget spent mid-hunt, ZERO edits made. Ten voyages flat at 26/29. The block also pasted the
+oracle's live URL (`localhost:8975`) into a sandbox that runs with `--share-net`.
+
+**The whole fix, in the header, block still RAW (dk: avoid ANY paraphrasing):**
+- `runs against the build` -> `is run by a user against the build`
+- added: `You have no access to these tests, as they are run by the user.`
+
+R11 control 24->28 in 2 (was 26 capped at 12). R11b candidate 24->28 in 2 (was 26 capped at 12).
+
+**Rejected, do not revisit:** giving the sim any way to invoke the acceptance suite. An oracle
+the agent can run is an oracle it optimises against; the quarantine is what makes 28/29 mean
+anything (dk, 2026-07-31).
+
+**Also true and unfixed:** `ESCAPED` in eval-leg.sh is a MISNOMER — it greps transcripts for
+cockpit path strings. bwrap containment held; verified directly, inside the jail
+`/home/exedev/shipshape-shakedown` holds only the bind's parent chain and CAPTAIN.md does not
+exist. Rename it before it scares someone again. And one R11 leg died void (3600s timeout, no
+session, provider stall) — the harness correctly refused to score it.
+
+**A grade alone does not mean doctrine was followed.** mimo/control reached 26/29 in R9 having
+authored ZERO scenarios, no rigging and no watchbill across twelve voyages — the same score as
+the candidate cell that wrote 28. Report conformance beside the grade or a cell like that reads
+as a success.
+
+
+<!-- ============================================================================= -->
 ## >>> 2026-07-30: 28/29 IN TWO VOYAGES. The leg split was the whole problem. <<<
 
 **SMOKE4-control-flash: V1 24/29 -> V2 28/29, REACHED, 34 minutes.** Against SMOKE2's twelve

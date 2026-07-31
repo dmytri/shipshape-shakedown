@@ -1,0 +1,151 @@
+diff --git a/js/app.js b/js/app.js
+index 547a213..313cba8 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -103,6 +103,37 @@
+ 	var clearCompletedBtn = document.querySelector(".clear-completed");
+ 	var editEl = null;
+ 
++	// Cache of <li> elements keyed by todo id, built during render
++	var liCache = {};
++
++	function createTodoLi(todo) {
++		var li = document.createElement("li");
++		li.dataset.id = todo.id;
++
++		var viewDiv = document.createElement("div");
++		viewDiv.className = "view";
++
++		var toggle = document.createElement("input");
++		toggle.className = "toggle";
++		toggle.type = "checkbox";
++
++		var label = document.createElement("label");
++
++		var destroyBtn = document.createElement("button");
++		destroyBtn.className = "destroy";
++
++		viewDiv.appendChild(toggle);
++		viewDiv.appendChild(label);
++		viewDiv.appendChild(destroyBtn);
++
++		var editInput = document.createElement("input");
++		editInput.className = "edit";
++
++		li.appendChild(viewDiv);
++		li.appendChild(editInput);
++		return li;
++	}
++
+ 	function render() {
+ 		var filtered = getFilteredTodos();
+ 		var activeCount = todos.filter((t) => !t.completed).length;
+@@ -117,49 +148,69 @@
+ 			footer.style.display = "";
+ 		}
+ 
+-		// Render todo list
+-		todoList.innerHTML = "";
++		// Render todo list surgically: update existing elements in place
++		var newIds = new Set();
++		var fragment = document.createDocumentFragment();
+ 		filtered.forEach((todo) => {
+-			var li = document.createElement("li");
+-			li.dataset.id = todo.id;
+-
+-			if (todo.completed) li.classList.add("completed");
+-			if (editingId === todo.id) li.classList.add("editing");
+-
+-			var viewDiv = document.createElement("div");
+-			viewDiv.className = "view";
+-
+-			var toggle = document.createElement("input");
+-			toggle.className = "toggle";
+-			toggle.type = "checkbox";
+-			if (todo.completed) toggle.checked = true;
+-
+-			var label = document.createElement("label");
+-			label.textContent = todo.title;
+-
+-			var destroyBtn = document.createElement("button");
+-			destroyBtn.className = "destroy";
+-
+-			viewDiv.appendChild(toggle);
+-			viewDiv.appendChild(label);
+-			viewDiv.appendChild(destroyBtn);
+-
+-			var editInput = document.createElement("input");
+-			editInput.className = "edit";
+-			editInput.value = todo.title;
++			newIds.add(todo.id);
++			var li = liCache[todo.id];
++			if (li) {
++				// Update existing element in place
++				if (todo.completed) li.classList.add("completed");
++				else li.classList.remove("completed");
++				if (editingId === todo.id) li.classList.add("editing");
++				else li.classList.remove("editing");
++				var toggle = li.querySelector(".toggle");
++				toggle.checked = todo.completed;
++				var label = li.querySelector("label");
++				label.textContent = todo.title;
++				var editInput = li.querySelector(".edit");
++				editInput.value = todo.title;
++			} else {
++				li = createTodoLi(todo);
++				li.dataset.id = todo.id;
++				if (todo.completed) li.classList.add("completed");
++				if (editingId === todo.id) li.classList.add("editing");
++				li.querySelector(".toggle").checked = todo.completed;
++				li.querySelector("label").textContent = todo.title;
++				li.querySelector(".edit").value = todo.title;
++				liCache[todo.id] = li;
++			}
++			fragment.appendChild(li);
++		});
+ 
+-			li.appendChild(viewDiv);
+-			li.appendChild(editInput);
+-			todoList.appendChild(li);
++		// Remove stale elements
++		Object.keys(liCache).forEach((id) => {
++			if (!newIds.has(Number(id))) {
++				liCache[id].remove();
++				delete liCache[id];
++			}
+ 		});
+ 
+-		// Counter
+-		todoCount.innerHTML =
+-			"<strong>" +
+-			activeCount +
+-			"</strong> " +
+-			(activeCount === 1 ? "item" : "items") +
+-			" left";
++		// Rebuild list from fragment
++		todoList.innerHTML = "";
++		todoList.appendChild(fragment);
++
++		// Counter: update in place to preserve DOM node references
++		var strong = todoCount.querySelector("strong");
++		if (strong) {
++			strong.textContent = String(activeCount);
++			// Clear and rebuild to ensure correct text ordering
++			todoCount.textContent = "";
++			todoCount.appendChild(strong);
++			todoCount.appendChild(
++				document.createTextNode(
++					" " + (activeCount === 1 ? "item" : "items") + " left",
++				),
++			);
++		} else {
++			todoCount.innerHTML =
++				"<strong>" +
++				activeCount +
++				"</strong> " +
++				(activeCount === 1 ? "item" : "items") +
++				" left";
++		}
+ 
+ 		// Clear completed button visibility
+ 		if (completedCount === 0) {

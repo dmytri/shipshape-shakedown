@@ -1,5 +1,32 @@
 # Metrics: how to read a shakedown
 
+## 2026-07-31 — R9: nine cells, nine ceilings, once the playbook stopped lying
+
+| arm | flash | mimo | hy3 |
+|---|---|---|---|
+| control | 28/29 (2v) | 26/29 (12v cap) -> **28/29 (2v)** | 28/29 (2v) |
+| candidate | 28/29 (3v) | 26/29 (12v cap) -> **28/29 (2v)** | 28/29 (2v) |
+| midway | 28/29 (2v) | 28/29 (2v) | 28/29 (2v) |
+
+One draw per cell. This earns "every arm reaches the ceiling on every model". It does NOT earn
+any arm-vs-arm difference: voyage counts are 2 or 3 everywhere and R6 showed that swing runs 3
+to 12 within a single arm.
+
+**The two caps were a prompt defect, proven by re-run.** The correction prompt pasted the
+runner's raw output including `From Your Spec Code: ... spec.cy.js:737`, telling the agent the
+failing test was its own spec. Both cells burned their budget hunting a quarantined file --
+5 of 11 and 4 of 12 voyages ended `stopReason: length` with zero edits. Two sentences of header
+("is run by a user", "You have no access to these tests") moved both cells from capped-at-26 to
+the ceiling in two voyages. Nothing else changed: same arms, model, fixture, driver.
+
+**Midway is 3/3 in two voyages each, with the largest spec surfaces (29/56/66 scenarios).** The
+standing suspicion that its vocabulary carried a regression does not reproduce on a clean build.
+Worth a repeat draw before it is called a result.
+
+**Conformance is not the grade.** mimo/control scored 26/29 in R9 with ZERO scenarios, no
+RIGGING.md and no watchbill across twelve voyages -- the same score as a cell that wrote 28
+scenarios. Any future table reports scenarios/rigging/custody beside the number.
+
 ## 2026-07-30 — the instrument works: 28/29 in two voyages
 
 | wave | driver shape | voyages | trajectory | final | wall |
