@@ -29,13 +29,29 @@ import re
 import sys
 
 ENTRY = re.compile(r"^\s*(\d+)\)\s*(.*)$")
+
+# A frame is the RUNNER'S only if it points into the runner. Frames pointing at the app's own
+# files are the most useful thing in the block and the agent can open them -- it wrote them.
+#   at render (http://localhost:8884/examples/shakedown/js/app.js:130:42)   <- KEEP as js/app.js:130
+#   at Keyboard.fireSimulatedEvent (.../cypress_runner.js:118974:27)        <- drop
 FRAME = re.compile(r"^\s*at\s+")
-PATHY = re.compile(r"webpack://|\.cy\.js|/cypress/|cypress/e2e|localhost:\d+|https?://")
+RUNNER_FRAME = re.compile(r"cypress_runner\.js|webpack://|\.cy\.js|/cypress/|__cypress")
+APP_URL = re.compile(r"https?://[^/]+/examples/[^/]+/")
+
+# The runner's tutorial. `>` alone is NOT a tutorial marker: the app's own uncaught exception
+# is printed as "> Failed to execute 'removeChild' ...", which is the single most valuable line
+# in the whole block and precisely what a user pasting console output would paste. Only kill a
+# `>` line when it is the runner quoting its own API at us.
 TUTORIAL = re.compile(
     r"^\s*(Common situations why this happens|You can typically solve this|"
-    r"From Your Spec Code|>\s|\(Results\)|[-\s]*$)",
+    r"From Your Spec Code|When Cypress detects uncaught errors|This behavior is configurable|"
+    r"\(Results\)|>\s*`?cy\.)",
     re.I,
 )
+PATHY = re.compile(r"webpack://|\.cy\.js|/cypress/|cypress/e2e|__cypress|https?://on\.")
+# the tutorial's rewrite examples are joined by a bare connector line ("to"), which otherwise
+# lands at the end of the error text as a stray word.
+BULLET = re.compile(r"^\s*(-\s+\S|to$|and$)")
 SUMMARY = re.compile(r"^\s*\d+\s+(passing|failing|pending)\b", re.I)
 ERRLINE = re.compile(r"^\s*(?:\w*Error|AssertionError|CypressError)\s*:\s*(.*)$")
 
@@ -43,18 +59,20 @@ ERRLINE = re.compile(r"^\s*(?:\w*Error|AssertionError|CypressError)\s*:\s*(.*)$"
 # stripped of its prefix it is an unattributed function name the agent can mistake for
 # something in its own code. cy.get/find/eq are all element lookups on a held subject; WHICH
 # one ran is irrelevant to the fix.
+# dk, 2026-07-31: "stick to the exact cypress error as much as possible." So this list is as
+# SHORT as it can be. It touches only the tokens that name the runner or a file the agent
+# cannot see. Every other word of the error -- the timeout, the cause, the DOM detachment, the
+# assertion text -- passes through byte for byte.
+#
+# `cy.find()` cannot simply become `find()`: stripped of its prefix it is an unattributed
+# function name the agent can mistake for something in its own code, which is a fresh goose
+# chase. cy.get/find/eq/clear/type all appear in the corpus; naming the ACTION keeps the
+# sentence true and grammatical without naming the tool.
 VOICE = [
-    # handle the whole clause before the bare-command rule, or "`cy.find()` failed because"
-    # renders as "the element I was interacting with failed because", which is not English.
-    (re.compile(r"`?\bcy\.[a-zA-Z]+\([^)]*\)`?\s+failed because\b"),
-     "the element I was interacting with was replaced because"),
-    (re.compile(r"`?\bcy\.[a-zA-Z]+\([^)]*\)`?"), "the element I was interacting with"),
-    (re.compile(r"\bThe subject is no longer attached to the DOM\b"),
-     "The element I had is no longer attached to the page"),
-    (re.compile(r"\bthe subject\b", re.I), "the element I had"),
-    (re.compile(r"\bbut you tried to continue the command chain\b"),
-     "and I could not carry on with it"),
-    (re.compile(r",? and Cypress cannot requery the page after commands such as [^.]*\.", re.I), "."),
+    (re.compile(r"`?\bcy\.(get|find|eq|first|last|children|parent|closest|filter)\([^)]*\)`?"),
+     "the element lookup"),
+    (re.compile(r"`?\bcy\.[a-zA-Z]+\([^)]*\)`?"), "the browser action"),
+    (re.compile(r"\bCypressError\b"), "BrowserError"),
     (re.compile(r"\bCypress\b"), "the browser"),
     (re.compile(r"\bcypress\b"), "the browser"),
 ]
@@ -90,16 +108,27 @@ def report(raw):
         # its doc link, its stack frames. Matching only the heading let the bullets through
         # ("- Your JS framework re-rendered asynchronously"). Stop collecting until the next
         # numbered failure.
-        if TUTORIAL.match(line) or SUMMARY.match(line):
-            cur["done"] = True
+        # SKIP the runner's chatter line by line -- never terminate the entry on it. In the
+        # uncaught-exception block the runner's explanation ("When Cypress detects uncaught
+        # errors...") sits BETWEEN the app's error and the app's own stack frames, so
+        # terminating there threw away the frames pointing at js/app.js:130 -- the most
+        # actionable lines in the whole report.
+        if TUTORIAL.match(line) or SUMMARY.match(line) or BULLET.match(line):
             continue
-        if cur.get("done") or FRAME.match(line) or PATHY.search(line):
+        if FRAME.match(line):
+            # keep the app's own frames, stripped to a path the agent can open
+            if RUNNER_FRAME.search(line):
+                continue
+            cur.setdefault("frames", []).append(APP_URL.sub("", line).strip())
+            continue
+        if PATHY.search(line):
             continue
         e = ERRLINE.match(line)
         if e:
             cur["desc"].append(e.group(1).strip())
         elif line.strip():
-            (cur["desc"] if cur["desc"] else cur["context"]).append(line.strip())
+            # the app's own uncaught exception is printed quoted: "> Failed to execute ..."
+            (cur["desc"] if cur["desc"] else cur["context"]).append(re.sub(r"^>\s*", "", line.strip()))
     if cur:
         entries.append(cur)
 
@@ -112,17 +141,21 @@ def report(raw):
         for pat, rep in BEHAVIOUR:
             behaviour = pat.sub(rep, behaviour)
         desc = voice(" ".join(e["desc"])) or "it did not work."
-        out.append((section, behaviour.strip(), desc))
+        out.append((section, behaviour.strip(), desc, e.get("frames", [])))
     return out
 
 
 def render(raw):
     lines = []
-    for i, (section, behaviour, desc) in enumerate(report(raw), 1):
+    for i, (section, behaviour, desc, frames) in enumerate(report(raw), 1):
         head = f"  {i}) {section} — {behaviour}" if section else f"  {i}) {behaviour}"
         lines.append(head)
         lines.append("")
         lines.append(f"     {desc}")
+        if frames:
+            lines.append("")
+            for f in frames[:6]:
+                lines.append(f"       {f}")
         lines.append("")
     return "\n".join(lines).rstrip("\n")
 
