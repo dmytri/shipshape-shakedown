@@ -86,10 +86,14 @@ sys.exit(1 if bad else 0)
 PY
 # dk, 2026-07-29: gplint config is part of fit-out grading — measured, never seeded.
 grep -q 'FIT-OUT' "$R" && ok "fit-out grade recorded (gplintrc, rigging lint, gplint run)" || no "fit-out is not graded"
-# dk, 2026-07-30: ONE session per voyage. The captain/qm leg split was an operator invention and
-# every defect of 07-29/30 lived on its git handoff seam (14, 15, 16, and the greenfield block).
-[ "$(grep -cE '^\s*leg "?v' "$R")" = 2 ] && ok "one session per voyage (no inter-leg git handoff to get wrong)" || no "the voyage is still split across legs"
-grep -qE '^[^#]*BASE_COMMIT' "$R" && no "BASE_COMMIT handoff contract is back — that seam caused defects 15 and 16" || ok "no BASE_COMMIT contract between legs"
+# dk, 2026-08-01: Captain/Shipwright fit out and STOP; a FRESH QM session opens on that commit.
+# Context isolation between roles is the mechanism under test -- one session wearing five hats
+# wrote production code as "Step 1 (Crew work)" and the watchbill last, after its scenarios were
+# already green (R13 control/flash: app+specs+steps+watchbill in ONE 870-line commit).
+[ "$(grep -cE '^\s*leg "?v' "$R")" = 4 ] && ok "two sessions per voyage (Captain/Shipwright, then a fresh QM)" || no "the voyage is not split Captain -> QM"
+grep -q 'SKILLS/shipwright' "$R" && ok "Shipwright is loaded (it owns fitting out)" || no "Shipwright absent — nobody owns deriving the rigging"
+grep -q 'SKILLS/crew' "$R" && grep -qE 'leg "?v[0-9$]+-captain".*SKILLS/crew' "$R" && no "Captain leg carries Crew — production code is not Captain's" || ok "Captain leg carries no Crew/QM skills"
+grep -qE '^[^#]*BASE_COMMIT="\$\(git -C "\$SIM" rev-parse HEAD\)"' "$R" && ok "BASE_COMMIT is read AFTER the Captain leg takes custody" || no "BASE_COMMIT is not derived from the Captain commit"
 grep -qE 'Do not commit, push' "$R" "$HERE/tasks/pilot/captain-todomvc.task.md" && no "a pilot prompt still forbids the roles to commit" || ok "custody is the roles' business, not forbidden by the prompt"
 grep -q 'assume that role in place' "$R" "$HERE/tasks/pilot/captain-todomvc.task.md" >/dev/null && ok "the voyage prompt carries the no-spawn-tool fallback" || no "the agent is not told to assume roles in place"
 grep -qE '(python3|bin/)[^#]*rigging-conform' "$R" && no "fit-out grade keys on ## Methods — penalises the control arm" || ok "fit-out grade is vocabulary-neutral across arms"
