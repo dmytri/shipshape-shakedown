@@ -18,20 +18,22 @@
 #                                 pastes the exact oracle failure; picking a canned intent instead
 #                                 was operator craft dressed as playbook.
 #   resume / infra-retry paths    state to get wrong, for a run that should just be rerun.
-#   the captain/qm leg SPLIT      2026-07-30, dk: "basic fixture, agent runs in bwrap with the
-#                                 todomvc specs, runs autonomously until oracle, then the playbook
-#                                 gives the clean exact error back until 28/29." Splitting each
-#                                 voyage into two pi sessions with a git handoff between them was
-#                                 an operator invention doctrine never asked for, and EVERY defect
-#                                 of 2026-07-29/30 lived on that seam: the harness read BASE_COMMIT
-#                                 before the Captain's work existed (16), so QM opened on a foul and
-#                                 stashed the watchbill (15), so QM had no targets for ten voyages,
-#                                 so the self-suite froze at 37/37 and the ceiling was unreachable;
-#                                 and a fresh QM opening cold on a tree it never built blocked on a
-#                                 missing RIGGING.md (B1). ONE session per voyage carries the whole
-#                                 voyage — which is what the skills already do when no spawn tool
-#                                 exists ("assume that role in place"), exactly as the old QM leg
-#                                 already ran Crew and Boatswain inside itself.
+#   the ONE-session voyage       2026-07-30, restored to two sessions on 08-01. Collapsing the
+#                                 voyage to a single session did fix the handoff defects (14/15/16),
+#                                 but context isolation between roles IS Shipshape's mechanism, and
+#                                 one agent wearing five hats has none of it: R13 control/flash read
+#                                 every skill, then wrote production code as "Step 1 (Crew work)",
+#                                 the watchbill LAST after its scenarios were already green, and
+#                                 landed app+specs+steps+watchbill in ONE 870-line commit. Nothing
+#                                 red, nothing handed over, no rigging (the context already knew its
+#                                 own commands), no planks (no dispatch against failure evidence).
+#                                 Roles became labels on a checklist.
+#
+# THE VOYAGE (dk, 2026-08-01): Captain+Shipwright fit out, author feature files, scantlings, assets
+# and the watchbill, TAKE CUSTODY, and stop -- production code explicitly forbidden. BASE_COMMIT is
+# read from that commit. Then a FRESH QM+Crew+Boatswain session opens cold on it and carries the
+# work. This is not the 07-29 split that caused 15/16: there the prompt forbade Captain to commit,
+# so BASE_COMMIT predated its work and QM stashed the watchbill it was handed.
 #
 # The harness now READS this repo and never writes it. Custody, rigging and specs are the roles'
 # business; whether they happen is a RESULT, not something to arrange.
@@ -151,7 +153,7 @@ correction(){ # correction <prev-voyage-tag> -> writes a task file, echoes its p
   [ -n "$block" ] || block="$(titles "$vg" | sed 's/^/  - /')"
   # dk, 2026-07-31: the original header, with the suite RUN BY A USER. No paraphrasing and no
   # filtering of the block -- it is passed through exactly as the runner emitted it.
-  { printf 'You are the Shipshape Captain. Project root: %s.\n\nAn external browser acceptance suite is run by a user against the build. It is FIXED and\nCORRECT — you cannot and must not change it. You have no access to these tests, as they are\nrun by the user. Your own verification suite passes, yet the\nacceptance suite still reports the failures below, because a real browser exercises behaviour\nyour in-harness DOM does not. These are real PRODUCT defects; fix the product so a real\nbrowser passes.\n\nVerbatim acceptance-suite failure output:\n----------------------------------------------------------------------\n' "$SIM"
+  { printf 'You are the Shipshape Captain. Project root: %s.\n\nAn external browser acceptance suite is run by a user against the build. It is FIXED and\nCORRECT — you cannot and must not change it. You have no access to these tests, as they are\nrun by the user. Your own verification suite passes, yet the acceptance suite still reports\nthe failures below, because a real browser exercises behaviour your in-harness DOM does not. These are real PRODUCT defects. Capture them as durable specs and\nwatchbill targets, so a Quartermaster can prove them red and Crew can fix the product.\n\nVerbatim acceptance-suite failure output:\n----------------------------------------------------------------------\n' "$SIM"
     printf '%s\n' "$block"
     printf -- '----------------------------------------------------------------------\n\nProceed now without waiting for confirmation: author or correct the durable specs and\nwatchbill your role calls for, take local commit custody of them, then stop.\n\nYou have no subagent spawn tool. Where your role would dispatch Shipwright, assume that role\nin place by reading its skill and following it.\n\nDo NOT write production code and do NOT push. A separate Quartermaster session opens on your\ncommit and carries the work from there.\n'
   } > "$task"

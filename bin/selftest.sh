@@ -102,7 +102,9 @@ grep -q 'SKILLS/shipwright' "$R" && ok "Shipwright is loaded (it owns fitting ou
 grep -q 'SKILLS/crew' "$R" && grep -qE 'leg "?v[0-9$]+-captain".*SKILLS/crew' "$R" && no "Captain leg carries Crew — production code is not Captain's" || ok "Captain leg carries no Crew/QM skills"
 grep -qE '^[^#]*BASE_COMMIT="\$\(git -C "\$SIM" rev-parse HEAD\)"' "$R" && ok "BASE_COMMIT is read AFTER the Captain leg takes custody" || no "BASE_COMMIT is not derived from the Captain commit"
 grep -qE 'Do not commit, push' "$R" "$HERE/tasks/pilot/captain-todomvc.task.md" && no "a pilot prompt still forbids the roles to commit" || ok "custody is the roles' business, not forbidden by the prompt"
-grep -q 'assume that role in place' "$R" "$HERE/tasks/pilot/captain-todomvc.task.md" >/dev/null && ok "the voyage prompt carries the no-spawn-tool fallback" || no "the agent is not told to assume roles in place"
+# match across the prompt's line wrap, and ONLY in the prompts -- this check was green for a
+# year because it was matching the phrase in a source COMMENT rather than in any prompt.
+grep -qz 'assume that role[[:space:]]*in place' "$HERE/tasks/pilot/captain-todomvc.task.md" && grep -q 'assume that role' "$R" && ok "both prompts carry the no-spawn-tool fallback" || no "a prompt does not tell the agent to assume roles in place"
 grep -qE '(python3|bin/)[^#]*rigging-conform' "$R" && no "fit-out grade keys on ## Methods — penalises the control arm" || ok "fit-out grade is vocabulary-neutral across arms"
 [ -e "$HERE/.eval-scratch/.shared-nm/node_modules/.bin/gplint" ] && ok "gplint resolves from the shared toolkit (no registry round-trip)" || no "gplint missing from shared toolkit"
 
