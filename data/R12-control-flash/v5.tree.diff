@@ -1,0 +1,126 @@
+diff --git a/features/support/steps.js b/features/support/steps.js
+index ad5991e..db00365 100644
+--- a/features/support/steps.js
++++ b/features/support/steps.js
+@@ -243,6 +243,18 @@ Then('the todo is no longer marked as completed', function () {
+   expect(toggle.checked).toBe(false);
+ });
+ 
++Then('the todo checkbox input is checked', function () {
++  const toggle = this.document.querySelector('.todo-list li .toggle');
++  expect(toggle).not.toBeNull();
++  expect(toggle.checked).toBe(true);
++});
++
++Then('the todo checkbox input is not checked', function () {
++  const toggle = this.document.querySelector('.todo-list li .toggle');
++  expect(toggle).not.toBeNull();
++  expect(toggle.checked).toBe(false);
++});
++
+ Then('all todos are marked as completed', function () {
+   const items = this.document.querySelectorAll('.todo-list li');
+   expect(items.length).toBeGreaterThan(0);
+diff --git a/features/todos.feature b/features/todos.feature
+index ccce0b3..efc8e1e 100644
+--- a/features/todos.feature
++++ b/features/todos.feature
+@@ -43,11 +43,18 @@ Feature: TodoMVC
+     And I click the toggle checkbox on the todo
+     Then the todo is marked as completed
+ 
++  Scenario: Marking a todo as completed checks the toggle input
++    When I type "Buy groceries" into the new todo input and press Enter
++    And I click the toggle checkbox on the todo
++    Then the todo is marked as completed
++    And the todo checkbox input is checked
++
+   Scenario: Mark a completed todo as active
+     When I type "Buy groceries" into the new todo input and press Enter
+     And I click the toggle checkbox on the todo
+     And I click the toggle checkbox on the todo again
+     Then the todo is no longer marked as completed
++    And the todo checkbox input is not checked
+ 
+   Scenario: Mark all todos as complete
+     When I type "Buy groceries" into the new todo input and press Enter
+@@ -63,6 +70,14 @@ Feature: TodoMVC
+     When I click the toggle checkbox on "Walk the dog"
+     Then the "Mark all as complete" toggle is checked
+ 
++  Scenario: Toggle-all is not checked after clearing completed items
++    When I type "Buy groceries" into the new todo input and press Enter
++    And I type "Walk the dog" into the new todo input and press Enter
++    And I click the "Mark all as complete" toggle
++    Then the "Mark all as complete" toggle is checked
++    When I click the "Clear completed" button
++    Then the "Mark all as complete" toggle is not checked
++
+   Rule: Deleting todos
+ 
+   Scenario: Delete a todo
+diff --git a/js/app.js b/js/app.js
+index 87a8c22..365e4c3 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -229,7 +229,6 @@
+ 
+     // Update the DOM in place after a toggle, without rebuilding the todo list
+     updateToggleUI: function (id) {
+-      var self = this;
+       var activeCount = this.activeCount();
+       var completedCount = this.completedCount();
+ 
+@@ -253,25 +252,20 @@
+           continue;
+         }
+ 
+-        // Remove items that no longer match the current filter
+-        var matchesFilter =
+-          this.filter === 'all' ||
+-          (this.filter === 'active' && !todo.completed) ||
+-          (this.filter === 'completed' && todo.completed);
+-        if (!matchesFilter) {
+-          li.parentNode.removeChild(li);
+-          continue;
+-        }
+-
+-        // Update checkbox and completed class in place
++        // Sync both the CSS class and the toggle checkbox checked state
++        // from the model.  The old approach skipped toggle.checked (relying
++        // on the native browser click), but that leaves individual
++        // checkboxes out of sync when toggleAll() changes every item's
++        // model state without a dom-native click on each one.  A real
++        // browser Cypress test then sees a mismatch between class and
++        // checked and reports a detached subject.
+         var toggle = li.querySelector('.toggle');
+-        if (toggle) {
+-          toggle.checked = todo.completed;
+-        }
+         if (todo.completed) {
+           li.classList.add('completed');
++          if (toggle) toggle.checked = true;
+         } else {
+           li.classList.remove('completed');
++          if (toggle) toggle.checked = false;
+         }
+       }
+ 
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..8dc0f7a
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,11 @@
++{
++  "watches": [
++    {
++      "scenarios": [
++        "features/todos.feature:Mark a completed todo as active",
++        "features/todos.feature:Marking a todo as completed checks the toggle input",
++        "features/todos.feature:Toggle-all is not checked after clearing completed items"
++      ]
++    }
++  ]
++}
+\ No newline at end of file

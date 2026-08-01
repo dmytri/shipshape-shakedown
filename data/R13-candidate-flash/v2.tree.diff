@@ -1,0 +1,105 @@
+diff --git a/js/app.js b/js/app.js
+index 2ad847d..8e6a5f2 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -69,45 +69,72 @@
+     this.$main.style.display = hasTodos ? 'block' : 'none';
+     this.$footer.style.display = hasTodos ? 'block' : 'none';
+ 
+-    // Render list items
+-    this.$todoList.innerHTML = '';
++    // Diff-based list rendering: reuse existing <li> elements by data-id
+     var self = this;
+-    todos.forEach(function (todo) {
+-      var li = document.createElement('li');
+-      if (todo.completed) {
+-        li.className = 'completed';
++    var existing = {};
++    var child = this.$todoList.firstElementChild;
++    while (child) {
++      var id = child.getAttribute('data-id');
++      if (id !== null) {
++        existing[id] = child;
+       }
+-      li.dataset.id = todo.id;
++      child = child.nextElementSibling;
++    }
++
++    // Build the new list in document fragment, reusing existing elements
++    var fragment = document.createDocumentFragment();
++    todos.forEach(function (todo) {
++      var id = String(todo.id);
++      var li = existing[id];
++      if (li) {
++        // Reuse existing element — update its content
++        delete existing[id];
++      } else {
++        // Create new element
++        li = document.createElement('li');
++        li.dataset.id = id;
+ 
+-      var viewDiv = document.createElement('div');
+-      viewDiv.className = 'view';
++        var viewDiv = document.createElement('div');
++        viewDiv.className = 'view';
+ 
+-      var toggle = document.createElement('input');
+-      toggle.className = 'toggle';
+-      toggle.type = 'checkbox';
+-      if (todo.completed) {
+-        toggle.checked = true;
+-      }
++        var toggle = document.createElement('input');
++        toggle.className = 'toggle';
++        toggle.type = 'checkbox';
+ 
+-      var label = document.createElement('label');
+-      label.textContent = todo.title;
++        var label = document.createElement('label');
+ 
+-      var destroyBtn = document.createElement('button');
+-      destroyBtn.className = 'destroy';
++        var destroyBtn = document.createElement('button');
++        destroyBtn.className = 'destroy';
+ 
+-      viewDiv.appendChild(toggle);
+-      viewDiv.appendChild(label);
+-      viewDiv.appendChild(destroyBtn);
++        viewDiv.appendChild(toggle);
++        viewDiv.appendChild(label);
++        viewDiv.appendChild(destroyBtn);
+ 
+-      var editInput = document.createElement('input');
+-      editInput.className = 'edit';
+-      editInput.value = todo.title;
++        var editInput = document.createElement('input');
++        editInput.className = 'edit';
+ 
+-      li.appendChild(viewDiv);
+-      li.appendChild(editInput);
+-      self.$todoList.appendChild(li);
++        li.appendChild(viewDiv);
++        li.appendChild(editInput);
++      }
++
++      // Update dynamic parts
++      var viewDiv = li.querySelector('.view');
++      li.className = todo.completed ? 'completed' : '';
++      viewDiv.querySelector('.toggle').checked = todo.completed;
++      viewDiv.querySelector('label').textContent = todo.title;
++      li.querySelector('.edit').value = todo.title;
++
++      fragment.appendChild(li);
+     });
+ 
++    // Remove any leftover (deleted) elements
++    Object.keys(existing).forEach(function (id) {
++      existing[id].parentNode.removeChild(existing[id]);
++    });
++
++    // Replace list contents in one go
++    this.$todoList.appendChild(fragment);
++
+     // Update toggle-all
+     this.$toggleAll.checked = todos.length > 0 && activeCount === 0;
+ 

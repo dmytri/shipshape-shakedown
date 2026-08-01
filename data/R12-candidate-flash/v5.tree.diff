@@ -1,0 +1,31 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..6c2addd
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,24 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++## Durable decisions
++
++- **Root cause of acceptance test failure**: In a real browser, clicking a checkbox natively toggles `.checked` AND our `click` handler fires on the same event. These two DOM mutations cause Cypress to detect a "page update" when commands are chained (e.g. `.click().should('be.checked')`), because the subject appears to be detached between the browser's native mutation and our handler's mutation.
++- **Fix**: Intercept `mousedown` on `.toggle` checkboxes with `preventDefault()` so the browser never natively toggles `checked`. Our `toggleTodo` handler alone manages `checked` via the data model, producing a single deterministic DOM mutation per click.
++
++## Specs changed
++
++- None (production defect fix only)
++
++## Production code changed
++
++- `js/app.js` – added `mousedown` handler with `preventDefault()` on `.toggle` checkboxes; restored explicit `cb.checked = updated.completed` in `toggleTodo`
++
++## Verification
++
++- cucumber-js (happy-dom): 24/24 scenarios, 158/158 steps passed before and after fix
++
++## Open
++
++- Acceptance tests need re-running against the build to confirm fix
+\ No newline at end of file

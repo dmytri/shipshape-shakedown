@@ -1,0 +1,34 @@
+diff --git a/js/app.js b/js/app.js
+index 1f944e6..a60c4d2 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -138,7 +138,7 @@
+     if (!li) return;
+     var id = Number(li.dataset.id);
+ 
+-    // Toggle checkbox — explicitly manage state via data model
++    // Toggle checkbox — let the browser's native toggle set .checked
+     if (e.target.classList.contains('toggle')) {
+       toggleTodo(id);
+     }
+@@ -214,8 +214,9 @@
+     if (!updated) return;
+     saveTodos();
+     // Surgical DOM update: update only the toggled element instead of rebuilding the entire list.
+-    // Explicitly set the checkbox checked state to match the data model, independent of the
+-    // browser's default activation timing (which toggles checked after click).
++    // The browser's native click on a checkbox toggles the checked property before the click
++    // event fires, so we must NOT set cb.checked here — doing so triggers a redundant DOM
++    // mutation that Cypress sees as a "page update", detaching the chained subject.
+     var li = todoList.querySelector('li[data-id="' + id + '"]');
+     if (li) {
+       if (updated.completed) {
+@@ -223,8 +224,6 @@
+       } else {
+         li.classList.remove('completed');
+       }
+-      var cb = li.querySelector('.toggle');
+-      if (cb) cb.checked = updated.completed;
+       // If the item no longer matches the current filter, use render() to rebuild
+       // the list properly instead of manually removing the element, which can cause
+       // DOM detachment issues in a real browser with chained Cypress commands.

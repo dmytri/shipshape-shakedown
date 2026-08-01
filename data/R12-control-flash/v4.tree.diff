@@ -1,0 +1,40 @@
+diff --git a/js/app.js b/js/app.js
+index 87a8c22..d494189 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -229,7 +229,6 @@
+ 
+     // Update the DOM in place after a toggle, without rebuilding the todo list
+     updateToggleUI: function (id) {
+-      var self = this;
+       var activeCount = this.activeCount();
+       var completedCount = this.completedCount();
+ 
+@@ -253,21 +252,12 @@
+           continue;
+         }
+ 
+-        // Remove items that no longer match the current filter
+-        var matchesFilter =
+-          this.filter === 'all' ||
+-          (this.filter === 'active' && !todo.completed) ||
+-          (this.filter === 'completed' && todo.completed);
+-        if (!matchesFilter) {
+-          li.parentNode.removeChild(li);
+-          continue;
+-        }
+-
+-        // Update checkbox and completed class in place
+-        var toggle = li.querySelector('.toggle');
+-        if (toggle) {
+-          toggle.checked = todo.completed;
+-        }
++        // Update the item in place: toggle its completed class.
++        // The browser's native checkbox click already toggled the .toggle
++        // element's checked property, so we do NOT set toggle.checked here.
++        // Doing so would redundantly mutate the same DOM node during the
++        // event handler, which causes Cypress to detect a detached subject.
++        // Filter-based visibility is handled by render() on navigation.
+         if (todo.completed) {
+           li.classList.add('completed');
+         } else {

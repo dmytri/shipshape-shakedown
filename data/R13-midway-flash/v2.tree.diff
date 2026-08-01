@@ -1,0 +1,109 @@
+diff --git a/js/app.js b/js/app.js
+index 453b234..a15a2c5 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -143,42 +143,78 @@
+     main.style.display = hasTodos ? 'block' : 'none';
+     footer.style.display = hasTodos ? 'block' : 'none';
+ 
+-    // Create fragment for new list items
+-    var fragment = document.createDocumentFragment();
++    // Index existing li elements by data-id so we can reuse them
++    var existingLi;
++    var elsById = {};
++    existingLi = Array.prototype.slice.call(list.children);
++    existingLi.forEach(function (li) {
++      var id = li.getAttribute('data-id');
++      if (id) elsById[id] = li;
++    });
++
++    // Track which ids we still have in the model
++    var usedIds = {};
++
++    // Reconcile: update existing elements in-place, create new ones as needed
+     filtered.forEach(function (todo) {
+-      var li = document.createElement('li');
+-      if (todo.completed) li.classList.add('completed');
++      var idStr = String(todo.id);
++      usedIds[idStr] = true;
++      var li = elsById[idStr];
++
++      if (li) {
++        // Update existing element — preserves DOM reference
++        if (todo.completed) {
++          li.classList.add('completed');
++        } else {
++          li.classList.remove('completed');
++        }
++        var checkbox = li.querySelector('.toggle');
++        if (checkbox) checkbox.checked = todo.completed;
++        var label = li.querySelector('label');
++        if (label) label.textContent = todo.title;
++        var editInput = li.querySelector('.edit');
++        if (editInput) editInput.value = todo.title;
++      } else {
++        // Create new element
++        li = document.createElement('li');
++        li.setAttribute('data-id', idStr);
++        if (todo.completed) li.classList.add('completed');
+ 
+-      var div = document.createElement('div');
+-      div.className = 'view';
++        var div = document.createElement('div');
++        div.className = 'view';
+ 
+-      var checkbox = document.createElement('input');
+-      checkbox.className = 'toggle';
+-      checkbox.type = 'checkbox';
+-      checkbox.checked = todo.completed;
++        var checkbox = document.createElement('input');
++        checkbox.className = 'toggle';
++        checkbox.type = 'checkbox';
++        checkbox.checked = todo.completed;
+ 
+-      var label = document.createElement('label');
+-      label.textContent = todo.title;
++        var label = document.createElement('label');
++        label.textContent = todo.title;
+ 
+-      var destroyBtn = document.createElement('button');
+-      destroyBtn.className = 'destroy';
++        var destroyBtn = document.createElement('button');
++        destroyBtn.className = 'destroy';
+ 
+-      div.appendChild(checkbox);
+-      div.appendChild(label);
+-      div.appendChild(destroyBtn);
++        div.appendChild(checkbox);
++        div.appendChild(label);
++        div.appendChild(destroyBtn);
+ 
+-      var editInput = document.createElement('input');
+-      editInput.className = 'edit';
+-      editInput.value = todo.title;
++        var editInput = document.createElement('input');
++        editInput.className = 'edit';
++        editInput.value = todo.title;
+ 
+-      li.appendChild(div);
+-      li.appendChild(editInput);
+-      fragment.appendChild(li);
++        li.appendChild(div);
++        li.appendChild(editInput);
++        list.appendChild(li);
++      }
+     });
+ 
+-    // Replace list contents
+-    while (list.firstChild) { list.removeChild(list.firstChild); }
+-    list.appendChild(fragment);
++    // Remove stale elements (deleted todos or filtered out)
++    existingLi.forEach(function (li) {
++      var id = li.getAttribute('data-id');
++      if (id && !usedIds[id]) {
++        list.removeChild(li);
++      }
++    });
+ 
+     // Update toggle-all
+     toggleAll.checked = activeCount === 0 && this.todos.length > 0;

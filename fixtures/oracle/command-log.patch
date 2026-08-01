@@ -1,0 +1,33 @@
+diff --git a/cypress/support/e2e.js b/cypress/support/e2e.js
+index 8edffddd..486e2e3b 100644
+--- a/cypress/support/e2e.js
++++ b/cypress/support/e2e.js
+@@ -1,3 +1,28 @@
+ import { createTodoCommands } from './commands'
+ 
+ export default createTodoCommands
++
++// Shakedown harness (2026-07-31, dk): a failure report must carry what the user DID, not only
++// what broke. Cypress already records every command; this appends that sequence to the error
++// so it lands inside the verbatim block the playbook pastes. No prose, no summary, no change
++// to what the suite asserts — the spec is untouched and remains unreadable to the agent.
++//
++// Why: every cell that failed the Item toggle pair fixed the toggle handler, because the toggle
++// is the only action the error mentions. The element actually detached earlier, when a SECOND
++// todo was created and re-rendered the list. That antecedent appears nowhere in the output.
++const __cmds = []
++Cypress.on('test:before:run', () => { __cmds.length = 0 })
++Cypress.on('command:start', (c) => {
++  try {
++    const a = c.attributes || {}
++    const args = (a.args || []).map((x) => (typeof x === 'string' ? x : '')).filter(Boolean).join(' ')
++    __cmds.push(`${a.name || '?'} ${args}`.trim().slice(0, 120))
++  } catch (e) { /* never let logging fail a test */ }
++})
++Cypress.on('fail', (err) => {
++  if (__cmds.length) {
++    err.message += '\n\nCommands run in this test, in order:\n' +
++      __cmds.map((c) => '    ' + c).join('\n')
++  }
++  throw err
++})

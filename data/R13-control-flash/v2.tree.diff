@@ -1,0 +1,67 @@
+diff --git a/js/app.js b/js/app.js
+index f6b5dd5..ebcac6e 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -217,23 +217,48 @@
+     var model = this.controller.model;
+     var filtered = this.controller.getFilteredTodos();
+ 
+-    // Render todo items
+-    this.todoList.innerHTML = '';
++    // Build a map of existing todo <li> elements by their dataset id,
++    // so we can reuse them across renders instead of detaching + recreating
++    // them. A real browser (Cypress) stores references to DOM elements in
++    // aliases like @todos or @firstTodo; a full innerHTML = '' destroys
++    // those references and causes detached-DOM errors.
++    var existing = {};
++    var children = [].slice.call(this.todoList.children);
++    children.forEach(function (li) {
++      existing[li.dataset.id] = li;
++    });
++
++    // Render/reuse todo items in order
++    var fragment = document.createDocumentFragment();
+     filtered.forEach(function (todo) {
+-      var li = document.createElement('li');
+-      li.dataset.id = todo.id;
+-      if (todo.completed) li.classList.add('completed');
+-
+-      li.innerHTML =
+-        '<div class="view">' +
+-          '<input class="toggle" type="checkbox"' + (todo.completed ? ' checked' : '') + '>' +
+-          '<label>' + self.escapeHtml(todo.title) + '</label>' +
+-          '<button class="destroy"></button>' +
+-        '</div>' +
+-        '<input class="edit" value="' + self.escapeHtml(todo.title) + '">';
+-      self.todoList.appendChild(li);
++      var li = existing[todo.id];
++      if (li) {
++        // Reuse and update the existing element — keeps DOM references alive
++        li.className = todo.completed ? 'completed' : '';
++        li.querySelector('.toggle').checked = todo.completed;
++        li.querySelector('label').textContent = todo.title;
++        li.querySelector('.edit').value = todo.title;
++        delete existing[todo.id];
++      } else {
++        li = document.createElement('li');
++        li.dataset.id = todo.id;
++        if (todo.completed) li.classList.add('completed');
++
++        li.innerHTML =
++          '<div class="view">' +
++            '<input class="toggle" type="checkbox"' + (todo.completed ? ' checked' : '') + '>' +
++            '<label>' + self.escapeHtml(todo.title) + '</label>' +
++            '<button class="destroy"></button>' +
++          '</div>' +
++          '<input class="edit" value="' + self.escapeHtml(todo.title) + '">';
++      }
++      fragment.appendChild(li);
+     });
+ 
++    // Remove elements no longer in the filtered list
++    this.todoList.innerHTML = '';
++    this.todoList.appendChild(fragment);
++
+     // Main and footer visibility
+     var hasTodos = model.todos.length > 0;
+     this.main.style.display = hasTodos ? '' : 'none';

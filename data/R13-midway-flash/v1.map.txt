@@ -1,0 +1,62 @@
+# banked: 2026-07-31T16:52:17Z
+# verdict: PENDING
+# leg: {  "name": "v1",  "model": "deepseek/deepseek-v4-flash",  "provider": "openrouter",  "workspace": "/home/exedev/shipshape-shakedown/.eval-scratch/R13-midway-flash/sim",  "timeout_s": 3600,  "max_tokens": 32768,  "skills": [    "/home/exedev/shipshape-shakedown/experiments/methods-midway/skills/shipshape",    "/home/exedev/shipshape-shakedown/experiments/methods-midway/skills/captain",    "/home/exedev/shipshape-shakedown/experiments/methods-midway/skills/qm",    "/home/exedev/shipshape-shakedown/experiments/methods-midway/skills/crew",    "/home/exedev/shipshape-shakedown/experiments/methods-midway/skills/boatswain",    "/home/exedev/yoink/skills/yoink"  ]}
+
+
+=== v1.session.jsonl ===
+  turns=51  wall=450.0s  in=240358  out=34184  cache_read=3751936  cost=$0.0993
+  role reads: captain@t0 -> shipshape@t0 -> crew@t5 -> qm@t5 -> boatswain@t5
+  roles loaded: boatswain, captain, crew, qm, shipshape
+  ~ repeated tool signature at turns [1, 7, 20, 25, 28, 29, 34, 35, 36, 43, 47] (possible flail)
+  per-turn (turn: in/out/cache $cost  tools):
+    t0    2398/191        0 $0.0003  read, read
+    t1   18600/235        0 $0.0018  read, read, read
+    t2   28137/700     2304 $0.0028  bash, bash
+    t3   17233/342    30208 $0.0022  read, read, bash, bash
+    t4    2933/345    45056 $0.0012  read, bash, bash, read
+    t5    2028/1311   47872 $0.0013  read, read, read
+    t6   10884/660    49152 $0.0021  bash, bash
+    t7    3380/220    57344 $0.0014  bash, bash
+    t8    3714/193    57344 $0.0015  bash, read
+    t9     809/694    60672 $0.0013  write
+    t10   1294/1494   60928 $0.0015  write
+    t11   1558/550    62208 $0.0014  write
+    t12   2922/743    61440 $0.0016  write, write
+    t13   1449/3344   63744 $0.0020  write
+    t14   7148/2657   61440 $0.0023  write
+    t15   5756/351    65536 $0.0018  bash
+    t16   2205/355    69632 $0.0016  edit
+    t17   1076/138    71168 $0.0015  bash
+    t18   1357/1030   71680 $0.0017  edit
+    t19  74119/138        0 $0.0070  bash
+    t20   1400/136    72960 $0.0015  bash
+    t21   1010/2646   74240 $0.0020  edit
+    t22   4233/186    73728 $0.0018  read, read
+    t23   5795/984    77824 $0.0022  edit
+    t24   1199/195    83456 $0.0017  bash
+    t25   3455/1725   81920 $0.0022  bash
+    t26   2087/1196   85248 $0.0020  edit
+    t27   1300/133    87296 $0.0018  read
+    t28   2914/119    86016 $0.0019  read
+    t29    486/103    88832 $0.0017  read
+    t30    767/393    89088 $0.0018  edit
+    t31   1720/124    88576 $0.0018  bash
+    t32    761/1730   90112 $0.0021  edit
+    t33   3067/119    89600 $0.0020  read
+    t34    596/107    92416 $0.0018  read
+    t35    370/115    92928 $0.0018  read
+    t36    356/328    93184 $0.0018  read
+    t37   3310/454    90624 $0.0021  edit
+    t38   1000/797    93440 $0.0020  edit
+    t39   1589/122    93696 $0.0019  bash
+    t40    628/627    95232 $0.0020  bash
+    t41   2345/1963   94208 $0.0024  edit
+    t42   2052/809    96512 $0.0022  edit
+    t43   1121/205    98304 $0.0020  edit
+    t44    354/123    99328 $0.0019  bash
+    t45    552/1648   99584 $0.0022  edit
+    t46   3276/124    98560 $0.0022  bash
+    t47   1955/301   100096 $0.0021  bash, bash
+    t48    680/359   101888 $0.0020  bash
+    t49    649/146   102400 $0.0020  bash
+    t50    331/476   102912 $0.0021  -

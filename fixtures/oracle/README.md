@@ -5,6 +5,7 @@ AFTER cloning, BEFORE the first grading run:
 
     git -C <oracle-clone> apply /home/exedev/shipshape-shakedown/fixtures/oracle/spy-reset.patch
     git -C <oracle-clone> apply /home/exedev/shipshape-shakedown/fixtures/oracle/shakedown-localstorage-exempt.patch
+    git -C <oracle-clone> apply /home/exedev/shipshape-shakedown/fixtures/oracle/command-log.patch
 
 All shakedown pilots MUST serve their build at `examples/shakedown/` and grade with
 `--env framework=shakedown` (a fixed name, not `pilot3`/`todopilot4`/etc.) so this
@@ -85,3 +86,30 @@ already sits in is not routing around a real defect — it is correcting an
 assumption this rule was built on, with the same rigor `spy-reset.patch` used.
 Not a general license to add exemptions on demand; the evidence bar above still
 applies to any future request of this kind.
+
+
+## command-log.patch — the failure report carries what the user DID
+
+dk, 2026-07-31. The report told the agent what broke but never what preceded it. The
+detachment failures read as "the toggle broke", so every stuck cell fixed the toggle handler.
+The element actually detached earlier: the test aliased the first `<li>`, then created a
+SECOND todo, and that re-render destroyed the alias. Nothing in the output said so.
+
+This appends Cypress's own command sequence to the error message, so it lands inside the
+verbatim block the playbook already pastes -- no change to pilot-run.sh, no prose, no summary:
+
+    Commands run in this test, in order:
+        get .new-todo
+        type buy some cheese{enter}
+        as firstTodo
+        createTodo feed the cat      <- the antecedent that was invisible
+        as secondTodo
+        get @firstTodo
+        find .toggle
+
+It touches the SUPPORT file only. The spec is untouched and stays unreadable to the agent;
+nothing the suite asserts changes. Verified: the same build grades 26/29 with and without it.
+
+Measured effect (R13 vs R12, flash, same arms/model/fixture):
+  control    24 24 26 25 26 (5 voyages, unfinished)  ->  24 28 (cleared)
+  candidate  24 26 26 26    (4 voyages, flat)        ->  24 25 28 (cleared)
