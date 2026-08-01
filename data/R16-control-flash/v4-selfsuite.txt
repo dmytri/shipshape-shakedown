@@ -1,0 +1,119 @@
+npm notice run todomvc-shakedown@0.1.0 npx
+npm notice run 'cucumber-js' features
+..........................................................................................................................................................................................................................UU-UU...UUU-UU....U-UU....U-UU...UUU...UUU.
+
+Undefined scenarios:
+  1) Mark-all toggle preserves previous DOM node references # features/todos.feature:221
+       Given the todo list contains items "Buy milk", "Walk dog" and "Book a doctors appointment"
+       When the user captures direct references to each todo list item
+       Then each captured reference should still be connected to the DOM
+       And the checkbox within each captured reference should be checked
+  2) Toggle-all uncheck preserves previous DOM node references # features/todos.feature:229
+       Given the todo list contains items "Buy milk", "Walk dog" and "Book a doctors appointment"
+       And all items are completed
+       When the user captures direct references to each todo list item
+       Then each captured reference should still be connected to the DOM
+       And the checkbox within each captured reference should not be checked
+  3) Adding a new todo preserves existing DOM node references # features/todos.feature:238
+       When the user captures a direct reference to the first todo list item
+       Then the captured reference should still be connected to the DOM
+       And the label text within the captured reference should still read "Buy milk"
+  4) Toggling a todo preserves existing DOM node references # features/todos.feature:246
+       When the user captures a direct reference to the first todo list item
+       Then the captured reference should still be connected to the DOM
+       And the captured reference should have the class "completed"
+  5) The watchbill declares every watch as a real scenario # features/todos.feature:254
+       Given the watchbill at "watchbill.json"
+       When the verifier checks each watch entry references an existing scenario in the feature files
+       Then every watch entry resolves to a current scenario
+  6) No PERTURBATION token is present in production code # features/todos.feature:260
+       Given the implementation directory "src"
+       When the verifier searches for the "PERTURBATION" token
+       Then no match is found
+
+36 scenarios (30 passed, 6 undefined)
+261 steps (236 passed, 4 skipped, 21 undefined)
+0m 0.520s (0m 0.445s executing your code)
+
+You can implement missing steps with the snippets below:
+
+Given('the todo list contains items {string}, {string} and {string}', function (string, string2, string3) {
+  // Write code here that turns the phrase above into concrete actions
+  return 'pending';
+});
+
+When('the user captures direct references to each todo list item', function () {
+  // Write code here that turns the phrase above into concrete actions
+  return 'pending';
+});
+
+Then('each captured reference should still be connected to the DOM', function () {
+  // Write code here that turns the phrase above into concrete actions
+  return 'pending';
+});
+
+Then('the checkbox within each captured reference should be checked', function () {
+  // Write code here that turns the phrase above into concrete actions
+  return 'pending';
+});
+
+Given('all items are completed', function () {
+  // Write code here that turns the phrase above into concrete actions
+  return 'pending';
+});
+
+Then('the checkbox within each captured reference should not be checked', function () {
+  // Write code here that turns the phrase above into concrete actions
+  return 'pending';
+});
+
+When('the user captures a direct reference to the first todo list item', function () {
+  // Write code here that turns the phrase above into concrete actions
+  return 'pending';
+});
+
+Then('the captured reference should still be connected to the DOM', function () {
+  // Write code here that turns the phrase above into concrete actions
+  return 'pending';
+});
+
+Then('the label text within the captured reference should still read {string}', function (string) {
+  // Write code here that turns the phrase above into concrete actions
+  return 'pending';
+});
+
+Then('the captured reference should have the class {string}', function (string) {
+  // Write code here that turns the phrase above into concrete actions
+  return 'pending';
+});
+
+Given('the watchbill at {string}', function (string) {
+  // Write code here that turns the phrase above into concrete actions
+  return 'pending';
+});
+
+When('the verifier checks each watch entry references an existing scenario in the feature files', function () {
+  // Write code here that turns the phrase above into concrete actions
+  return 'pending';
+});
+
+Then('every watch entry resolves to a current scenario', function () {
+  // Write code here that turns the phrase above into concrete actions
+  return 'pending';
+});
+
+Given('the implementation directory {string}', function (string) {
+  // Write code here that turns the phrase above into concrete actions
+  return 'pending';
+});
+
+When('the verifier searches for the {string} token', function (string) {
+  // Write code here that turns the phrase above into concrete actions
+  return 'pending';
+});
+
+Then('no match is found', function () {
+  // Write code here that turns the phrase above into concrete actions
+  return 'pending';
+});
+

@@ -1,6 +1,69 @@
 # Captain notes - shipshape-shakedown workstream
 
 <!-- ============================================================================= -->
+## >>> 2026-08-01: the voyage is TWO sessions. The cheap shape measured nothing. <<<
+
+**R16-control-flash: 24 24 24 24 28 -> 28/29 in 5 voyages, 37 min, $0.602.**
+
+**Why the one-session voyage was worthless as a doctrine test.** R13's control cell read every
+skill, then wrote `Step 1: production code (Crew work)`, `Step 2: feature specs (Captain work)`,
+`Step 4: watchbill` — spec-driven development backwards. It said "All 31 scenarios pass. Let me
+add the hovering scenario to the watchbill", i.e. wrote the work order after the work was green,
+and landed app+specs+steps+watchbill in ONE 870-line commit. Nothing red, nothing handed over,
+no rigging (the one context already knew its own commands), no planks, no tags. Roles as labels
+on a checklist. Shipwright — which OWNS fitting out — was not even loaded in any leg.
+
+**The shape now (dk):** leg 1 is Captain+Shipwright ONLY: fit out, author feature files,
+scantlings, assets, watchbill, TAKE CUSTODY, stop. Production code forbidden. `BASE_COMMIT` is
+read from that commit. Leg 2 is a FRESH QM+Crew+Boatswain opening cold on it.
+
+**What that bought, none of which the cheap shape ever produced:**
+
+| | R13 one session | R16 two sessions |
+|---|---|---|
+| grade | 28/29 | 28/29 |
+| wall / cost | 6 min / $0.055 | 37 min / **$0.602** |
+| commits | 2 | 7 |
+| tags | NONE | **@captain @conformance @contract** |
+| planks | 0 | 2 (`@planks-provisional`) |
+| rigging | none derived | full: every command but typecheck/conformance |
+| self-suite at V1 | 31/31 green | **29 pass, 2 undefined, 1 FAILED** |
+
+A fresh QM inherited 32 scenarios it had never seen and left them RED. That is the watchbill
+working as a work order. It also rejected a malformed watchbill (`"watch"` not `"watch1"`) and
+ignored `@captain` entries per policy — correct behaviour, reported as blockers to Captain.
+
+**ROUTED, NOT SHIPPED:**
+- **B5: `## Directories` is descriptive where greenfield needs it prescriptive.** Doctrine says
+  "list every directory that can hold a planked seam" — retrospective. At greenfield there is no
+  code to list, so Shipwright guessed `implementation: src`; Crew wrote to `js/` (the template's
+  convention, discoverable in `assets/app-template.index.html`, which Shipwright did not read).
+  `plank-inventory: npx jsdoc -X -recurse src/` therefore scans an EMPTY directory: zero planks,
+  exit 0, reads as a pass forever. Jolly's "selects nothing = false green" hazard, in doctrine.
+  Needs a probe before any fix (probe-first).
+
+**HARNESS GAPS, mine, not fixed:**
+- **QM's blocker report is discarded.** `correction()` pastes only the oracle failures, so the
+  next Captain never learns its watchbill was rejected. R16 spent voyages 2-4 flat rediscovering
+  this before converging at v5. Routing it would likely halve a cell.
+- **`handoff` misreports twice:** it blames Captain for dirt inherited from a QM leg that ended
+  UNCOMMITTED, and reads a clean tree as "took custody" when it can mean "did nothing" (v5's
+  Captain committed nothing; HEAD did not move).
+
+**Defect 17 (FIXED): the disk warden unlinked the stdout of LIVE legs.** `-mmin +$IDLE_MIN
+-delete` read "not written for a while" as "leg finished"; a leg blocked on the provider looks
+idle. Caught as `/proc/<pi>/fd/1 -> pi.stdout (deleted)`. Cost: no live window into any running
+leg, raw capture lost for exactly the slow legs worth reading, and eval-leg's 429-retry grep
+silently dead. Now keyed on `$OUT/exit`. A no-progress watchdog kills a leg whose stdout has not
+grown for 6 min and lets the retry take it — two legs this session ran the full 3600s producing
+ZERO bytes (R11 candidate/mimo, R14 control/flash), an hour each.
+
+**Operator lesson: I called R16 "fully inert" at v4 and twice recommended killing it. It reached
+28/29 at v5.** Three flat voyages is not a stall; a 12-voyage cap exists precisely because
+convergence is lumpy.
+
+
+<!-- ============================================================================= -->
 ## >>> 2026-07-31: R9 is a 9/9 ceiling. The two caps were the PLAYBOOK, not the model. <<<
 
 **The matrix (one draw per cell). Seven cells cleared on the first run; the two that capped

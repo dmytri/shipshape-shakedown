@@ -1,0 +1,50 @@
+npm notice run todomvc-shakedown@0.1.0 npx
+npm notice run 'cucumber-js' features
+...........................................................................................................................................................................................................................................................UUU...UUU.
+
+Undefined scenarios:
+  1) The watchbill declares every watch as a real scenario # features/todos.feature:250
+       Given the watchbill at "watchbill.json"
+       When the verifier checks each watch entry references an existing scenario in the feature files
+       Then every watch entry resolves to a current scenario
+  2) No PERTURBATION token is present in production code # features/todos.feature:256
+       Given the implementation directory "src"
+       When the verifier searches for the "PERTURBATION" token
+       Then no match is found
+
+36 scenarios (34 passed, 2 undefined)
+261 steps (255 passed, 6 undefined)
+0m 0.515s (0m 0.435s executing your code)
+
+You can implement missing steps with the snippets below:
+
+Given('the watchbill at {string}', function (string) {
+  // Write code here that turns the phrase above into concrete actions
+  return 'pending';
+});
+
+When('the verifier checks each watch entry references an existing scenario in the feature files', function () {
+  // Write code here that turns the phrase above into concrete actions
+  return 'pending';
+});
+
+Then('every watch entry resolves to a current scenario', function () {
+  // Write code here that turns the phrase above into concrete actions
+  return 'pending';
+});
+
+Given('the implementation directory {string}', function (string) {
+  // Write code here that turns the phrase above into concrete actions
+  return 'pending';
+});
+
+When('the verifier searches for the {string} token', function (string) {
+  // Write code here that turns the phrase above into concrete actions
+  return 'pending';
+});
+
+Then('no match is found', function () {
+  // Write code here that turns the phrase above into concrete actions
+  return 'pending';
+});
+

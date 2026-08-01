@@ -1,0 +1,584 @@
+diff --git a/css/app.css b/css/app.css
+new file mode 100644
+index 0000000..504b832
+--- /dev/null
++++ b/css/app.css
+@@ -0,0 +1 @@
++/* App-specific overrides */
+\ No newline at end of file
+diff --git a/features/steps/todos.js b/features/steps/todos.js
+new file mode 100644
+index 0000000..26bdfdc
+--- /dev/null
++++ b/features/steps/todos.js
+@@ -0,0 +1,522 @@
++const { Given, When, Then } = require('@cucumber/cucumber');
++const chai = require('chai');
++const path = require('node:path');
++const fs = require('node:fs');
++const Ajv = require('ajv');
++
++const { expect } = chai;
++
++// -- HELPERS ----------------------------------------------------------------
++
++function getTodoItems(document) {
++  return Array.from(document.querySelectorAll('.todo-list li'));
++}
++
++function findTodoItem(document, text) {
++  return getTodoItems(document).find(
++    (li) => li.querySelector('label').textContent.trim() === text
++  );
++}
++
++function waitForTick() {
++  return new Promise((r) => setTimeout(r, 0));
++}
++
++// Directly update localStorage without app reload. Reads from this.localStorage
++// and writes back; then re-renders the app by creating-and-removing a temporary
++// element trick, or simply set localStorage and let the app re-read it on next render.
++// We cannot call render() directly, so we use the app's own toggle-all handler
++// as a side effect, or we set localStorage and then trigger a full re-init via
++// app's route change or similar.
++
++// Safer helper: write todos to the CURRENT window's localStorage (the same one
++// the app uses), then trigger a render by dispatching a custom event the app
++// doesn't react to, but then force a re-read. We do this by patching the app's
++// render loop: we write localStorage and then click nothing; the app will read
++// from localStorage on its next render cycle.
++// Since we cannot easily trigger a render without the app's API, we'll just
++// set localStorage and then re-init via the app's own disposal trick using
++// the fact that the app reads localStorage on every render() — so we need to
++// call render(). The simplest approach: create a hidden input, type into it to
++// trigger the new-todo handler (which renders), but that would add a todo.
++// Instead, we write localStorage then reload via hashchange without navigation.
++function forceRenderFromStore(self) {
++  // read and write back the same data — the app renders already on some events.
++  // We'll use a hashchange event to trigger a re-render cycle.
++  var currentHash = self.window.location.hash;
++  self.window.location.hash = '#/nonexistent';
++  self.window.dispatchEvent(new self.window.Event('hashchange'));
++  self.window.location.hash = currentHash || '#/';
++  self.window.dispatchEvent(new self.window.Event('hashchange'));
++}
++
++// -- GIVEN ------------------------------------------------------------------
++
++Given('the user opens the TodoMVC app', async function () {
++  await waitForTick();
++});
++
++Given('the app has loaded with no todos', async function () {
++  this.localStorage.clear();
++  await this.disposeApp();
++  this.loadApp();
++  await waitForTick();
++});
++
++Given('the todo list is empty', async function () {
++  const items = getTodoItems(this.document);
++  expect(items.length).to.equal(0);
++});
++
++Given('the todo list contains an item {string}', async function (text) {
++  const input = this.document.querySelector('.new-todo');
++  input.value = text;
++  input.dispatchEvent(new this.window.KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, bubbles: true }));
++  await waitForTick();
++});
++
++Given('the todo list contains items {string} and {string}', async function (text1, text2) {
++  const input = this.document.querySelector('.new-todo');
++  input.value = text1;
++  input.dispatchEvent(new this.window.KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, bubbles: true }));
++  await waitForTick();
++  input.value = text2;
++  input.dispatchEvent(new this.window.KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, bubbles: true }));
++  await waitForTick();
++});
++
++Given('the item {string} is already completed', async function (text) {
++  const li = findTodoItem(this.document, text);
++  expect(li).to.not.be.undefined;
++  const checkbox = li.querySelector('.toggle');
++  if (!checkbox.checked) {
++    checkbox.checked = true;
++    checkbox.dispatchEvent(new this.window.Event('change', { bubbles: true }));
++    await waitForTick();
++  }
++});
++
++Given('the item {string} is completed', async function (text) {
++  const li = findTodoItem(this.document, text);
++  expect(li).to.not.be.undefined;
++  const checkbox = li.querySelector('.toggle');
++  if (!checkbox.checked) {
++    checkbox.checked = true;
++    checkbox.dispatchEvent(new this.window.Event('change', { bubbles: true }));
++    await waitForTick();
++  }
++});
++
++Given('no items are completed', async function () {
++  // Use the toggle-all to uncheck all items
++  const toggleAll = this.document.querySelector('.toggle-all');
++  if (toggleAll.checked) {
++    toggleAll.checked = false;
++    toggleAll.dispatchEvent(new this.window.Event('change', { bubbles: true }));
++    await waitForTick();
++  }
++  // Also ensure individual items are not checked
++  const items = getTodoItems(this.document);
++  items.forEach((li) => {
++    const checkbox = li.querySelector('.toggle');
++    if (checkbox.checked) {
++      checkbox.checked = false;
++      checkbox.dispatchEvent(new this.window.Event('change', { bubbles: true }));
++    }
++  });
++  await waitForTick();
++});
++
++Given('both items are completed', async function () {
++  // Use toggle-all to check all items
++  const toggleAll = this.document.querySelector('.toggle-all');
++  if (!toggleAll.checked) {
++    toggleAll.checked = true;
++    toggleAll.dispatchEvent(new this.window.Event('change', { bubbles: true }));
++    await waitForTick();
++  }
++});
++
++Given('the app has loaded with todos from localStorage', async function () {
++  await waitForTick();
++});
++
++// -- WHEN -------------------------------------------------------------------
++
++When('the user types {string} into the new-todo input and presses Enter', async function (text) {
++  const input = this.document.querySelector('.new-todo');
++  input.value = text;
++  input.dispatchEvent(new this.window.KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, bubbles: true }));
++  await waitForTick();
++});
++
++When('the user clicks the toggle checkbox for {string}', async function (text) {
++  const li = findTodoItem(this.document, text);
++  expect(li).to.not.be.undefined;
++  const checkbox = li.querySelector('.toggle');
++  checkbox.checked = !checkbox.checked;
++  checkbox.dispatchEvent(new this.window.Event('change', { bubbles: true }));
++  await waitForTick();
++});
++
++When('the user clicks the mark-all-as-complete toggle', async function () {
++  const toggle = this.document.querySelector('.toggle-all');
++  toggle.checked = !toggle.checked;
++  toggle.dispatchEvent(new this.window.Event('change', { bubbles: true }));
++  await waitForTick();
++});
++
++When('the user marks {string} as completed', async function (text) {
++  const li = findTodoItem(this.document, text);
++  expect(li).to.not.be.undefined;
++  const checkbox = li.querySelector('.toggle');
++  if (!checkbox.checked) {
++    checkbox.checked = true;
++    checkbox.dispatchEvent(new this.window.Event('change', { bubbles: true }));
++  }
++  await waitForTick();
++});
++
++When('the user clicks the {string} button', async function (buttonText) {
++  if (buttonText === 'Clear completed') {
++    const btn = this.document.querySelector('button.clear-completed');
++    btn.dispatchEvent(new this.window.Event('click', { bubbles: true }));
++    await waitForTick();
++  }
++});
++
++When('the user destroys the todo {string}', async function (text) {
++  const li = findTodoItem(this.document, text);
++  expect(li).to.not.be.undefined;
++  const btn = li.querySelector('button.destroy');
++  btn.dispatchEvent(new this.window.Event('click', { bubbles: true }));
++  await waitForTick();
++});
++
++When('the user double-clicks the label for {string}', async function (text) {
++  const li = findTodoItem(this.document, text);
++  expect(li).to.not.be.undefined;
++  const label = li.querySelector('label');
++  label.dispatchEvent(new this.window.Event('dblclick', { bubbles: true }));
++  await waitForTick();
++});
++
++When('the user edits {string} to {string} and presses Enter', async function (oldText, newText) {
++  const li = findTodoItem(this.document, oldText);
++  expect(li).to.not.be.undefined;
++  const label = li.querySelector('label');
++  label.dispatchEvent(new this.window.Event('dblclick', { bubbles: true }));
++  await waitForTick();
++  const editInput = li.querySelector('input.edit');
++  editInput.value = newText;
++  editInput.dispatchEvent(new this.window.KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, bubbles: true }));
++  await waitForTick();
++});
++
++When('the user edits {string} to {string} and blurs the edit input', async function (oldText, newText) {
++  const li = findTodoItem(this.document, oldText);
++  expect(li).to.not.be.undefined;
++  const label = li.querySelector('label');
++  label.dispatchEvent(new this.window.Event('dblclick', { bubbles: true }));
++  await waitForTick();
++  const editInput = li.querySelector('input.edit');
++  editInput.value = newText;
++  editInput.dispatchEvent(new this.window.Event('blur', { bubbles: true }));
++  await waitForTick();
++});
++
++When('the user edits {string} to {string} and presses Escape', async function (oldText, newText) {
++  const li = findTodoItem(this.document, oldText);
++  expect(li).to.not.be.undefined;
++  const label = li.querySelector('label');
++  label.dispatchEvent(new this.window.Event('dblclick', { bubbles: true }));
++  await waitForTick();
++  const editInput = li.querySelector('input.edit');
++  editInput.value = newText;
++  editInput.dispatchEvent(new this.window.KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, bubbles: true }));
++  await waitForTick();
++});
++
++When('the user reloads the app', async function () {
++  // Preserve localStorage across happy-dom window recreation
++  var preservedData = {};
++  var len = this.localStorage.length;
++  for (var i = 0; i < len; i++) {
++    var key = this.localStorage.key(i);
++    preservedData[key] = this.localStorage.getItem(key);
++  }
++  await this.disposeApp();
++  // Create a new Window and restore data before app initializes
++  const { Window } = require('happy-dom');
++  const fs = require('node:fs');
++  const path = require('node:path');
++  const ROOT = path.resolve(__dirname, '..', '..');
++  const indexPath = path.join(ROOT, 'index.html');
++  const appPath = path.join(ROOT, 'js', 'app.js');
++  const appSource = fs.readFileSync(appPath, 'utf8');
++  this.window = new (require('happy-dom').Window)({
++    url: 'http://localhost/',
++    settings: { disableJavaScriptFileLoading: true },
++  });
++  this.document = this.window.document;
++  this.document.write(fs.readFileSync(indexPath, 'utf8'));
++  this.document.close();
++  // Restore preserved data before app initializes
++  for (var key in preservedData) {
++    if (preservedData.hasOwnProperty(key)) {
++      this.localStorage.setItem(key, preservedData[key]);
++    }
++  }
++  this.window.eval(appSource);
++  this.document.dispatchEvent(new this.window.Event('DOMContentLoaded', { bubbles: true }));
++  this.window.dispatchEvent(new this.window.Event('load'));
++  const w = this.window;
++  this.document.addEventListener('click', (e) => {
++    const a = e.target && e.target.closest ? e.target.closest('a[href^="#"]') : null;
++    if (!a) return;
++    const next = a.getAttribute('href');
++    if (w.location.hash !== next) { w.location.hash = next; w.dispatchEvent(new w.Event('hashchange')); }
++  }, true);
++  await waitForTick();
++});
++
++When('the user inspects the localStorage data for {string}', async function (key) {
++  this.inspectedKey = key;
++  const raw = this.localStorage.getItem(key);
++  this.inspectedData = raw ? JSON.parse(raw) : [];
++});
++
++When('the user navigates to the default route', async function () {
++  this.navigate('#/');
++  await waitForTick();
++});
++
++When('the user navigates to the Active filter', async function () {
++  this.navigate('#/active');
++  await waitForTick();
++});
++
++When('the user navigates to the Completed filter', async function () {
++  this.navigate('#/completed');
++  await waitForTick();
++});
++
++When('the user marks {string} as active', async function (text) {
++  const li = findTodoItem(this.document, text);
++  expect(li).to.not.be.undefined;
++  const checkbox = li.querySelector('.toggle');
++  if (checkbox.checked) {
++    checkbox.checked = false;
++    checkbox.dispatchEvent(new this.window.Event('change', { bubbles: true }));
++  }
++  await waitForTick();
++});
++
++// -- THEN -------------------------------------------------------------------
++
++Then('the main section should not be visible', function () {
++  const main = this.document.querySelector('section.main');
++  const style = this.window.getComputedStyle(main);
++  expect(style.display).to.equal('none');
++});
++
++Then('the footer section should not be visible', function () {
++  const footer = this.document.querySelector('footer.footer');
++  const style = this.window.getComputedStyle(footer);
++  expect(style.display).to.equal('none');
++});
++
++Then('the todo list should contain {int} item', function (count) {
++  const items = getTodoItems(this.document);
++  expect(items.length).to.equal(count);
++});
++
++Then('the new item should display the text {string}', function (text) {
++  const items = getTodoItems(this.document);
++  expect(items.length).to.be.at.least(1);
++  const lastItem = items[items.length - 1];
++  expect(lastItem.querySelector('label').textContent.trim()).to.equal(text);
++});
++
++Then('the new-todo input should be cleared', function () {
++  const input = this.document.querySelector('.new-todo');
++  expect(input.value).to.equal('');
++});
++
++Then('the todo list should contain an item with the text {string}', function (text) {
++  const item = findTodoItem(this.document, text);
++  expect(item).to.not.be.undefined;
++});
++
++Then('the todo list should still be empty', function () {
++  const items = getTodoItems(this.document);
++  expect(items.length).to.equal(0);
++});
++
++Then('the item {string} should be marked as completed', function (text) {
++  const li = findTodoItem(this.document, text);
++  expect(li).to.not.be.undefined;
++  expect(li.classList.contains('completed')).to.be.true;
++});
++
++Then('the mark-all-as-complete checkbox should be checked', function () {
++  const toggle = this.document.querySelector('.toggle-all');
++  expect(toggle.checked).to.be.true;
++});
++
++Then('every todo in the list should be marked as completed', function () {
++  const items = getTodoItems(this.document);
++  items.forEach((li) => {
++    expect(li.classList.contains('completed')).to.be.true;
++  });
++});
++
++Then('no todo in the list should be marked as completed', function () {
++  const items = getTodoItems(this.document);
++  items.forEach((li) => {
++    expect(li.classList.contains('completed')).to.be.false;
++  });
++});
++
++Then('the mark-all-as-complete checkbox should not be checked', function () {
++  const toggle = this.document.querySelector('.toggle-all');
++  expect(toggle.checked).to.be.false;
++});
++
++Then('the todo-count should show {string}', function (expected) {
++  const countEl = this.document.querySelector('.todo-count');
++  expect(countEl.textContent.trim()).to.equal(expected);
++});
++
++Then('the todo-count should contain a strong element with the active count', function () {
++  const countEl = this.document.querySelector('.todo-count');
++  const strong = countEl.querySelector('strong');
++  expect(strong).to.not.be.undefined;
++  expect(strong.textContent.trim()).to.match(/^\d+$/);
++});
++
++Then('the todo list should contain only {string}', function (text) {
++  const items = getTodoItems(this.document);
++  expect(items.length).to.equal(1);
++  expect(items[0].querySelector('label').textContent.trim()).to.equal(text);
++});
++
++Then('the item {string} should not appear in the list', function (text) {
++  const item = findTodoItem(this.document, text);
++  expect(item).to.be.undefined;
++});
++
++Then('the clear-completed button should not be visible', function () {
++  const btn = this.document.querySelector('button.clear-completed');
++  const style = this.window.getComputedStyle(btn);
++  expect(style.display).to.equal('none');
++});
++
++Then('the item\'s li should have the class {string}', function (cls) {
++  const editingLi = this.document.querySelector('.todo-list li.editing');
++  expect(editingLi).to.not.be.undefined;
++  expect(editingLi.classList.contains(cls)).to.be.true;
++});
++
++Then('the edit input should be focused', function () {
++  const editingLi = this.document.querySelector('.todo-list li.editing');
++  expect(editingLi).to.not.be.undefined;
++  const editInput = editingLi.querySelector('input.edit');
++  expect(this.document.activeElement).to.equal(editInput);
++});
++
++Then('the edit input should contain the text {string}', function (text) {
++  const editingLi = this.document.querySelector('.todo-list li.editing');
++  expect(editingLi).to.not.be.undefined;
++  const editInput = editingLi.querySelector('input.edit');
++  expect(editInput.value).to.equal(text);
++});
++
++Then('the item should display the text {string}', function (text) {
++  const items = getTodoItems(this.document);
++  const found = items.find((li) => li.querySelector('label').textContent.trim() === text);
++  expect(found).to.not.be.undefined;
++});
++
++Then('the item\'s li should not have the class {string}', function (cls) {
++  const items = getTodoItems(this.document);
++  items.forEach((li) => {
++    expect(li.classList.contains(cls)).to.be.false;
++  });
++});
++
++Then('the item should display the original text {string}', function (text) {
++  const item = findTodoItem(this.document, text);
++  expect(item).to.not.be.undefined;
++  expect(item.querySelector('label').textContent.trim()).to.equal(text);
++});
++
++Then('the todo list should contain {int} items', function (count) {
++  const items = getTodoItems(this.document);
++  expect(items.length).to.equal(count);
++});
++
++Then('the item {string} should be active', function (text) {
++  const li = findTodoItem(this.document, text);
++  expect(li).to.not.be.undefined;
++  expect(li.classList.contains('completed')).to.be.false;
++});
++
++Then('the item {string} should be completed', function (text) {
++  const li = findTodoItem(this.document, text);
++  expect(li).to.not.be.undefined;
++  expect(li.classList.contains('completed')).to.be.true;
++});
++
++Then('every item in the stored list conforms to the {string} schema in {string}', async function (schemaName, schemaPath) {
++  const schemaFullPath = path.resolve(__dirname, '..', '..', schemaPath);
++  const schemaText = fs.readFileSync(schemaFullPath, 'utf8');
++  const schema = JSON.parse(schemaText);
++  const ajv = new Ajv();
++  const validate = ajv.compile(schema);
++  const data = this.inspectedData || [];
++  data.forEach((item, i) => {
++    const valid = validate(item);
++    expect(valid, `Item ${i} does not conform: ${JSON.stringify(validate.errors)}`).to.be.true;
++  });
++});
++
++Then('the todo list should show {int} items', function (count) {
++  const items = getTodoItems(this.document);
++  expect(items.length).to.equal(count);
++});
++
++Then('the {string} filter link should have the class {string}', function (filterName, cls) {
++  const filterMap = { 'All': '#/', 'Active': '#/active', 'Completed': '#/completed' };
++  const href = filterMap[filterName];
++  const link = this.document.querySelector(`.filters a[href="${href}"]`);
++  expect(link).to.not.be.undefined;
++  expect(link.classList.contains(cls)).to.be.true;
++});
++
++Then('the todo list should show {int} item', function (count) {
++  const items = getTodoItems(this.document);
++  expect(items.length).to.equal(count);
++});
++
++Then('that item should be {string}', function (text) {
++  const items = getTodoItems(this.document);
++  expect(items.length).to.equal(1);
++  expect(items[0].querySelector('label').textContent.trim()).to.equal(text);
++});
++
++Then('the {string} filter link should not have the class {string}', function (filterName, cls) {
++  const filterMap = { 'All': '#/', 'Active': '#/active', 'Completed': '#/completed' };
++  const href = filterMap[filterName];
++  const link = this.document.querySelector(`.filters a[href="${href}"]`);
++  if (link) {
++    expect(link.classList.contains(cls)).to.be.false;
++  }
++});
++
++Then('the todo list should show only uncompleted items', function () {
++  const items = getTodoItems(this.document);
++  items.forEach((li) => {
++    expect(li.classList.contains('completed')).to.be.false;
++  });
++});
+\ No newline at end of file
+diff --git a/index.html b/index.html
+new file mode 100644
+index 0000000..c685df2
+--- /dev/null
++++ b/index.html
+@@ -0,0 +1,40 @@
++<!doctype html>
++<html lang="en">
++	<head>
++		<meta charset="utf-8">
++		<meta name="viewport" content="width=device-width, initial-scale=1">
++		<title>TodoMVC</title>
++		<link rel="stylesheet" href="node_modules/todomvc-common/base.css">
++		<link rel="stylesheet" href="node_modules/todomvc-app-css/index.css">
++		<link rel="stylesheet" href="css/app.css">
++	</head>
++	<body>
++		<section class="todoapp">
++			<header class="header">
++				<h1>todos</h1>
++				<input class="new-todo" placeholder="What needs to be done?" autofocus>
++			</header>
++			<section class="main">
++				<input id="toggle-all" class="toggle-all" type="checkbox">
++				<label for="toggle-all">Mark all as complete</label>
++				<ul class="todo-list"></ul>
++			</section>
++			<footer class="footer">
++				<span class="todo-count"><strong>0</strong> item left</span>
++				<ul class="filters">
++					<li><a href="#/" class="selected">All</a></li>
++					<li><a href="#/active">Active</a></li>
++					<li><a href="#/completed">Completed</a></li>
++				</ul>
++				<button class="clear-completed">Clear completed</button>
++			</footer>
++		</section>
++		<footer class="info">
++			<p>Double-click to edit a todo</p>
++			<p>Created with Shipshape</p>
++			<p>Part of <a href="http://todomvc.com">TodoMVC</a></p>
++		</footer>
++		<script src="node_modules/todomvc-common/base.js"></script>
++		<script src="js/app.js"></script>
++	</body>
++</html>
+\ No newline at end of file

@@ -1,0 +1,13 @@
+diff --git a/js/app.js b/js/app.js
+index d859978..dd04218 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -206,6 +206,8 @@
+   }
+ 
+   function renderList(filtered) {
++    throw new Error("PERTURBATION: consider current durable context; remove when fixed");
++
+     // Clear existing items
+     while (todoList.firstChild) {
+       todoList.removeChild(todoList.firstChild);
