@@ -235,9 +235,38 @@ if command -v bwrap >/dev/null 2>&1; then
   # (2026-07-25). The failure means the leg never started, so a retry is safe and usually wins.
   # Also retry a transient provider RATE-LIMIT (429): the leg produced no useful work, so
   # back off and retry (upstream throttling, e.g. minimax-m3 via Parasail, 2026-07-25).
+  # NO-PROGRESS WATCHDOG (2026-08-01). Two legs this session produced ZERO bytes and ran the
+  # full 3600s: R11 candidate/mimo and R14 control/flash, an hour each, ~5% of legs. Both were
+  # blocked on a provider request that never returned -- R14 burned 60 minutes on 1 second of
+  # CPU. The timeout is the only thing that ended them, and a wave then loses an hour to a leg
+  # that never started. This kills a leg whose stdout has not grown for STALL_MIN minutes and
+  # lets the existing retry take it, turning an hour into a few minutes. It measures BYTES
+  # WRITTEN, not wall time, so a leg that is genuinely working is never touched however long
+  # it takes. (This only became possible once defect 17 stopped the warden unlinking the file.)
+  STALL_MIN="${STALL_MIN:-6}"
+  watchdog(){ # watchdog <child-pid> <stdout-file>
+    local pid="$1" f="$2" last=-1 now still=0
+    while kill -0 "$pid" 2>/dev/null; do
+      sleep 60
+      now=$(stat -c %s "$f" 2>/dev/null || echo 0)
+      if [ "$now" -gt "$last" ]; then last=$now; still=0; else still=$((still+1)); fi
+      if [ "$still" -ge "$STALL_MIN" ]; then
+        echo "eval-leg[$NAME]: NO OUTPUT for ${STALL_MIN}m (${now} bytes) — killing stalled leg" >&2
+        kill -9 "$pid" 2>/dev/null; return
+      fi
+    done
+  }
   for attempt in 1 2 3 4 5 6; do
-    timeout "${TIMEOUT_S}s" "${BW[@]}" "$PI" "${PI_ARGS[@]}" >"$OUT/pi.stdout" 2>"$OUT/pi.stderr"
-    EXIT=$?
+    timeout "${TIMEOUT_S}s" "${BW[@]}" "$PI" "${PI_ARGS[@]}" >"$OUT/pi.stdout" 2>"$OUT/pi.stderr" &
+    CHILD=$!
+    watchdog "$CHILD" "$OUT/pi.stdout" &
+    WD=$!
+    wait "$CHILD"; EXIT=$?
+    kill "$WD" 2>/dev/null; wait "$WD" 2>/dev/null
+    if [ ! -s "$OUT/pi.stdout" ] && [ "$attempt" -lt 6 ]; then
+      echo "eval-leg[$NAME]: leg produced no output (attempt $attempt) — retrying in $((attempt*10))s" >&2
+      sleep $((attempt*10)); continue
+    fi
     if grep -q "Can't make overlay mount\|Unable to create overlay" "$OUT/pi.stderr" 2>/dev/null; then
       echo "eval-leg[$NAME]: overlay mount failed (attempt $attempt) — retrying in ${attempt}s" >&2; sleep "$attempt"; continue
     fi
