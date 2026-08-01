@@ -1,0 +1,87 @@
+npm notice run todomvc-shakedown@0.1.0 npx
+npm notice run 'cucumber-js' features
+..............................UU-U....UU-U....UU-U....UU-U....UUU-U....UU-U..............................................................................................................................................................................................................
+
+Undefined scenarios:
+  1) Toggle-all preserves existing todo element references # features/todo-dom-stability.feature:14
+       And I have stored references to the todo list items
+       Given the todo list has 2 items
+       Then all previously stored todo references are still attached to the DOM
+  2) Unchecking toggle-all preserves existing todo element references # features/todo-dom-stability.feature:20
+       And I have stored references to the todo list items
+       Given all todos are completed
+       Then all previously stored todo references are still attached to the DOM
+  3) Adding a todo preserves references to existing items # features/todo-dom-stability.feature:28
+       And I have stored references to the todo list items
+       Given I have stored a reference to the first todo item
+       Then the previously stored first todo reference is still attached to the DOM
+  4) Toggling a single todo preserves references to other items # features/todo-dom-stability.feature:34
+       And I have stored references to the todo list items
+       Given I have stored a reference to the second todo item
+       Then the previously stored second todo reference is still attached to the DOM
+  5) Clearing completed preserves references to remaining items # features/todo-dom-stability.feature:40
+       And I have stored references to the todo list items
+       Given the first todo is completed
+       And I have stored a reference to the second todo item
+       Then the previously stored second todo reference is still attached to the DOM
+  6) Deleting a todo preserves references to remaining items # features/todo-dom-stability.feature:47
+       And I have stored references to the todo list items
+       Given I have stored a reference to the second todo item
+       Then the previously stored second todo reference is still attached to the DOM
+
+43 scenarios (37 passed, 6 undefined)
+281 steps (256 passed, 6 skipped, 19 undefined)
+0m 0.378s (0m 0.323s executing your code)
+
+You can implement missing steps with the snippets below:
+
+Given('I have stored references to the todo list items', function () {
+  // Write code here that turns the phrase above into concrete actions
+  return 'pending';
+});
+
+Given('the todo list has {int} items', function (int) {
+  // Write code here that turns the phrase above into concrete actions
+  return 'pending';
+});
+
+Given('the todo list has {float} items', function (float) {
+  // Write code here that turns the phrase above into concrete actions
+  return 'pending';
+});
+
+Then('all previously stored todo references are still attached to the DOM', function () {
+  // Write code here that turns the phrase above into concrete actions
+  return 'pending';
+});
+
+Given('all todos are completed', function () {
+  // Write code here that turns the phrase above into concrete actions
+  return 'pending';
+});
+
+Given('I have stored a reference to the first todo item', function () {
+  // Write code here that turns the phrase above into concrete actions
+  return 'pending';
+});
+
+Then('the previously stored first todo reference is still attached to the DOM', function () {
+  // Write code here that turns the phrase above into concrete actions
+  return 'pending';
+});
+
+Given('I have stored a reference to the second todo item', function () {
+  // Write code here that turns the phrase above into concrete actions
+  return 'pending';
+});
+
+Then('the previously stored second todo reference is still attached to the DOM', function () {
+  // Write code here that turns the phrase above into concrete actions
+  return 'pending';
+});
+
+Given('the first todo is completed', function () {
+  // Write code here that turns the phrase above into concrete actions
+  return 'pending';
+});
+

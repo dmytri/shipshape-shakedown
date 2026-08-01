@@ -1,0 +1,106 @@
+You are the Shipshape Captain. Project root: /home/exedev/shipshape-shakedown/.eval-scratch/R17-control-flash/sim.
+
+An external browser acceptance suite is run by a user against the build. It is FIXED and
+CORRECT — you cannot and must not change it. You have no access to these tests, as they are
+run by the user. Your own verification suite passes, yet the acceptance suite still reports
+the failures below, because a real browser exercises behaviour your in-harness DOM does not. These are real PRODUCT defects. Capture them as durable specs and
+watchbill targets, so a Quartermaster can prove them red and Crew can fix the product.
+
+Verbatim acceptance-suite failure output:
+----------------------------------------------------------------------
+  1) TodoMVC - shakedown
+       Editing
+         should remove the item if an empty text string was entered:
+     The following error originated from your application code, not from Cypress.
+
+  > Failed to execute 'removeChild' on 'Node': The node to be removed is no longer a child of this node. Perhaps it was moved in a 'blur' event handler?
+
+When Cypress detects uncaught errors originating from your application it will automatically fail the current test.
+
+This behavior is configurable, and you can choose to turn this off by listening to the `uncaught:exception` event.
+
+https://on.cypress.io/uncaught-exception-from-application
+
+Commands run in this test, in order:
+    visit /shakedown
+    then
+    contains h1
+    document
+    then
+    log app uses class selectors
+    get .todo-list li
+    createDefaultTodos
+    get .new-todo
+    type buy some cheese{enter}
+    get .todo-list li
+    get .new-todo
+    type feed the cat{enter}
+    get .todo-list li
+    get .new-todo
+    type book a doctors appointment{enter}
+    get .todo-list li
+    get .todo-list li:visible
+    then
+    as todos
+    get @todos
+    eq
+    find label
+    dblclick
+    get .todo-list li
+    eq
+    find .edit
+    clear
+    type {enter}
+  NotFoundError: The following error originated from your application code, not from Cypress.
+  
+    > Failed to execute 'removeChild' on 'Node': The node to be removed is no longer a child of this node. Perhaps it was moved in a 'blur' event handler?
+  
+  When Cypress detects uncaught errors originating from your application it will automatically fail the current test.
+  
+  This behavior is configurable, and you can choose to turn this off by listening to the `uncaught:exception` event.
+  
+  https://on.cypress.io/uncaught-exception-from-application
+      at render (http://localhost:8971/examples/shakedown/js/app.js:212:46)
+      at removeTodo (http://localhost:8971/examples/shakedown/js/app.js:268:5)
+      at updateTodo (http://localhost:8971/examples/shakedown/js/app.js:300:7)
+      at HTMLUListElement.<anonymous> (http://localhost:8971/examples/shakedown/js/app.js:368:7)
+      at Keyboard.fireSimulatedEvent (http://localhost:8971/__cypress/runner/cypress_runner.js:118974:27)
+      at Keyboard.simulatedKeydown (http://localhost:8971/__cypress/runner/cypress_runner.js:119087:58)
+      at Keyboard.typeSimulatedKey (http://localhost:8971/__cypress/runner/cypress_runner.js:119125:10)
+      at <unknown> (http://localhost:8971/__cypress/runner/cypress_runner.js:118821:14)
+      at tryCatcher (http://localhost:8971/__cypress/runner/cypress_runner.js:1777:23)
+      at Promise.attempt.Promise.try (http://localhost:8971/__cypress/runner/cypress_runner.js:4285:29)
+
+
+
+
+  (Results)
+----------------------------------------------------------------------
+
+The Quartermaster who worked the last voyage closed with this report:
+----------------------------------------------------------------------
+**QM** — fresh-context verification → Crew → Boatswain complete.
+
+- context: clean
+- watchbill: spent — struck with custody commit
+- target files: features/todo-dom-stability.feature (6 scenarios)
+- steps made executable: `all todos are completed`, `the first todo is completed`, `I have stored references to the todo list items`, `all previously stored todo references are still attached to the DOM`
+- result: 43/43 green (276/276 steps), fresh
+- **Crew**: replaced `innerHTML` with element-reuse strategy in `render()` that preserves existing `<li>` DOM element references by data-id. Added `@planks` annotations for new step patterns on `js/app.js`.
+- **Boatswain**:
+  - hygiene: plank-inventory + step-usage join clean (4 new planks match 4 step-definition patterns). Lint reports pre-existing style drift (noInnerDeclarations, useTemplate) — not blockers.
+  - verification recheck: all green
+  - watchbill struck, committed
+  - commit: `9a9bf1b` — "Preserve DOM element references across state transitions"
+  - tree: clean
+- next role: Captain
+----------------------------------------------------------------------
+
+Proceed now without waiting for confirmation: author or correct the durable specs and
+watchbill your role calls for, take local commit custody of them, then stop.
+
+You have no subagent spawn tool. Where your role would dispatch Shipwright, assume that role
+in place by reading its skill and following it.
+
+Do NOT write production code and do NOT push. A separate Quartermaster session opens on your
+commit and carries the work from there.

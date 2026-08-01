@@ -1,0 +1,369 @@
+You are the Shipshape Captain. Project root: /home/exedev/shipshape-shakedown/.eval-scratch/R17-control-flash/sim.
+
+An external browser acceptance suite is run by a user against the build. It is FIXED and
+CORRECT — you cannot and must not change it. You have no access to these tests, as they are
+run by the user. Your own verification suite passes, yet the acceptance suite still reports
+the failures below, because a real browser exercises behaviour your in-harness DOM does not. These are real PRODUCT defects. Capture them as durable specs and
+watchbill targets, so a Quartermaster can prove them red and Crew can fix the product.
+
+Verbatim acceptance-suite failure output:
+----------------------------------------------------------------------
+  1) TodoMVC - shakedown
+       Mark all as completed
+         should allow me to mark all items as completed:
+     Timed out retrying after 4000ms: `cy.eq()` failed because the page updated as a result of this command, but you tried to continue the command chain. The subject is no longer attached to the DOM, and Cypress cannot requery the page after commands such as `cy.eq()`.
+
+Common situations why this happens:
+  - Your JS framework re-rendered asynchronously
+  - Your app code reacted to an event firing and removed the element
+
+You can typically solve this by breaking up a chain. For example, rewrite:
+
+> `cy.get('button').click().should('have.class', 'active')`
+
+to
+
+> `cy.get('button').as('btn').click()`
+> `cy.get('@btn').should('have.class', 'active')`
+
+https://on.cypress.io/element-has-detached-from-dom
+
+Commands run in this test, in order:
+    visit /shakedown
+    then
+    contains h1
+    document
+    then
+    log app uses class selectors
+    get .todo-list li
+    createDefaultTodos
+    get .new-todo
+    type buy some cheese{enter}
+    get .todo-list li
+    get .new-todo
+    type feed the cat{enter}
+    get .todo-list li
+    get .new-todo
+    type book a doctors appointment{enter}
+    get .todo-list li
+    get .todo-list li:visible
+    then
+    as todos
+    get .toggle-all
+    check
+    get @todos
+    eq
+  CypressError: Timed out retrying after 4000ms: `cy.eq()` failed because the page updated as a result of this command, but you tried to continue the command chain. The subject is no longer attached to the DOM, and Cypress cannot requery the page after commands such as `cy.eq()`.
+  
+  Common situations why this happens:
+    - Your JS framework re-rendered asynchronously
+    - Your app code reacted to an event firing and removed the element
+  
+  You can typically solve this by breaking up a chain. For example, rewrite:
+  
+  > `cy.get('button').click().should('have.class', 'active')`
+  
+  to
+  
+  > `cy.get('button').as('btn').click()`
+  > `cy.get('@btn').should('have.class', 'active')`
+  
+  https://on.cypress.io/element-has-detached-from-dom
+      at isAttached (http://localhost:8971/__cypress/runner/cypress_runner.js:153456:58)
+      at validateType (http://localhost:8971/__cypress/runner/cypress_runner.js:153326:9)
+      at Object.isType (http://localhost:8971/__cypress/runner/cypress_runner.js:153361:7)
+      at <unknown> (http://localhost:8971/__cypress/runner/cypress_runner.js:138989:24)
+      at Object.subjectFn (http://localhost:8971/__cypress/runner/cypress_runner.js:152363:16)
+      at $Cy.verifyUpcomingAssertions (http://localhost:8971/__cypress/runner/cypress_runner.js:151628:31)
+      at onRetry (http://localhost:8971/__cypress/runner/cypress_runner.js:152354:15)
+      at tryCatcher (http://localhost:8971/__cypress/runner/cypress_runner.js:1777:23)
+      at Promise.attempt.Promise.try (http://localhost:8971/__cypress/runner/cypress_runner.js:4285:29)
+      at whenStable (http://localhost:8971/__cypress/runner/cypress_runner.js:152237:70)
+      at <unknown> (http://localhost:8971/__cypress/runner/cypress_runner.js:152152:14)
+      at tryCatcher (http://localhost:8971/__cypress/runner/cypress_runner.js:1777:23)
+      at Promise._settlePromiseFromHandler (http://localhost:8971/__cypress/runner/cypress_runner.js:1489:31)
+      at Promise._settlePromise (http://localhost:8971/__cypress/runner/cypress_runner.js:1546:18)
+      at Promise._settlePromise0 (http://localhost:8971/__cypress/runner/cypress_runner.js:1591:10)
+      at Promise._settlePromises (http://localhost:8971/__cypress/runner/cypress_runner.js:1671:18)
+      at Promise._fulfill (http://localhost:8971/__cypress/runner/cypress_runner.js:1615:18)
+      at <unknown> (http://localhost:8971/__cypress/runner/cypress_runner.js:5420:46)
+
+  2) TodoMVC - shakedown
+       Mark all as completed
+         should allow me to clear the complete state of all items:
+     Timed out retrying after 4000ms: `cy.eq()` failed because the page updated as a result of this command, but you tried to continue the command chain. The subject is no longer attached to the DOM, and Cypress cannot requery the page after commands such as `cy.eq()`.
+
+Common situations why this happens:
+  - Your JS framework re-rendered asynchronously
+  - Your app code reacted to an event firing and removed the element
+
+You can typically solve this by breaking up a chain. For example, rewrite:
+
+> `cy.get('button').click().should('have.class', 'active')`
+
+to
+
+> `cy.get('button').as('btn').click()`
+> `cy.get('@btn').should('have.class', 'active')`
+
+https://on.cypress.io/element-has-detached-from-dom
+
+Commands run in this test, in order:
+    visit /shakedown
+    then
+    contains h1
+    document
+    then
+    log app uses class selectors
+    get .todo-list li
+    createDefaultTodos
+    get .new-todo
+    type buy some cheese{enter}
+    get .todo-list li
+    get .new-todo
+    type feed the cat{enter}
+    get .todo-list li
+    get .new-todo
+    type book a doctors appointment{enter}
+    get .todo-list li
+    get .todo-list li:visible
+    then
+    as todos
+    get .toggle-all
+    check
+    get .toggle-all
+    uncheck
+    get @todos
+    eq
+  CypressError: Timed out retrying after 4000ms: `cy.eq()` failed because the page updated as a result of this command, but you tried to continue the command chain. The subject is no longer attached to the DOM, and Cypress cannot requery the page after commands such as `cy.eq()`.
+  
+  Common situations why this happens:
+    - Your JS framework re-rendered asynchronously
+    - Your app code reacted to an event firing and removed the element
+  
+  You can typically solve this by breaking up a chain. For example, rewrite:
+  
+  > `cy.get('button').click().should('have.class', 'active')`
+  
+  to
+  
+  > `cy.get('button').as('btn').click()`
+  > `cy.get('@btn').should('have.class', 'active')`
+  
+  https://on.cypress.io/element-has-detached-from-dom
+      at isAttached (http://localhost:8971/__cypress/runner/cypress_runner.js:153456:58)
+      at validateType (http://localhost:8971/__cypress/runner/cypress_runner.js:153326:9)
+      at Object.isType (http://localhost:8971/__cypress/runner/cypress_runner.js:153361:7)
+      at <unknown> (http://localhost:8971/__cypress/runner/cypress_runner.js:138989:24)
+      at Object.subjectFn (http://localhost:8971/__cypress/runner/cypress_runner.js:152363:16)
+      at $Cy.verifyUpcomingAssertions (http://localhost:8971/__cypress/runner/cypress_runner.js:151628:31)
+      at onRetry (http://localhost:8971/__cypress/runner/cypress_runner.js:152354:15)
+      at tryCatcher (http://localhost:8971/__cypress/runner/cypress_runner.js:1777:23)
+      at Promise.attempt.Promise.try (http://localhost:8971/__cypress/runner/cypress_runner.js:4285:29)
+      at whenStable (http://localhost:8971/__cypress/runner/cypress_runner.js:152237:70)
+      at <unknown> (http://localhost:8971/__cypress/runner/cypress_runner.js:152152:14)
+      at tryCatcher (http://localhost:8971/__cypress/runner/cypress_runner.js:1777:23)
+      at Promise._settlePromiseFromHandler (http://localhost:8971/__cypress/runner/cypress_runner.js:1489:31)
+      at Promise._settlePromise (http://localhost:8971/__cypress/runner/cypress_runner.js:1546:18)
+      at Promise._settlePromise0 (http://localhost:8971/__cypress/runner/cypress_runner.js:1591:10)
+      at Promise._settlePromises (http://localhost:8971/__cypress/runner/cypress_runner.js:1671:18)
+      at Promise._fulfill (http://localhost:8971/__cypress/runner/cypress_runner.js:1615:18)
+      at <unknown> (http://localhost:8971/__cypress/runner/cypress_runner.js:5420:46)
+
+  3) TodoMVC - shakedown
+       Item
+         should allow me to mark items as complete:
+     Timed out retrying after 4000ms: `cy.find()` failed because the page updated as a result of this command, but you tried to continue the command chain. The subject is no longer attached to the DOM, and Cypress cannot requery the page after commands such as `cy.find()`.
+
+Common situations why this happens:
+  - Your JS framework re-rendered asynchronously
+  - Your app code reacted to an event firing and removed the element
+
+You can typically solve this by breaking up a chain. For example, rewrite:
+
+> `cy.get('button').click().should('have.class', 'active')`
+
+to
+
+> `cy.get('button').as('btn').click()`
+> `cy.get('@btn').should('have.class', 'active')`
+
+https://on.cypress.io/element-has-detached-from-dom
+
+Commands run in this test, in order:
+    visit /shakedown
+    then
+    contains h1
+    document
+    then
+    log app uses class selectors
+    get .todo-list li
+    createTodo buy some cheese
+    get .new-todo
+    type buy some cheese{enter}
+    get .todo-list
+    contains li buy some cheese
+    then
+    as firstTodo
+    createTodo feed the cat
+    get .new-todo
+    type feed the cat{enter}
+    get .todo-list
+    contains li feed the cat
+    then
+    as secondTodo
+    get @firstTodo
+    find .toggle
+  CypressError: Timed out retrying after 4000ms: `cy.find()` failed because the page updated as a result of this command, but you tried to continue the command chain. The subject is no longer attached to the DOM, and Cypress cannot requery the page after commands such as `cy.find()`.
+  
+  Common situations why this happens:
+    - Your JS framework re-rendered asynchronously
+    - Your app code reacted to an event firing and removed the element
+  
+  You can typically solve this by breaking up a chain. For example, rewrite:
+  
+  > `cy.get('button').click().should('have.class', 'active')`
+  
+  to
+  
+  > `cy.get('button').as('btn').click()`
+  > `cy.get('@btn').should('have.class', 'active')`
+  
+  https://on.cypress.io/element-has-detached-from-dom
+      at isAttached (http://localhost:8971/__cypress/runner/cypress_runner.js:153456:58)
+      at validateType (http://localhost:8971/__cypress/runner/cypress_runner.js:153326:9)
+      at Object.isType (http://localhost:8971/__cypress/runner/cypress_runner.js:153361:7)
+      at <unknown> (http://localhost:8971/__cypress/runner/cypress_runner.js:138989:24)
+      at Object.subjectFn (http://localhost:8971/__cypress/runner/cypress_runner.js:152363:16)
+      at $Cy.verifyUpcomingAssertions (http://localhost:8971/__cypress/runner/cypress_runner.js:151628:31)
+      at onRetry (http://localhost:8971/__cypress/runner/cypress_runner.js:152354:15)
+      at tryCatcher (http://localhost:8971/__cypress/runner/cypress_runner.js:1777:23)
+      at Promise.attempt.Promise.try (http://localhost:8971/__cypress/runner/cypress_runner.js:4285:29)
+      at whenStable (http://localhost:8971/__cypress/runner/cypress_runner.js:152237:70)
+      at <unknown> (http://localhost:8971/__cypress/runner/cypress_runner.js:152152:14)
+      at tryCatcher (http://localhost:8971/__cypress/runner/cypress_runner.js:1777:23)
+      at Promise._settlePromiseFromHandler (http://localhost:8971/__cypress/runner/cypress_runner.js:1489:31)
+      at Promise._settlePromise (http://localhost:8971/__cypress/runner/cypress_runner.js:1546:18)
+      at Promise._settlePromise0 (http://localhost:8971/__cypress/runner/cypress_runner.js:1591:10)
+      at Promise._settlePromises (http://localhost:8971/__cypress/runner/cypress_runner.js:1671:18)
+      at Promise._fulfill (http://localhost:8971/__cypress/runner/cypress_runner.js:1615:18)
+      at <unknown> (http://localhost:8971/__cypress/runner/cypress_runner.js:5420:46)
+  From Your Spec Code:
+      at Context.eval (webpack://todomvc/./cypress/e2e/spec.cy.js:737:29)
+
+  4) TodoMVC - shakedown
+       Item
+         should allow me to un-mark items as complete:
+     Timed out retrying after 4000ms: `cy.find()` failed because the page updated as a result of this command, but you tried to continue the command chain. The subject is no longer attached to the DOM, and Cypress cannot requery the page after commands such as `cy.find()`.
+
+Common situations why this happens:
+  - Your JS framework re-rendered asynchronously
+  - Your app code reacted to an event firing and removed the element
+
+You can typically solve this by breaking up a chain. For example, rewrite:
+
+> `cy.get('button').click().should('have.class', 'active')`
+
+to
+
+> `cy.get('button').as('btn').click()`
+> `cy.get('@btn').should('have.class', 'active')`
+
+https://on.cypress.io/element-has-detached-from-dom
+
+Commands run in this test, in order:
+    visit /shakedown
+    then
+    contains h1
+    document
+    then
+    log app uses class selectors
+    get .todo-list li
+    createTodo buy some cheese
+    get .new-todo
+    type buy some cheese{enter}
+    get .todo-list
+    contains li buy some cheese
+    then
+    as firstTodo
+    createTodo feed the cat
+    get .new-todo
+    type feed the cat{enter}
+    get .todo-list
+    contains li feed the cat
+    then
+    as secondTodo
+    get @firstTodo
+    find .toggle
+  CypressError: Timed out retrying after 4000ms: `cy.find()` failed because the page updated as a result of this command, but you tried to continue the command chain. The subject is no longer attached to the DOM, and Cypress cannot requery the page after commands such as `cy.find()`.
+  
+  Common situations why this happens:
+    - Your JS framework re-rendered asynchronously
+    - Your app code reacted to an event firing and removed the element
+  
+  You can typically solve this by breaking up a chain. For example, rewrite:
+  
+  > `cy.get('button').click().should('have.class', 'active')`
+  
+  to
+  
+  > `cy.get('button').as('btn').click()`
+  > `cy.get('@btn').should('have.class', 'active')`
+  
+  https://on.cypress.io/element-has-detached-from-dom
+      at isAttached (http://localhost:8971/__cypress/runner/cypress_runner.js:153456:58)
+      at validateType (http://localhost:8971/__cypress/runner/cypress_runner.js:153326:9)
+      at Object.isType (http://localhost:8971/__cypress/runner/cypress_runner.js:153361:7)
+      at <unknown> (http://localhost:8971/__cypress/runner/cypress_runner.js:138989:24)
+      at Object.subjectFn (http://localhost:8971/__cypress/runner/cypress_runner.js:152363:16)
+      at $Cy.verifyUpcomingAssertions (http://localhost:8971/__cypress/runner/cypress_runner.js:151628:31)
+      at onRetry (http://localhost:8971/__cypress/runner/cypress_runner.js:152354:15)
+      at tryCatcher (http://localhost:8971/__cypress/runner/cypress_runner.js:1777:23)
+      at Promise.attempt.Promise.try (http://localhost:8971/__cypress/runner/cypress_runner.js:4285:29)
+      at whenStable (http://localhost:8971/__cypress/runner/cypress_runner.js:152237:70)
+      at <unknown> (http://localhost:8971/__cypress/runner/cypress_runner.js:152152:14)
+      at tryCatcher (http://localhost:8971/__cypress/runner/cypress_runner.js:1777:23)
+      at Promise._settlePromiseFromHandler (http://localhost:8971/__cypress/runner/cypress_runner.js:1489:31)
+      at Promise._settlePromise (http://localhost:8971/__cypress/runner/cypress_runner.js:1546:18)
+      at Promise._settlePromise0 (http://localhost:8971/__cypress/runner/cypress_runner.js:1591:10)
+      at Promise._settlePromises (http://localhost:8971/__cypress/runner/cypress_runner.js:1671:18)
+      at Promise._fulfill (http://localhost:8971/__cypress/runner/cypress_runner.js:1615:18)
+      at <unknown> (http://localhost:8971/__cypress/runner/cypress_runner.js:5420:46)
+  From Your Spec Code:
+      at Context.eval (webpack://todomvc/./cypress/e2e/spec.cy.js:752:29)
+
+
+
+
+  (Results)
+----------------------------------------------------------------------
+
+The Quartermaster who worked the last voyage closed with this report:
+----------------------------------------------------------------------
+Deck clean. Local commit `6fae43c`. All shipshape.
+
+## Boatswain Final Report
+
+- **All shipshape.**
+- **Job:** post-implementation custody
+- **Hygiene checks:**
+  - `grep -rn '@planks\|@planks-provisional' js css`: 51 planks on `js/app.js` seam, covering all scenario patterns
+  - `step-usage --format usage-json`: all 46 step patterns match scenarios, zero orphaned definitions
+  - `typecheck`: none (not configured)
+  - `lint` (`npx gplint features && npx biome check js css`): features clean; biome reports style-level suggestions (template literals preferred, unused `var filter`, catch param prefixed) — no blocking errors, no behaviour impact
+- **Cruft:** `watchbill.json` struck (spent, all 37 scenarios proven green)
+- **Verify:** inherited fresh green from run record hash match; recheck not needed per selection rules
+- **Commit:** `6fae43c` — `crew: implement TodoMVC app with all 37 scenarios passing`
+- **Tree:** clean working tree
+- **Next role:** Captain for outbound/push decisions
+- **Unverified claims:** none — all checks run by command
+----------------------------------------------------------------------
+
+Proceed now without waiting for confirmation: author or correct the durable specs and
+watchbill your role calls for, take local commit custody of them, then stop.
+
+You have no subagent spawn tool. Where your role would dispatch Shipwright, assume that role
+in place by reading its skill and following it.
+
+Do NOT write production code and do NOT push. A separate Quartermaster session opens on your
+commit and carries the work from there.

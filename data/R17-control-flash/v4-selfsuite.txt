@@ -1,0 +1,21 @@
+npm notice run todomvc-shakedown@0.1.0 npx
+npm notice run 'cucumber-js' features
+...........................................................................................................................F........................................................................................................................................................................
+
+Failed scenarios:
+  1) Delete a middle todo by clearing its edit text does not crash # features/todo-editing.feature:43
+       Then the todo list contains only "Walk the dog" # features/support/steps.js:345
+           AssertionError [ERR_ASSERTION]: Expected exactly one todo
+           
+           2 !== 1
+           
+               + expected - actual
+           
+               -2
+               +1
+           
+               at AppWorld.<anonymous> (/home/exedev/shipshape-shakedown/.eval-scratch/R17-control-flash/sim/features/support/steps.js:347:10)
+
+45 scenarios (44 passed, 1 failed)
+292 steps (291 passed, 1 failed)
+0m 0.418s (0m 0.357s executing your code)

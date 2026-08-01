@@ -1,0 +1,16 @@
+13cae23 Fix edit-to-empty crash and reentrant render on multi-item lists
+193b6a4 captain: capture edit-to-empty reentrant render defect, plant 3 perturbations, correct weak assertions, recreate watchbill
+cc9eac0 plank: promote @planks-provisional to @planks for edit-to-empty 3-item scenarios
+6a75841 captain: promote edit-to-empty 3-item scenarios from @captain to binding, recreate watchbill
+4590e80 Strike spent watchbill: @captain scenarios not yet actionable
+b61b8d7 captain: update notes with current voyage state and watchbill
+ea9b713 captain+shipwright: capture real-browser edit-to-empty reentrant render defect
+6c9cb45 Strike spent watchbill: all targets green - features/todo-editing.feature:Delete a middle todo by clearing its edit text does not crash - features/todo-editing.feature:Delete the first todo by clearing its edit text does not crash - features/todo-dom-stability.feature:Editing a todo to empty text preserves references to remaining items
+409174d captain: fix spec contradiction in todo-editing Background, add first-item edit-to-empty scenario
+702aa2e captain: capture edit-to-empty reentrant render defect as @contract scenarios
+9a9bf1b Preserve DOM element references across state transitions
+c36a185 captain: promote 6 DOM-stability scenarios from @captain to binding
+156e6a8 captain: capture real-browser DOM stability defects as @captain scenarios
+6fae43c crew: implement TodoMVC app with all 37 scenarios passing
+2da32d5 captain: fit out TodoMVC project
+a725050 todomvc: empty project with spec + template assets
