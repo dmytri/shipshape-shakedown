@@ -141,6 +141,44 @@ grade(){ # echoes "passing total", or "ERR ERR" when UNMEASURED — never a fake
 
 titles(){ sed -n '/## failing tests/,/## /p' "$BASE/$1-oracle.txt" 2>/dev/null | grep '^  - ' | sed 's/^  - //'; }
 
+qmreport(){ # qmreport <prev-voyage-tag> -> the previous QM's own closing report, verbatim
+  # In a real project QM's report goes BACK to the Captain. The harness was throwing it away:
+  # correction() pasted only the oracle failures, so a Captain never learned that its watchbill
+  # had been rejected. R16 voyages 2-4 sat flat at 24/29 while the QM reported, every time,
+  # "Watchbill: Shape violation -- key "watch": "dom-node-stability" not "watch1". All 4 entries
+  # are @captain-tagged scenarios, ignored per policy. Next role: Captain." The Captain rewrote
+  # the same shape three times because nothing told it otherwise, and only converged at v5.
+  #
+  # Every flat-voyage cluster in the corpus has a playbook cause and every fix drove flats to
+  # zero (R9 mimo 10 flat -> R11 flat=0 once told it had no access to the tests; R12 flat 3/1 ->
+  # R13 flat=0 once the command log carried the antecedent). This is the last known one.
+  #
+  # Verbatim, like the failure block: the QM's own words, no summary of mine.
+  local vg="$1"
+  local sess="$BASE/$vg.out/session.jsonl"
+  [ -s "$sess" ] || return 0
+  python3 - "$sess" <<'PY' 2>/dev/null || true
+import json, sys
+txt = []
+for line in open(sys.argv[1], errors="ignore"):
+    try:
+        e = json.loads(line)
+    except Exception:
+        continue
+    m = e.get("message") or {}
+    if m.get("role") != "assistant":
+        continue
+    for p in (m.get("content") or []):
+        if p.get("type") == "text" and (p.get("text") or "").strip():
+            txt.append(p["text"].strip())
+if not txt:
+    raise SystemExit
+# the closing report is the last substantial block the QM wrote
+tail = [t for t in txt if len(t) > 200] or txt
+print(tail[-1][-2500:])
+PY
+}
+
 # the oracle-response prompt: the exact browser failure, verbatim, no rephrase
 correction(){ # correction <prev-voyage-tag> -> writes a task file, echoes its path
   # `local a=$1 b=$a` does NOT work: local expands ALL its assignment words before assigning any
@@ -155,7 +193,12 @@ correction(){ # correction <prev-voyage-tag> -> writes a task file, echoes its p
   # filtering of the block -- it is passed through exactly as the runner emitted it.
   { printf 'You are the Shipshape Captain. Project root: %s.\n\nAn external browser acceptance suite is run by a user against the build. It is FIXED and\nCORRECT — you cannot and must not change it. You have no access to these tests, as they are\nrun by the user. Your own verification suite passes, yet the acceptance suite still reports\nthe failures below, because a real browser exercises behaviour your in-harness DOM does not. These are real PRODUCT defects. Capture them as durable specs and\nwatchbill targets, so a Quartermaster can prove them red and Crew can fix the product.\n\nVerbatim acceptance-suite failure output:\n----------------------------------------------------------------------\n' "$SIM"
     printf '%s\n' "$block"
-    printf -- '----------------------------------------------------------------------\n\nProceed now without waiting for confirmation: author or correct the durable specs and\nwatchbill your role calls for, take local commit custody of them, then stop.\n\nYou have no subagent spawn tool. Where your role would dispatch Shipwright, assume that role\nin place by reading its skill and following it.\n\nDo NOT write production code and do NOT push. A separate Quartermaster session opens on your\ncommit and carries the work from there.\n'
+    printf -- '----------------------------------------------------------------------\n'
+    qm="$(qmreport "$vg")"
+    [ -n "$qm" ] && { printf '\nThe Quartermaster who worked the last voyage closed with this report:\n----------------------------------------------------------------------\n'
+                      printf '%s\n' "$qm"
+                      printf -- '----------------------------------------------------------------------\n'; }
+    printf -- '\nProceed now without waiting for confirmation: author or correct the durable specs and\nwatchbill your role calls for, take local commit custody of them, then stop.\n\nYou have no subagent spawn tool. Where your role would dispatch Shipwright, assume that role\nin place by reading its skill and following it.\n\nDo NOT write production code and do NOT push. A separate Quartermaster session opens on your\ncommit and carries the work from there.\n'
   } > "$task"
   echo "$task"
 }

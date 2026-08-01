@@ -93,6 +93,10 @@ sys.exit(1 if bad else 0)
 PY
 # dk, 2026-07-29: gplint config is part of fit-out grading — measured, never seeded.
 grep -q 'FIT-OUT' "$R" && ok "fit-out grade recorded (gplintrc, rigging lint, gplint run)" || no "fit-out is not graded"
+# Every flat-voyage cluster in the corpus had a playbook cause and every fix drove flats to zero
+# (R9 mimo 10 flat -> R11 flat=0; R12 flat 3/1 -> R13 flat=0). The last known one: QM's report was
+# thrown away, so a Captain never learned its watchbill had been rejected -- R16 sat flat 3 voyages.
+grep -q 'qmreport' "$R" && ok "the previous QM's report reaches the next Captain" || no "QM's blockers are discarded by the harness"
 # dk, 2026-08-01: Captain/Shipwright fit out and STOP; a FRESH QM session opens on that commit.
 # Context isolation between roles is the mechanism under test -- one session wearing five hats
 # wrote production code as "Step 1 (Crew work)" and the watchbill last, after its scenarios were
