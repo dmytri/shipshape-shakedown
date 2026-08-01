@@ -55,10 +55,26 @@ say(){ echo "[$(date -u +%FT%TZ)] warden: $*"; }
 free_g(){ df -Pk / | awk 'NR==2{printf "%.1f",$4/1048576}'; }
 
 sweep() {
-  # 1. raw stdout: cap while live, delete once the leg has moved on. session.jsonl is the record.
+  # 1. raw stdout: cap while live, delete once the leg has ACTUALLY FINISHED.
+  #
+  # Defect 17 (2026-08-01). This used `-mmin +$IDLE_MIN -delete`, reading "file not written for
+  # a while" as "the leg has moved on". It is not: a leg thinking, or waiting on the provider,
+  # writes nothing for many minutes. The warden then unlinked the stdout of a LIVE leg and pi
+  # went on writing into a deleted inode -- caught red-handed on R14, where
+  #   /proc/<pi>/fd/1 -> .../v1-captain.out/pi.stdout (deleted)
+  # Three costs: no live window into a running leg (every stall so far took a 3600s timeout to
+  # discover instead of a glance); the raw capture destroyed for precisely the slow legs worth
+  # inspecting; and eval-leg.sh's 429-retry check greps pi.stdout, so with the file gone a
+  # rate-limited leg silently never retries.
+  #
+  # eval-leg.sh writes $OUT/exit when the leg returns, so that file -- not mtime -- says whether
+  # a leg is done. Truncation stays unconditional: it reclaims the bytes without unlinking, so a
+  # live leg keeps its fd and simply continues.
   find "$SCRATCH" -name 'pi.stdout' -size +${STDOUT_CAP_MB}M -exec sh -c ': > "$1"' _ {} \; 2>/dev/null
-  find "$SCRATCH" -name 'pi.stdout' -mmin +"$IDLE_MIN" -delete 2>/dev/null
-  find "$SCRATCH" -name 'pi.stderr' -mmin +"$IDLE_MIN" -delete 2>/dev/null
+  find "$SCRATCH" -name 'pi.stdout' -mmin +"$IDLE_MIN" -print0 2>/dev/null | while IFS= read -r -d '' f; do
+    [ -e "$(dirname "$f")/exit" ] || continue   # leg still running: never unlink a live capture
+    rm -f -- "$f" "$(dirname "$f")/pi.stderr"
+  done
 
   # 2. THE BIG ONE: per-leg package caches inside each leg's isolated HOME. Nothing downstream
   #    reads them; they exist only because each leg gets a private XDG_CACHE_HOME.

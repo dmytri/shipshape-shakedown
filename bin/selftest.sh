@@ -66,6 +66,10 @@ grep -q 'never a gate' "$R" && ok "self-suite observed, never used to revert" ||
 grep -qE 'features specs|for r in features specs' "$R" && ok "self-suite finds specs/ or features/" || no "self-suite spec-path handling missing"
 grep -q 'NM_UPPER' "$HERE/bin/eval-leg.sh" && ok "node_modules persists per wave (a role's install survives)" || no "persistent node_modules missing"
 grep -q 'modelOverrides' "$HERE/bin/eval-leg.sh" && ok "output budget applied via models.json (the mechanism pi honours)" || no "budget override missing"
+# defect 17 (2026-08-01): the warden unlinked a LIVE leg's stdout because the file had not been
+# written for IDLE_MIN -- a leg waiting on the provider looks idle. pi then wrote to a deleted
+# inode: no live window, raw capture lost, and eval-leg's 429-retry grep silently dead.
+grep -qE "name 'pi.stdout' -mmin \+\"?\$IDLE_MIN\"? -delete" "$HERE/bin/disk-warden.sh" && no "disk warden deletes live leg stdout by mtime" || ok "disk warden only unlinks stdout of FINISHED legs"
 # defect 14 (2026-07-29): `local a=$1 b=$a` aborts under set -u, which killed every voyage 2.
 # Check the CLASS across every harness script, not just the one line that bit us.
 python3 - "$HERE"/bin/*.sh <<'PY' && ok "no local self-reference (the defect-14 class)" || no "a local assignment reads a variable it assigns on the same line"
