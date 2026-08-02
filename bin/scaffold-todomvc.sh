@@ -67,7 +67,15 @@ cat > package.json <<'JSON'
   "version": "0.1.0",
   "private": true,
   "scripts": { "test": "cucumber-js" },
-  "devDependencies": { "@cucumber/cucumber": "*", "happy-dom": "*" }
+  "devDependencies": {
+    "@cucumber/cucumber": "*",
+    "happy-dom": "*",
+    "gplint": "*",
+    "jsdoc": "*",
+    "c8": "*",
+    "@biomejs/biome": "*",
+    "knip": "*"
+  }
 }
 JSON
 
