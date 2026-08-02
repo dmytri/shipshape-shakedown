@@ -86,10 +86,16 @@ handoff(){ # Captain -> QM handoff integrity. OBSERVED and reported, never repai
   local dirty n
   dirty="$(git -C "$SIM" status --porcelain 2>/dev/null)"
   n=$(printf '%s' "$dirty" | grep -c . || true)
-  if [ -z "$dirty" ]; then
-    say "$v HANDOFF | captain took custody | QM opens clean on $(git -C "$SIM" rev-parse --short HEAD)"
+  # Doctrine: "Captain's own uncommitted durable-artifact work is work in flight, not dirt ... it
+  # rides to QM uncommitted and Boatswain commits it with the production change it orders", and
+  # "QM reads the artifacts as they stand". So UNCOMMITTED is the correct state here. The prompt
+  # used to order a commit -- my compensation for the defect-16 handoff -- and every Captain since
+  # had to choose between the prompt and its own skill (F5 mimo worked it out in the open). It no
+  # longer does. What QM makes of work in flight is a RESULT, not something to arrange.
+  if [ -n "$dirty" ]; then
+    say "$v HANDOFF | captain work in flight, per doctrine: $(printf '%s' "$dirty" | awk '{print $2}' | tr '\n' ' ')| QM base $(git -C "$SIM" rev-parse --short HEAD)"
   else
-    say "$v HANDOFF | WARN captain left $n path(s) uncommitted — QM's base excludes them: $(printf '%s' "$dirty" | awk '{print $2}' | tr '\n' ' ')"
+    say "$v HANDOFF | captain committed — a deviation from the work-in-flight rule | HEAD $(git -C "$SIM" rev-parse --short HEAD)"
   fi
 }
 
@@ -198,7 +204,7 @@ correction(){ # correction <prev-voyage-tag> -> writes a task file, echoes its p
     [ -n "$qm" ] && { printf '\nThe Quartermaster who worked the last voyage closed with this report:\n----------------------------------------------------------------------\n'
                       printf '%s\n' "$qm"
                       printf -- '----------------------------------------------------------------------\n'; }
-    printf -- '\nProceed now without waiting for confirmation: author or correct the durable specs and\nwatchbill your role calls for, take local commit custody of them, then stop.\n\nYou have no subagent spawn tool. Where your role would dispatch Shipwright, assume that role\nin place by reading its skill and following it.\n\nDo NOT write production code and do NOT push. A separate Quartermaster session opens on your\ncommit and carries the work from there.\n'
+    printf -- '\nProceed now without waiting for confirmation: author or correct the durable specs and\nwatchbill your role calls for, then stop. Do NOT commit: your durable-artifact work rides to\nthe Quartermaster as it stands.\n\nYou have no subagent spawn tool. Where your role would dispatch Shipwright, assume that role\nin place by reading its skill and following it.\n\nDo NOT write production code and do NOT push. A separate Quartermaster session opens on your\ncommit and carries the work from there.\n'
   } > "$task"
   echo "$task"
 }
@@ -227,8 +233,8 @@ say "VOYAGE 1 (fit out + specs + watchbill)"
 sed "s#PROJECT_ROOT_PLACEHOLDER#$SIM#g" "$HERE/tasks/pilot/captain-todomvc.task.md" > "$BASE/v1-captain.task"
 leg v1-captain "$BASE/v1-captain.task" "$SKILLS/shipshape" "$SKILLS/captain" "$SKILLS/shipwright" \
   "$HOME/yoink/skills/yoink" || { say "STOP: captain leg failed"; exit 5; }
+BASE_COMMIT="$(git -C "$SIM" rev-parse HEAD)"   # BEFORE Captain: its work rides uncommitted
 handoff v1
-BASE_COMMIT="$(git -C "$SIM" rev-parse HEAD)"
 sed -e "s#PROJECT_ROOT_PLACEHOLDER#$SIM#g" -e "s#BASE_COMMIT_PLACEHOLDER#$BASE_COMMIT#g" \
   "$HERE/tasks/pilot/qm.task.md" > "$BASE/v1-qm.task"
 leg v1 "$BASE/v1-qm.task" "$SKILLS/shipshape" "$SKILLS/qm" "$SKILLS/crew" \
@@ -249,8 +255,8 @@ for v in $(seq 2 "$MAXV"); do
   cp "$task" "$BASE/v$v-captain.task"
   leg "v$v-captain" "$BASE/v$v-captain.task" "$SKILLS/shipshape" "$SKILLS/captain" \
     "$SKILLS/shipwright" "$HOME/yoink/skills/yoink" || { say "STOP: captain leg failed at v$v"; break; }
+  BASE_COMMIT="$(git -C "$SIM" rev-parse HEAD)"   # BEFORE Captain: its work rides uncommitted
   handoff "v$v"
-  BASE_COMMIT="$(git -C "$SIM" rev-parse HEAD)"
   sed -e "s#PROJECT_ROOT_PLACEHOLDER#$SIM#g" -e "s#BASE_COMMIT_PLACEHOLDER#$BASE_COMMIT#g" \
     "$HERE/tasks/pilot/qm.task.md" > "$BASE/v$v-qm.task"
   leg "v$v" "$BASE/v$v-qm.task" "$SKILLS/shipshape" "$SKILLS/qm" "$SKILLS/crew" \

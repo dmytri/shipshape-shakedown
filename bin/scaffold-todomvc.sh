@@ -55,6 +55,10 @@ Production code belongs in `js/`. Stylesheets the page links belong in `css/`.
 
 A missing or empty `index.html` or `js/app.js` fails every scenario loudly at load; the harness
 never runs against an absent artifact.
+
+Crew writes the application. Captain and Shipwright never write production code: this section
+says where the application lives so the rigging can name it, not that the reader should create
+it.
 MD
 
 cat > package.json <<'JSON'

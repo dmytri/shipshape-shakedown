@@ -6,10 +6,11 @@ localStorage.
 
 Proceed now without waiting for confirmation. Fit the project out and author the durable
 artifacts your role calls for — feature files, scantlings, assets and the watchbill — and
-take local commit custody of them. Then stop.
+then stop. Do NOT commit: your durable-artifact work rides to the Quartermaster as it stands,
+per the Working tree policy.
 
 You have no subagent spawn tool. Where your role would dispatch Shipwright, assume that role
 in place by reading its skill and following it.
 
-Do NOT write production code and do NOT push. A separate Quartermaster session opens on your
-commit and carries the work from there.
+Do NOT write production code and do NOT push. A separate Quartermaster session opens on the
+project and carries the work from there.
