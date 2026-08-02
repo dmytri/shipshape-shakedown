@@ -23,6 +23,8 @@ case "$ARM" in
   candidate) SKILLS="$HERE/experiments/methods-candidate/skills" ;;
   midway)    SKILLS="$HERE/experiments/methods-midway/skills" ;;
   floor)     SKILLS="$HERE/experiments/fitout-floor/skills" ;;
+  lean)      SKILLS="$HERE/experiments/fitout-lean/skills" ;;
+  leanplus)  SKILLS="$HERE/experiments/fitout-lean-plus/skills" ;;
   *) echo "usage: fitout-probe.sh <control|candidate|midway|floor> <flash|mimo|hy3> [tag]" >&2; exit 2 ;;
 esac
 case "$MODEL_KEY" in

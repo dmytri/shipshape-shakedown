@@ -36,6 +36,27 @@ Verification support ships with the project: `features/support/world.js` loads t
 `this.document` / `this.window`. Drive the app through those; do not build a DOM by hand.
 MD
 
+# The harness contract, stated where a reader finds it (2026-08-02). world.js hard-codes the load
+# paths -- index.html and js/app.js at the project root -- and NOTHING in the fixture said so, so
+# every Captain in 15 fit-out cells reverse-engineered the harness source to learn it. The two
+# most expensive flash cells were the two that spent the most turns doing it, and it is why
+# `implementation` came out `src` in one arm and `js` in another: the fact was discoverable only
+# by reading verification support. A real project's harness documents where the app lives; this
+# is that documentation, not a hint -- it is the fitting-out INPUT the layout should be derived
+# from.
+cat > AGENTS.md <<'MD'
+# Project agent rules
+
+## Harness contract
+
+The verification harness (`features/support/world.js`) loads the page at `index.html` and the
+application at `js/app.js`, both at the project root, and executes the application source itself.
+Production code belongs in `js/`. Stylesheets the page links belong in `css/`.
+
+A missing or empty `index.html` or `js/app.js` fails every scenario loudly at load; the harness
+never runs against an absent artifact.
+MD
+
 cat > package.json <<'JSON'
 {
   "name": "todomvc-shakedown",
