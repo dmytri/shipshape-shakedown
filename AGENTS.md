@@ -15,6 +15,29 @@ vs .plugin/plugin.json. Development and testing
 happen HERE; ~/shipshape is doctrine/plugin only - it gets doctrine commits and
 nothing else (no notes, no fixtures, no scratch).
 
+## The change loop (2026-08-02, dk: "make this as deterministic as possible")
+
+Every defect that cost a run this session was a text change nobody verified. The `local`
+self-reference that killed every voyage 2. A slice that truncated `captain/SKILL.md` from 22KB
+to 2KB. A watchbill example sited at the reader instead of the writer. An `AGENTS.md` sentence
+that invented a "stubs the harness needs" exception and produced write-scope violations. A
+`Write` that reported "updated successfully" on a file it had deleted -- caught only because a
+selftest check happened to grep it.
+
+So changes go through this, in order, every time:
+
+1. **Change one thing.** Not four. Every multi-edit arm built today failed to attribute.
+2. **Read the artifact back** -- `wc -c` and grep the patterns that must be present. The tool
+   reporting success is not evidence the file is right.
+3. **Render what the agent will actually see.** A prompt is not its source; print the assembled
+   text. Both prompt defects this session were invisible in the source and obvious in the render.
+4. **`bin/selftest.sh` ONCE**, reading one output. Running it twice and comparing fragments is
+   how an already-fixed failure got re-diagnosed.
+5. **One cheap cell before any batch.** `bin/fitout-probe.sh <arm> mimo` is about a cent. Nine
+   cells on an unverified change is nine wasted cells.
+6. **Encode the lesson as a check.** Selftest went 25 -> 42 checks today, one per defect. A
+   lesson that lives only in a commit message will be relearned by spending.
+
 ## Standing procedure (order matters)
 
 1. **Ship first.** Doctrine changes under test must be committed, pushed, and
