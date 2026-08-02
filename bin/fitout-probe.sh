@@ -22,16 +22,14 @@ case "$ARM" in
   control)   SKILLS=/home/exedev/.claude/plugins/cache/dmytri-shipshape/shipshape/596fbf17be06/skills ;;
   candidate) SKILLS="$HERE/experiments/methods-candidate/skills" ;;
   midway)    SKILLS="$HERE/experiments/methods-midway/skills" ;;
-  floor)     SKILLS="$HERE/experiments/fitout-floor/skills" ;;
-  lean)      SKILLS="$HERE/experiments/fitout-lean/skills" ;;
-  leanplus)  SKILLS="$HERE/experiments/fitout-lean-plus/skills" ;;
-  *) echo "usage: fitout-probe.sh <control|candidate|midway|floor> <flash|mimo|hy3> [tag]" >&2; exit 2 ;;
+  fitout)    SKILLS="$HERE/experiments/fitout/skills" ;;
+  *) echo "usage: fitout-probe.sh <control|candidate|midway|fitout> <flash|mimo|hy3> [tag]" >&2; exit 2 ;;
 esac
 case "$MODEL_KEY" in
   flash) MODEL=deepseek/deepseek-v4-flash ;;
   mimo)  MODEL=xiaomi/mimo-v2.5 ;;
   hy3)   MODEL=tencent/hy3 ;;
-  *) echo "usage: fitout-probe.sh <control|candidate|midway|floor> <flash|mimo|hy3> [tag]" >&2; exit 2 ;;
+  *) echo "usage: fitout-probe.sh <control|candidate|midway|fitout> <flash|mimo|hy3> [tag]" >&2; exit 2 ;;
 esac
 
 WAVE="$TAG-$ARM-$MODEL_KEY"
