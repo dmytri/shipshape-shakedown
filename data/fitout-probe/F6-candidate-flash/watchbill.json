@@ -1,0 +1,46 @@
+{
+  "watch1": {
+    "scenarios": [
+      "features/todos.feature:Create a new todo",
+      "features/todos.feature:Trim whitespace from new todo",
+      "features/todos.feature:Reject empty todo on creation",
+      "features/todos.feature:Hide main and footer when no todos exist",
+      "features/todos.feature:Mark a todo as complete",
+      "features/todos.feature:Unmark a completed todo",
+      "features/todos.feature:Mark all todos as complete",
+      "features/todos.feature:Unmark all todos",
+      "features/todos.feature:Toggle updates when individual items are all checked",
+      "features/todos.feature:Delete a todo",
+      "features/todos.feature:Activate editing mode",
+      "features/todos.feature:Save edit on Enter",
+      "features/todos.feature:Save edit on blur",
+      "features/todos.feature:Delete todo when edit is empty",
+      "features/todos.feature:Cancel edit with Escape"
+    ]
+  },
+  "watch2": {
+    "scenarios": [
+      "features/todos.feature:Show number of active todos",
+      "features/todos.feature:Pluralize item count correctly",
+      "features/todos.feature:Show zero items left",
+      "features/todos.feature:Clear completed todos",
+      "features/todos.feature:Hide clear completed when no todos are completed",
+      "features/todos.feature:Show clear completed when some todos are completed"
+    ]
+  },
+  "watch3": {
+    "scenarios": [
+      "features/persistence.feature:Save tasks to localStorage",
+      "features/persistence.feature:Restore tasks from localStorage on reload",
+      "features/persistence.feature:Persist completed state",
+      "features/persistence.feature:Persist active filter",
+      "features/persistence.feature:Each task has an identifier",
+      "features/persistence.feature:Editing mode is not persisted",
+      "features/routing.feature:Show all items by default",
+      "features/routing.feature:Show only active items",
+      "features/routing.feature:Show only completed items",
+      "features/routing.feature:Hide item when completed under active filter",
+      "features/routing.feature:Show item when uncompleted under completed filter"
+    ]
+  }
+}

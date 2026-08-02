@@ -1,0 +1,38 @@
+{
+  "watch1": {
+    "scenarios": [
+      "features/todos.feature:Main and footer are hidden when there are no todos",
+      "features/todos.feature:User creates a todo",
+      "features/todos.feature:Leading and trailing whitespace is trimmed from new todos",
+      "features/todos.feature:Empty todo is not created",
+      "features/todos.feature:User marks a todo as completed",
+      "features/todos.feature:User unmarks a completed todo",
+      "features/todos.feature:Mark all as complete toggles all todos",
+      "features/todos.feature:Mark all as complete clears all when already all completed",
+      "features/todos.feature:Mark all checkbox updates when individual todos are toggled",
+      "features/todos.feature:Mark all checkbox clears when clear completed is clicked",
+      "features/todos.feature:Counter shows the number of active todos",
+      "features/todos.feature:Counter shows correct plural form for zero items",
+      "features/todos.feature:Counter shows singular form for one item",
+      "features/todos.feature:Counter shows plural form for multiple items",
+      "features/todos.feature:Clear completed removes completed todos",
+      "features/todos.feature:Clear completed button is hidden with no completed todos",
+      "features/todos.feature:User deletes a todo with the destroy button",
+      "features/todos.feature:User enters edit mode by double-clicking a todo label",
+      "features/todos.feature:User saves an edit by pressing Enter",
+      "features/todos.feature:User saves an edit by blurring the input",
+      "features/todos.feature:User cancels an edit by pressing Escape",
+      "features/todos.feature:Editing to an empty title destroys the todo",
+      "features/persistence.feature:Todos are persisted to localStorage",
+      "features/persistence.feature:Completed state is persisted",
+      "features/persistence.feature:Editing mode is not persisted",
+      "features/routing.feature:Default route shows all todos",
+      "features/routing.feature:Active filter shows only active todos",
+      "features/routing.feature:Completed filter shows only completed todos",
+      "features/routing.feature:All filter link is selected by default",
+      "features/routing.feature:Selected class toggles between filter links",
+      "features/routing.feature:Checking an active todo hides it in the active filter",
+      "features/routing.feature:Unchecking a completed todo hides it in the completed filter"
+    ]
+  }
+}

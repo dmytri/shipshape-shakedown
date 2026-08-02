@@ -1,0 +1,57 @@
+{
+  "watch1": {
+    "scenarios": [
+      "features/empty-state.feature:No todos hides main and footer",
+      "features/new-todo.feature:Pressing Enter adds a todo to the list",
+      "features/new-todo.feature:Empty or whitespace input is not added",
+      "features/new-todo.feature:Input is trimmed before creation",
+      "features/new-todo.feature:The new-todo input is focused on page load"
+    ]
+  },
+  "watch2": {
+    "scenarios": [
+      "features/toggle-complete.feature:Clicking the checkbox completes a todo",
+      "features/toggle-complete.feature:Clicking the checkbox again uncompletes a todo",
+      "features/toggle-complete.feature:The toggle-all checkbox marks all todos complete",
+      "features/toggle-complete.feature:The toggle-all checkbox unchecks when one todo is unchecked"
+    ]
+  },
+  "watch3": {
+    "scenarios": [
+      "features/editing.feature:Double-clicking activates editing mode",
+      "features/editing.feature:Pressing Enter saves the edit",
+      "features/editing.feature:Blurring saves the edit",
+      "features/editing.feature:Pressing Escape discards the edit",
+      "features/editing.feature:Saving an empty edit destroys the todo"
+    ]
+  },
+  "watch4": {
+    "scenarios": [
+      "features/counter.feature:Counter shows the number of active todos",
+      "features/counter.feature:Counter updates after completing a todo",
+      "features/counter.feature:Counter uses singular for one item",
+      "features/counter.feature:Counter uses plural for zero items"
+    ]
+  },
+  "watch5": {
+    "scenarios": [
+      "features/clear-completed.feature:Clear completed removes completed todos",
+      "features/clear-completed.feature:Clear completed button is hidden when no todos are completed",
+      "features/clear-completed.feature:Clear completed button is visible when a todo is completed"
+    ]
+  },
+  "watch6": {
+    "scenarios": [
+      "features/routing.feature:The default route shows all todos",
+      "features/routing.feature:The active filter shows only incomplete todos",
+      "features/routing.feature:The completed filter shows only completed todos",
+      "features/routing.feature:The active filter is preserved on reload"
+    ]
+  },
+  "watch7": {
+    "scenarios": [
+      "features/persistence.feature:Todos persist after reload",
+      "features/persistence.feature:Completed state persists after reload"
+    ]
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "watches": [
+    {
+      "name": "visibility",
+      "targets": [
+        "features/todo-visibility.feature:Main section and footer are hidden when no todos exist",
+        "features/todo-visibility.feature:Main section and footer appear when a todo is added",
+        "features/todo-visibility.feature:Main section and footer hide when all todos are deleted"
+      ]
+    },
+    {
+      "name": "management",
+      "targets": [
+        "features/todos-management.feature:New todo is added on Enter",
+        "features/todos-management.feature:New todo input is cleared after adding",
+        "features/todos-management.feature:Whitespace-only input is not added",
+        "features/todos-management.feature:Multiple todos can be added",
+        "features/todos-management.feature:Todo is removed via destroy button",
+        "features/todos-management.feature:Input is trimmed before creating todo"
+      ]
+    },
+    {
+      "name": "toggling",
+      "targets": [
+        "features/todos-toggling.feature:Clicking checkbox marks todo as completed",
+        "features/todos-toggling.feature:Clicking checkbox on completed todo marks it active",
+        "features/todos-toggling.feature:Mark all as complete checks all todos",
+        "features/todos-toggling.feature:Mark all as complete unchecks all when all are completed",
+        "features/todos-toggling.feature:Mark all becomes checked when all todos are individually completed",
+        "features/todos-toggling.feature:Mark all becomes unchecked when a todo is uncompleted",
+        "features/todos-toggling.feature:Clear completed removes completed todos",
+        "features/todos-toggling.feature:Clear completed is hidden when no completed todos exist"
+      ]
+    },
+    {
+      "name": "editing",
+      "targets": [
+        "features/todo-editing.feature:Double-click activates editing mode",
+        "features/todo-editing.feature:Edit is saved on Enter",
+        "features/todo-editing.feature:Edit is saved on blur",
+        "features/todo-editing.feature:Empty edit destroys the todo",
+        "features/todo-editing.feature:Escape discards edit changes",
+        "features/todo-editing.feature:Edit input is trimmed"
+      ]
+    },
+    {
+      "name": "counter",
+      "targets": [
+        "features/todo-counter.feature:Counter shows zero when no todos exist",
+        "features/todo-counter.feature:Counter shows one for a single active todo",
+        "features/todo-counter.feature:Counter shows plural for multiple active todos",
+        "features/todo-counter.feature:Counter decreases when a todo is completed",
+        "features/todo-counter.feature:Counter uses singular for one remaining"
+      ]
+    },
+    {
+      "name": "routing",
+      "targets": [
+        "features/todo-routing.feature:All route shows all todos",
+        "features/todo-routing.feature:Active route shows only active todos",
+        "features/todo-routing.feature:Completed route shows only completed todos",
+        "features/todo-routing.feature:Filter persists across reload",
+        "features/todo-routing.feature:Toggling a todo in filtered view removes it from the list"
+      ]
+    },
+    {
+      "name": "persistence",
+      "targets": [
+        "features/todo-persistence.feature:Todos survive page reload",
+        "features/todo-persistence.feature:Completed state persists across reload",
+        "features/todo-persistence.feature:Deleted todo stays deleted after reload",
+        "features/todo-persistence.feature:Edited title persists across reload"
+      ]
+    }
+  ]
+}

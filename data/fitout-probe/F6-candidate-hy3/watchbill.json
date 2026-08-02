@@ -1,0 +1,83 @@
+{
+  "watch1": {
+    "scenarios": [
+      "features/new-todo.feature:Pressing Enter appends the typed todo to the list",
+      "features/new-todo.feature:Creating a todo clears the new todo field",
+      "features/new-todo.feature:A title of only whitespace creates no todo",
+      "features/new-todo.feature:Surrounding whitespace is trimmed from a new title",
+      "features/new-todo.feature:A second todo is appended after the first",
+      "features/new-todo.feature:The main section and the footer are hidden when no todos exist",
+      "features/new-todo.feature:The main section and the footer are shown once a todo exists",
+      "features/new-todo.feature:The new todo field holds focus when the page is loaded"
+    ]
+  },
+  "watch2": {
+    "scenarios": [
+      "features/complete-todo.feature:Checking a todo marks it completed",
+      "features/complete-todo.feature:Unchecking a completed todo makes it active again",
+      "features/complete-todo.feature:Mark all as complete completes every todo",
+      "features/complete-todo.feature:Unchecking mark all as complete reactivates every todo",
+      "features/complete-todo.feature:Mark all as complete is checked once every todo is completed",
+      "features/complete-todo.feature:Mark all as complete clears when a completed todo is reactivated",
+      "features/complete-todo.feature:Mark all as complete clears after the completed todos are cleared"
+    ]
+  },
+  "watch3": {
+    "scenarios": [
+      "features/remove-todo.feature:The destroy button removes that todo",
+      "features/remove-todo.feature:Removing the last todo hides the main section and the footer",
+      "features/remove-todo.feature:Clear completed removes the completed todos and keeps the active ones",
+      "features/remove-todo.feature:The clear completed button is hidden when no todo is completed",
+      "features/remove-todo.feature:The clear completed button is shown when a todo is completed"
+    ]
+  },
+  "watch4": {
+    "scenarios": [
+      "features/active-count.feature:The counter pluralizes the number of active todos",
+      "features/active-count.feature:The counter number is wrapped in a strong element",
+      "features/active-count.feature:Completing a todo lowers the active count"
+    ]
+  },
+  "watch5": {
+    "scenarios": [
+      "features/edit-todo.feature:Double-clicking the label starts editing that todo",
+      "features/edit-todo.feature:The edit field is focused and carries the current title",
+      "features/edit-todo.feature:Pressing Enter saves the edited title",
+      "features/edit-todo.feature:Saving with Enter leaves editing mode",
+      "features/edit-todo.feature:Blurring the edit field saves the edited title",
+      "features/edit-todo.feature:The edited title is trimmed of surrounding whitespace",
+      "features/edit-todo.feature:Saving an empty title destroys the todo",
+      "features/edit-todo.feature:Pressing Escape discards the edit",
+      "features/edit-todo.feature:Pressing Escape leaves editing mode"
+    ]
+  },
+  "watch6": {
+    "scenarios": [
+      "features/persist-todos.feature:A new todo is written to browser storage",
+      "features/persist-todos.feature:Completing a todo is written to browser storage",
+      "features/persist-todos.feature:Removing a todo is written to browser storage",
+      "features/persist-todos.feature:Stored todos are restored when the application restarts",
+      "features/persist-todos.feature:Editing mode is left behind when the application restarts",
+      "features/persist-todos.feature:The stored todos conform to the storage record shape"
+    ]
+  },
+  "watch7": {
+    "scenarios": [
+      "features/filter-todos.feature:The active route lists only the active todos",
+      "features/filter-todos.feature:The completed route lists only the completed todos",
+      "features/filter-todos.feature:The all route lists every todo",
+      "features/filter-todos.feature:The filter link of the current route is selected",
+      "features/filter-todos.feature:Completing a todo hides it while the active filter is applied",
+      "features/filter-todos.feature:A todo added while the completed filter is applied stays out of view",
+      "features/filter-todos.feature:The counter reports every active todo while a filter is applied",
+      "features/filter-todos.feature:The active filter survives a restart of the application"
+    ]
+  },
+  "watch8": {
+    "scenarios": [
+      "features/shipshape-conformance.feature:The watchbill conforms to its fixed shape",
+      "features/shipshape-conformance.feature:No perturbation statement stands in the implementation",
+      "features/shipshape-conformance.feature:Verification support discharges the verification-conformance rule set"
+    ]
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "watch1": {
+    "scenarios": [
+      "features/todo-management.feature:No todos hides the main and footer sections",
+      "features/todo-management.feature:User adds a new todo",
+      "features/todo-management.feature:Empty input after trimming does not create a todo",
+      "features/todo-management.feature:Mark all as complete when some todos are active",
+      "features/todo-management.feature:Mark all as complete when some are already completed",
+      "features/todo-management.feature:Mark-all checkbox reflects individual check state",
+      "features/todo-management.feature:Clear completed removes completed todos",
+      "features/todo-management.feature:Clear completed is hidden when no todos are completed",
+      "features/todo-management.feature:Counter shows pluralized count of active todos",
+      "features/todo-management.feature:Counter shows singular for one active todo"
+    ]
+  },
+  "watch2": {
+    "scenarios": [
+      "features/todo-editing.feature:Double-click label activates editing for that todo",
+      "features/todo-editing.feature:Saving an edit on Enter",
+      "features/todo-editing.feature:Saving an edit on blur",
+      "features/todo-editing.feature:Empty edit destroys the todo",
+      "features/todo-editing.feature:Edit with whitespace-only title destroys the todo",
+      "features/todo-editing.feature:Escape cancels edit and restores original title"
+    ]
+  },
+  "watch3": {
+    "scenarios": [
+      "features/todo-filtering.feature:Default route shows all todos",
+      "features/todo-filtering.feature:Active route filters to active todos",
+      "features/todo-filtering.feature:Completed route filters to completed todos",
+      "features/todo-filtering.feature:Completing a todo in active filter hides it",
+      "features/todo-filtering.feature:Un-completing a todo in completed filter hides it",
+      "features/todo-filtering.feature:Active filter persists on page reload"
+    ]
+  },
+  "watch4": {
+    "scenarios": [
+      "features/todo-persistence.feature:New todos are saved to localStorage",
+      "features/todo-persistence.feature:Todos survive a page reload",
+      "features/todo-persistence.feature:Completed state persists across reload",
+      "features/todo-persistence.feature:Cleared completed todos are removed from localStorage",
+      "features/todo-persistence.feature:Editing state is not persisted",
+      "features/todo-persistence.feature:Persisted data conforms to the todo schema"
+    ]
+  }
+}

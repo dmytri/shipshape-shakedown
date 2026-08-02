@@ -1,0 +1,73 @@
+{
+  "watch1": {
+    "scenarios": [
+      "features/new-todo.feature:Pressing Enter appends the typed todo to the list",
+      "features/new-todo.feature:Pressing Enter clears the new todo input",
+      "features/new-todo.feature:Surrounding whitespace is trimmed from a new todo",
+      "features/new-todo.feature:A whitespace-only entry creates no todo",
+      "features/new-todo.feature:A new todo is appended after the todos already listed",
+      "features/new-todo.feature:The new todo input carries the autofocus attribute",
+      "features/empty-state.feature:The main section and the footer are hidden with no todos",
+      "features/empty-state.feature:The main section and the footer appear when the first todo is added",
+      "features/empty-state.feature:The main section and the footer hide again when the last todo is deleted"
+    ]
+  },
+  "watch2": {
+    "scenarios": [
+      "features/todo-item.feature:Checking the toggle marks its todo completed",
+      "features/todo-item.feature:Unchecking the toggle returns its todo to active",
+      "features/todo-item.feature:The destroy button removes its todo from the list",
+      "features/todo-item.feature:Double-clicking the label puts its todo into editing mode",
+      "features/active-count.feature:The count reads in the singular for one active todo",
+      "features/active-count.feature:The count reads in the plural for two active todos",
+      "features/active-count.feature:Completed todos leave the count",
+      "features/active-count.feature:The count reads zero in the plural when every todo is completed",
+      "features/active-count.feature:The count number sits in a strong element"
+    ]
+  },
+  "watch3": {
+    "scenarios": [
+      "features/editing-todo.feature:Editing mode shows the current title in the edit input",
+      "features/editing-todo.feature:The edit input takes focus when editing starts",
+      "features/editing-todo.feature:Pressing Enter saves the edited title",
+      "features/editing-todo.feature:Saving with Enter leaves editing mode",
+      "features/editing-todo.feature:Blurring the edit input saves the edited title",
+      "features/editing-todo.feature:Surrounding whitespace is trimmed from an edited title",
+      "features/editing-todo.feature:Saving an empty title destroys the todo",
+      "features/editing-todo.feature:Pressing Escape discards the edit",
+      "features/editing-todo.feature:Pressing Escape leaves editing mode"
+    ]
+  },
+  "watch4": {
+    "scenarios": [
+      "features/mark-all-complete.feature:Checking mark all as complete completes every todo",
+      "features/mark-all-complete.feature:Unchecking mark all as complete returns every todo to active",
+      "features/mark-all-complete.feature:Mark all as complete becomes checked when the last active todo is completed",
+      "features/mark-all-complete.feature:Mark all as complete clears when a completed todo is reopened",
+      "features/mark-all-complete.feature:Mark all as complete clears after the completed todos are cleared",
+      "features/clear-completed.feature:Clearing completed removes the completed todos and keeps the active ones",
+      "features/clear-completed.feature:The clear completed button is hidden while nothing is completed",
+      "features/clear-completed.feature:The clear completed button appears once a todo is completed",
+      "features/clear-completed.feature:The clear completed button hides again when the last completed todo is reopened"
+    ]
+  },
+  "watch5": {
+    "scenarios": [
+      "features/filtering.feature:The active route lists only the active todos",
+      "features/filtering.feature:The completed route lists only the completed todos",
+      "features/filtering.feature:The default route lists every todo",
+      "features/filtering.feature:The current filter link carries the selected class",
+      "features/filtering.feature:Completing a todo removes it from the active route",
+      "features/filtering.feature:Clicking a filter link filters the list"
+    ]
+  },
+  "watch6": {
+    "scenarios": [
+      "features/persistence.feature:An added todo is written to storage",
+      "features/persistence.feature:Completing a todo updates its stored completed value",
+      "features/persistence.feature:An edited title is written to storage",
+      "features/persistence.feature:A deleted todo leaves storage",
+      "features/persistence.feature:The stored todos conform to their record shape"
+    ]
+  }
+}

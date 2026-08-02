@@ -1,0 +1,74 @@
+{
+  "watch1": {
+    "scenarios": [
+      "features/empty-state.feature:The main section and the footer are hidden when no todo exists",
+      "features/new-todo.feature:Pressing Enter appends the new todo to the list",
+      "features/new-todo.feature:The new todo field is cleared after the todo is created",
+      "features/new-todo.feature:A new todo is appended after the todos already on the list",
+      "features/new-todo.feature:Surrounding whitespace is trimmed from the new todo title",
+      "features/new-todo.feature:A whitespace-only entry creates no todo",
+      "features/new-todo.feature:The new todo field carries autofocus",
+      "features/empty-state.feature:The main section and the footer appear when the first todo is added"
+    ]
+  },
+  "watch2": {
+    "scenarios": [
+      "features/todo-item.feature:Checking the toggle marks the todo completed",
+      "features/todo-item.feature:Unchecking the toggle returns the todo to active",
+      "features/todo-item.feature:The remove button deletes the todo",
+      "features/empty-state.feature:The main section and the footer hide again when the last todo is removed"
+    ]
+  },
+  "watch3": {
+    "scenarios": [
+      "features/active-counter.feature:The counter reads one item for a single active todo",
+      "features/active-counter.feature:The counter pluralizes for several active todos",
+      "features/active-counter.feature:The counter ignores completed todos",
+      "features/active-counter.feature:The counter reads zero items when every todo is completed",
+      "features/active-counter.feature:The counter number is wrapped in a strong element"
+    ]
+  },
+  "watch4": {
+    "scenarios": [
+      "features/clear-completed.feature:The button removes every completed todo",
+      "features/clear-completed.feature:The button is hidden when no todo is completed",
+      "features/clear-completed.feature:The button appears when a todo is completed",
+      "features/mark-all-complete.feature:The checkbox completes every todo",
+      "features/mark-all-complete.feature:The checkbox reopens every todo when all are completed",
+      "features/mark-all-complete.feature:The checkbox becomes checked when the last active todo is completed",
+      "features/mark-all-complete.feature:The checkbox clears when a completed todo is reopened",
+      "features/mark-all-complete.feature:The checkbox clears after the completed todos are cleared"
+    ]
+  },
+  "watch5": {
+    "scenarios": [
+      "features/editing-todo.feature:Double-clicking the label activates editing mode",
+      "features/editing-todo.feature:The edit field holds the todo title and takes focus",
+      "features/editing-todo.feature:Enter saves the edited title and leaves editing mode",
+      "features/editing-todo.feature:Blur saves the edited title",
+      "features/editing-todo.feature:Escape discards the edit",
+      "features/editing-todo.feature:Surrounding whitespace is trimmed from the edited title",
+      "features/editing-todo.feature:Saving an empty title destroys the todo"
+    ]
+  },
+  "watch6": {
+    "scenarios": [
+      "features/filter-routing.feature:The default route shows every todo",
+      "features/filter-routing.feature:The active route shows active todos only",
+      "features/filter-routing.feature:The completed route shows completed todos only",
+      "features/filter-routing.feature:Returning to the default route shows every todo again",
+      "features/filter-routing.feature:The filter link for the current route is selected",
+      "features/filter-routing.feature:Completing a todo under the active filter hides it",
+      "features/filter-routing.feature:Reopening a todo under the completed filter hides it"
+    ]
+  },
+  "watch7": {
+    "scenarios": [
+      "features/persistence.feature:A new todo is written to local storage",
+      "features/persistence.feature:Completing a todo is written to local storage",
+      "features/persistence.feature:Removing a todo is written to local storage",
+      "features/persistence.feature:Stored todos are restored when the app starts",
+      "features/persistence.feature:The stored todos conform to their schema"
+    ]
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "watch1": {
+    "scenarios": [
+      "features/adding-todos.feature:A new todo is created when the user types and presses Enter",
+      "features/adding-todos.feature:A new todo is added to the bottom of the list",
+      "features/adding-todos.feature:Empty or whitespace-only input is ignored",
+      "features/adding-todos.feature:The new todo input is focused on page load",
+      "features/clear-completed.feature:The clear completed button is hidden when there are no completed todos",
+      "features/clear-completed.feature:The clear completed button is visible when there are completed todos",
+      "features/clear-completed.feature:Clicking clear completed removes completed todos",
+      "features/clear-completed.feature:Clear completed hides the button when all todos are cleared",
+      "features/counter.feature:The counter shows zero items when there are no todos",
+      "features/counter.feature:The counter shows one item for a single active todo",
+      "features/counter.feature:The counter shows the correct count for multiple active todos",
+      "features/counter.feature:The counter does not count completed todos",
+      "features/editing-todos.feature:Double-clicking a todo enters editing mode",
+      "features/editing-todos.feature:Pressing Enter saves the edit",
+      "features/editing-todos.feature:Blurring the edit input saves the edit",
+      "features/editing-todos.feature:Pressing Escape cancels the edit",
+      "features/editing-todos.feature:Saving an empty edit destroys the todo",
+      "features/persistence.feature:Todos are saved to localStorage",
+      "features/persistence.feature:Todos are restored from localStorage on reload",
+      "features/persistence.feature:Completed state is persisted",
+      "features/routing.feature:The All filter shows all todos",
+      "features/routing.feature:The Active filter shows only active todos",
+      "features/routing.feature:The Completed filter shows only completed todos",
+      "features/routing.feature:The active filter link has the selected class",
+      "features/routing.feature:Changing from active to completed filter updates the visible list",
+      "features/routing.feature:Changing from completed to all filter shows all items",
+      "features/toggling-todos.feature:Clicking the checkbox marks a todo as completed",
+      "features/toggling-todos.feature:Clicking the checkbox again marks a completed todo as active",
+      "features/toggling-todos.feature:The toggle-all checkbox checks all todos",
+      "features/toggling-todos.feature:The toggle-all checkbox unchecks all todos",
+      "features/toggling-todos.feature:The toggle-all checkbox is checked when all todos are completed",
+      "features/toggling-todos.feature:The toggle-all checkbox is unchecked when not all todos are completed"
+    ]
+  }
+}
