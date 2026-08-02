@@ -74,7 +74,8 @@ cat > package.json <<'JSON'
     "jsdoc": "*",
     "c8": "*",
     "@biomejs/biome": "*",
-    "knip": "*"
+    "knip": "*",
+    "@dk/yoink": "*"
   }
 }
 JSON
