@@ -1,0 +1,87 @@
+{
+  "watch1": {
+    "scenarios": [
+      "features/empty-state.feature:The main section is hidden when there are no todos",
+      "features/empty-state.feature:The footer is hidden when there are no todos",
+      "features/empty-state.feature:The main section appears once a todo exists",
+      "features/empty-state.feature:The footer appears once a todo exists",
+      "features/empty-state.feature:Removing the last todo hides the main section again"
+    ]
+  },
+  "watch2": {
+    "scenarios": [
+      "features/new-todo.feature:The new-todo input holds focus when the page loads",
+      "features/new-todo.feature:Pressing Enter appends the entered todo to the list",
+      "features/new-todo.feature:Pressing Enter appends a second todo below the first",
+      "features/new-todo.feature:Creating a todo clears the new-todo input",
+      "features/new-todo.feature:Surrounding whitespace is trimmed from a new todo",
+      "features/new-todo.feature:A whitespace-only entry creates no todo",
+      "features/new-todo.feature:A new todo starts out active"
+    ]
+  },
+  "watch3": {
+    "scenarios": [
+      "features/completing-todos.feature:Checking a todo marks it complete",
+      "features/completing-todos.feature:Unchecking a completed todo makes it active again",
+      "features/completing-todos.feature:Mark all as complete completes every todo",
+      "features/completing-todos.feature:Mark all as complete reactivates every todo when all are complete",
+      "features/completing-todos.feature:The mark-all checkbox becomes checked when the last active todo is checked",
+      "features/completing-todos.feature:The mark-all checkbox clears when one todo is unchecked",
+      "features/completing-todos.feature:The mark-all checkbox clears after the completed todos are cleared"
+    ]
+  },
+  "watch4": {
+    "scenarios": [
+      "features/removing-todos.feature:The destroy button removes its own todo",
+      "features/removing-todos.feature:Clear completed removes the completed todos",
+      "features/removing-todos.feature:The clear-completed button is hidden when no todo is completed",
+      "features/removing-todos.feature:The clear-completed button appears once a todo is completed",
+      "features/removing-todos.feature:The clear-completed button hides again after the completed todos are cleared"
+    ]
+  },
+  "watch5": {
+    "scenarios": [
+      "features/active-item-counter.feature:The counter reports the number of active todos",
+      "features/active-item-counter.feature:The counter number is wrapped in a strong element",
+      "features/active-item-counter.feature:Completing a todo lowers the counter"
+    ]
+  },
+  "watch6": {
+    "scenarios": [
+      "features/editing-todos.feature:Double-clicking the label puts the todo into editing mode",
+      "features/editing-todos.feature:The edit field opens focused and holding the current title",
+      "features/editing-todos.feature:Pressing Enter saves the edited title",
+      "features/editing-todos.feature:Saving the edit leaves editing mode",
+      "features/editing-todos.feature:Blurring the edit field saves the edited title",
+      "features/editing-todos.feature:Surrounding whitespace is trimmed from an edited title",
+      "features/editing-todos.feature:Emptying the title destroys the todo",
+      "features/editing-todos.feature:Pressing Escape discards the edit",
+      "features/editing-todos.feature:Pressing Escape leaves editing mode"
+    ]
+  },
+  "watch7": {
+    "scenarios": [
+      "features/filtering-todos.feature:The default route lists every todo",
+      "features/filtering-todos.feature:The active route lists only the active todos",
+      "features/filtering-todos.feature:The completed route lists only the completed todos",
+      "features/filtering-todos.feature:Returning to the default route lists every todo again",
+      "features/filtering-todos.feature:The filter link for the current route is selected",
+      "features/filtering-todos.feature:The filter link for a route left behind is no longer selected",
+      "features/filtering-todos.feature:Completing a todo under the active filter removes it from the list",
+      "features/filtering-todos.feature:Reactivating a todo under the completed filter removes it from the list",
+      "features/filtering-todos.feature:The active filter survives a reload",
+      "features/filtering-todos.feature:The filter link stays selected after a reload"
+    ]
+  },
+  "watch8": {
+    "scenarios": [
+      "features/persisting-todos.feature:A new todo is written to local storage",
+      "features/persisting-todos.feature:Todos are restored on reload",
+      "features/persisting-todos.feature:Completion state is restored on reload",
+      "features/persisting-todos.feature:A removed todo is dropped from local storage",
+      "features/persisting-todos.feature:An edited title is written to local storage",
+      "features/persisting-todos.feature:A todo left in editing mode is not restored as editing",
+      "features/persisting-todos.feature:A stored todo record satisfies its mechanical shape"
+    ]
+  }
+}

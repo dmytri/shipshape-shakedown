@@ -1,0 +1,98 @@
+{
+  "watches": [
+    {
+      "name": "core-add",
+      "targets": [
+        "features/add-todo.feature:Creating a new todo from text input",
+        "features/add-todo.feature:Preventing empty todo creation",
+        "features/add-todo.feature:Preventing whitespace-only todo creation",
+        "features/add-todo.feature:Trimming whitespace from todo titles",
+        "features/add-todo.feature:Creating multiple todos"
+      ]
+    },
+    {
+      "name": "visibility",
+      "targets": [
+        "features/visibility.feature:Main and footer are hidden when no todos exist",
+        "features/visibility.feature:Main and footer appear when a todo is added"
+      ]
+    },
+    {
+      "name": "toggle",
+      "targets": [
+        "features/toggle-todo.feature:Checking a todo marks it completed",
+        "features/toggle-todo.feature:Unchecking a todo marks it active"
+      ]
+    },
+    {
+      "name": "toggle-all",
+      "targets": [
+        "features/toggle-all.feature:Toggling all marks every todo as completed",
+        "features/toggle-all.feature:Unchecking toggle-all marks every todo as active",
+        "features/toggle-all.feature:Toggle-all reflects individual todo state",
+        "features/toggle-all.feature:Toggle-all is unchecked when any todo is active"
+      ]
+    },
+    {
+      "name": "counter",
+      "targets": [
+        "features/counter.feature:Counter shows the count of active todos",
+        "features/counter.feature:Counter uses plural form for multiple items",
+        "features/counter.feature:Counter uses singular form for one item",
+        "features/counter.feature:Counter shows zero items"
+      ]
+    },
+    {
+      "name": "edit",
+      "targets": [
+        "features/edit-todo.feature:Double-clicking activates edit mode",
+        "features/edit-todo.feature:Pressing Enter saves the edit",
+        "features/edit-todo.feature:Clicking away saves the edit",
+        "features/edit-todo.feature:Pressing Escape discards the edit",
+        "features/edit-todo.feature:Empty edit deletes the todo",
+        "features/edit-todo.feature:Whitespace-only edit deletes the todo"
+      ]
+    },
+    {
+      "name": "delete",
+      "targets": [
+        "features/delete-todo.feature:Clicking destroy removes the todo"
+      ]
+    },
+    {
+      "name": "clear-completed",
+      "targets": [
+        "features/clear-completed.feature:Clear completed removes finished todos",
+        "features/clear-completed.feature:Clear completed button is hidden when no todos are completed",
+        "features/clear-completed.feature:Clear completed button is visible when todos are completed"
+      ]
+    },
+    {
+      "name": "filtering",
+      "targets": [
+        "features/filtering.feature:All filter shows every todo",
+        "features/filtering.feature:Active filter shows only incomplete todos",
+        "features/filtering.feature:Completed filter shows only completed todos",
+        "features/filtering.feature:Completing a todo hides it from the Active filter",
+        "features/filtering.feature:Active filter is selected by default"
+      ]
+    },
+    {
+      "name": "persistence",
+      "targets": [
+        "features/persistence.feature:Todos persist across page reload",
+        "features/persistence.feature:Completed state persists across reload",
+        "features/persistence.feature:Todos are stored under the correct localStorage key"
+      ]
+    },
+    {
+      "name": "routing",
+      "targets": [
+        "features/routing.feature:Default route shows all todos",
+        "features/routing.feature:Active route shows active todos",
+        "features/routing.feature:Completed route shows completed todos",
+        "features/routing.feature:Clicking a filter link changes the route"
+      ]
+    }
+  ]
+}

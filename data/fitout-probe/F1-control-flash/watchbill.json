@@ -1,0 +1,41 @@
+[
+  {
+    "name": "Core todo operations",
+    "scenarios": [
+      "features/todos.feature:No todos shows empty state",
+      "features/todos.feature:Create a new todo by pressing Enter",
+      "features/todos.feature:Leading and trailing whitespace is trimmed",
+      "features/todos.feature:Whitespace-only input does not create a todo",
+      "features/todos.feature:Mark a todo as complete",
+      "features/todos.feature:Mark a completed todo as active",
+      "features/todos.feature:Toggle-all checkbox marks every todo complete",
+      "features/todos.feature:Toggle-all marks all complete when some are already complete",
+      "features/todos.feature:Toggle-all checkbox reflects when all todos are complete",
+      "features/todos.feature:Toggle-all clears when a completed todo is unchecked",
+      "features/todos.feature:Double-clicking a todo label enters editing mode",
+      "features/todos.feature:Editing saves on Enter",
+      "features/todos.feature:Editing saves on blur",
+      "features/todos.feature:Escape during editing discards changes",
+      "features/todos.feature:Empty text during edit destroys the todo",
+      "features/todos.feature:Counter shows the number of active todos",
+      "features/todos.feature:Counter singularises for one active todo",
+      "features/todos.feature:Clear completed removes completed todos",
+      "features/todos.feature:Clear completed button is hidden when no todos are completed"
+    ]
+  },
+  {
+    "name": "Routing, filtering and persistence",
+    "scenarios": [
+      "features/todos.feature:All route shows all todos regardless of state",
+      "features/todos.feature:Active route shows only active todos",
+      "features/todos.feature:Completed route shows only completed todos",
+      "features/todos.feature:Filter link gets selected class for current route",
+      "features/todos.feature:Updating a todo in a filtered view hides it when it no longer matches",
+      "features/todos.feature:Todos persist in localStorage on reload",
+      "features/todos.feature:Completed state persists across reload",
+      "features/todos.feature:Editing mode does not persist across reload",
+      "features/todos.feature:Clear completed is persisted",
+      "features/todos.feature:localStorage uses the correct key and item shape"
+    ]
+  }
+]

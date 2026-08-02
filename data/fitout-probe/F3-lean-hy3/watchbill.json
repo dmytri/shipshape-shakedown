@@ -1,0 +1,72 @@
+{
+  "watch1": {
+    "scenarios": [
+      "features/app-shell.feature:An empty app hides the main section and the footer on load",
+      "features/new-todo.feature:Submitting a title appends the todo to the list",
+      "features/new-todo.feature:Submitting a title clears the new todo field",
+      "features/new-todo.feature:A new todo is created active",
+      "features/new-todo.feature:A title is trimmed before the todo is created",
+      "features/new-todo.feature:A whitespace-only title creates no todo",
+      "features/new-todo.feature:The new todo field holds the keyboard focus after the page loads",
+      "features/app-shell.feature:The main section and the footer appear when the first todo is created"
+    ]
+  },
+  "watch2": {
+    "scenarios": [
+      "features/todo-completion.feature:Checking a todo marks it completed",
+      "features/todo-completion.feature:Unchecking a completed todo returns it to active",
+      "features/todo-completion.feature:Mark all as complete completes every todo",
+      "features/todo-completion.feature:Unchecking mark all as complete returns every todo to active",
+      "features/todo-completion.feature:The mark all checkbox checks itself when the last active todo is completed",
+      "features/todo-completion.feature:The mark all checkbox clears when a completed todo is reopened"
+    ]
+  },
+  "watch3": {
+    "scenarios": [
+      "features/delete-todo.feature:The destroy button removes the todo from the list",
+      "features/delete-todo.feature:Deleting a completed todo leaves the active todos in place",
+      "features/app-shell.feature:The main section and the footer hide again when the last todo is deleted",
+      "features/active-count.feature:The counter pluralizes the number of active todos",
+      "features/active-count.feature:The counter number is emphasized"
+    ]
+  },
+  "watch4": {
+    "scenarios": [
+      "features/clear-completed.feature:Clear completed removes the completed todos and keeps the active ones",
+      "features/clear-completed.feature:The clear completed button is hidden when no todo is completed",
+      "features/clear-completed.feature:The clear completed button appears once a todo is completed",
+      "features/clear-completed.feature:The mark all checkbox clears after the completed todos are cleared"
+    ]
+  },
+  "watch5": {
+    "scenarios": [
+      "features/edit-todo.feature:Double-clicking the title opens the edit field with the current title",
+      "features/edit-todo.feature:The edit field holds the keyboard focus when editing starts",
+      "features/edit-todo.feature:Pressing Enter saves the edited title and leaves editing mode",
+      "features/edit-todo.feature:Moving focus away saves the edited title",
+      "features/edit-todo.feature:An edited title is trimmed before it is saved",
+      "features/edit-todo.feature:Saving an empty title destroys the todo",
+      "features/edit-todo.feature:Pressing Escape discards the edit"
+    ]
+  },
+  "watch6": {
+    "scenarios": [
+      "features/persistence.feature:Todos survive a reload",
+      "features/persistence.feature:Completed state survives a reload",
+      "features/persistence.feature:A deleted todo is gone after a reload",
+      "features/persistence.feature:Editing mode is not persisted",
+      "features/persistence.feature:The todos are stored under the key \"todos-vanillajs\"",
+      "features/persistence.feature:The stored todo list conforms to its storage schema"
+    ]
+  },
+  "watch7": {
+    "scenarios": [
+      "features/filter-routing.feature:The active route shows only the active todos",
+      "features/filter-routing.feature:The completed route shows only the completed todos",
+      "features/filter-routing.feature:The default route shows every todo",
+      "features/filter-routing.feature:The filter link for the current route is marked selected",
+      "features/filter-routing.feature:Completing a todo under the active filter removes it from view",
+      "features/filter-routing.feature:The current filter survives a reload"
+    ]
+  }
+}

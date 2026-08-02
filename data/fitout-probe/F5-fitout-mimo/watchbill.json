@@ -1,0 +1,76 @@
+{
+  "watch1": {
+    "scenarios": [
+      "features/add-todo.feature:Page loads with no todos",
+      "features/add-todo.feature:Creating a todo displays it in the list",
+      "features/add-todo.feature:Creating a todo clears the input",
+      "features/add-todo.feature:Pressing Enter creates the todo",
+      "features/add-todo.feature:Whitespace-only input does not create a todo",
+      "features/add-todo.feature:Leading and trailing whitespace is trimmed from the title",
+      "features/add-todo.feature:The input is focused on page load"
+    ]
+  },
+  "watch2": {
+    "scenarios": [
+      "features/toggle-todo.feature:Marking a todo as complete",
+      "features/toggle-todo.feature:Unmarking a completed todo",
+      "features/toggle-todo.feature:Completed todo has the completed class"
+    ]
+  },
+  "watch3": {
+    "scenarios": [
+      "features/delete-todo.feature:Deleting a single todo",
+      "features/delete-todo.feature:Deleting the only todo empties the list"
+    ]
+  },
+  "watch4": {
+    "scenarios": [
+      "features/edit-todo.feature:Double-clicking a todo shows the edit input",
+      "features/edit-todo.feature:Editing input is focused when editing mode activates",
+      "features/edit-todo.feature:Clicking away saves the edit",
+      "features/edit-todo.feature:Pressing Enter saves the edit",
+      "features/edit-todo.feature:Pressing Escape reverts the edit",
+      "features/edit-todo.feature:Saving an empty edit deletes the todo",
+      "features/edit-todo.feature:Saving a whitespace-only edit deletes the todo"
+    ]
+  },
+  "watch5": {
+    "scenarios": [
+      "features/counter.feature:Counter shows zero with no active todos",
+      "features/counter.feature:Counter shows singular for one active todo",
+      "features/counter.feature:Counter shows plural for multiple active todos",
+      "features/counter.feature:Counter decrements when a todo is completed",
+      "features/counter.feature:Counter increments when a todo is uncompleted"
+    ]
+  },
+  "watch6": {
+    "scenarios": [
+      "features/toggle-all.feature:Marking all as complete",
+      "features/toggle-all.feature:Unmarking all completes no todos",
+      "features/toggle-all.feature:Toggle-all becomes checked when all individual todos are completed",
+      "features/toggle-all.feature:Toggle-all becomes unchecked when a todo is unmarked"
+    ]
+  },
+  "watch7": {
+    "scenarios": [
+      "features/clear-completed.feature:Clearing completed todos removes them from the list",
+      "features/clear-completed.feature:Button hidden with no completed todos",
+      "features/clear-completed.feature:Button visible when a todo is completed"
+    ]
+  },
+  "watch8": {
+    "scenarios": [
+      "features/filter.feature:All todos are visible at #/",
+      "features/filter.feature:Active filter shows incomplete todos",
+      "features/filter.feature:Completed filter shows completed todos",
+      "features/filter.feature:Selected filter has the selected class",
+      "features/filter.feature:Completing a todo hides it from the active filter"
+    ]
+  },
+  "watch9": {
+    "scenarios": [
+      "features/persistence.feature:Todos survive a page reload",
+      "features/persistence.feature:Completed state survives a page reload"
+    ]
+  }
+}

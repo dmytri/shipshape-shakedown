@@ -1,0 +1,57 @@
+{
+  "watches": {
+    "watch1": {
+      "scenarios": [
+        "features/todos.feature:Creating a new todo appends it to the list",
+        "features/todos.feature:Creating a todo trims whitespace",
+        "features/todos.feature:Creating a blank todo is rejected",
+        "features/todos.feature:Clicking the checkbox marks a todo as completed",
+        "features/todos.feature:Toggling a completed todo makes it active",
+        "features/todos.feature:The toggle-all checkbox marks all todos as completed",
+        "features/todos.feature:The toggle-all checkbox clears when a todo is unchecked",
+        "features/todos.feature:The toggle-all checkbox checks when all todos are completed"
+      ]
+    },
+    "watch2": {
+      "scenarios": [
+        "features/todos.feature:Double-clicking a todo activates edit mode",
+        "features/todos.feature:Pressing Enter while editing saves the new title",
+        "features/todos.feature:Blurring the edit field saves the new title",
+        "features/todos.feature:Pressing Escape during edit discards changes",
+        "features/todos.feature:Editing a todo to empty removes it",
+        "features/todos.feature:Editing trims whitespace before saving"
+      ]
+    },
+    "watch3": {
+      "scenarios": [
+        "features/todos.feature:Clicking destroy removes a todo",
+        "features/todos.feature:Clicking Clear completed removes all completed todos",
+        "features/todos.feature:Clear completed only removes completed todos"
+      ]
+    },
+    "watch4": {
+      "scenarios": [
+        "features/todos.feature:The counter shows the number of active todos",
+        "features/todos.feature:The counter does not include completed todos",
+        "features/todos.feature:The counter uses singular for one item",
+        "features/todos.feature:The counter uses plural for zero or multiple items",
+        "features/todos.feature:Main and footer are hidden when there are no todos",
+        "features/todos.feature:Main and footer are visible when there are todos"
+      ]
+    },
+    "watch5": {
+      "scenarios": [
+        "features/todos.feature:All route shows all todos",
+        "features/todos.feature:Active route shows only active todos",
+        "features/todos.feature:Completed route shows only completed todos",
+        "features/todos.feature:The selected filter link reflects the current route"
+      ]
+    },
+    "watch6": {
+      "scenarios": [
+        "features/todos.feature:Todos persist across page reloads",
+        "features/todos.feature:Completed state persists across page reloads"
+      ]
+    }
+  }
+}

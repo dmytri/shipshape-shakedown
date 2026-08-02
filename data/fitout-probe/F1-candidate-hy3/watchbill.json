@@ -1,0 +1,86 @@
+{
+  "watch1": {
+    "scenarios": [
+      "features/app-chrome.feature:The main section is hidden when there are no todos",
+      "features/app-chrome.feature:The footer is hidden when there are no todos",
+      "features/new-todo.feature:Pressing Enter appends the new todo to the list",
+      "features/new-todo.feature:Creating a todo clears the new todo field",
+      "features/new-todo.feature:A new todo is stored with its surrounding whitespace trimmed",
+      "features/new-todo.feature:A whitespace-only entry creates no todo",
+      "features/new-todo.feature:The new todo field is focused when the page loads",
+      "features/app-chrome.feature:The main section is shown once a todo exists",
+      "features/app-chrome.feature:The footer is shown once a todo exists"
+    ]
+  },
+  "watch2": {
+    "scenarios": [
+      "features/todo-completion.feature:Checking a todo marks its item completed",
+      "features/todo-completion.feature:Unchecking a completed todo returns it to active",
+      "features/todo-completion.feature:Mark all as complete completes every todo",
+      "features/todo-completion.feature:Unchecking mark all as complete returns every todo to active",
+      "features/todo-completion.feature:Completing the last active todo checks mark all as complete",
+      "features/todo-completion.feature:Reopening one todo unchecks mark all as complete",
+      "features/todo-completion.feature:Clear completed removes the completed todos",
+      "features/todo-completion.feature:Clear completed unchecks mark all as complete",
+      "features/app-chrome.feature:The clear completed button is hidden while nothing is completed",
+      "features/app-chrome.feature:The clear completed button is shown once a todo is completed"
+    ]
+  },
+  "watch3": {
+    "scenarios": [
+      "features/active-count.feature:The count reads zero items when every todo is completed",
+      "features/active-count.feature:The count is singular for one active todo",
+      "features/active-count.feature:The count is plural for two active todos",
+      "features/active-count.feature:The count number is wrapped in a strong element",
+      "features/todo-removal.feature:Clicking the destroy button removes that todo",
+      "features/todo-removal.feature:Removing a todo shortens the list",
+      "features/app-chrome.feature:Removing the last todo hides the main section again"
+    ]
+  },
+  "watch4": {
+    "scenarios": [
+      "features/todo-editing.feature:Double-clicking a todo label opens editing mode",
+      "features/todo-editing.feature:The edit field is focused when editing opens",
+      "features/todo-editing.feature:Pressing Enter saves the edited title",
+      "features/todo-editing.feature:Saving an edit closes editing mode",
+      "features/todo-editing.feature:Blurring the edit field saves the edited title",
+      "features/todo-editing.feature:An edited title is saved with its surrounding whitespace trimmed",
+      "features/todo-editing.feature:Emptying a todo during an edit destroys it",
+      "features/todo-editing.feature:Pressing Escape discards the edit",
+      "features/todo-editing.feature:Pressing Escape closes editing mode"
+    ]
+  },
+  "watch5": {
+    "scenarios": [
+      "features/filtering.feature:The active route lists only the active todos",
+      "features/filtering.feature:The active route hides the completed todos",
+      "features/filtering.feature:The completed route lists only the completed todos",
+      "features/filtering.feature:The default route lists every todo",
+      "features/filtering.feature:The active filter link carries the selected class",
+      "features/filtering.feature:Only one filter link is selected at a time",
+      "features/filtering.feature:Completing a todo under the active filter hides it",
+      "features/filtering.feature:Reopening a todo under the completed filter hides it"
+    ]
+  },
+  "watch6": {
+    "scenarios": [
+      "features/persistence.feature:A new todo is written to the stored list",
+      "features/persistence.feature:A stored todo carries the id, title, and completed keys",
+      "features/persistence.feature:Completing a todo is written to the stored list",
+      "features/persistence.feature:Removing a todo is written to the stored list",
+      "features/persistence.feature:A stored list is rendered when the app starts",
+      "features/persistence.feature:A stored completed todo is rendered as completed",
+      "features/persistence.feature:Editing state is left out of the stored list",
+      "features/persistence.feature:The app starts on the filter named by the opening address"
+    ]
+  },
+  "watch7": {
+    "scenarios": [
+      "features/app-structure.feature:The shipped app conforms to its structure scantling",
+      "features/app-structure.feature:The page markup ships without the template comments",
+      "features/shipshape-conformance.feature:The watchbill conforms to its fixed shape",
+      "features/shipshape-conformance.feature:No perturbation statement stands in the implementation",
+      "features/shipshape-conformance.feature:Verification support conforms to the verification-conformance rule set"
+    ]
+  }
+}

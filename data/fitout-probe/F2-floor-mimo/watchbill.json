@@ -1,0 +1,84 @@
+{
+  "watches": [
+    {
+      "id": "empty-state",
+      "scenarios": [
+        "features/empty-state.feature:main section and footer are hidden when no todos exist",
+        "features/empty-state.feature:new todo input is visible and focused on load"
+      ]
+    },
+    {
+      "id": "add-todo",
+      "scenarios": [
+        "features/add-todo.feature:create a todo by pressing Enter",
+        "features/add-todo.feature:trim whitespace from new todo input",
+        "features/add-todo.feature:ignore empty or whitespace-only input",
+        "features/add-todo.feature:clear input after creating a todo",
+        "features/add-todo.feature:create multiple todos in sequence"
+      ]
+    },
+    {
+      "id": "toggle-todo",
+      "scenarios": [
+        "features/toggle-todo.feature:mark a todo as complete",
+        "features/toggle-todo.feature:mark a completed todo as active",
+        "features/toggle-todo.feature:completed todo has strikethrough styling"
+      ]
+    },
+    {
+      "id": "toggle-all",
+      "scenarios": [
+        "features/toggle-all.feature:mark all todos as complete",
+        "features/toggle-all.feature:mark all todos as active",
+        "features/toggle-all.feature:toggle-all reflects individual state when all are complete",
+        "features/toggle-all.feature:toggle-all reflects individual state when some are active"
+      ]
+    },
+    {
+      "id": "edit-todo",
+      "scenarios": [
+        "features/edit-todo.feature:enter editing mode on double-click",
+        "features/edit-todo.feature:save edit on Enter",
+        "features/edit-todo.feature:save edit on blur",
+        "features/edit-todo.feature:discard edit on Escape",
+        "features/edit-todo.feature:delete todo when edit is empty",
+        "features/edit-todo.feature:trim whitespace from edited title"
+      ]
+    },
+    {
+      "id": "counter",
+      "scenarios": [
+        "features/counter.feature:display active todo count",
+        "features/counter.feature:singular form for one active todo",
+        "features/counter.feature:plural form for zero active todos"
+      ]
+    },
+    {
+      "id": "clear-completed",
+      "scenarios": [
+        "features/clear-completed.feature:remove completed todos",
+        "features/clear-completed.feature:clear completed button is visible when completed todos exist",
+        "features/clear-completed.feature:clear completed button is hidden when no completed todos exist"
+      ]
+    },
+    {
+      "id": "persistence",
+      "scenarios": [
+        "features/persistence.feature:persist todos to localStorage",
+        "features/persistence.feature:restore todos from localStorage on reload",
+        "features/persistence.feature:use correct localStorage key"
+      ]
+    },
+    {
+      "id": "routing",
+      "scenarios": [
+        "features/routing.feature:show all todos at hash \"#/\"",
+        "features/routing.feature:show only active todos at hash \"#/active\"",
+        "features/routing.feature:show only completed todos at hash \"#/completed\"",
+        "features/routing.feature:filter persists across reload",
+        "features/routing.feature:hide completed todo when toggled in active filter",
+        "features/routing.feature:show active todo when toggled in completed filter"
+      ]
+    }
+  ]
+}

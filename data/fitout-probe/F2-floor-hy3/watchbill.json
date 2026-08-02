@@ -1,0 +1,87 @@
+{
+  "watch1": {
+    "scenarios": [
+      "features/todo-entry.feature:Pressing Enter adds the typed todo to the list",
+      "features/todo-entry.feature:A created todo clears the new-todo input",
+      "features/todo-entry.feature:A second todo is appended below the first",
+      "features/todo-entry.feature:A title with surrounding whitespace is trimmed",
+      "features/todo-entry.feature:A whitespace-only entry creates no todo",
+      "features/todo-entry.feature:The new-todo input takes focus when the page loads"
+    ]
+  },
+  "watch2": {
+    "scenarios": [
+      "features/todo-chrome.feature:The main and footer sections are hidden while the list is empty",
+      "features/todo-chrome.feature:The main and footer sections appear once a todo exists",
+      "features/todo-chrome.feature:The main and footer sections hide again when the last todo goes",
+      "features/todo-chrome.feature:The counter reads one item in the singular",
+      "features/todo-chrome.feature:The counter reads two items in the plural",
+      "features/todo-chrome.feature:The counter counts only the active todos",
+      "features/todo-chrome.feature:The counter number is emphasized",
+      "features/todo-chrome.feature:The clear-completed button is hidden while no todo is completed",
+      "features/todo-chrome.feature:The clear-completed button appears once a todo is completed"
+    ]
+  },
+  "watch3": {
+    "scenarios": [
+      "features/todo-completion.feature:Checking a todo marks it completed",
+      "features/todo-completion.feature:Unchecking a completed todo returns it to active",
+      "features/todo-completion.feature:Mark all as complete completes every todo",
+      "features/todo-completion.feature:Unchecking mark all as complete returns every todo to active",
+      "features/todo-completion.feature:The mark-all checkbox checks itself when the last active todo is completed",
+      "features/todo-completion.feature:The mark-all checkbox unchecks itself when a completed todo is reopened",
+      "features/todo-completion.feature:Clearing completed todos unchecks the mark-all checkbox"
+    ]
+  },
+  "watch4": {
+    "scenarios": [
+      "features/todo-removal.feature:The destroy button removes its todo",
+      "features/todo-removal.feature:Clear completed removes every completed todo",
+      "features/todo-removal.feature:Clear completed leaves the active todos in place"
+    ]
+  },
+  "watch5": {
+    "scenarios": [
+      "features/todo-editing.feature:Double-clicking a todo label starts editing",
+      "features/todo-editing.feature:The edit input opens holding the current title",
+      "features/todo-editing.feature:The edit input takes focus when editing starts",
+      "features/todo-editing.feature:Pressing Enter saves the edited title",
+      "features/todo-editing.feature:Saving an edit leaves editing mode",
+      "features/todo-editing.feature:Blurring the edit input saves the edited title",
+      "features/todo-editing.feature:A saved title is trimmed",
+      "features/todo-editing.feature:Saving an empty title destroys the todo",
+      "features/todo-editing.feature:Pressing Escape discards the edit"
+    ]
+  },
+  "watch6": {
+    "scenarios": [
+      "features/todo-persistence.feature:The list is stored under the todos-vanillajs key",
+      "features/todo-persistence.feature:A created todo survives a reload",
+      "features/todo-persistence.feature:A completed state survives a reload",
+      "features/todo-persistence.feature:An edited title survives a reload",
+      "features/todo-persistence.feature:A destroyed todo stays gone after a reload",
+      "features/todo-persistence.feature:Editing mode is not persisted",
+      "features/todo-persistence.feature:The stored todo list conforms to its storage schema"
+    ]
+  },
+  "watch7": {
+    "scenarios": [
+      "features/todo-filtering.feature:The active route shows only the active todos",
+      "features/todo-filtering.feature:The completed route shows only the completed todos",
+      "features/todo-filtering.feature:The default route shows every todo",
+      "features/todo-filtering.feature:The filter link for the current route is selected",
+      "features/todo-filtering.feature:The default route selects the All filter link",
+      "features/todo-filtering.feature:Completing a todo hides it under the active filter",
+      "features/todo-filtering.feature:Reopening a todo hides it under the completed filter",
+      "features/todo-filtering.feature:The active filter survives a reload"
+    ]
+  },
+  "watch8": {
+    "scenarios": [
+      "features/shipshape-conformance.feature:The project watchbill conforms to the fixed watch-object shape",
+      "features/shipshape-conformance.feature:No perturbation statement stands in the implementation directories",
+      "features/shipshape-conformance.feature:Every production plank joins to a current step-definition pattern",
+      "features/shipshape-conformance.feature:Verification support conforms to the verification-conformance rule set"
+    ]
+  }
+}

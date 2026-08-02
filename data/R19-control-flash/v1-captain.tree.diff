@@ -1,0 +1,356 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..904b23a
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,35 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
++
++## Voyage 1 — Greenfield bootstrap
++
++### Intent
++Build a TodoMVC app following `assets/app-spec.md`, using `assets/app-template.index.html` as the base markup. Vanilla JavaScript, no preprocessors, persists to localStorage.
++
++### Key decisions
++- **Language**: JavaScript (vanilla, no preprocessors per spec)
++- **Runtime**: None (browser-only app)
++- **Package manager**: npm (existing `package.json`)
++- **Implementation directory**: `js/` (per AGENTS.md harness contract)
++- **Spec directory**: `features/` (existing)
++- **DOM tier**: happy-dom (harness pre-installed)
++- **Coverage**: None at bootstrap (c8 not installed)
++- **Lint**: None at bootstrap
++- **Scantling**: JSON Schema for todo item shape at `assets/todo-item.schema.json`
++- **localStorage key**: `todos-javascript` per spec convention
++
++### Durable artifacts authored
++- `RIGGING.md` — minimal bootstrap rigging
++- `features/todos.feature` — 22 scenarios covering all spec functionality + 1 @contract
++- `assets/todo-item.schema.json` — scantling for todo item shape (id, title, completed)
++- `watchbill.json` — all scenarios targeted for QM
++- `CAPTAIN.md` — this file
++
++### Next
++Dispatch QM with the watchbill. The harness installs at `features/support/world.js` — pre-existing and functional (confirmed by dry-run).
++
++### Open
++- `todomvc-common` and `todomvc-app-css` listed as dependencies in app-spec.md; recorded in RIGGING.md but not yet installed. Crew or Shipwright will install them.
+\ No newline at end of file
+diff --git a/RIGGING.md b/RIGGING.md
+new file mode 100644
+index 0000000..b95d689
+--- /dev/null
++++ b/RIGGING.md
+@@ -0,0 +1,37 @@
++# Rigging
++## Stack
++- language: JavaScript
++- runtime: none
++- packageManager: npm
++## Directories
++- implementation: js
++- specs: features
++- verification: features/support
++- assets: assets
++- scantlings: assets
++## Commands
++- discover: `npx cucumber-js --dry-run --format json --tags "not @captain and not @shipwright"`
++- focused: `ref="{scenario}"; npx cucumber-js "${ref%%:*}" --name "^${ref#*:}$" --tags "not @captain and not @shipwright"`
++- broad: `npx cucumber-js --tags "not @captain and not @shipwright"`
++- step-usage: `npx cucumber-js --dry-run --format usage-json --tags "not @captain and not @shipwright"`
++- plank-inventory: `npx jsdoc -X js/`
++- typecheck: `none`
++- lint: `none`
++- conformance: `none`
++## Perturbation
++- message: `PERTURBATION: consider current durable context; remove when fixed`
++- perturb: `throw new Error("PERTURBATION: consider current durable context; remove when fixed");`
++## Tiers
++- default: @logic
++- sandbox: none
++- policy: none
++- weather: none
++- runrecord: none
++## Dependencies
++- policy: locked
++- dependency: @cucumber/cucumber
++- dependency: happy-dom
++- dependency: todomvc-common
++- dependency: todomvc-app-css
++## Outbound
++- outbound: none
+\ No newline at end of file
+diff --git a/assets/todo-item.schema.json b/assets/todo-item.schema.json
+new file mode 100644
+index 0000000..ae368af
+--- /dev/null
++++ b/assets/todo-item.schema.json
+@@ -0,0 +1,23 @@
++{
++  "$schema": "http://json-schema.org/draft-07/schema#",
++  "$id": "todo-item",
++  "title": "Todo Item",
++  "description": "A single todo item stored in localStorage",
++  "type": "object",
++  "required": ["id", "title", "completed"],
++  "properties": {
++    "id": {
++      "description": "Unique identifier for the todo item",
++      "type": "string"
++    },
++    "title": {
++      "description": "The todo item text",
++      "type": "string"
++    },
++    "completed": {
++      "description": "Whether the todo item is completed",
++      "type": "boolean"
++    }
++  },
++  "additionalProperties": false
++}
+\ No newline at end of file
+diff --git a/features/todos.feature b/features/todos.feature
+new file mode 100644
+index 0000000..650b870
+--- /dev/null
++++ b/features/todos.feature
+@@ -0,0 +1,153 @@
++Feature: Todo Application
++  As a user
++  I want to manage a todo list
++  So that I can keep track of tasks I need to complete
++
++  Background:
++    Given the app is loaded
++
++  Rule: Visual state when empty
++
++  Scenario: Main and footer are hidden when there are no todos
++    Then "#main" should not be visible
++    And "#footer" should not be visible
++
++  Rule: Creating todos
++
++  Scenario: Create a new todo
++    When I type "Buy milk" into the new todo input and press Enter
++    Then I should see "Buy milk" in the todo list
++    And the new todo input should be cleared
++
++  Scenario: Whitespace in new todo is trimmed
++    When I type "   Buy milk   " into the new todo input and press Enter
++    Then I should see "Buy milk" in the todo list
++
++  Scenario: Empty todo is ignored
++    When I type "" into the new todo input and press Enter
++    Then the todo list should remain empty
++
++  Rule: Toggling completion
++
++  Scenario: Mark a todo as completed
++    Given a todo "Buy milk" exists
++    When I click the toggle for "Buy milk"
++    Then "Buy milk" should be marked as completed
++
++  Scenario: Mark all todos as completed
++    Given todos "Buy milk" and "Walk dog" exist
++    When I click the "Mark all as complete" toggle
++    Then all todos should be marked as completed
++
++  Scenario: Mark-all checkbox reflects individual completions
++    Given todos "Buy milk" and "Walk dog" exist
++    When I mark "Buy milk" as completed
++    And I mark "Walk dog" as completed
++    Then the "Mark all as complete" checkbox should be checked
++
++  Rule: Editing todos
++
++  Scenario: Double-click a todo to enter editing mode
++    Given a todo "Buy milk" exists
++    When I double-click "Buy milk"
++    Then the todo should be in editing mode
++
++  Scenario: Save an edited todo on Enter
++    Given a todo "Buy milk" exists
++    When I double-click "Buy milk"
++    And I change the value to "Buy organic milk" and press Enter
++    Then I should see "Buy organic milk" in the todo list
++
++  Scenario: Save an edited todo on blur
++    Given a todo "Buy milk" exists
++    When I double-click "Buy milk"
++    And I change the value to "Buy organic milk" and blur the input
++    Then I should see "Buy organic milk" in the todo list
++
++  Scenario: Discard edit on Escape
++    Given a todo "Buy milk" exists
++    When I double-click "Buy milk"
++    And I change the value to "Buy organic milk" and press Escape
++    Then I should see "Buy milk" in the todo list
++
++  Scenario: Destroy todo when edit is emptied
++    Given a todo "Buy milk" exists
++    When I double-click "Buy milk"
++    And I clear the edit input and press Enter
++    Then the todo list should be empty
++
++  Rule: Counter
++
++  Scenario: Display active todo count
++    Given todos "Buy milk" and "Walk dog" exist
++    And "Buy milk" is marked as completed
++    Then the todo count should show "1 item left"
++
++  Scenario: Pluralize item count
++    Given a todo "Buy milk" exists
++    Then the todo count should show "1 item left"
++    When I create a todo "Walk dog"
++    Then the todo count should show "2 items left"
++
++  Rule: Clear completed
++
++  Scenario: Clear completed removes completed todos
++    Given todos "Buy milk" and "Walk dog" exist
++    And "Buy milk" is marked as completed
++    When I click "Clear completed"
++    Then "Buy milk" should not appear in the todo list
++    And "Walk dog" should appear in the todo list
++
++  Scenario: Clear completed button is hidden when no completed todos exist
++    Given a todo "Buy milk" exists
++    Then the "Clear completed" button should not be visible
++
++  Rule: Routing and filtering
++
++  Scenario: Show all todos by default
++    Given todos "Buy milk" and "Walk dog" exist
++    And "Buy milk" is marked as completed
++    Then I should see 2 todos
++
++  Scenario: Filter to active todos
++    Given todos "Buy milk" and "Walk dog" exist
++    And "Buy milk" is marked as completed
++    When I click the "Active" filter
++    Then I should see 1 todo
++    And it should be "Walk dog"
++
++  Scenario: Filter to completed todos
++    Given todos "Buy milk" and "Walk dog" exist
++    And "Buy milk" is marked as completed
++    When I click the "Completed" filter
++    Then I should see 1 todo
++    And it should be "Buy milk"
++
++  Scenario: Active filter link has selected class
++    When I click the "Active" filter
++    Then the "Active" filter link should have class "selected"
++    And the "All" filter link should not have class "selected"
++
++  Rule: Persistence to localStorage
++
++  Scenario: Persist todos across reload
++    Given a todo "Buy milk" exists
++    When I reload the app
++    Then I should see "Buy milk" in the todo list
++
++  Scenario: Persist completion state across reload
++    Given a todo "Buy milk" exists
++    And "Buy milk" is marked as completed
++    When I reload the app
++    Then "Buy milk" should be marked as completed
++
++  Scenario: Persist active filter across reload
++    Given todos "Buy milk" and "Walk dog" exist
++    When I click the "Active" filter
++    And I reload the app
++    Then I should see only active todos
++
++  @contract
++  Scenario: The todo item conforms to the todo-item schema
++    Given a todo "Buy milk" exists
++    Then the localStorage todo items conform to the "todo-item" schema in "assets/todo-item.schema.json"
+\ No newline at end of file
+diff --git a/watchbill.json b/watchbill.json
+new file mode 100644
+index 0000000..f2c2f37
+--- /dev/null
++++ b/watchbill.json
+@@ -0,0 +1,73 @@
++{
++  "watches": [
++    {
++      "name": "Visual state when empty",
++      "scenarios": [
++        "features/todos.feature:Main and footer are hidden when there are no todos"
++      ]
++    },
++    {
++      "name": "Creating todos",
++      "scenarios": [
++        "features/todos.feature:Create a new todo",
++        "features/todos.feature:Whitespace in new todo is trimmed",
++        "features/todos.feature:Empty todo is ignored"
++      ]
++    },
++    {
++      "name": "Toggling completion",
++      "scenarios": [
++        "features/todos.feature:Mark a todo as completed",
++        "features/todos.feature:Mark all todos as completed",
++        "features/todos.feature:Mark-all checkbox reflects individual completions"
++      ]
++    },
++    {
++      "name": "Editing todos",
++      "scenarios": [
++        "features/todos.feature:Double-click a todo to enter editing mode",
++        "features/todos.feature:Save an edited todo on Enter",
++        "features/todos.feature:Save an edited todo on blur",
++        "features/todos.feature:Discard edit on Escape",
++        "features/todos.feature:Destroy todo when edit is emptied"
++      ]
++    },
++    {
++      "name": "Counter",
++      "scenarios": [
++        "features/todos.feature:Display active todo count",
++        "features/todos.feature:Pluralize item count"
++      ]
++    },
++    {
++      "name": "Clear completed",
++      "scenarios": [
++        "features/todos.feature:Clear completed removes completed todos",
++        "features/todos.feature:Clear completed button is hidden when no completed todos exist"
++      ]
++    },
++    {
++      "name": "Routing and filtering",
++      "scenarios": [
++        "features/todos.feature:Show all todos by default",
++        "features/todos.feature:Filter to active todos",
++        "features/todos.feature:Filter to completed todos",
++        "features/todos.feature:Active filter link has selected class"
++      ]
++    },
++    {
++      "name": "Persistence to localStorage",
++      "scenarios": [
++        "features/todos.feature:Persist todos across reload",
++        "features/todos.feature:Persist completion state across reload",
++        "features/todos.feature:Persist active filter across reload"
++      ]
++    },
++    {
++      "name": "Item shape contract",
++      "scenarios": [
++        "features/todos.feature:The todo item conforms to the todo-item schema"
++      ]
++    }
++  ]
++}
+\ No newline at end of file

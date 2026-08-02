@@ -1,0 +1,51 @@
+{
+  "watch1": {
+    "scenarios": [
+      "features/todos.feature:Main and footer are hidden when there are no todos",
+      "features/todos.feature:Create a new todo by pressing Enter",
+      "features/todos.feature:Whitespace-only input is ignored",
+      "features/todos.feature:New todo is appended to an existing list",
+      "features/todos.feature:Mark a todo as completed",
+      "features/todos.feature:Unmark a completed todo",
+      "features/todos.feature:Delete a todo with the destroy button"
+    ]
+  },
+  "watch2": {
+    "scenarios": [
+      "features/todos.feature:The user enters editing mode by double-clicking the label",
+      "features/todos.feature:The user saves the edit by pressing Enter",
+      "features/todos.feature:The user saves the edit on blur",
+      "features/todos.feature:The user discards edit changes on Escape",
+      "features/todos.feature:The app destroys the todo when editing to an empty value",
+      "features/todos.feature:The app destroys the todo when editing to whitespace only",
+      "features/todos.feature:Mark all todos as completed with the toggle-all checkbox",
+      "features/todos.feature:Unmark all completed todos through the toggle-all checkbox",
+      "features/todos.feature:Toggle-all is unchecked when only some todos are completed",
+      "features/todos.feature:Toggle-all is checked when all individual todos are completed"
+    ]
+  },
+  "watch3": {
+    "scenarios": [
+      "features/todos.feature:Clear completed removes all completed todos",
+      "features/todos.feature:Clear completed button is hidden when no completed todos exist",
+      "features/todos.feature:Counter displays the number of active todos",
+      "features/todos.feature:Counter displays singular form for one active todo",
+      "features/todos.feature:Counter displays plural form for zero active todos",
+      "features/todos.feature:Todos persist across page reloads",
+      "features/todos.feature:Editing state is not persisted",
+      "features/todos.feature:Each persisted todo conforms to the data schema"
+    ]
+  },
+  "watch4": {
+    "scenarios": [
+      "features/routing.feature:The default route shows all todos",
+      "features/routing.feature:The active filter shows only active todos",
+      "features/routing.feature:The completed filter shows only completed todos",
+      "features/routing.feature:The active filter link has the selected class",
+      "features/routing.feature:The completed filter link has the selected class",
+      "features/routing.feature:Completing a todo while viewing active filter hides it",
+      "features/routing.feature:Uncompleting a todo while viewing completed filter hides it",
+      "features/routing.feature:Active filter is preserved on page reload"
+    ]
+  }
+}

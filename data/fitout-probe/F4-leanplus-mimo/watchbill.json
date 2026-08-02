@@ -1,0 +1,56 @@
+{
+  "watch1": {
+    "scenarios": [
+      "features/todos.feature:Creating a new todo",
+      "features/todos.feature:Empty input is not created",
+      "features/todos.feature:Input is trimmed before creation",
+      "features/todos.feature:Marking a todo as complete",
+      "features/todos.feature:Marking a completed todo as incomplete",
+      "features/todos.feature:Deleting a todo"
+    ]
+  },
+  "watch2": {
+    "scenarios": [
+      "features/todos.feature:Counter shows number of active todos",
+      "features/todos.feature:Counter decrements on completion",
+      "features/todos.feature:Counter uses singular for one item",
+      "features/todos.feature:Counter uses zero form",
+      "features/todos.feature:Mark all as complete",
+      "features/todos.feature:Unmark all when all are complete",
+      "features/todos.feature:Clear completed removes finished todos",
+      "features/todos.feature:Clear completed is hidden when no completed todos",
+      "features/todos.feature:Clear completed is visible when completed todos exist",
+      "features/todos.feature:Main section and footer are hidden with no todos",
+      "features/todos.feature:Main section and footer appear when a todo is created"
+    ]
+  },
+  "watch3": {
+    "scenarios": [
+      "features/editing.feature:Double-click enters editing mode",
+      "features/editing.feature:Editing mode focuses the input",
+      "features/editing.feature:Pressing Enter saves the edit",
+      "features/editing.feature:Blur saves the edit",
+      "features/editing.feature:Edit is trimmed",
+      "features/editing.feature:Empty edit destroys the todo",
+      "features/editing.feature:Escape discards changes"
+    ]
+  },
+  "watch4": {
+    "scenarios": [
+      "features/routing.feature:All filter shows all todos",
+      "features/routing.feature:Active filter shows only incomplete todos",
+      "features/routing.feature:Completed filter shows only completed todos",
+      "features/routing.feature:Active filter survives reload",
+      "features/routing.feature:Completing a todo in active view removes it from list",
+      "features/routing.feature:Uncompleting a todo in completed view removes it from list"
+    ]
+  },
+  "watch5": {
+    "scenarios": [
+      "features/persistence.feature:Todos survive reload",
+      "features/persistence.feature:Completion state survives reload",
+      "features/persistence.feature:Deleted todos stay deleted after reload",
+      "features/persistence.feature:Editing survives reload"
+    ]
+  }
+}

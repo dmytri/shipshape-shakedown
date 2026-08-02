@@ -1,0 +1,78 @@
+{
+  "watch1": {
+    "scenarios": [
+      "features/new-todo.feature:Pressing Enter appends the new todo to the list",
+      "features/new-todo.feature:Creating a todo clears the new todo input",
+      "features/new-todo.feature:Surrounding whitespace is trimmed from a new todo title",
+      "features/new-todo.feature:A whitespace-only entry creates no todo",
+      "features/new-todo.feature:The new todo input holds focus when the page loads",
+      "features/app-chrome.feature:The main section is hidden when there are no todos",
+      "features/app-chrome.feature:The footer is hidden when there are no todos",
+      "features/app-chrome.feature:The main section is shown once a todo exists",
+      "features/app-chrome.feature:The footer is shown once a todo exists"
+    ]
+  },
+  "watch2": {
+    "scenarios": [
+      "features/todo-item.feature:Checking the toggle marks the todo completed",
+      "features/todo-item.feature:Unchecking the toggle returns the todo to active",
+      "features/todo-item.feature:The destroy button removes the todo from the list",
+      "features/todo-item.feature:Completing one todo leaves the other untouched",
+      "features/active-count.feature:The counter reads two items left when both todos are active",
+      "features/active-count.feature:The counter reads one item left when one todo is completed",
+      "features/active-count.feature:The counter reads zero items left when every todo is completed",
+      "features/active-count.feature:The counter number sits in a strong element"
+    ]
+  },
+  "watch3": {
+    "scenarios": [
+      "features/mark-all-complete.feature:The mark all control completes every todo",
+      "features/mark-all-complete.feature:Unchecking the mark all control reactivates every todo",
+      "features/mark-all-complete.feature:The mark all control checks itself when the last active todo is completed",
+      "features/mark-all-complete.feature:The mark all control unchecks itself when a completed todo is reactivated",
+      "features/mark-all-complete.feature:The mark all control clears after the completed todos are cleared",
+      "features/clear-completed.feature:Clear completed removes the completed todos",
+      "features/clear-completed.feature:The clear completed button is hidden when nothing is completed",
+      "features/clear-completed.feature:The clear completed button is shown once a todo is completed"
+    ]
+  },
+  "watch4": {
+    "scenarios": [
+      "features/edit-todo.feature:Double-clicking the label activates editing mode",
+      "features/edit-todo.feature:The edit field is focused and carries the current title",
+      "features/edit-todo.feature:Pressing Enter saves the edited title",
+      "features/edit-todo.feature:Saving an edit leaves editing mode",
+      "features/edit-todo.feature:Blurring the edit field saves the edited title",
+      "features/edit-todo.feature:Pressing Escape discards the edit",
+      "features/edit-todo.feature:An edit trimmed to an empty title destroys the todo",
+      "features/edit-todo.feature:Surrounding whitespace is trimmed from an edited title"
+    ]
+  },
+  "watch5": {
+    "scenarios": [
+      "features/filter-todos.feature:The active route shows only the active todos",
+      "features/filter-todos.feature:The completed route shows only the completed todos",
+      "features/filter-todos.feature:The default route shows every todo",
+      "features/filter-todos.feature:The selected class marks the filter link of the current route",
+      "features/filter-todos.feature:Completing a todo hides it while the active filter is applied",
+      "features/filter-todos.feature:The current filter is restored on reload"
+    ]
+  },
+  "watch6": {
+    "scenarios": [
+      "features/persistence.feature:A new todo is written to localStorage under \"todos-vanillajs\"",
+      "features/persistence.feature:Persisted todos are restored on reload",
+      "features/persistence.feature:Completing a todo updates its persisted record",
+      "features/persistence.feature:Destroying a todo removes its persisted record",
+      "features/persistence.feature:The persisted todo record conforms to its storage schema"
+    ]
+  },
+  "watch7": {
+    "scenarios": [
+      "features/methodology.feature:The watchbill conforms to its shape",
+      "features/methodology.feature:A deck at rest carries no watchbill",
+      "features/methodology.feature:No perturbation statement stands in the implementation",
+      "features/methodology.feature:Verification support discharges its conformance rule set"
+    ]
+  }
+}

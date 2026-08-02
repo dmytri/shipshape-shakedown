@@ -1,0 +1,65 @@
+{
+  "watch1": {
+    "scenarios": [
+      "features/todos.feature:Creating a new todo",
+      "features/todos.feature:Creating a todo trims whitespace",
+      "features/todos.feature:Empty input does not create a todo",
+      "features/todos.feature:Whitespace-only input does not create a todo",
+      "features/todos.feature:Completing a todo",
+      "features/todos.feature:Uncompleting a todo",
+      "features/todos.feature:Editing a todo by double-clicking",
+      "features/todos.feature:Saving an edit on Enter",
+      "features/todos.feature:Saving an edit on blur",
+      "features/todos.feature:Cancelling an edit on Escape",
+      "features/todos.feature:Editing to empty destroys the todo",
+      "features/todos.feature:Destroying a todo",
+      "features/todos.feature:Section and footer hidden when no todos",
+      "features/todos.feature:Section and footer visible when todos exist"
+    ]
+  },
+  "watch2": {
+    "scenarios": [
+      "features/toggle-all.feature:Mark all as complete",
+      "features/toggle-all.feature:Unmark all when all are complete",
+      "features/toggle-all.feature:Toggle-all reflects single item completion",
+      "features/toggle-all.feature:Clear completed unchecks toggle-all"
+    ]
+  },
+  "watch3": {
+    "scenarios": [
+      "features/counter.feature:Counter shows zero when no todos",
+      "features/counter.feature:Counter shows one for a single active todo",
+      "features/counter.feature:Counter decrements on completion",
+      "features/counter.feature:Counter increments on uncompletion",
+      "features/counter.feature:Counter pluralizes correctly",
+      "features/counter.feature:Counter excludes completed todos"
+    ]
+  },
+  "watch4": {
+    "scenarios": [
+      "features/clear-completed.feature:Clear completed removes finished todos",
+      "features/clear-completed.feature:Clear completed hides button when no completed items",
+      "features/clear-completed.feature:Clear completed shows button when completed items exist"
+    ]
+  },
+  "watch5": {
+    "scenarios": [
+      "features/routing.feature:Default route shows all todos",
+      "features/routing.feature:Active filter shows only active todos",
+      "features/routing.feature:Completed filter shows only completed todos",
+      "features/routing.feature:Active filter link is selected when on active route",
+      "features/routing.feature:Completed filter link is selected when on completed route",
+      "features/routing.feature:All filter link is selected by default",
+      "features/routing.feature:Completing a todo hides it from active filter",
+      "features/routing.feature:Uncompleting a todo shows it in active filter"
+    ]
+  },
+  "watch6": {
+    "scenarios": [
+      "features/persistence.feature:Todos persist after page reload",
+      "features/persistence.feature:Completed state persists after page reload",
+      "features/persistence.feature:Deleted todos do not reappear after reload",
+      "features/persistence.feature:localStorage key follows the format todos-todomvc"
+    ]
+  }
+}

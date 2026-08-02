@@ -1,0 +1,38 @@
+{
+  "watch1": {
+    "scenarios": [
+      "features/todos.feature:Creating a new todo adds it to the list",
+      "features/todos.feature:Creating a todo with whitespace-only input is ignored",
+      "features/todos.feature:Marking a todo as completed toggles its completed state",
+      "features/todos.feature:Marking all todos as complete toggles all items",
+      "features/todos.feature:Toggle-all checkbox reflects individual todo state",
+      "features/todos.feature:Deleting a todo removes it from the list",
+      "features/todos.feature:Clearing completed todos removes only completed items",
+      "features/todos.feature:Clear completed button is hidden when no todos are completed",
+      "features/todos.feature:Editing a todo saves the new title on Enter",
+      "features/todos.feature:Editing a todo saves the new title on blur",
+      "features/todos.feature:Editing a todo with an empty title destroys it",
+      "features/todos.feature:Pressing Escape during editing discards changes",
+      "features/todos.feature:The active todo counter shows the correct count with pluralization",
+      "features/todos.feature:Main section is hidden when no todos exist",
+      "features/todos.feature:Footer is hidden when no todos exist",
+      "features/todos.feature:The new-todo input has focus on page load"
+    ]
+  },
+  "watch2": {
+    "scenarios": [
+      "features/persistence.feature:Todos saved to localStorage are restored on reload",
+      "features/persistence.feature:Editing state is not persisted",
+      "features/persistence.feature:Active filter state is persisted on reload"
+    ]
+  },
+  "watch3": {
+    "scenarios": [
+      "features/routing.feature:Default route shows all todos",
+      "features/routing.feature:Active filter shows only active todos",
+      "features/routing.feature:Completed filter shows only completed todos",
+      "features/routing.feature:Filter link has the selected class for the active route",
+      "features/routing.feature:Completing a todo while in the active filter hides it"
+    ]
+  }
+}

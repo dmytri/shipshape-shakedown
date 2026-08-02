@@ -1,0 +1,42 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..904b23a
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,35 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
++
++## Voyage 1 — Greenfield bootstrap
++
++### Intent
++Build a TodoMVC app following `assets/app-spec.md`, using `assets/app-template.index.html` as the base markup. Vanilla JavaScript, no preprocessors, persists to localStorage.
++
++### Key decisions
++- **Language**: JavaScript (vanilla, no preprocessors per spec)
++- **Runtime**: None (browser-only app)
++- **Package manager**: npm (existing `package.json`)
++- **Implementation directory**: `js/` (per AGENTS.md harness contract)
++- **Spec directory**: `features/` (existing)
++- **DOM tier**: happy-dom (harness pre-installed)
++- **Coverage**: None at bootstrap (c8 not installed)
++- **Lint**: None at bootstrap
++- **Scantling**: JSON Schema for todo item shape at `assets/todo-item.schema.json`
++- **localStorage key**: `todos-javascript` per spec convention
++
++### Durable artifacts authored
++- `RIGGING.md` — minimal bootstrap rigging
++- `features/todos.feature` — 22 scenarios covering all spec functionality + 1 @contract
++- `assets/todo-item.schema.json` — scantling for todo item shape (id, title, completed)
++- `watchbill.json` — all scenarios targeted for QM
++- `CAPTAIN.md` — this file
++
++### Next
++Dispatch QM with the watchbill. The harness installs at `features/support/world.js` — pre-existing and functional (confirmed by dry-run).
++
++### Open
++- `todomvc-common` and `todomvc-app-css` listed as dependencies in app-spec.md; recorded in RIGGING.md but not yet installed. Crew or Shipwright will install them.
+\ No newline at end of file

@@ -1,0 +1,71 @@
+{
+  "watch1": {
+    "scenarios": [
+      "features/todos.feature:Create a new todo",
+      "features/todos.feature:Do not create empty todos"
+    ]
+  },
+  "watch2": {
+    "scenarios": [
+      "features/todos.feature:Toggle a todo as completed",
+      "features/todos.feature:Toggle a todo back to active",
+      "features/todos.feature:Delete a todo",
+      "features/todos.feature:Mark all todos as complete",
+      "features/todos.feature:Mark all when some are already complete",
+      "features/todos.feature:Toggle-all reflects individual selections"
+    ]
+  },
+  "watch3": {
+    "scenarios": [
+      "features/todos.feature:Clear completed removes completed items",
+      "features/todos.feature:Clear completed button is hidden when nothing is completed",
+      "features/todos.feature:Clear completed button is visible when items are completed",
+      "features/todos.feature:Active item count displays correctly",
+      "features/todos.feature:Pluralized item count",
+      "features/todos.feature:Zero item count",
+      "features/todos.feature:Main section is hidden when there are no todos",
+      "features/todos.feature:Main section is visible when there are todos",
+      "features/todos.feature:Footer is hidden when there are no todos",
+      "features/todos.feature:Footer is visible when there are todos"
+    ]
+  },
+  "watch4": {
+    "scenarios": [
+      "features/todos.feature:Edit a todo title",
+      "features/todos.feature:Save edit on blur",
+      "features/todos.feature:Cancel edit with Escape",
+      "features/todos.feature:Delete todo when edit is emptied"
+    ]
+  },
+  "watch5": {
+    "scenarios": [
+      "features/persistence.feature:Persist todos to localStorage",
+      "features/persistence.feature:Restore todos from localStorage on load",
+      "features/persistence.feature:Persist completed state",
+      "features/persistence.feature:Restore completed state from localStorage",
+      "features/persistence.feature:Remove deleted todos from localStorage",
+      "features/persistence.feature:localStorage uses the key todos-javascript",
+      "features/persistence.feature:Each todo item has id, title and completed fields",
+      "features/persistence.feature:Clear completed removes persisted items",
+      "features/persistence.feature:Edit title persists to localStorage",
+      "features/persistence.feature:Editing mode is not persisted"
+    ]
+  },
+  "watch6": {
+    "scenarios": [
+      "features/persistence.feature:The todo item shape conforms to the schema"
+    ]
+  },
+  "watch7": {
+    "scenarios": [
+      "features/routing.feature:Default route shows all todos",
+      "features/routing.feature:Active filter shows only active todos",
+      "features/routing.feature:Completed filter shows only completed todos",
+      "features/routing.feature:Selected class on the active filter link",
+      "features/routing.feature:Selected class on the completed filter link",
+      "features/routing.feature:Item moves out of active list when completed",
+      "features/routing.feature:Item moves out of completed list when unchecked",
+      "features/routing.feature:Active filter persists on reload"
+    ]
+  }
+}

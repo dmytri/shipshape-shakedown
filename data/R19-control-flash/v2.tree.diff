@@ -1,0 +1,79 @@
+diff --git a/CAPTAIN.md b/CAPTAIN.md
+new file mode 100644
+index 0000000..ca53b9d
+--- /dev/null
++++ b/CAPTAIN.md
+@@ -0,0 +1,72 @@
++> STOP. Captain's notes: non-binding. Captain writes, Captain trims. Anyone else: close this file now.
++
++# Captain Notes
++
++Binding behaviour lives in `.feature` specs and referenced `assets/**`. History lives in git. These notes carry only what the next cycle needs.
++
++## Voyage 1 — Greenfield bootstrap
++
++### Intent
++Build a TodoMVC app following `assets/app-spec.md`, using `assets/app-template.index.html` as the base markup. Vanilla JavaScript, no preprocessors, persists to localStorage.
++
++### Key decisions
++- **Language**: JavaScript (vanilla, no preprocessors per spec)
++- **Runtime**: None (browser-only app)
++- **Package manager**: npm (existing `package.json`)
++- **Implementation directory**: `js/` (per AGENTS.md harness contract)
++- **Spec directory**: `features/` (existing)
++- **DOM tier**: happy-dom (harness pre-installed)
++- **Coverage**: None at bootstrap (c8 not installed)
++- **Lint**: None at bootstrap
++- **Scantling**: JSON Schema for todo item shape at `assets/todo-item.schema.json`
++- **localStorage key**: `todos-javascript` per spec convention
++
++### Durable artifacts authored
++- `RIGGING.md` — minimal bootstrap rigging
++- `features/todos.feature` — 22 scenarios covering all spec functionality + 1 @contract
++- `assets/todo-item.schema.json` — scantling for todo item shape (id, title, completed)
++- `watchbill.json` — all scenarios targeted for QM
++- `CAPTAIN.md` — this file
++
++### Next
++Dispatch QM with the new watchbill targeting DOM element persistence scenarios.
++
++### Voyage 2 — Acceptance test failures revealed DOM element detachment defect
++
++#### Acceptance test failures from external Cypress suite
++4 failures, all root cause: `render()` replaces `todoList.innerHTML` entirely on every state change, destroying all `<li>` elements and breaking cached DOM references.
++
++**Tests 1-2 (Mark all as completed / Clear complete state):**
++- Creates 3 todos, caches them as `@todos`, checks/unchecks `#toggle-all`
++- `render()` replaces innerHTML, detaching all cached `<li>` references
++- Then `cy.eq()` on the cached reference fails: element not attached to DOM
++
++**Tests 3-4 (Mark/un-mark items as complete):**
++- Creates first todo, caches as `@firstTodo`, creates second todo
++- `render()` from creating second todo replaces innerHTML, detaching `@firstTodo`
++- Then `cy.find('.toggle')` on the cached reference fails
++
++#### App spec violation
++`assets/app-spec.md` Item section says:
++> "Clicking the checkbox marks the todo as complete by updating its `completed` value and toggling the class `completed` on its parent `<li>`"
++
++The phrase "toggling the class `completed` on its parent `<li>`" implies the EXISTING `<li>` element is mutated in place, not replaced with a new one. The current implementation replaces `todoList.innerHTML`, which violates this spec.
++
++#### Durable artifacts authored (this session)
++- `features/todos.feature` — 4 new scenarios under Rule: DOM element persistence
++- `watchbill.json` — 4 scenarios targeted
++- `CAPTAIN.md` — this update
++
++#### New scenarios added
++| # | Scenario | Acceptance test it covers |
++|---|----------|--------------------------|
++| 1 | Existing todo element persists when marked completed | Tests 3 & 4 (find .toggle on cached ref) |
++| 2 | Existing todo elements persist when marking all as completed | Test 1 (eq() on cached @todos after check) |
++| 3 | Clearing the completed state preserves remaining elements | Test 2 (eq() on cached @todos after uncheck) |
++| 4 | Existing todo elements persist when creating a new todo | Tests 3 & 4 (find .toggle on cached ref after 2nd create) |
++
++All 4 scenarios assert that a saved element reference remains attached to the document after a state-changing action — asserting element persistence, not just functional outcome.
++
++### Open
++- QM needs to implement step definitions for "save the element reference", "saved element should have class", "saved element should be attached to the document", and "each saved element should..."
++- The existing 22 scenarios + 1 @contract continue to pass in the in-harness (happy-dom) tier
+\ No newline at end of file

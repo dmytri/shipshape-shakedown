@@ -1,0 +1,78 @@
+{
+  "watch1": {
+    "scenarios": [
+      "features/new-todo.feature:Pressing Enter creates the todo and clears the input",
+      "features/new-todo.feature:A whitespace-only entry creates no todo",
+      "features/new-todo.feature:Surrounding whitespace is trimmed from a new todo title",
+      "features/new-todo.feature:A second todo is appended after the first",
+      "features/new-todo.feature:The main section and the footer are hidden while there are no todos",
+      "features/new-todo.feature:The main section and the footer appear once a todo exists",
+      "features/new-todo.feature:The new todo input holds focus when the page loads"
+    ]
+  },
+  "watch2": {
+    "scenarios": [
+      "features/todo-item.feature:Checking the toggle marks the todo completed",
+      "features/todo-item.feature:Unchecking the toggle returns the todo to active",
+      "features/todo-item.feature:A completed todo shows its toggle checked",
+      "features/todo-item.feature:Clicking the destroy button removes the todo",
+      "features/todo-item.feature:The counter reads one item left in the singular",
+      "features/todo-item.feature:The counter reads two items left in the plural",
+      "features/todo-item.feature:The counter reads zero items left when every todo is completed",
+      "features/todo-item.feature:The counter wraps its number in a strong element"
+    ]
+  },
+  "watch3": {
+    "scenarios": [
+      "features/bulk-actions.feature:Mark all as complete completes every todo",
+      "features/bulk-actions.feature:Unchecking mark all as complete returns every todo to active",
+      "features/bulk-actions.feature:The mark all as complete checkbox checks itself when the last todo is completed",
+      "features/bulk-actions.feature:The mark all as complete checkbox clears when one todo is set active",
+      "features/bulk-actions.feature:Clear completed removes the completed todos",
+      "features/bulk-actions.feature:Clear completed clears the mark all as complete checkbox",
+      "features/bulk-actions.feature:The clear completed button is hidden while no todo is completed",
+      "features/bulk-actions.feature:The clear completed button appears once a todo is completed"
+    ]
+  },
+  "watch4": {
+    "scenarios": [
+      "features/editing.feature:Double-clicking the label activates editing mode",
+      "features/editing.feature:The edit field opens holding the current title",
+      "features/editing.feature:Pressing Enter saves the edited title",
+      "features/editing.feature:Saving an edit leaves editing mode",
+      "features/editing.feature:Blurring the edit field saves the edited title",
+      "features/editing.feature:A saved title is trimmed of surrounding whitespace",
+      "features/editing.feature:Pressing Escape discards the edit",
+      "features/editing.feature:Saving an empty title destroys the todo"
+    ]
+  },
+  "watch5": {
+    "scenarios": [
+      "features/persistence.feature:Todos survive a reload",
+      "features/persistence.feature:A completed state survives a reload",
+      "features/persistence.feature:A destroyed todo stays gone after a reload",
+      "features/persistence.feature:Editing mode is left behind by a reload",
+      "features/persistence.feature:The collection is stored under the todos-vanillajs key",
+      "features/persistence.feature:The persisted collection conforms to the todo record schema"
+    ]
+  },
+  "watch6": {
+    "scenarios": [
+      "features/filtering.feature:The default route lists every todo",
+      "features/filtering.feature:The active route lists only the active todos",
+      "features/filtering.feature:The completed route lists only the completed todos",
+      "features/filtering.feature:The active filter link carries the selected class",
+      "features/filtering.feature:The other filter links lose the selected class",
+      "features/filtering.feature:Completing a todo hides it from the active route",
+      "features/filtering.feature:Clearing a todo shows it on the active route",
+      "features/filtering.feature:The chosen filter survives a reload"
+    ]
+  },
+  "watch7": {
+    "scenarios": [
+      "features/methodology-conformance.feature:The watchbill conforms to its fixed shape",
+      "features/methodology-conformance.feature:The implementation carries no live perturbation token",
+      "features/methodology-conformance.feature:The verification support discharges its conformance rule set"
+    ]
+  }
+}
