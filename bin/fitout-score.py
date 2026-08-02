@@ -67,10 +67,15 @@ def watchbill(sim):
         w = json.load(open(p, errors="ignore"))
     except Exception:
         return dict(present=True, shape="MALFORMED-JSON", targets=0)
-    keys = list(w)
-    ok = all(re.fullmatch(r"watch\d+", k) for k in keys) and keys != []
+    # the fixed shape is an OBJECT keyed watch1, watch2, ... A list is a shape violation, and
+    # crashing on it would hide the very defect worth reporting (control/flash, F1).
+    if not isinstance(w, dict):
+        n = sum(len(v.get("scenarios", [])) for v in w if isinstance(v, dict)) if isinstance(w, list) else 0
+        return dict(present=True, shape="VIOLATION:list", targets=n)
+    keys = [k for k in w if isinstance(k, str)]
+    ok = bool(keys) and all(re.fullmatch(r"watch\d+", k) for k in keys)
     n = sum(len(v.get("scenarios", [])) for v in w.values() if isinstance(v, dict))
-    return dict(present=True, shape=("fixed" if ok else "VIOLATION:" + ",".join(keys[:2])), targets=n)
+    return dict(present=True, shape=("fixed" if ok else "VIOL:" + ",".join(keys[:2])[:12]), targets=n)
 
 
 def leg_cost(wave):
