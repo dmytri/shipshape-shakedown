@@ -92,7 +92,7 @@ for b in bad: print(b, file=sys.stderr)
 sys.exit(1 if bad else 0)
 PY
 # === prompt/fixture coherence (every one of these cost a run today) ===
-T="$HERE/tasks/pilot/captain-todomvc.task.md"; A_MD="$(sed -n "/cat > AGENTS.md/,/^MD$/p" "$HERE/bin/scaffold-todomvc.sh")"
+CAPTASK="$HERE/tasks/pilot/captain-todomvc.task.md"; A_MD="$(sed -n "/cat > AGENTS.md/,/^MD$/p" "$HERE/bin/scaffold-todomvc.sh")"
 # the Captain leg wrote index.html because AGENTS.md said a missing one "fails every scenario
 # loudly" -- it carved out "stubs the harness needs". Nothing shipped to the sim may imply the
 # reader must create production files.
@@ -101,10 +101,10 @@ printf '%s' "$A_MD" | grep -qiE 'fails every scenario|must exist|needs? (an|the)
   || ok "fixture states where code lives without demanding the reader create it"
 # RIGGING.md absent is the single upstream cause of a zero-traceability voyage, and the task's
 # artifact list did not name it.
-grep -q 'RIGGING.md' "$T" && ok "the Captain task names RIGGING.md as an artifact to write" || no "RIGGING.md is not named at the writer"
+grep -q 'RIGGING.md' "$CAPTASK" && ok "the Captain task names RIGGING.md as an artifact to write" || no "RIGGING.md is not named at the writer"
 # the task led with "Build a TodoMVC app" and forbade production code eight lines later.
-head -6 "$T" | grep -qiE '^Build (a|the) ' && no "the Captain task opens by telling it to build the app" || ok "the Captain task states the job before the product"
-grep -qiE 'no `index.html`|not build the application' "$T" && ok "the Captain task names what NOT to build" || no "the task does not say which files are out of scope"
+head -6 "$CAPTASK" | grep -qiE '^Build (a|the) ' && no "the Captain task opens by telling it to build the app" || ok "the Captain task states the job before the product"
+grep -qiE 'no `index.html`|not build the application' "$CAPTASK" && ok "the Captain task names what NOT to build" || no "the task does not say which files are out of scope"
 
 # dk, 2026-07-29: gplint config is part of fit-out grading — measured, never seeded.
 grep -q 'FIT-OUT' "$R" && ok "fit-out grade recorded (gplintrc, rigging lint, gplint run)" || no "fit-out is not graded"

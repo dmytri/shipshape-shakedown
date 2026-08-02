@@ -33,6 +33,9 @@ case "$MODEL_KEY" in
   *) echo "usage: voyage1-probe.sh <arm> <flash|mimo|hy3> [tag]" >&2; exit 2 ;;
 esac
 
+case "$ARM" in control) A0=0;; candidate) A0=3;; midway) A0=6;; fitout) A0=9;; esac
+case "$MODEL_KEY" in flash) P0=1;; mimo) P0=2;; hy3) P0=3;; esac
+PORT=$((8930 + A0 + P0))
 WAVE="$TAG-$ARM-$MODEL_KEY"
 BASE="$SCRATCH/$WAVE"; SIM="$BASE/sim"; LOG="$BASE/probe.log"
 [ -d "$SKILLS/shipshape" ] || { echo "voyage1-probe: no skills at $SKILLS" >&2; exit 3; }
@@ -80,5 +83,13 @@ say "SELF-SUITE | $(grep -oE '[0-9]+ scenarios( \([^)]*\))?' "$BASE/selfsuite.tx
 [ -n "$(git -C "$SIM" status --porcelain 2>/dev/null)" ] \
   && say "CUSTODY | work left uncommitted: $(git -C "$SIM" status --porcelain | awk '{print $2}' | tr '\n' ' ')" \
   || say "CUSTODY | deck clean | HEAD $(git -C "$SIM" rev-parse --short HEAD)"
-say "PROBE END $WAVE (no oracle, by design)"
+# --- ONE oracle grade, then stop. No correction voyage, no chasing the number. ---
+"$HERE/bin/oracle-grade.sh" --build "$SIM" --out "$BASE/oracle.txt" --clone "$SCRATCH/oracle-clone" \
+  --port "$PORT" >"$BASE/oraclerun.log" 2>&1 || true
+if grep -q '^GRADE:' "$BASE/oracle.txt" 2>/dev/null; then
+  say "ORACLE | $(grep -oE 'passing=[0-9]+ failing=[0-9]+ pending=[0-9]+' "$BASE/oracle.txt" | head -1) | $(grep -oE 'GRADE: .*' "$BASE/oracle.txt" | head -1)"
+else
+  say "ORACLE | UNMEASURED — not scored"
+fi
+say "PROBE END $WAVE (first oracle only, by design)"
 echo PROBE-DONE
