@@ -111,9 +111,12 @@ def score(wave):
     for d in ("js", "src", "lib"):
         prod += glob.glob(os.path.join(sim, d, "**", "*.js"), recursive=True)
     prod += glob.glob(os.path.join(sim, "index.html"))
-    # B5: a declared implementation dir holding no code
+    # B5 is only meaningful AFTER a build voyage: at fit-out there is no production code yet, so a
+    # declared implementation dir is empty BY DESIGN and this fires on every cell. Only flag it
+    # where the sim has actually been built.
+    built = bool(glob.glob(os.path.join(sim, "js", "*.js")) or glob.glob(os.path.join(sim, "src", "*.js")))
     empty_impl = []
-    if r:
+    if r and built:
         for d in r["impl"]:
             d = d.strip().strip("`")
             if d and d.lower() != "none":
